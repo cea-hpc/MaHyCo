@@ -282,7 +282,7 @@ private:
 	utils::Timer global_timer;
 	utils::Timer cpu_timer;
 	utils::Timer io_timer;
-        const size_t maxHardThread = Kokkos::DefaultExecutionSpace::max_hardware_threads();
+        // const size_t maxHardThread = Kokkos::DefaultExecutionSpace::max_hardware_threads();
 
 public:
 	EucclhydRemap(Options* aOptions, CartesianMesh2D* aCartesianMesh2D, string output)
