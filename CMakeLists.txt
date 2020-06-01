@@ -9,7 +9,7 @@ set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 add_subdirectory( "./cppnabla" )
 
 add_executable( eucclhydremap EucclhydRemap.cc )
-target_link_libraries(eucclhydremap 
+target_link_libraries( eucclhydremap 
     PRIVATE
         cppnabla
         stdc++fs
