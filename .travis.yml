@@ -1,12 +1,11 @@
-dist: bionic
 language: cpp
 git:
   depth: false
 before_install:
   - cwd=$(pwd)
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hwloc libhwloc-dev; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install hwloc libhwloc-dev; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hwloc; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get install hwloc; fi
   - cd /tmp
   - git clone https://github.com/kokkos/kokkos.git
   - mkdir build_kokkos
@@ -19,10 +18,21 @@ script:
   - make 
 jobs:
   include:
-      - name: "gcc release"
-        os: 
-          - linux
-          - osx
+      - name: "linux gcc release"
+        os: linux
+        dist: bionic
+        compiler:
+          - gcc
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+      - name: "macos gcc release"
+        os: osx
         compiler:
           - gcc
         before_script:
@@ -36,7 +46,7 @@ jobs:
       - name: "clang release"
         compiler:
           - clang
-        before_script:
+          before_script:
           # create a build folder for the out-of-source build
           - mkdir build
           # switch to build directory
