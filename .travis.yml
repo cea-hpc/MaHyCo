@@ -1,0 +1,66 @@
+language: c++
+git:
+  depth: false
+before_install:
+  - sudo apt-get install hwloc libhwloc-dev
+  - cd /tmp
+  - git clone https://github.com/kokkos/kokkos.git
+  - mkdir build_kokkos
+  - mkdir install_kokkos
+  - cd build_kokkos
+  - cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On
+  - make install
+script: 
+  - make 
+jobs:
+  include:
+      - name: "gcc release"
+        compiler:
+          - gcc
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Release -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+      - name: "clang release"
+        compiler:
+          - clang
+        before_install:
+          # Just for clang
+          - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Release -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+      - name: "gcc debug"
+        compiler:
+          - gcc
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Debug -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+      - name: "clang debug"
+        compiler:
+          - clang
+        before_install:
+          # Just for clang
+          - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Debug -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 

@@ -1,6 +1,13 @@
 set( LIBRARY_NAME "cppnabla" )
 
-list( APPEND CMAKE_PREFIX_PATH "/home/anaxi/opt/lib/cmake/Kokkos" )
+set( KOKKOS_INSTALL_PATH "Undef" CACHE STRING "Path to the Kokkos installation directory" )
+
+message( STATUS "KOKKOS_INSTALL_PATH is ${KOKKOS_INSTALL_PATH}" )
+if( ${KOKKOS_INSTALL_PATH} STREQUAL "Undef" )
+    message( FATAL_ERROR "Please specify the KOKKOS installation directory (-DKOKKOS_INSTALL_PATH)" )
+endif()
+
+list( APPEND CMAKE_PREFIX_PATH "${KOKKOS_INSTALL_PATH}" )
 find_package( Kokkos REQUIRED )
 
 if( ${Kokkos_FOUND} )
