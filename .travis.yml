@@ -4,6 +4,7 @@ language: cpp
 git:
   depth: false
 before_install:
+  - cwd=$(pwd)
   - sudo apt-get install hwloc libhwloc-dev
   - cd /tmp
   - git clone https://github.com/kokkos/kokkos.git
@@ -12,7 +13,7 @@ before_install:
   - cd build_kokkos
   - cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On
   - make install
-  - cd
+  - cd ${cwd}
 script: 
   - make 
 jobs:
