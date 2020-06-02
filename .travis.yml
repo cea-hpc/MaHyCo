@@ -1,5 +1,6 @@
+os: linux
 dist: bionic
-language: c++
+language: cpp
 git:
   depth: false
 before_install:
@@ -11,6 +12,7 @@ before_install:
   - cd build_kokkos
   - cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On
   - make install
+  - cd
 script: 
   - make 
 jobs:
@@ -29,9 +31,6 @@ jobs:
       - name: "clang release"
         compiler:
           - clang
-        before_install:
-          # Just for clang
-          - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
         before_script:
           # create a build folder for the out-of-source build
           - mkdir build
@@ -54,9 +53,6 @@ jobs:
       - name: "clang debug"
         compiler:
           - clang
-        before_install:
-          # Just for clang
-          - export LD_LIBRARY_PATH=/usr/local/clang/lib:$LD_LIBRARY_PATH
         before_script:
           # create a build folder for the out-of-source build
           - mkdir build
