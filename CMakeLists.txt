@@ -7,6 +7,9 @@ if( " ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}" )
   message( FATAL_ERROR "FATAL: In-source builds are not allowed.
                        You should create a separate directory for build files." )
 endif()
+
+enable_testing()
+
 set( CMAKE_CXX_STANDARD_REQUIRED ON )
 set( CMAKE_CXX_STANDARD 17 )
 set( CMAKE_POSITION_INDEPENDENT_CODE ON )
@@ -14,6 +17,7 @@ set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 add_subdirectory( "./cppnabla" )
 
 add_executable( eucclhydremap EucclhydRemap.cc )
+
 if ( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     target_link_libraries( eucclhydremap 
         PRIVATE
@@ -28,3 +32,13 @@ elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
 else()
     message( FATAL_ERROR "Not configured to be built on Windows" )
 endif()
+
+# Test name is also test directory
+set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}/tests" )
+
+set( TEST_NAME "SOD_X_bi_mat_Superbee_PenteBorne_mix" )
+
+add_test( NAME ${TEST_NAME}
+          COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:eucclhydremap> "${TEST_DIR}/${TEST_NAME}" )
+set_tests_properties( ${TEST_NAME} PROPERTIES
+                      ENVIRONMENT OMP_NUM_THREADS=1 )
