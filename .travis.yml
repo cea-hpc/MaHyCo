@@ -10,6 +10,7 @@ addons:
     packages:
       - hwloc
       - libomp
+    update: true
 before_install:
   - cwd=$(pwd)
   - cd /tmp
