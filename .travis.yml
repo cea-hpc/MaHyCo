@@ -18,7 +18,8 @@ before_install:
   - mkdir build_kokkos
   - mkdir install_kokkos
   - cd build_kokkos
-  - cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then cmake ../kokkos -DCMAKE_CXX_FLAGS="-Xpreprocessor -lomp" -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
+  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
   - make install
   - cd ${cwd}
 script: 
