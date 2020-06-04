@@ -19,7 +19,6 @@ elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
     target_link_libraries( eucclhydremap 
         PRIVATE
             cppnabla
-            c++fs
     )
 else()
     message( FATAL_ERROR "Not configured to be built on Windows" )
