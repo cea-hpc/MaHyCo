@@ -39,7 +39,7 @@ jobs:
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
       - name: "macos release"
         os: osx
-        osx_image: xcode10.2
+        osx_image: xcode11.5
         before_script:
           # create a build folder for the out-of-source build
           - mkdir build
