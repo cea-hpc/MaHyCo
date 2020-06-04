@@ -42,3 +42,24 @@ add_test( NAME ${TEST_NAME}
           COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:eucclhydremap> "${TEST_DIR}/${TEST_NAME}" )
 set_tests_properties( ${TEST_NAME} PROPERTIES
                       ENVIRONMENT OMP_NUM_THREADS=1 )
+
+set( TEST_NAME "SOD_X_bi_mat_MinMod_simple" )
+
+add_test( NAME ${TEST_NAME}
+          COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:eucclhydremap> "${TEST_DIR}/${TEST_NAME}" )
+set_tests_properties( ${TEST_NAME} PROPERTIES
+                      ENVIRONMENT OMP_NUM_THREADS=1 )
+
+set( TEST_NAME "SOD_X_bi_mat_Superbee_PenteBorne_simple" )
+
+add_test( NAME ${TEST_NAME}
+          COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:eucclhydremap> "${TEST_DIR}/${TEST_NAME}" )
+set_tests_properties( ${TEST_NAME} PROPERTIES
+                      ENVIRONMENT OMP_NUM_THREADS=1 )
+
+set( TEST_NAME "SOD_X_bi_mat_Superbee_simple" )
+
+add_test( NAME ${TEST_NAME}
+          COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:eucclhydremap> "${TEST_DIR}/${TEST_NAME}" )
+set_tests_properties( ${TEST_NAME} PROPERTIES
+                      ENVIRONMENT OMP_NUM_THREADS=1 )
