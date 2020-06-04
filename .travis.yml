@@ -3,11 +3,13 @@ git:
   depth: false
 addons:
   apt:
-    - hwloc
-    - libhwloc-dev
+    packages:
+      - hwloc
+      - libhwloc-dev
   homebrew:
-    - hwloc
-    - libomp
+    packages:
+      - hwloc
+      - libomp
 before_install:
   - cwd=$(pwd)
   - cd /tmp
