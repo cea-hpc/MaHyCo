@@ -10,7 +10,6 @@ addons:
     packages:
       - hwloc
       - libomp
-      - llvm
     update: true
 before_install:
   - cwd=$(pwd)
@@ -19,7 +18,7 @@ before_install:
   - mkdir build_kokkos
   - mkdir install_kokkos
   - cd build_kokkos
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then cmake ../kokkos -DCMAKE_C_COMPILER="/usr/local/opt/llvm/bin/clang" -DCMAKE_CXX_COMPILER="/usr/local/opt/llvm/bin/clang++" -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then cmake ../kokkos  -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
   - make install
   - cd ${cwd}
@@ -41,7 +40,7 @@ jobs:
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
       - name: "macos release"
         os: osx
-        osx_image: xcode10.3
+        osx_image: xcode10
         before_script:
           # create a build folder for the out-of-source build
           - mkdir build
