@@ -3,16 +3,16 @@ Maquette hydrodynamique collaborative
 
 # Pre-required
 
-You should have installed *hwloc* and *kokkos*. 
+You should have installed *openmp*, *hwloc* and *kokkos*. 
 
-## *hwloc*
+## *openmp* and *hwloc*
 
-To install *hwloc*, the recomanded way is to use your package manager.
+To install *openmp* and *hwloc*, the recomanded way is to use your package manager.
 
 For example on Debian/Ubuntu linux distributions :
 
 ```
-sudo apt-get install hwloc libhwloc-dev
+sudo apt-get install libomp-dev hwloc libhwloc-dev
 ```
 
 On Mac Os:
@@ -20,6 +20,8 @@ On Mac Os:
 ```
 brew install hwloc
 ```
+
+For Mac users, do not install *openmp*.
 
 ## *kokkos*
 
@@ -34,6 +36,12 @@ mkdir build_kokkos
 cd build_kokkos
 cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/path/to/desired/kokkos/install/dir -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On
 make install
+```
+
+For Mac users, replace the `cmake` command with :
+
+```
+cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/path/to/desired/kokkos/install/dir -DKokkos_ENABLE_OPENMP=Off -DKokkos_ENABLE_HWLOC=On
 ```
 
 # Download *MaHyCo*
