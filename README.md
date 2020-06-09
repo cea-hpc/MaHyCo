@@ -92,4 +92,12 @@ set( TEST_NAMES "SOD_X_bi_mat_Superbee_PenteBorne_mix"
                 "test_name" )
 ```
 
+## Launch integration tests
 
+To launch integration tests just run : 
+
+```
+ctest -j 4
+```
+ 
+in the directory where *MaHyCo* has been built.
