@@ -73,7 +73,7 @@ make -j 4
 
 In the build directory the executable `eucclhydremap` is now available
 
-## Add new integration test
+# Add new integration test
 
 To add a new integration test, in the `tests` directory, create a new directory which name will be referenced as `test_name`.
 
@@ -100,7 +100,7 @@ set( TEST_NAMES "SOD_X_bi_mat_Superbee_PenteBorne_mix"
                 "test_name" )
 ```
 
-## Launch integration tests
+# Launch integration tests
 
 To launch integration tests just run : 
 
@@ -109,3 +109,14 @@ ctest -j 4
 ```
  
 in the directory where *MaHyCo* has been built.
+
+
+# Coding standard
+
+This project respect the google style.
+
+To format your source accordingly please type :
+
+```
+clang-format -i -style=Google your_file.cc
+```
