@@ -97,8 +97,9 @@ jobs:
           - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
         script: 
           - make -j 4
-      - stage: "Tests d'intégration"
+      - stage: "Integration tests"
         name: "linux gcc release"
+        # Here we compile again the source. There is maybe a way to use previous executable...
         os: linux
         dist: bionic
         compiler: gcc
@@ -115,4 +116,4 @@ jobs:
           - ctest -j 4
 stages:
   - "Compilation"
-  - "Tests d'intégration"
+  - "Integration tests"
