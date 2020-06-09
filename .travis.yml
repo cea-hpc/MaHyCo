@@ -37,6 +37,9 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+        script:
+          - make -j 4
+          - ctest -j 4
       - name: "macos release"
         os: osx
         osx_image: xcode11.5
