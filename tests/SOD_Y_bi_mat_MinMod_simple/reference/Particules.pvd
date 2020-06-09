@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<VTKFile type="Collection" version="0.1">
+	<Collection>
+			<DataSet timestep="0" group="" part="0" file="Particules.1.vtp"/>
+			<DataSet timestep="0.0100628" group="" part="0" file="Particules.37.vtp"/>
+			<DataSet timestep="0.0202689" group="" part="0" file="Particules.51.vtp"/>
+			<DataSet timestep="0.0309179" group="" part="0" file="Particules.65.vtp"/>
+			<DataSet timestep="0.0415668" group="" part="0" file="Particules.79.vtp"/>
+			<DataSet timestep="0.0522158" group="" part="0" file="Particules.93.vtp"/>
+			<DataSet timestep="0.0628647" group="" part="0" file="Particules.107.vtp"/>
+			<DataSet timestep="0.0735136" group="" part="0" file="Particules.121.vtp"/>
+			<DataSet timestep="0.0841626" group="" part="0" file="Particules.135.vtp"/>
+			<DataSet timestep="0.0948115" group="" part="0" file="Particules.149.vtp"/>
+			<DataSet timestep="0.10546" group="" part="0" file="Particules.163.vtp"/>
+			<DataSet timestep="0.116109" group="" part="0" file="Particules.177.vtp"/>
+			<DataSet timestep="0.126758" group="" part="0" file="Particules.191.vtp"/>
+			<DataSet timestep="0.137407" group="" part="0" file="Particules.205.vtp"/>
+			<DataSet timestep="0.148056" group="" part="0" file="Particules.219.vtp"/>
+			<DataSet timestep="0.158705" group="" part="0" file="Particules.233.vtp"/>
+			<DataSet timestep="0.169354" group="" part="0" file="Particules.247.vtp"/>
+			<DataSet timestep="0.180003" group="" part="0" file="Particules.261.vtp"/>
+			<DataSet timestep="0.190652" group="" part="0" file="Particules.275.vtp"/>
+	</Collection>
+</VTKFile>

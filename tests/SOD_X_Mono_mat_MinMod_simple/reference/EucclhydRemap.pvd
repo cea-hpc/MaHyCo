@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<VTKFile type="Collection" version="0.1">
+	<Collection>
+			<DataSet timestep="0" group="" part="0" file="EucclhydRemap.1.vtp"/>
+			<DataSet timestep="0.0100627" group="" part="0" file="EucclhydRemap.38.vtp"/>
+			<DataSet timestep="0.0202007" group="" part="0" file="EucclhydRemap.62.vtp"/>
+			<DataSet timestep="0.0305386" group="" part="0" file="EucclhydRemap.87.vtp"/>
+			<DataSet timestep="0.0407801" group="" part="0" file="EucclhydRemap.112.vtp"/>
+			<DataSet timestep="0.0510037" group="" part="0" file="EucclhydRemap.137.vtp"/>
+			<DataSet timestep="0.0612384" group="" part="0" file="EucclhydRemap.162.vtp"/>
+			<DataSet timestep="0.0714892" group="" part="0" file="EucclhydRemap.187.vtp"/>
+			<DataSet timestep="0.0817501" group="" part="0" file="EucclhydRemap.212.vtp"/>
+			<DataSet timestep="0.0920162" group="" part="0" file="EucclhydRemap.237.vtp"/>
+			<DataSet timestep="0.102285" group="" part="0" file="EucclhydRemap.262.vtp"/>
+			<DataSet timestep="0.112554" group="" part="0" file="EucclhydRemap.287.vtp"/>
+			<DataSet timestep="0.122825" group="" part="0" file="EucclhydRemap.312.vtp"/>
+			<DataSet timestep="0.133097" group="" part="0" file="EucclhydRemap.337.vtp"/>
+			<DataSet timestep="0.143369" group="" part="0" file="EucclhydRemap.362.vtp"/>
+			<DataSet timestep="0.153643" group="" part="0" file="EucclhydRemap.387.vtp"/>
+			<DataSet timestep="0.163917" group="" part="0" file="EucclhydRemap.412.vtp"/>
+			<DataSet timestep="0.174192" group="" part="0" file="EucclhydRemap.437.vtp"/>
+			<DataSet timestep="0.184468" group="" part="0" file="EucclhydRemap.462.vtp"/>
+			<DataSet timestep="0.194745" group="" part="0" file="EucclhydRemap.487.vtp"/>
+	</Collection>
+</VTKFile>
