@@ -25,7 +25,7 @@ brew install hwloc
 
 To install *kokkos*, first clone the repository:
 
-``` git clone https://github.com/kokkos/kokkos.git```
+```git clone https://github.com/kokkos/kokkos.git```
 
 Then create a build directory and build *kokkos* in it :
 
@@ -54,7 +54,7 @@ cd /tmp/build_mahyco
 Then call *CMake* to generate the build files by specifying the path toward *kokkos* installation directory:
 
 ```
-cmake -DCMAKE_BUILD_TYPE=Release -DKOKKOS_INSTALL_PATH=/path/to/kokkos/install/dir
+cmake -DCMAKE_BUILD_TYPE=Release -DKOKKOS_INSTALL_PATH=/path/to/kokkos/install/dir  /path/to/mahyco
 ```
 
 And then just build it:
