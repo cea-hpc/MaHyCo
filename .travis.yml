@@ -21,11 +21,10 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then cmake ../kokkos -DKokkos_CXX_STANDARD=17 -DCMAKE_INSTALL_PREFIX=/tmp/install_kokkos -DKokkos_ENABLE_OPENMP=On -DKokkos_ENABLE_HWLOC=On; fi
   - make install
   - cd ${cwd}
-script: 
-  - make 
 jobs:
   include:
-      - name: "linux gcc release"
+      - stage: "Compilation"
+        name: "linux gcc release"
         os: linux
         dist: bionic
         compiler: gcc
@@ -37,10 +36,10 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
-        script:
-          - make -j 4
-          - ctest -j 4
-      - name: "macos release"
+        script: 
+          - make -j 4 
+      - stage: "Compilation"
+        name: "macos release"
         os: osx
         osx_image: xcode11.5
         before_script:
@@ -51,7 +50,10 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
-      - name: "linux clang release"
+        script: 
+          - make -j 4 
+      - stage: "Compilation"
+        name: "linux clang release"
         os: linux
         dist: bionic
         compiler: clang
@@ -63,7 +65,10 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
-      - name: "linux gcc debug"
+        script: 
+          - make -j 4 
+      - stage: "Compilation"
+        name: "linux gcc debug"
         os: linux
         dist: bionic
         compiler: gcc
@@ -75,7 +80,10 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
-      - name: "linux clang debug"
+        script: 
+          - make -j 4 
+      - stage: "Compilation"
+        name: "linux clang debug"
         os: linux
         dist: bionic
         compiler: clang
@@ -87,3 +95,24 @@ jobs:
           # run cmake; here we assume that the project's
           # top-level CMakeLists.txt is located at '..'
           - cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+        script: 
+          - make -j 4
+      - stage: "Tests d'intégration"
+        name: "linux gcc release"
+        os: linux
+        dist: bionic
+        compiler: gcc
+        before_script:
+          # create a build folder for the out-of-source build
+          - mkdir build
+          # switch to build directory
+          - cd build
+          # run cmake; here we assume that the project's
+          # top-level CMakeLists.txt is located at '..'
+          - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_VERBOSE_MAKEFILE=ON -DKOKKOS_INSTALL_PATH=/tmp/install_kokkos .. 
+          - make -j 4 
+        script:
+          - ctest -j 4
+stages:
+  - "Compilation"
+  - "Tests d'intégration"
