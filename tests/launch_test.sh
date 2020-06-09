@@ -29,12 +29,24 @@ function compare_results {
 }
 
 # Main function. Calls launch_computation and compare_results
+# For each test a directory is created inside /tmp
 function main {
   local readonly exe_path=$1
   local readonly test_dir=$2
 
   echo "Executable path : ${exe_path}"
   echo "Executing test $(basename ${test_dir})"
+
+  tmp_dir=$(mktemp -d -t mahyco-ci-XXXXXXXXXX)
+
+  if [[ ! -d ${tmp_dir} ]]; then
+    echo "Unable to create a temporary directory!"
+    echo "Aborting!"
+    exit 3
+  fi
+
+  cd ${tmp_dir}
+  echo "This directory contains the output of the test under ${test_dir}" > README.txt
 
   launch_computation ${exe_path} ${test_dir}
   if [[ $? -ne 0 ]]; then
