@@ -4,6 +4,7 @@ git:
 addons:
   apt:
     packages:
+      - clang-format-diff
       - hwloc
       - libhwloc-dev
   homebrew:
@@ -23,6 +24,11 @@ before_install:
   - cd ${cwd}
 jobs:
   include:
+      - stage: "Pre-check"
+        name: "formatting"
+        os: linux
+        dist: bionic
+        script: ./check_format.sh
       - stage: "Compilation"
         name: "linux gcc release"
         os: linux
@@ -115,5 +121,6 @@ jobs:
         script:
           - ctest -j 4
 stages:
+  - "Pre-check"
   - "Compilation"
   - "Integration tests"
