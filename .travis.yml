@@ -30,7 +30,7 @@ jobs:
         dist: bionic
         script:
           - cd ${TRAVIS_BUILD_DIR}
-          - ./check_format.sh
+          - bash ./check_format.sh
       - stage: "Compilation"
         name: "linux gcc release"
         os: linux
