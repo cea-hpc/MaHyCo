@@ -4,11 +4,7 @@ git:
 addons:
   apt:
     packages:
-<<<<<<< HEAD
       - clang-format
-=======
-      - clang-format-diff
->>>>>>> ea126ad6d0a7733d5381de3628499ebd67a74d3b
       - hwloc
       - libhwloc-dev
   homebrew:
