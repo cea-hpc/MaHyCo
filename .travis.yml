@@ -28,7 +28,9 @@ jobs:
         name: "formatting"
         os: linux
         dist: bionic
-        script: ./check_format.sh
+        script:
+          - cd hippo91/MaHyCo
+          - ./check_format.sh
       - stage: "Compilation"
         name: "linux gcc release"
         os: linux
