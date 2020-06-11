@@ -16,7 +16,21 @@ set( CMAKE_POSITION_INDEPENDENT_CODE ON )
 
 add_subdirectory( "./cppnabla" )
 
-add_executable( eucclhydremap EucclhydRemap.cc )
+add_executable( eucclhydremap )
+target_sources( eucclhydremap 
+    PRIVATE
+        main.cc
+        EucclhydRemap.cc
+        ConditionsLimites.cc
+        Init.cc
+        PhaseLagrange.cc
+        PhaseRemap1.cc
+        PhaseRemap2.cc
+        PhaseRemapFinal.cc
+        SchemaParticules.cc
+        Utiles.cc
+        UtilesRemap.cc
+)
 
 if ( ${CMAKE_SYSTEM_NAME} MATCHES "Linux" )
     target_link_libraries( eucclhydremap 
@@ -29,7 +43,7 @@ elseif( ${CMAKE_SYSTEM_NAME} MATCHES "Darwin" )
         PRIVATE
             cppnabla
     )
-else()
+    else()
     message( FATAL_ERROR "Not configured to be built on Windows" )
 endif()
 

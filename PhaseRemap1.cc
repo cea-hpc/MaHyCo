@@ -1,10 +1,13 @@
+// Kokkos headers
+#include <Kokkos_Core.hpp>
+
+#include "EucclhydRemap.h"
 /**
  * Job computeGradPhiFace1 called @8.0 in executeTimeLoopN method.
  * In variables: ULagrange, deltaxLagrange, projectionOrder, vLagrange,
  * x_then_y_n Out variables: gradPhiFace1
  */
-KOKKOS_INLINE_FUNCTION
-void computeGradPhiFace1() noexcept {
+void EucclhydRemap::computeGradPhiFace1() noexcept {
   if (options->projectionOrder > 1) {
     if (x_then_y_n) {
       auto innerVerticalFaces(mesh->getInnerVerticalFaces());
@@ -184,8 +187,7 @@ void computeGradPhiFace1() noexcept {
  * In variables: gradPhiFace1, projectionLimiterId, projectionOrder, x_then_y_n
  * Out variables: gradPhi1
  */
-KOKKOS_INLINE_FUNCTION
-void computeGradPhi1() noexcept {
+void EucclhydRemap::computeGradPhi1() noexcept {
   if (options->projectionOrder > 1) {
     if (x_then_y_n) {
       // std::cout << " Phase 1 Horizontale computeGradPhi1 " << std::endl;
@@ -411,8 +413,7 @@ void computeGradPhi1() noexcept {
  * deltaxLagrange, faceNormal, faceNormalVelocity, gradPhi1, vLagrange,
  * x_then_y_n Out variables: phiFace1
  */
-KOKKOS_INLINE_FUNCTION
-void computeUpwindFaceQuantitiesForProjection1() noexcept {
+void EucclhydRemap::computeUpwindFaceQuantitiesForProjection1() noexcept {
   if (x_then_y_n) {
     // std::cout << " Phase Projection 1 Horizontale " << std::endl;
     auto innerVerticalFaces(mesh->getInnerVerticalFaces());
@@ -521,8 +522,7 @@ void computeUpwindFaceQuantitiesForProjection1() noexcept {
  * faceNormalVelocity, outerFaceNormal, phiFace1, x_then_y_n Out variables:
  * Uremap1
  */
-KOKKOS_INLINE_FUNCTION
-void computeUremap1() noexcept {
+void EucclhydRemap::computeUremap1() noexcept {
   RealArray1D<dim> exy = xThenYToDirection(x_then_y_n);
   Kokkos::parallel_for(
       "computeUremap1", nbCells, KOKKOS_LAMBDA(const int& cCells) {

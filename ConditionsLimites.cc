@@ -1,10 +1,13 @@
+// Kokkos headers
+#include <Kokkos_Core.hpp>
+
+#include "EucclhydRemap.h"
 /**
  * Job computeBoundaryNodeVelocities called @4.0 in executeTimeLoopN method.
  * In variables: G, Mnode, bottomBC, bottomBCValue, leftBC, leftBCValue,
  * rightBC, rightBCValue, topBC, topBCValue Out variables: Vnode_nplus1
  */
-KOKKOS_INLINE_FUNCTION
-void computeBoundaryNodeVelocities() noexcept {
+void EucclhydRemap::computeBoundaryNodeVelocities() noexcept {
   auto leftNodes(mesh->getLeftNodes());
   Kokkos::parallel_for(
       "computeBoundaryNodeVelocities", nbLeftNodes,
@@ -84,9 +87,9 @@ void computeBoundaryNodeVelocities() noexcept {
       });
 }
 KOKKOS_INLINE_FUNCTION
-RealArray1D<dim> nodeVelocityBoundaryCondition(int BC, RealArray1D<dim> BCValue,
-                                               RealArray2D<dim, dim> Mp,
-                                               RealArray1D<dim> Gp) {
+RealArray1D<EucclhydRemap::dim> EucclhydRemap::nodeVelocityBoundaryCondition(int BC, RealArray1D<EucclhydRemap::dim> BCValue,
+                                               RealArray2D<EucclhydRemap::dim, EucclhydRemap::dim> Mp,
+                                               RealArray1D<EucclhydRemap::dim> Gp) {
   if (BC == 200)
     return ArrayOperations::multiply(
         MathFunctions::dot(Gp, BCValue) /
@@ -103,9 +106,9 @@ RealArray1D<dim> nodeVelocityBoundaryCondition(int BC, RealArray1D<dim> BCValue,
 }
 
 KOKKOS_INLINE_FUNCTION
-RealArray1D<dim> nodeVelocityBoundaryConditionCorner(
-    int BC1, RealArray1D<dim> BCValue1, int BC2, RealArray1D<dim> BCValue2,
-    RealArray2D<dim, dim> Mp, RealArray1D<dim> Gp) {
+RealArray1D<EucclhydRemap::dim> EucclhydRemap::nodeVelocityBoundaryConditionCorner(
+    int BC1, RealArray1D<EucclhydRemap::dim> BCValue1, int BC2, RealArray1D<EucclhydRemap::dim> BCValue2,
+    RealArray2D<EucclhydRemap::dim, EucclhydRemap::dim> Mp, RealArray1D<EucclhydRemap::dim> Gp) {
   if (BC1 == 200 && BC2 == 200) {
     if (MathFunctions::fabs(
             MathFunctions::fabs(MathFunctions::dot(BCValue1, BCValue2)) -
@@ -129,9 +132,8 @@ RealArray1D<dim> nodeVelocityBoundaryConditionCorner(
   }
 }
 
-KOKKOS_INLINE_FUNCTION
-RealArray1D<nbequamax> computeBoundaryFluxes(int proj, int cCells,
-                                             RealArray1D<dim> exy) {
+RealArray1D<EucclhydRemap::nbequamax> EucclhydRemap::computeBoundaryFluxes(int proj, int cCells,
+                                             RealArray1D<EucclhydRemap::dim> exy) {
   RealArray1D<nbequamax> phiFace_fFaces = options->Uzero;
   int nbCellX = options->X_EDGE_ELEMS;
   int nbCellY = options->Y_EDGE_ELEMS;

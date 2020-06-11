@@ -1,10 +1,13 @@
+// Kokkos headers
+#include <Kokkos_Core.hpp>
+
+#include "EucclhydRemap.h"
 /**
  * Job remapCellcenteredVariable called @16.0 in executeTimeLoopN method.
  * In variables: Uremap2, v, x_then_y_n
  * Out variables: V_nplus1, eps_nplus1, rho_nplus1, x_then_y_nplus1
  */
-KOKKOS_INLINE_FUNCTION
-void remapCellcenteredVariable() noexcept {
+void EucclhydRemap::remapCellcenteredVariable() noexcept {
   ETOTALE_T = 0.;
   x_then_y_nplus1 = !x_then_y_n;
   Kokkos::parallel_for(

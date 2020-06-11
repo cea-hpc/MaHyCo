@@ -1,5 +1,8 @@
-KOKKOS_INLINE_FUNCTION
-void updateParticlePosition() noexcept {
+// Kokkos headers
+#include <Kokkos_Core.hpp>
+
+#include "EucclhydRemap.h"
+void EucclhydRemap::updateParticlePosition() noexcept {
   Kokkos::parallel_for(
       "updateParticleCoefficient", nbCells,
       KOKKOS_LAMBDA(const int& cCells) { listpart(cCells).clear(); });
@@ -66,8 +69,8 @@ void updateParticlePosition() noexcept {
         //	  << " " << listpart(ICellp(ipart)).size() << std::endl;
       });
 }
-KOKKOS_INLINE_FUNCTION
-void updateParticleCoefficients() noexcept {
+
+void EucclhydRemap::updateParticleCoefficients() noexcept {
   Kokkos::parallel_for(
       "updateParticleCoefficient", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         fracpart(cCells) = 1.;
@@ -126,8 +129,7 @@ void updateParticleCoefficients() noexcept {
       });
 }
 
-KOKKOS_INLINE_FUNCTION
-void updateParticleVelocity() noexcept {
+void EucclhydRemap::updateParticleVelocity() noexcept {
   Kokkos::parallel_for(
       "initPart", nbPart, KOKKOS_LAMBDA(const int& ipart) {
         int icells = ICellp(ipart);
@@ -161,8 +163,8 @@ void updateParticleVelocity() noexcept {
         // Part  " << ipart << " vit " << Vpart_nplus1(ipart)  << std::endl;
       });
 }
-KOKKOS_INLINE_FUNCTION
-void updateParticleRetroaction() noexcept {
+
+void EucclhydRemap::updateParticleRetroaction() noexcept {
   Kokkos::parallel_for(
       "initPart", nbPart, KOKKOS_LAMBDA(const int& ipart) {
         int icells = ICellp(ipart);
@@ -172,8 +174,8 @@ void updateParticleRetroaction() noexcept {
         V_nplus1(icells)[1] += mpart(ipart) * AccelerationP[1] / m(icells);
       });
 }
-KOKKOS_INLINE_FUNCTION
-void switchalpharho_rho() noexcept {
+
+void EucclhydRemap::switchalpharho_rho() noexcept {
   Kokkos::parallel_for(
       "updateParticleCoefficient", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         rho_n(cCells) /= fracpart(cCells);
@@ -181,8 +183,8 @@ void switchalpharho_rho() noexcept {
           rhop_n(cCells)[imat] /= fracpart(cCells);
       });
 }
-KOKKOS_INLINE_FUNCTION
-void switchrho_alpharho() noexcept {
+
+void EucclhydRemap::switchrho_alpharho() noexcept {
   Kokkos::parallel_for(
       "updateParticleCoefficient", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         rho_n(cCells) *= fracpart(cCells);
@@ -190,15 +192,3 @@ void switchrho_alpharho() noexcept {
           rhop_n(cCells)[imat] *= fracpart(cCells);
       });
 }
-// KOKKOS_INLINE_FUNCTION
-// void updateParticleTemperature() noexcept
-// {
-//     Kokkos::parallel_for("initPart", nbPart, KOKKOS_LAMBDA(const int& ipart)
-//       {
-//         int icells = ICellp(ipart);
-// 	double Qs = 4.*Pi*rpart(ipart)*
-// 	  Kappa*(pow(fracpart(icells),(-1.75)) + 0.3 *
-// pow(fracpart(icells),(-0.5)) *  pow(Repart(ipart),(0.5)) * pow(Pr, (1./3.)));
-// 	Temppart(ipart) += deltat_n * Qs / (Cp * mpart(ipart));
-//       });
-// }

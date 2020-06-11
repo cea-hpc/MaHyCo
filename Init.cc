@@ -1,5 +1,9 @@
-KOKKOS_INLINE_FUNCTION
-void initBoundaryConditions() noexcept {
+// Kokkos headers
+#include <Kokkos_Core.hpp>
+
+#include "EucclhydRemap.h"
+
+void EucclhydRemap::initBoundaryConditions() noexcept {
   if (options->testCase == options->SodCase ||
       options->testCase == options->BiSodCase) {
     // maillage 200 5 0.005 0.02
@@ -90,8 +94,7 @@ void initBoundaryConditions() noexcept {
  * In variables: X
  * Out variables: Xc, Xc_x, Xc_y, perim, v
  */
-KOKKOS_INLINE_FUNCTION
-void initMeshGeometryForCells() noexcept {
+void EucclhydRemap::initMeshGeometryForCells() noexcept {
   Kokkos::parallel_for(
       "initMeshGeometryForCells", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         int cId(cCells);
@@ -157,8 +160,7 @@ void initMeshGeometryForCells() noexcept {
  * In variables: zeroVect
  * Out variables: F_n0, Vnode_n0
  */
-KOKKOS_INLINE_FUNCTION
-void initVpAndFpc() noexcept {
+void EucclhydRemap::initVpAndFpc() noexcept {
   Kokkos::parallel_for(
       "initVpAndFpc", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
         int pId(pNodes);
@@ -179,8 +181,7 @@ void initVpAndFpc() noexcept {
  * X_EDGE_LENGTH, Xc, Y_EDGE_LENGTH, gamma, p0, rho0, testCase, threshold Out
  * variables: eps_n0
  */
-KOKKOS_INLINE_FUNCTION
-void initCellInternalEnergy() noexcept {
+void EucclhydRemap::initCellInternalEnergy() noexcept {
   Kokkos::parallel_for(
       "initCellInternalEnergy", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         for (imat = 0; imat < nbmatmax; imat++) {
@@ -358,8 +359,7 @@ void initCellInternalEnergy() noexcept {
  * In variables: NohTestCase, SedovTestCase, SodCase, Xc, testCase, u0
  * Out variables: V_n0
  */
-KOKKOS_INLINE_FUNCTION
-void initCellVelocity() noexcept {
+void EucclhydRemap::initCellVelocity() noexcept {
   Kokkos::parallel_for(
       "initCellVelocity", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         if (options->testCase == options->NohTestCase ||
@@ -395,8 +395,7 @@ void initCellVelocity() noexcept {
  * In variables: SodCase, Xc, rho0, testCase
  * Out variables: rho_n0
  */
-KOKKOS_INLINE_FUNCTION
-void initDensity() noexcept {
+void EucclhydRemap::initDensity() noexcept {
   Kokkos::parallel_for(
       "initDensity", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         for (imat = 0; imat < nbmatmax; imat++) {
@@ -620,8 +619,7 @@ void initDensity() noexcept {
  * In variables: X, Xc, ex, ey, threshold
  * Out variables: Xf, faceLength, faceNormal, outerFaceNormal
  */
-KOKKOS_INLINE_FUNCTION
-void initMeshGeometryForFaces() noexcept {
+void EucclhydRemap::initMeshGeometryForFaces() noexcept {
   auto faces(mesh->getFaces());
   Kokkos::parallel_for(
       "initMeshGeometryForFaces", nbFaces, KOKKOS_LAMBDA(const int& fFaces) {
@@ -668,8 +666,8 @@ void initMeshGeometryForFaces() noexcept {
         faceNormal(fFaces) = face_normal;
       });
 }
-KOKKOS_INLINE_FUNCTION
-void initPart() noexcept {
+
+void EucclhydRemap::initPart() noexcept {
   Kokkos::parallel_for(
       "initPart", nbPart, KOKKOS_LAMBDA(const int& ipart) {
         Vpart_n0(ipart) = options->zeroVect;
@@ -739,8 +737,7 @@ void initPart() noexcept {
  * In variables: F_n0, V_n0, Vnode_n0, eps_n0, rho_n0
  * Out variables: F_n, V_n, Vnode_n, eps_n, rho_n
  */
-KOKKOS_INLINE_FUNCTION
-void setUpTimeLoopN() noexcept {
+void EucclhydRemap::setUpTimeLoopN() noexcept {
   deep_copy(Vnode_n, Vnode_n0);
   deep_copy(rho_n, rho_n0);
   deep_copy(rhop_n, rhop_n0);
