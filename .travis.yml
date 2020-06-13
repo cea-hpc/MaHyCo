@@ -123,6 +123,7 @@ jobs:
         script:
           - ctest -j 4
 stages:
-  - "Pre-check"
+  - name: "Pre-check"
+    if: "$TRAVIS_PULL_REQUEST" != "false"
   - "Compilation"
   - "Integration tests"
