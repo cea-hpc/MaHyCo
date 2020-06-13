@@ -1,3 +1,6 @@
+#ifndef UTILESREMAP_IMPL_H
+#define UTILESREMAP_IMPL_H
+
 template <size_t d>
 RealArray1D<d> EucclhydRemap::computeAndLimitGradPhi(
     int projectionLimiterId, RealArray1D<d> gradphiplus,
@@ -408,3 +411,5 @@ RealArray1D<d> EucclhydRemap::computeRemapFlux(
         MathFunctions::dot(outer_face_normal, exy) * face_length, phi_face);
   }
 }
+
+#endif  // UTILESREMAP_IMPL_H
