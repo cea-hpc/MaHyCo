@@ -1,7 +1,15 @@
-// Kokkos headers
 #include <Kokkos_Core.hpp>
+#include <algorithm>                // for copy
+#include <array>                    // for array
+#include <iostream>                 // for operator<<, basic_ostream::operat...
+#include <vector>                   // for allocator, vector
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
+#include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
+#include "types/ArrayOperations.h"  // for multiply, plus
+#include "types/MathFunctions.h"    // for dot, matVectProduct, norm
+#include "types/MultiArray.h"       // for operator<<
+#include "utils/Utils.h"            // for indexOf
 
-#include "EucclhydRemap.h"
 /**
  * Job computeBoundaryNodeVelocities called @4.0 in executeTimeLoopN method.
  * In variables: G, Mnode, bottomBC, bottomBCValue, leftBC, leftBCValue,

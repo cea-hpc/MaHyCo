@@ -1,7 +1,16 @@
-// Kokkos headers
-#include <Kokkos_Core.hpp>
+#include <math.h>                      // for floor, sqrt
+#include <Kokkos_Core.hpp>        // for deep_copy
+#include <algorithm>                   // for copy
+#include <array>                       // for array
+#include <iostream>                    // for operator<<, basic_ostream::ope...
+#include <vector>                      // for allocator, vector
+#include "EucclhydRemap.h"             // for EucclhydRemap, EucclhydRemap::...
+#include "mesh/CartesianMesh2D.h"      // for CartesianMesh2D
+#include "types/ArrayOperations.h"     // for minus, multiply, plus, divide
+#include "types/MathFunctions.h"       // for max, norm, dot
+#include "types/MultiArray.h"          // for operator<<
+#include "utils/Utils.h"               // for indexOf
 
-#include "EucclhydRemap.h"
 
 void EucclhydRemap::initBoundaryConditions() noexcept {
   if (options->testCase == options->SodCase ||

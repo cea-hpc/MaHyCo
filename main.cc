@@ -1,19 +1,11 @@
-#include <cfenv>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
+#include <Kokkos_Core.hpp>                  // for finalize, initialize
+#include <cstdlib>                          // for atof, atoi, exit
+#include <iostream>                         // for operator<<, endl, basic_o...
+#include <string>                           // for string
+#include "EucclhydRemap.h"                  // for EucclhydRemap::Options
+#include "mesh/CartesianMesh2D.h"           // for CartesianMesh2D
+#include "mesh/CartesianMesh2DGenerator.h"  // for CartesianMesh2DGenerator
 
-// Kokkos headers
-#include <Kokkos_Core.hpp>
-
-// Nabla headers
-#include "mesh/CartesianMesh2DGenerator.h"
-
-// Projet headers
-#include "EucclhydRemap.h"
 
 using namespace nablalib;
 
