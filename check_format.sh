@@ -55,7 +55,7 @@ if [[ $# -ne 0 ]]; then
 fi
 
 readonly REFERENCE_BRANCH="master"
-readonly FILES_TYPES="*.cc *.h"
+readonly FILES_TYPES="main.cc eucclhyd_remap/*.cc eucclhyd_remap*.h"
 readonly STYLE_EXPECTED="Google"
 
 check_formatting $REFERENCE_BRANCH $STYLE_EXPECTED $FILES_TYPES 
