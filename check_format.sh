@@ -20,7 +20,7 @@ function check_formatting
     shift 2
     local readonly FILE_TYPES="$@"
 
-    local OUTPUT=$(git diff -U0 --no-color ${REF_BRANCH} -- ${FILE_TYPES} | clang-format-diff-8 -p1 -style=${STYLE})
+    local OUTPUT=$(git diff -U0 --no-color ${REF_BRANCH} -- ${FILE_TYPES} | python2 $(which clang-format-diff) -p1 -style=${STYLE})
     
     if [[ -z "${OUTPUT}" ]]; then
         echo "Everything correctly formatted!"
