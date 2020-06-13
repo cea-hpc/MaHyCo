@@ -1,18 +1,17 @@
-#include <stdlib.h>                    // for exit
-#include <Kokkos_Core.hpp>           // for KOKKOS_LAMBDA
-#include <algorithm>                   // for equal, copy
-#include <array>                       // for array, operator!=
-#include <iostream>                    // for operator<<, basic_ostream::ope...
-#include <limits>                      // for numeric_limits
-#include <vector>                      // for vector, allocator
-#include "EucclhydRemap.h"             // for EucclhydRemap, EucclhydRemap::...
-#include "Utiles-Impl.h"               // for EucclhydRemap::tensProduct
-#include "mesh/CartesianMesh2D.h"      // for CartesianMesh2D
-#include "types/ArrayOperations.h"     // for plus, multiply, minus, divide
-#include "types/MathFunctions.h"       // for max, min, dot, matVectProduct
-#include "types/MultiArray.h"          // for operator<<
-#include "utils/Utils.h"               // for indexOf
-
+#include <stdlib.h>                 // for exit
+#include <Kokkos_Core.hpp>          // for KOKKOS_LAMBDA
+#include <algorithm>                // for equal, copy
+#include <array>                    // for array, operator!=
+#include <iostream>                 // for operator<<, basic_ostream::ope...
+#include <limits>                   // for numeric_limits
+#include <vector>                   // for vector, allocator
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::...
+#include "Utiles-Impl.h"            // for EucclhydRemap::tensProduct
+#include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
+#include "types/ArrayOperations.h"  // for plus, multiply, minus, divide
+#include "types/MathFunctions.h"    // for max, min, dot, matVectProduct
+#include "types/MultiArray.h"       // for operator<<
+#include "utils/Utils.h"            // for indexOf
 
 /**
  * Job computeCornerNormal called @1.0 in simulate method.
@@ -425,29 +424,27 @@ void EucclhydRemap::extrapolateValue() noexcept {
  * Out variables: G
  */
 void EucclhydRemap::computeG() noexcept {
-  Kokkos::parallel_for(
-      "computeG", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
-        int pId(pNodes);
-        RealArray1D<dim> reduction1 = options->zeroVect;
-        {
-          auto cellsOfNodeP(mesh->getCellsOfNode(pId));
-          for (int cCellsOfNodeP = 0; cCellsOfNodeP < cellsOfNodeP.size();
-               cCellsOfNodeP++) {
-            int cId(cellsOfNodeP[cCellsOfNodeP]);
-            int cCells(cId);
-            int pNodesOfCellC(utils::indexOf(mesh->getNodesOfCell(cId), pId));
-            reduction1 = ArrayOperations::plus(
-                reduction1,
-                (ArrayOperations::plus(
-                    MathFunctions::matVectProduct(
-                        M(pNodes, cCellsOfNodeP),
-                        V_extrap(cCells, pNodesOfCellC)),
-                    ArrayOperations::multiply(p_extrap(cCells, pNodesOfCellC),
-                                              lpc_n(pNodes, cCellsOfNodeP)))));
-          }
-        }
-        G(pNodes) = reduction1;
-      });
+  Kokkos::parallel_for("computeG", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
+    int pId(pNodes);
+    RealArray1D<dim> reduction1 = options->zeroVect;
+    {
+      auto cellsOfNodeP(mesh->getCellsOfNode(pId));
+      for (int cCellsOfNodeP = 0; cCellsOfNodeP < cellsOfNodeP.size();
+           cCellsOfNodeP++) {
+        int cId(cellsOfNodeP[cCellsOfNodeP]);
+        int cCells(cId);
+        int pNodesOfCellC(utils::indexOf(mesh->getNodesOfCell(cId), pId));
+        reduction1 = ArrayOperations::plus(
+            reduction1,
+            (ArrayOperations::plus(
+                MathFunctions::matVectProduct(M(pNodes, cCellsOfNodeP),
+                                              V_extrap(cCells, pNodesOfCellC)),
+                ArrayOperations::multiply(p_extrap(cCells, pNodesOfCellC),
+                                          lpc_n(pNodes, cCellsOfNodeP)))));
+      }
+    }
+    G(pNodes) = reduction1;
+  });
 }
 
 /**
@@ -479,14 +476,13 @@ void EucclhydRemap::computeNodeDissipationMatrixAndG() noexcept {
  */
 void EucclhydRemap::computeNodeVelocity() noexcept {
   auto innerNodes(mesh->getInnerNodes());
-  Kokkos::parallel_for(
-      "computeNodeVelocity", nbInnerNodes,
-      KOKKOS_LAMBDA(const int& pInnerNodes) {
-        int pId(innerNodes[pInnerNodes]);
-        int pNodes(pId);
-        Vnode_nplus1(pNodes) =
-            MathFunctions::matVectProduct(inverse(Mnode(pNodes)), G(pNodes));
-      });
+  Kokkos::parallel_for("computeNodeVelocity", nbInnerNodes,
+                       KOKKOS_LAMBDA(const int& pInnerNodes) {
+                         int pId(innerNodes[pInnerNodes]);
+                         int pNodes(pId);
+                         Vnode_nplus1(pNodes) = MathFunctions::matVectProduct(
+                             inverse(Mnode(pNodes)), G(pNodes));
+                       });
 }
 /**
  * Job computeFaceVelocity called @5.0 in executeTimeLoopN method.
@@ -912,19 +908,17 @@ void EucclhydRemap::updateCellCenteredLagrangeVariables() noexcept {
   double reductionE(0.), reductionM(0.);
   {
     Kokkos::Sum<double> reducerE(reductionE);
-    Kokkos::parallel_reduce(
-        "reductionE", nbCells,
-        KOKKOS_LAMBDA(const int& cCells, double& x) {
-          reducerE.join(x, ETOT_L(cCells));
-        },
-        reducerE);
+    Kokkos::parallel_reduce("reductionE", nbCells,
+                            KOKKOS_LAMBDA(const int& cCells, double& x) {
+                              reducerE.join(x, ETOT_L(cCells));
+                            },
+                            reducerE);
     Kokkos::Sum<double> reducerM(reductionM);
-    Kokkos::parallel_reduce(
-        "reductionM", nbCells,
-        KOKKOS_LAMBDA(const int& cCells, double& x) {
-          reducerM.join(x, MTOT_L(cCells));
-        },
-        reducerM);
+    Kokkos::parallel_reduce("reductionM", nbCells,
+                            KOKKOS_LAMBDA(const int& cCells, double& x) {
+                              reducerM.join(x, MTOT_L(cCells));
+                            },
+                            reducerM);
   }
   ETOTALE_L = reductionE;
   MASSET_L = reductionM;

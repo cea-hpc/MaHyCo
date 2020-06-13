@@ -6,9 +6,7 @@
 #include "mesh/CartesianMesh2D.h"           // for CartesianMesh2D
 #include "mesh/CartesianMesh2DGenerator.h"  // for CartesianMesh2DGenerator
 
-
 using namespace nablalib;
-
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);

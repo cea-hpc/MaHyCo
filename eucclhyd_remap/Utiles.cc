@@ -2,7 +2,6 @@
 #include "EucclhydRemap.h"        // for EucclhydRemap
 #include "types/MathFunctions.h"  // for det
 
-
 RealArray2D<2, 2> EucclhydRemap::inverse(RealArray2D<2, 2> a) {
   double alpha = 1.0 / MathFunctions::det(a);
   return {{{{a[1][1] * alpha, -a[0][1] * alpha}},

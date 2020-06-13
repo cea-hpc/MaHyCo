@@ -4,7 +4,6 @@
 #include "EucclhydRemap.h"        // for EucclhydRemap, EucclhydRemap::Options
 #include "types/MathFunctions.h"  // for min, max
 
-
 double EucclhydRemap::fluxLimiter(int projectionLimiterId, double r) {
   if (projectionLimiterId == options->minmod) {
     return MathFunctions::max(0.0, MathFunctions::min(1.0, r));
@@ -24,9 +23,10 @@ double EucclhydRemap::fluxLimiter(int projectionLimiterId, double r) {
     return 0.0;  // ordre 1
 }
 
-double EucclhydRemap::fluxLimiterPP(int projectionLimiterId, double gradplus, double gradmoins,
-                                    double y0, double yplus, double ymoins, double h0,
-                                    double hplus, double hmoins) {
+double EucclhydRemap::fluxLimiterPP(int projectionLimiterId, double gradplus,
+                                    double gradmoins, double y0, double yplus,
+                                    double ymoins, double h0, double hplus,
+                                    double hmoins) {
   double grady, gradM, gradMplus, gradMmoins;
   // limitation rupture de pente (formule 16 si on utilise pas le plateau pente)
   if (gradplus * gradmoins < 0.0) return 0.;
@@ -70,9 +70,9 @@ double EucclhydRemap::fluxLimiterPP(int projectionLimiterId, double gradplus, do
   return grady;
 }
 
-double EucclhydRemap::computeY0(int projectionLimiterId, double y0, double yplus,
-                 double ymoins, double h0, double hplus, double hmoins,
-                 int type) {
+double EucclhydRemap::computeY0(int projectionLimiterId, double y0,
+                                double yplus, double ymoins, double h0,
+                                double hplus, double hmoins, int type) {
   // retourne {{y0plus, y0moins}}
   double y0plus = 0., y0moins = 0.;
   if (projectionLimiterId == options->minmodG ||
@@ -120,8 +120,9 @@ double EucclhydRemap::computeY0(int projectionLimiterId, double y0, double yplus
     return 0.0;  // lancer forcement avec type 0 ou 1 mais warning compile
 }
 
-double EucclhydRemap::computexgxd(double y0, double yplus, double ymoins, double h0,
-                   double y0plus, double y0moins, int type) {
+double EucclhydRemap::computexgxd(double y0, double yplus, double ymoins,
+                                  double h0, double y0plus, double y0moins,
+                                  int type) {
   // retourne {{xg, xd}}
   double xd = 0., xg = 0.;
   double xplus = 1.;
@@ -140,8 +141,9 @@ double EucclhydRemap::computexgxd(double y0, double yplus, double ymoins, double
     return 0.0;  // lancer forcement avec type 0 ou 1 mais warning compile
 }
 
-double EucclhydRemap::computeygyd(double y0, double yplus, double ymoins, double h0,
-                   double y0plus, double y0moins, double grady, int type) {
+double EucclhydRemap::computeygyd(double y0, double yplus, double ymoins,
+                                  double h0, double y0plus, double y0moins,
+                                  double grady, int type) {
   // retourne {{yg, yd}}
   double yd, yg;
   double xtd = y0 + h0 / 2 * grady;
@@ -160,7 +162,8 @@ double EucclhydRemap::computeygyd(double y0, double yplus, double ymoins, double
     return 0.0;  // lancer forcement avec type 0 ou 1 mais warning compile
 }
 
-double EucclhydRemap::INTY(double X, double x0, double y0, double x1, double y1) {
+double EucclhydRemap::INTY(double X, double x0, double y0, double x1,
+                           double y1) {
   double flux = 0.;
   double Xbar = MathFunctions::min(MathFunctions::max(x0, X), x1);
   // std::cout << " Xbar  " << Xbar << std::endl;
@@ -169,7 +172,8 @@ double EucclhydRemap::INTY(double X, double x0, double y0, double x1, double y1)
   return flux;
 }
 
-double EucclhydRemap::INT2Y(double X, double x0, double y0, double x1, double y1) {
+double EucclhydRemap::INT2Y(double X, double x0, double y0, double x1,
+                            double y1) {
   double flux = 0.;
   // std::cout << " x0 " << x0 << std::endl;
   // std::cout << " x1 " << x1 << std::endl;
@@ -182,11 +186,11 @@ double EucclhydRemap::INT2Y(double X, double x0, double y0, double x1, double y1
   return flux;
 }
 
-RealArray1D<EucclhydRemap::dim> EucclhydRemap::xThenYToDirection(bool x_then_y_) {
+RealArray1D<EucclhydRemap::dim> EucclhydRemap::xThenYToDirection(
+    bool x_then_y_) {
   if (x_then_y_)
     return {{1.0, 0.0}};
 
   else
     return {{0.0, 1.0}};
 }
-

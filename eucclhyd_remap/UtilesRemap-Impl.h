@@ -1,8 +1,8 @@
 #ifndef UTILESREMAP_IMPL_H
 #define UTILESREMAP_IMPL_H
 
-#include "types/MathFunctions.h"
 #include "types/ArrayOperations.h"
+#include "types/MathFunctions.h"
 
 template <size_t d>
 RealArray1D<d> EucclhydRemap::computeAndLimitGradPhi(
@@ -130,7 +130,7 @@ RealArray1D<d> EucclhydRemap::computeIntersectionPP(
       // if (cas_PP == 1) std::cout << " type 1 Flux1 " << flux1 << " Flux1m "
       // << flux1m << " Flux2 " << flux2
       //			    << " Flux2m " << flux2m << " Flux3 " <<
-      //flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
+      // flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
     } else if (type ==
                1)  // flux devant ou au dessus de cCells, integration entre
                    // h0/2.-abs(face_normal_velocity)*deltat_n et h0/2.
@@ -174,7 +174,7 @@ RealArray1D<d> EucclhydRemap::computeIntersectionPP(
       // if (cas_PP == 1) std::cout << " type 1 Flux1 " << flux1 << " Flux1m "
       // << flux1m << " Flux2 " << flux2
       //			    << " Flux2m " << flux2m << " Flux3 " <<
-      //flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
+      // flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
     }
 
     // Calcul du flux a deplacer peut etre dans computeUremap1 et 2
@@ -302,7 +302,7 @@ RealArray1D<d> EucclhydRemap::computeIntersectionPPPure(
       // if (cas_PP == 1) std::cout << " type 1 Flux1 " << flux1 << " Flux1m "
       // << flux1m << " Flux2 " << flux2
       //			    << " Flux2m " << flux2m << " Flux3 " <<
-      //flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
+      // flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
     } else if (type ==
                1)  // flux devant ou au dessus de cCells, integration entre
                    // h0/2.-abs(face_normal_velocity)*deltat_n et h0/2.
@@ -346,7 +346,7 @@ RealArray1D<d> EucclhydRemap::computeIntersectionPPPure(
       // if (cas_PP == 1) std::cout << " type 1 Flux1 " << flux1 << " Flux1m "
       // << flux1m << " Flux2 " << flux2
       //			    << " Flux2m " << flux2m << " Flux3 " <<
-      //flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
+      // flux3 << " Flux3m " << flux3m << " soit " << Flux[i] << std::endl;
     }
 
     // Calcul du flux a deplacer peut etre dans computeUremap1 et 2

@@ -1,4 +1,4 @@
-#include <math.h>                   // for sqrt
+#include <math.h>  // for sqrt
 #include <Kokkos_Core.hpp>
 #include <algorithm>                // for copy
 #include <array>                    // for array
@@ -11,7 +11,6 @@
 #include "types/MathFunctions.h"    // for dot
 #include "types/MultiArray.h"       // for operator<<
 #include "utils/Utils.h"            // for indexOf
-
 
 /**
  * Job computeGradPhiFace2 called @12.0 in executeTimeLoopN method.
@@ -35,8 +34,10 @@ void EucclhydRemap::computeGradPhiFace2() noexcept {
             int cbCells(cbId);
             // gradPhiFace2(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(Uremap1(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(Uremap1(cbCells),
-            //vLagrange(cbCells)))), 					       deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(Uremap1(cbCells),
+            // vLagrange(cbCells)))),
+            // deltaxLagrange(fFaces));
             gradPhiFace2(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
@@ -120,8 +121,10 @@ void EucclhydRemap::computeGradPhiFace2() noexcept {
             int cbCells(cbId);
             // gradPhiFace2(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(Uremap1(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(Uremap1(cbCells),
-            //vLagrange(cbCells)))), 					       deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(Uremap1(cbCells),
+            // vLagrange(cbCells)))),
+            // deltaxLagrange(fFaces));
             gradPhiFace2(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
@@ -255,8 +258,8 @@ void EucclhydRemap::computeGradPhi2() noexcept {
               // std::cout << " Phase 2 Verticale " << std::endl;
               RealArray1D<dim> exy = {{0.0, 1.0}};
               // std::cout << " cfCells " << cfCells << " cCells " << cCells <<
-              // " cbCells " << cbCells << std::endl; std::cout << " fbFaces " <<
-              // fbFaces << " fbId" << fbId << std::endl;
+              // " cbCells " << cbCells << std::endl; std::cout << " fbFaces "
+              // << fbFaces << " fbId" << fbId << std::endl;
 
               double Flux_sortant_av =
                   MathFunctions::dot(outerFaceNormal(cCells, fbFacesOfCellC),

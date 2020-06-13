@@ -12,12 +12,11 @@
 #include <string>                         // for allocator, string
 #include <vector>                         // for vector
 #include "EucclhydRemap.h"
-#include "mesh/CartesianMesh2D.h"         // for CartesianMesh2D, CartesianM...
-#include "mesh/MeshGeometry.h"            // for MeshGeometry
-#include "mesh/PvdFileWriter2D.h"         // for PvdFileWriter2D
-#include "types/Types.h"                  // for RealArray1D, RealArray2D
-#include "utils/Timer.h"                  // for Timer
-
+#include "mesh/CartesianMesh2D.h"  // for CartesianMesh2D, CartesianM...
+#include "mesh/MeshGeometry.h"     // for MeshGeometry
+#include "mesh/PvdFileWriter2D.h"  // for PvdFileWriter2D
+#include "types/Types.h"           // for RealArray1D, RealArray2D
+#include "utils/Timer.h"           // for Timer
 
 /*---------------------------------------*/
 /*---------------------------------------*/
@@ -359,12 +358,12 @@ class EucclhydRemap {
         nminus("nminus", nbNodes, nbCellsOfNode),
         lplus("lplus", nbNodes, nbCellsOfNode),
         lminus("lminus", nbNodes, nbCellsOfNode),
-        p("p", nbCells) ,
+        p("p", nbCells),
         pp("pp", nbCells),
         m("m", nbCells),
-        mp("mp", nbCells) ,
+        mp("mp", nbCells),
         v("v", nbCells),
-        fracmass("fracmass", nbCells) ,
+        fracmass("fracmass", nbCells),
         mixte("mixte", nbCells),
         pure("pure", nbCells),
         fracvol("fracvol", nbCells),
@@ -423,7 +422,7 @@ class EucclhydRemap {
         deltaPhiFaceAv("deltaPhiFaceAv", nbCells),
         deltaPhiFaceAr("deltaPhiFaceAr", nbCells),
         Phi("Phi", nbCells),
-        p_extrap("p_extrap", nbCells, nbNodesOfCell) ,
+        p_extrap("p_extrap", nbCells, nbNodesOfCell),
         pp_extrap("pp_extrap", nbCells, nbNodesOfCell),
         V_extrap("V_extrap", nbCells, nbNodesOfCell),
         gradp("gradp", nbCells),
@@ -448,119 +447,122 @@ class EucclhydRemap {
         M1("M1", nbNodes, nbCellsOfNode),
         M2("M2", nbNodes, nbCellsOfNode),
         M3("M3", nbNodes, nbCellsOfNode),
-        Mnode("Mnode", nbNodes)
-    {
+        Mnode("Mnode", nbNodes) {
     // Copy node coordinates
     const auto& gNodes = mesh->getGeometry()->getNodes();
-    Kokkos::parallel_for(
-        nbNodes,
-        KOKKOS_LAMBDA(const int& rNodes) { X(rNodes) = gNodes[rNodes]; });
-    }
+    Kokkos::parallel_for(nbNodes, KOKKOS_LAMBDA(const int& rNodes) {
+      X(rNodes) = gNodes[rNodes];
+    });
+  }
 
  private:
-    void computeBoundaryNodeVelocities() noexcept;
-    RealArray1D<dim> nodeVelocityBoundaryCondition(
-        int BC, RealArray1D<dim> BCValue, RealArray2D<dim, dim> Mp, RealArray1D<dim> Gp);
-    RealArray1D<dim> nodeVelocityBoundaryConditionCorner(
-        int BC1, RealArray1D<dim> BCValue1, int BC2, RealArray1D<dim> BCValue2,
-        RealArray2D<dim, dim> Mp, RealArray1D<dim> Gp);
-    RealArray1D<nbequamax> computeBoundaryFluxes(
-        int proj, int cCells, RealArray1D<dim> exy);
+  void computeBoundaryNodeVelocities() noexcept;
+  RealArray1D<dim> nodeVelocityBoundaryCondition(int BC,
+                                                 RealArray1D<dim> BCValue,
+                                                 RealArray2D<dim, dim> Mp,
+                                                 RealArray1D<dim> Gp);
+  RealArray1D<dim> nodeVelocityBoundaryConditionCorner(
+      int BC1, RealArray1D<dim> BCValue1, int BC2, RealArray1D<dim> BCValue2,
+      RealArray2D<dim, dim> Mp, RealArray1D<dim> Gp);
+  RealArray1D<nbequamax> computeBoundaryFluxes(int proj, int cCells,
+                                               RealArray1D<dim> exy);
 
-    void initBoundaryConditions() noexcept;
-    void initMeshGeometryForCells() noexcept;
-    void initVpAndFpc() noexcept;
-    void initCellInternalEnergy() noexcept;
-    void initCellVelocity() noexcept;
-    void initDensity() noexcept;
-    void initMeshGeometryForFaces() noexcept;
-    void initPart() noexcept;
-    void setUpTimeLoopN() noexcept;
+  void initBoundaryConditions() noexcept;
+  void initMeshGeometryForCells() noexcept;
+  void initVpAndFpc() noexcept;
+  void initCellInternalEnergy() noexcept;
+  void initCellVelocity() noexcept;
+  void initDensity() noexcept;
+  void initMeshGeometryForFaces() noexcept;
+  void initPart() noexcept;
+  void setUpTimeLoopN() noexcept;
 
-    void computeCornerNormal() noexcept;
-    void computeEOS() noexcept;
-    void computeGradients() noexcept;
-    void computeMass() noexcept;
-    void computeDissipationMatrix() noexcept;
-    void computedeltatc() noexcept;
-    void extrapolateValue() noexcept;
-    void computeG() noexcept;
-    void computeNodeDissipationMatrixAndG() noexcept;
-    void computeNodeVelocity() noexcept;
-    void computeFaceVelocity() noexcept;
-    void computeLagrangePosition() noexcept;
-    void computeSubCellForce() noexcept;
-    void computeLagrangeVolumeAndCenterOfGravity() noexcept;
-    void computeFacedeltaxLagrange() noexcept;
-    void updateCellCenteredLagrangeVariables() noexcept;
+  void computeCornerNormal() noexcept;
+  void computeEOS() noexcept;
+  void computeGradients() noexcept;
+  void computeMass() noexcept;
+  void computeDissipationMatrix() noexcept;
+  void computedeltatc() noexcept;
+  void extrapolateValue() noexcept;
+  void computeG() noexcept;
+  void computeNodeDissipationMatrixAndG() noexcept;
+  void computeNodeVelocity() noexcept;
+  void computeFaceVelocity() noexcept;
+  void computeLagrangePosition() noexcept;
+  void computeSubCellForce() noexcept;
+  void computeLagrangeVolumeAndCenterOfGravity() noexcept;
+  void computeFacedeltaxLagrange() noexcept;
+  void updateCellCenteredLagrangeVariables() noexcept;
 
-    void computeGradPhiFace1() noexcept;
-    void computeGradPhi1() noexcept;
-    void computeUpwindFaceQuantitiesForProjection1() noexcept;
-    void computeUremap1() noexcept;
+  void computeGradPhiFace1() noexcept;
+  void computeGradPhi1() noexcept;
+  void computeUpwindFaceQuantitiesForProjection1() noexcept;
+  void computeUremap1() noexcept;
 
-    void computeGradPhiFace2() noexcept;
-    void computeGradPhi2() noexcept;
-    void computeUpwindFaceQuantitiesForProjection2() noexcept;
-    void computeUremap2() noexcept;
+  void computeGradPhiFace2() noexcept;
+  void computeGradPhi2() noexcept;
+  void computeUpwindFaceQuantitiesForProjection2() noexcept;
+  void computeUremap2() noexcept;
 
-    void remapCellcenteredVariable() noexcept;
+  void remapCellcenteredVariable() noexcept;
 
-    void updateParticlePosition() noexcept;
-    void updateParticleCoefficients() noexcept;
-    void updateParticleVelocity() noexcept;
-    void updateParticleRetroaction() noexcept;
-    void switchalpharho_rho() noexcept;
-    void switchrho_alpharho() noexcept;
+  void updateParticlePosition() noexcept;
+  void updateParticleCoefficients() noexcept;
+  void updateParticleVelocity() noexcept;
+  void updateParticleRetroaction() noexcept;
+  void switchalpharho_rho() noexcept;
+  void switchrho_alpharho() noexcept;
 
-    RealArray2D<2, 2> inverse(RealArray2D<2, 2> a);
-    double divideNoExcept(double a, double b);
-    template <size_t N, size_t M>
-    RealArray2D<N, M> tensProduct(RealArray1D<N> a, RealArray1D<M> b);
-    double crossProduct2d(RealArray1D<2> a, RealArray1D<2> b);
+  RealArray2D<2, 2> inverse(RealArray2D<2, 2> a);
+  double divideNoExcept(double a, double b);
+  template <size_t N, size_t M>
+  RealArray2D<N, M> tensProduct(RealArray1D<N> a, RealArray1D<M> b);
+  double crossProduct2d(RealArray1D<2> a, RealArray1D<2> b);
 
-    double fluxLimiter(int projectionLimiterId, double r);
-    double fluxLimiterPP(int projectionLimiterId, double gradplus, double gradmoins,
-                                        double y0, double yplus, double ymoins, double h0,
-                                        double hplus, double hmoins);
-    double computeY0(int projectionLimiterId, double y0, double yplus,
-                    double ymoins, double h0, double hplus, double hmoins,
-                    int type);
-    double computexgxd(double y0, double yplus, double ymoins, double h0,
-                    double y0plus, double y0moins, int type);
-    double computeygyd(double y0, double yplus, double ymoins, double h0,
-                    double y0plus, double y0moins, double grady, int type);
-    double INTY(double X, double x0, double y0, double x1, double y1);
-    double INT2Y(double X, double x0, double y0, double x1, double y1);
-    template <size_t d>
-    RealArray1D<d> computeAndLimitGradPhi(
-        int projectionLimiterId, RealArray1D<d> gradphiplus,
-        RealArray1D<d> gradphimoins, RealArray1D<d> phi, RealArray1D<d> phiplus,
-        RealArray1D<d> phimoins, double h0, double hplus, double hmoins);
-    template <size_t d>
-    RealArray1D<d> computeIntersectionPP(
-        RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
-        RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
-        double face_normal_velocity, double deltat_n, int type, int cell,
-        double flux_threhold);
-    template <size_t d>
-    RealArray1D<d> computeIntersectionPPPure(
-        RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
-        RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
-        double face_normal_velocity, double deltat_n, int type, int cell,
-        double flux_threhold);
-    template <size_t d>
-    RealArray1D<d> computeUpwindFaceQuantities(
-        RealArray1D<dim> face_normal, double face_normal_velocity, double delta_x,
-        RealArray1D<dim> x_f, RealArray1D<d> phi_cb, RealArray1D<d> grad_phi_cb,
-        RealArray1D<dim> x_cb, RealArray1D<d> phi_cf, RealArray1D<d> grad_phi_cf,
-        RealArray1D<dim> x_cf);
-    RealArray1D<dim> xThenYToDirection(bool x_then_y_);
-    template <size_t d>
-    RealArray1D<d> computeRemapFlux(
-        int projectionAvecPlateauPente, double face_normal_velocity,
-        RealArray1D<dim> face_normal, double face_length, RealArray1D<d> phi_face,
-        RealArray1D<dim> outer_face_normal, RealArray1D<dim> exy, double deltat_n);
+  double fluxLimiter(int projectionLimiterId, double r);
+  double fluxLimiterPP(int projectionLimiterId, double gradplus,
+                       double gradmoins, double y0, double yplus, double ymoins,
+                       double h0, double hplus, double hmoins);
+  double computeY0(int projectionLimiterId, double y0, double yplus,
+                   double ymoins, double h0, double hplus, double hmoins,
+                   int type);
+  double computexgxd(double y0, double yplus, double ymoins, double h0,
+                     double y0plus, double y0moins, int type);
+  double computeygyd(double y0, double yplus, double ymoins, double h0,
+                     double y0plus, double y0moins, double grady, int type);
+  double INTY(double X, double x0, double y0, double x1, double y1);
+  double INT2Y(double X, double x0, double y0, double x1, double y1);
+  template <size_t d>
+  RealArray1D<d> computeAndLimitGradPhi(
+      int projectionLimiterId, RealArray1D<d> gradphiplus,
+      RealArray1D<d> gradphimoins, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins);
+  template <size_t d>
+  RealArray1D<d> computeIntersectionPP(
+      RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
+      double face_normal_velocity, double deltat_n, int type, int cell,
+      double flux_threhold);
+  template <size_t d>
+  RealArray1D<d> computeIntersectionPPPure(
+      RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
+      double face_normal_velocity, double deltat_n, int type, int cell,
+      double flux_threhold);
+  template <size_t d>
+  RealArray1D<d> computeUpwindFaceQuantities(
+      RealArray1D<dim> face_normal, double face_normal_velocity, double delta_x,
+      RealArray1D<dim> x_f, RealArray1D<d> phi_cb, RealArray1D<d> grad_phi_cb,
+      RealArray1D<dim> x_cb, RealArray1D<d> phi_cf, RealArray1D<d> grad_phi_cf,
+      RealArray1D<dim> x_cf);
+  RealArray1D<dim> xThenYToDirection(bool x_then_y_);
+  template <size_t d>
+  RealArray1D<d> computeRemapFlux(int projectionAvecPlateauPente,
+                                  double face_normal_velocity,
+                                  RealArray1D<dim> face_normal,
+                                  double face_length, RealArray1D<d> phi_face,
+                                  RealArray1D<dim> outer_face_normal,
+                                  RealArray1D<dim> exy, double deltat_n);
 
   /**
    * Job dumpVariables called @2.0 in executeTimeLoopN method.
@@ -606,7 +608,7 @@ class EucclhydRemap {
   void simulate();
 };
 
-#include "UtilesRemap-Impl.h"
 #include "Utiles-Impl.h"
+#include "UtilesRemap-Impl.h"
 
 #endif  // EUCCLHYDREMAP_H

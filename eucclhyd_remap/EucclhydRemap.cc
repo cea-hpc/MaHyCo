@@ -1,17 +1,15 @@
 #include "EucclhydRemap.h"
-#include <stdlib.h>                    // for exit
-#include <Kokkos_Core.hpp>             // for finalize
-#include <iomanip>                     // for operator<<, setw, setiosflags
-#include <iostream>                    // for operator<<, basic_ostream, cha...
-#include <limits>                      // for numeric_limits
-#include <map>                         // for map
-#include <utility>                     // for pair, swap
-#include "types/MathFunctions.h"       // for min
-#include "utils/Utils.h"               // for __RESET__, __BOLD__, __GREEN__
-
+#include <stdlib.h>               // for exit
+#include <Kokkos_Core.hpp>        // for finalize
+#include <iomanip>                // for operator<<, setw, setiosflags
+#include <iostream>               // for operator<<, basic_ostream, cha...
+#include <limits>                 // for numeric_limits
+#include <map>                    // for map
+#include <utility>                // for pair, swap
+#include "types/MathFunctions.h"  // for min
+#include "utils/Utils.h"          // for __RESET__, __BOLD__, __GREEN__
 
 using namespace nablalib;
-
 
 /**
  * Job dumpVariables called @2.0 in executeTimeLoopN method.
@@ -50,9 +48,9 @@ void EucclhydRemap::dumpVariables() noexcept {
     partVariables.insert(pair<string, double*>("VyPart", Vpart_n[1].data()));
     auto quads = mesh->getGeometry()->getQuads();
     writer.writeFile(nbCalls, t_n, nbNodes, X.data(), nbCells, quads.data(),
-                      cellVariables, nodeVariables);
-    writerpart.writeFile(nbCalls, t_n, nbPart, Xpart_n.data(), 0,
-                          quads.data(), cellVariables, partVariables);
+                     cellVariables, nodeVariables);
+    writerpart.writeFile(nbCalls, t_n, nbPart, Xpart_n.data(), 0, quads.data(),
+                         cellVariables, partVariables);
     lastDump = t_n;
     std::cout << " time = " << t_n << " sortie demandée " << std::endl;
     io_timer.stop();
@@ -161,17 +159,16 @@ void EucclhydRemap::executeTimeLoopN() noexcept {
                 << __RESET__ "} ";
     else
       std::cout << " {CPU: " << __BLUE__ << cpu_timer.print(true)
-                << __RESET__ ", IO: " << __RED__ << "none" << __RESET__
-                << "} ";
+                << __RESET__ ", IO: " << __RED__ << "none" << __RESET__ << "} ";
 
     // Progress
     std::cout << utils::progress_bar(n, options->max_time_iterations, t_n,
-                                      options->final_time, 30);
+                                     options->final_time, 30);
     std::cout << __BOLD__ << __CYAN__
               << utils::Timer::print(
-                      utils::eta(n, options->max_time_iterations, t_n,
+                     utils::eta(n, options->max_time_iterations, t_n,
                                 options->final_time, deltat_n, global_timer),
-                      true)
+                     true)
               << __RESET__ << "\r";
     std::cout.flush();
 
@@ -190,12 +187,11 @@ void EucclhydRemap::computedeltat() noexcept {
   double reduction10(numeric_limits<double>::max());
   {
     Kokkos::Min<double> reducer(reduction10);
-    Kokkos::parallel_reduce(
-        "reduction10", nbCells,
-        KOKKOS_LAMBDA(const int& cCells, double& x) {
-          reducer.join(x, deltatc(cCells));
-        },
-        reducer);
+    Kokkos::parallel_reduce("reduction10", nbCells,
+                            KOKKOS_LAMBDA(const int& cCells, double& x) {
+                              reducer.join(x, deltatc(cCells));
+                            },
+                            reducer);
   }
   deltat_nplus1 =
       MathFunctions::min(options->cfl * reduction10, deltat_n * 1.05);
@@ -223,9 +219,9 @@ void EucclhydRemap::simulate() {
   std::cout << "[" << __GREEN__ << "MESH" << __RESET__
             << "]      X=" << __BOLD__ << options->X_EDGE_ELEMS << __RESET__
             << ", Y=" << __BOLD__ << options->Y_EDGE_ELEMS << __RESET__
-            << ", X length=" << __BOLD__ << options->X_EDGE_LENGTH
-            << __RESET__ << ", Y length=" << __BOLD__
-            << options->Y_EDGE_LENGTH << __RESET__ << std::endl;
+            << ", X length=" << __BOLD__ << options->X_EDGE_LENGTH << __RESET__
+            << ", Y length=" << __BOLD__ << options->Y_EDGE_LENGTH << __RESET__
+            << std::endl;
 
   if (Kokkos::hwloc::available()) {
     std::cout << "[" << __GREEN__ << "TOPOLOGY" << __RESET__

@@ -1,4 +1,4 @@
-#include <math.h>                   // for sqrt
+#include <math.h>  // for sqrt
 #include <Kokkos_Core.hpp>
 #include <algorithm>                // for copy
 #include <array>                    // for array
@@ -11,7 +11,6 @@
 #include "types/MathFunctions.h"    // for dot
 #include "types/MultiArray.h"       // for operator<<
 #include "utils/Utils.h"            // for indexOf
-
 
 /**
  * Job computeGradPhiFace1 called @8.0 in executeTimeLoopN method.
@@ -35,8 +34,9 @@ void EucclhydRemap::computeGradPhiFace1() noexcept {
             int cbCells(cbId);
             // gradPhiFace1(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(ULagrange(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(ULagrange(cbCells),
-            //vLagrange(cbCells)))), deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(ULagrange(cbCells),
+            // vLagrange(cbCells)))), deltaxLagrange(fFaces));
             gradPhiFace1(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
@@ -121,8 +121,9 @@ void EucclhydRemap::computeGradPhiFace1() noexcept {
             int cbCells(cbId);
             // gradPhiFace1(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(ULagrange(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(ULagrange(cbCells),
-            //vLagrange(cbCells)))), deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(ULagrange(cbCells),
+            // vLagrange(cbCells)))), deltaxLagrange(fFaces));
             gradPhiFace1(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
