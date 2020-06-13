@@ -52,7 +52,7 @@ git clone https://github.com/hippo91/MaHyCo.git
 ```
 
 # Compile *MaHyCo*
-Create a directory in which *MaHyCo* will be built and change directory into it:
+Create a directory in which *mahyco* will be built and change directory into it:
 
 ```
 mkdir /tmp/build_mahyco
@@ -71,7 +71,7 @@ And then just build it:
 make -j 4
 ```
 
-In the build directory the executable `eucclhydremap` is now available
+In the build directory the executable `mahyco` is now available
 
 # Add new integration test
 
@@ -79,7 +79,7 @@ To add a new integration test, in the `tests` directory, create a new directory 
 
 In this new directory adds :
 
-- an `args.txt` file and fill it with the required arguments that have to be passed to `eucclhydremap` ;
+- an `args.txt` file and fill it with the required arguments that have to be passed to `mahyco` ;
 - a `reference` directory which holds the expected results.
 
 Then register the new test in the `CMakeLists.txt` file by adding it to the `TEST_NAMES` variable :
@@ -108,7 +108,7 @@ To launch integration tests just run :
 ctest -j 4
 ```
  
-in the directory where *MaHyCo* has been built.
+in the directory where *mahyco* has been built.
 
 
 # Coding standard
