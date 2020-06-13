@@ -1,7 +1,19 @@
-// Kokkos headers
-#include <Kokkos_Core.hpp>
+#include <stdlib.h>                    // for exit
+#include <Kokkos_Core.hpp>           // for KOKKOS_LAMBDA
+#include <algorithm>                   // for equal, copy
+#include <array>                       // for array, operator!=
+#include <iostream>                    // for operator<<, basic_ostream::ope...
+#include <limits>                      // for numeric_limits
+#include <vector>                      // for vector, allocator
+#include "EucclhydRemap.h"             // for EucclhydRemap, EucclhydRemap::...
+#include "Utiles-Impl.h"               // for EucclhydRemap::tensProduct
+#include "mesh/CartesianMesh2D.h"      // for CartesianMesh2D
+#include "types/ArrayOperations.h"     // for plus, multiply, minus, divide
+#include "types/MathFunctions.h"       // for max, min, dot, matVectProduct
+#include "types/MultiArray.h"          // for operator<<
+#include "utils/Utils.h"               // for indexOf
 
-#include "EucclhydRemap.h"
+
 /**
  * Job computeCornerNormal called @1.0 in simulate method.
  * In variables: X

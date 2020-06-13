@@ -1,7 +1,15 @@
-// Kokkos headers
+#include <math.h>                   // for pow, floor, sqrt
+#include <stdlib.h>                 // for exit
 #include <Kokkos_Core.hpp>
+#include <algorithm>                // for max, min
+#include <array>                    // for array
+#include <iostream>                 // for operator<<, basic_ostream, basic_...
+#include <vector>                   // for allocator, vector
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
+#include "types/ArrayOperations.h"  // for multiply, minus, plus
+#include "types/MathFunctions.h"    // for max
 
-#include "EucclhydRemap.h"
+
 void EucclhydRemap::updateParticlePosition() noexcept {
   Kokkos::parallel_for(
       "updateParticleCoefficient", nbCells,

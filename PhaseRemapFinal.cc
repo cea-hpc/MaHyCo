@@ -1,7 +1,12 @@
-// Kokkos headers
-#include <Kokkos_Core.hpp>
+#include <stdlib.h>                    // for exit
+#include <Kokkos_Core.hpp>           // for KOKKOS_LAMBDA
+#include <array>                       // for array
+#include <iostream>                    // for operator<<, basic_ostream, endl
+#include <memory>                      // for allocator
+#include "EucclhydRemap.h"             // for EucclhydRemap, EucclhydRemap::...
+#include "types/MathFunctions.h"       // for max, min
+#include "types/MultiArray.h"          // for operator<<
 
-#include "EucclhydRemap.h"
 /**
  * Job remapCellcenteredVariable called @16.0 in executeTimeLoopN method.
  * In variables: Uremap2, v, x_then_y_n

@@ -1,8 +1,9 @@
+#include <math.h>                 // for fabs
+#include <stdlib.h>               // for abs
+#include <array>                  // for array
+#include "EucclhydRemap.h"        // for EucclhydRemap, EucclhydRemap::Options
+#include "types/MathFunctions.h"  // for min, max
 
-// Kokkos headers
-#include <Kokkos_Core.hpp>
-
-#include "EucclhydRemap.h"
 
 double EucclhydRemap::fluxLimiter(int projectionLimiterId, double r) {
   if (projectionLimiterId == options->minmod) {

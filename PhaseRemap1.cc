@@ -1,7 +1,18 @@
-// Kokkos headers
+#include <math.h>                   // for sqrt
 #include <Kokkos_Core.hpp>
+#include <algorithm>                // for copy
+#include <array>                    // for array
+#include <iostream>                 // for operator<<, basic_ostream::operat...
+#include <vector>                   // for allocator, vector
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
+#include "UtilesRemap-Impl.h"       // for EucclhydRemap::computeIntersectionPP
+#include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
+#include "types/ArrayOperations.h"  // for divide, minus, plus
+#include "types/MathFunctions.h"    // for dot
+#include "types/MultiArray.h"       // for operator<<
+#include "utils/Utils.h"            // for indexOf
 
-#include "EucclhydRemap.h"
+
 /**
  * Job computeGradPhiFace1 called @8.0 in executeTimeLoopN method.
  * In variables: ULagrange, deltaxLagrange, projectionOrder, vLagrange,

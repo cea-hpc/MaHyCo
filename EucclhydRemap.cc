@@ -1,16 +1,14 @@
-#include <cfenv>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
-//#pragma STDC FENV_ACCESS ON
-
-// Kokkos headers
-#include <Kokkos_Core.hpp>
-
 #include "EucclhydRemap.h"
+#include <stdlib.h>                    // for exit
+#include <Kokkos_Core.hpp>             // for finalize
+#include <iomanip>                     // for operator<<, setw, setiosflags
+#include <iostream>                    // for operator<<, basic_ostream, cha...
+#include <limits>                      // for numeric_limits
+#include <map>                         // for map
+#include <utility>                     // for pair, swap
+#include "types/MathFunctions.h"       // for min
+#include "utils/Utils.h"               // for __RESET__, __BOLD__, __GREEN__
+
 
 using namespace nablalib;
 
