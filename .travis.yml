@@ -4,6 +4,7 @@ git:
 addons:
   apt:
     packages:
+      - clang-format
       - hwloc
       - libhwloc-dev
   homebrew:
@@ -23,6 +24,13 @@ before_install:
   - cd ${cwd}
 jobs:
   include:
+      - stage: "Pre-check"
+        name: "formatting"
+        os: linux
+        dist: bionic
+        script:
+          - cd ${TRAVIS_BUILD_DIR}
+          - bash ./check_format.sh
       - stage: "Compilation"
         name: "linux gcc release"
         os: linux
@@ -115,5 +123,7 @@ jobs:
         script:
           - ctest -j 4
 stages:
-  - "Compilation"
-  - "Integration tests"
+  - name: "Pre-check"
+    if: branch = master
+  - name: "Compilation"
+  - name: "Integration tests"

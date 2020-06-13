@@ -1,26 +1,25 @@
-#include <cfenv>
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <limits>
-#include <type_traits>
-#include <utility>
-//#pragma STDC FENV_ACCESS ON
+#ifndef EUCCLHYDREMAP_H
+#define EUCCLHYDREMAP_H
 
-// Kokkos headers
-#include <Kokkos_Core.hpp>
-#include <Kokkos_hwloc.hpp>
+/*---------------------------------------*/
+/*---------------------------------------*/
 
-// Project headers
-#include "mesh/CartesianMesh2D.h"
-#include "mesh/CartesianMesh2DGenerator.h"
-#include "mesh/PvdFileWriter2D.h"
-#include "types/ArrayOperations.h"
-#include "types/MathFunctions.h"
-#include "types/Types.h"
-#include "utils/Timer.h"
-#include "utils/Utils.h"
+#include <stddef.h>                       // for size_t
+#include <Kokkos_Core.hpp>                // for KOKKOS_LAMBDA
+#include <OpenMP/Kokkos_OpenMP_Exec.hpp>  // for OpenMP::impl_is_initialized
+#include <algorithm>                      // for copy
+#include <array>                          // for array
+#include <string>                         // for allocator, string
+#include <vector>                         // for vector
+#include "EucclhydRemap.h"
+#include "mesh/CartesianMesh2D.h"  // for CartesianMesh2D, CartesianM...
+#include "mesh/MeshGeometry.h"     // for MeshGeometry
+#include "mesh/PvdFileWriter2D.h"  // for PvdFileWriter2D
+#include "types/Types.h"           // for RealArray1D, RealArray2D
+#include "utils/Timer.h"           // for Timer
 
+/*---------------------------------------*/
+/*---------------------------------------*/
 using namespace nablalib;
 
 class EucclhydRemap {
@@ -359,22 +358,12 @@ class EucclhydRemap {
         nminus("nminus", nbNodes, nbCellsOfNode),
         lplus("lplus", nbNodes, nbCellsOfNode),
         lminus("lminus", nbNodes, nbCellsOfNode),
-        p("p", nbCells)
-        //, p1("p1", nbCells) à réactiver pour les sorties
-        //, p2("p2", nbCells)
-        ,
+        p("p", nbCells),
         pp("pp", nbCells),
         m("m", nbCells),
-        mp("mp", nbCells)
-        //, m1("m1", nbCells)	à réactiver pour les sorties
-        //, m2("m2", nbCells)
-        ,
+        mp("mp", nbCells),
         v("v", nbCells),
-        fracmass("fracmass", nbCells)
-        //, c1("c1", nbCells) à réactiver pour les sorties
-        //, c2("c2", nbCells)
-        //, c3("c3", nbCells)
-        ,
+        fracmass("fracmass", nbCells),
         mixte("mixte", nbCells),
         pure("pure", nbCells),
         fracvol("fracvol", nbCells),
@@ -433,10 +422,7 @@ class EucclhydRemap {
         deltaPhiFaceAv("deltaPhiFaceAv", nbCells),
         deltaPhiFaceAr("deltaPhiFaceAr", nbCells),
         Phi("Phi", nbCells),
-        p_extrap("p_extrap", nbCells, nbNodesOfCell)
-        //, p1_extrap("p1_extrap", nbCells, nbNodesOfCell)
-        //, p2_extrap("p2_extrap", nbCells, nbNodesOfCell)
-        ,
+        p_extrap("p_extrap", nbCells, nbNodesOfCell),
         pp_extrap("pp_extrap", nbCells, nbNodesOfCell),
         V_extrap("V_extrap", nbCells, nbNodesOfCell),
         gradp("gradp", nbCells),
@@ -464,68 +450,126 @@ class EucclhydRemap {
         Mnode("Mnode", nbNodes) {
     // Copy node coordinates
     const auto& gNodes = mesh->getGeometry()->getNodes();
-    Kokkos::parallel_for(
-        nbNodes,
-        KOKKOS_LAMBDA(const int& rNodes) { X(rNodes) = gNodes[rNodes]; });
+    Kokkos::parallel_for(nbNodes, KOKKOS_LAMBDA(const int& rNodes) {
+      X(rNodes) = gNodes[rNodes];
+    });
   }
 
  private:
-#include "ConditionsLimites.cc"
-#include "Init.cc"
-#include "PhaseLagrange.cc"
-#include "PhaseRemap1.cc"
-#include "PhaseRemap2.cc"
-#include "PhaseRemapFinal.cc"
-#include "SchemaParticules.cc"
-#include "Utiles.cc"
-#include "UtilesRemap.cc"
+  void computeBoundaryNodeVelocities() noexcept;
+  RealArray1D<dim> nodeVelocityBoundaryCondition(int BC,
+                                                 RealArray1D<dim> BCValue,
+                                                 RealArray2D<dim, dim> Mp,
+                                                 RealArray1D<dim> Gp);
+  RealArray1D<dim> nodeVelocityBoundaryConditionCorner(
+      int BC1, RealArray1D<dim> BCValue1, int BC2, RealArray1D<dim> BCValue2,
+      RealArray2D<dim, dim> Mp, RealArray1D<dim> Gp);
+  RealArray1D<nbequamax> computeBoundaryFluxes(int proj, int cCells,
+                                               RealArray1D<dim> exy);
+
+  void initBoundaryConditions() noexcept;
+  void initMeshGeometryForCells() noexcept;
+  void initVpAndFpc() noexcept;
+  void initCellInternalEnergy() noexcept;
+  void initCellVelocity() noexcept;
+  void initDensity() noexcept;
+  void initMeshGeometryForFaces() noexcept;
+  void initPart() noexcept;
+  void setUpTimeLoopN() noexcept;
+
+  void computeCornerNormal() noexcept;
+  void computeEOS() noexcept;
+  void computeGradients() noexcept;
+  void computeMass() noexcept;
+  void computeDissipationMatrix() noexcept;
+  void computedeltatc() noexcept;
+  void extrapolateValue() noexcept;
+  void computeG() noexcept;
+  void computeNodeDissipationMatrixAndG() noexcept;
+  void computeNodeVelocity() noexcept;
+  void computeFaceVelocity() noexcept;
+  void computeLagrangePosition() noexcept;
+  void computeSubCellForce() noexcept;
+  void computeLagrangeVolumeAndCenterOfGravity() noexcept;
+  void computeFacedeltaxLagrange() noexcept;
+  void updateCellCenteredLagrangeVariables() noexcept;
+
+  void computeGradPhiFace1() noexcept;
+  void computeGradPhi1() noexcept;
+  void computeUpwindFaceQuantitiesForProjection1() noexcept;
+  void computeUremap1() noexcept;
+
+  void computeGradPhiFace2() noexcept;
+  void computeGradPhi2() noexcept;
+  void computeUpwindFaceQuantitiesForProjection2() noexcept;
+  void computeUremap2() noexcept;
+
+  void remapCellcenteredVariable() noexcept;
+
+  void updateParticlePosition() noexcept;
+  void updateParticleCoefficients() noexcept;
+  void updateParticleVelocity() noexcept;
+  void updateParticleRetroaction() noexcept;
+  void switchalpharho_rho() noexcept;
+  void switchrho_alpharho() noexcept;
+
+  RealArray2D<2, 2> inverse(RealArray2D<2, 2> a);
+  double divideNoExcept(double a, double b);
+  template <size_t N, size_t M>
+  RealArray2D<N, M> tensProduct(RealArray1D<N> a, RealArray1D<M> b);
+  double crossProduct2d(RealArray1D<2> a, RealArray1D<2> b);
+
+  double fluxLimiter(int projectionLimiterId, double r);
+  double fluxLimiterPP(int projectionLimiterId, double gradplus,
+                       double gradmoins, double y0, double yplus, double ymoins,
+                       double h0, double hplus, double hmoins);
+  double computeY0(int projectionLimiterId, double y0, double yplus,
+                   double ymoins, double h0, double hplus, double hmoins,
+                   int type);
+  double computexgxd(double y0, double yplus, double ymoins, double h0,
+                     double y0plus, double y0moins, int type);
+  double computeygyd(double y0, double yplus, double ymoins, double h0,
+                     double y0plus, double y0moins, double grady, int type);
+  double INTY(double X, double x0, double y0, double x1, double y1);
+  double INT2Y(double X, double x0, double y0, double x1, double y1);
+  template <size_t d>
+  RealArray1D<d> computeAndLimitGradPhi(
+      int projectionLimiterId, RealArray1D<d> gradphiplus,
+      RealArray1D<d> gradphimoins, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins);
+  template <size_t d>
+  RealArray1D<d> computeIntersectionPP(
+      RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
+      double face_normal_velocity, double deltat_n, int type, int cell,
+      double flux_threhold);
+  template <size_t d>
+  RealArray1D<d> computeIntersectionPPPure(
+      RealArray1D<d> gradphi, RealArray1D<d> phi, RealArray1D<d> phiplus,
+      RealArray1D<d> phimoins, double h0, double hplus, double hmoins,
+      double face_normal_velocity, double deltat_n, int type, int cell,
+      double flux_threhold);
+  template <size_t d>
+  RealArray1D<d> computeUpwindFaceQuantities(
+      RealArray1D<dim> face_normal, double face_normal_velocity, double delta_x,
+      RealArray1D<dim> x_f, RealArray1D<d> phi_cb, RealArray1D<d> grad_phi_cb,
+      RealArray1D<dim> x_cb, RealArray1D<d> phi_cf, RealArray1D<d> grad_phi_cf,
+      RealArray1D<dim> x_cf);
+  RealArray1D<dim> xThenYToDirection(bool x_then_y_);
+  template <size_t d>
+  RealArray1D<d> computeRemapFlux(int projectionAvecPlateauPente,
+                                  double face_normal_velocity,
+                                  RealArray1D<dim> face_normal,
+                                  double face_length, RealArray1D<d> phi_face,
+                                  RealArray1D<dim> outer_face_normal,
+                                  RealArray1D<dim> exy, double deltat_n);
 
   /**
    * Job dumpVariables called @2.0 in executeTimeLoopN method.
    * In variables: Xc_x, Xc_y, eps_n, m, p, rho_n, t_n, v
    * Out variables:
    */
-  KOKKOS_INLINE_FUNCTION
-  void dumpVariables() noexcept {
-    std::cout << " Deltat = " << deltat_n << std::endl;
-    std::cout << " ---------------------------"
-              << " Energie totale(t=0) = " << ETOTALE_0
-              << " Energie totale(Lagrange) = " << ETOTALE_L
-              << " Energie totale(time) = " << ETOTALE_T << std::endl;
-    std::cout << " ---------------------------"
-              << " Masse totale(t=0) = " << MASSET_0
-              << " Masse totale(Lagrange) = " << MASSET_L
-              << " Masse totale(time) = " << MASSET_T << std::endl;
-    nbCalls++;
-    if (!writer.isDisabled() &&
-        (t_n >= lastDump + options->output_time || t_n == 0.)) {
-      cpu_timer.stop();
-      io_timer.start();
-      std::map<string, double*> cellVariables;
-      std::map<string, double*> nodeVariables;
-      std::map<string, double*> partVariables;
-      cellVariables.insert(pair<string, double*>("Pressure", p.data()));
-      cellVariables.insert(pair<string, double*>("Density", rho_n.data()));
-      cellVariables.insert(pair<string, double*>("F1", fracvol1.data()));
-      cellVariables.insert(pair<string, double*>("F2", fracvol2.data()));
-      cellVariables.insert(pair<string, double*>("F3", fracvol3.data()));
-      cellVariables.insert(pair<string, double*>("VelocityX", Vxc.data()));
-      cellVariables.insert(pair<string, double*>("VelocityY", Vyc.data()));
-      cellVariables.insert(pair<string, double*>("Energy", eps_n.data()));
-      partVariables.insert(pair<string, double*>("VolumePart", vpart.data()));
-      partVariables.insert(pair<string, double*>("VxPart", Vpart_n[0].data()));
-      partVariables.insert(pair<string, double*>("VyPart", Vpart_n[1].data()));
-      auto quads = mesh->getGeometry()->getQuads();
-      writer.writeFile(nbCalls, t_n, nbNodes, X.data(), nbCells, quads.data(),
-                       cellVariables, nodeVariables);
-      writerpart.writeFile(nbCalls, t_n, nbPart, Xpart_n.data(), 0,
-                           quads.data(), cellVariables, partVariables);
-      lastDump = t_n;
-      std::cout << " time = " << t_n << " sortie demandée " << std::endl;
-      io_timer.stop();
-      cpu_timer.start();
-    }
-  }
+  void dumpVariables() noexcept;
 
   /**
    * Job executeTimeLoopN called @4.0 in simulate method.
@@ -544,251 +588,27 @@ class EucclhydRemap {
    * gradPhiFace1, gradPhiFace2, gradV, gradp, m, p, p_extrap, phiFace1,
    * phiFace2, rho_nplus1, t_nplus1, vLagrange, x_then_y_nplus1
    */
-  KOKKOS_INLINE_FUNCTION
-  void executeTimeLoopN() noexcept {
-    n = 0;
-    bool continueLoop = true;
-    do {
-      global_timer.start();
-      cpu_timer.start();
-      n++;
-      if (n != 1)
-        std::cout << "[" << __CYAN__ << __BOLD__ << setw(3) << n
-                  << __RESET__ "] time = " << __BOLD__
-                  << setiosflags(std::ios::scientific) << setprecision(8)
-                  << setw(16) << t_n << __RESET__;
+  void executeTimeLoopN() noexcept;
 
-      if (nbPart != 0) switchalpharho_rho();
-      computeEOS();  // @1.0
-      if (nbPart != 0) switchrho_alpharho();
-      computeGradients();                           // @1.0
-      computeMass();                                // @1.0
-      computeDissipationMatrix();                   // @2.0
-      computedeltatc();                             // @2.0
-      dumpVariables();                              // @2.0
-      extrapolateValue();                           // @2.0
-      computeG();                                   // @3.0
-      computeNodeDissipationMatrixAndG();           // @3.0
-      computedeltat();                              // @3.0
-      computeBoundaryNodeVelocities();              // @4.0
-      computeNodeVelocity();                        // @4.0
-      updateTime();                                 // @4.0
-      computeFaceVelocity();                        // @5.0
-      computeLagrangePosition();                    // @5.0
-      computeSubCellForce();                        // @5.0
-      computeLagrangeVolumeAndCenterOfGravity();    // @6.0
-      computeFacedeltaxLagrange();                  // @7.0
-      updateCellCenteredLagrangeVariables();        // @7.0
-      computeGradPhiFace1();                        // @8.0
-      computeGradPhi1();                            // @9.0
-      computeUpwindFaceQuantitiesForProjection1();  // @10.0
-      computeUremap1();                             // @11.0
-      computeGradPhiFace2();                        // @12.0
-      computeGradPhi2();                            // @13.0
-      computeUpwindFaceQuantitiesForProjection2();  // @14.0
-      computeUremap2();                             // @15.0
-      remapCellcenteredVariable();                  // @16.0
-      if (nbPart != 0) {
-        updateParticlePosition();
-        updateParticleCoefficients();
-        updateParticleVelocity();
-        updateParticleRetroaction();
-      }
-
-      // Evaluate loop condition with variables at time n
-      continueLoop = (n + 1 < options->max_time_iterations &&
-                      t_nplus1 < options->final_time);
-
-      if (continueLoop) {
-        // Switch variables to prepare next iteration
-        std::swap(x_then_y_nplus1, x_then_y_n);
-        std::swap(t_nplus1, t_n);
-        std::swap(deltat_nplus1, deltat_n);
-        std::swap(Vnode_nplus1, Vnode_n);
-        std::swap(rho_nplus1, rho_n);
-        std::swap(rhop_nplus1, rhop_n);
-        std::swap(V_nplus1, V_n);
-        std::swap(eps_nplus1, eps_n);
-        std::swap(epsp_nplus1, epsp_n);
-        std::swap(F_nplus1, F_n);
-        std::swap(F1_nplus1, F1_n);
-        std::swap(F2_nplus1, F2_n);
-        std::swap(F3_nplus1, F3_n);
-        std::swap(Vpart_nplus1, Vpart_n);
-        std::swap(Xpart_nplus1, Xpart_n);
-      }
-
-      cpu_timer.stop();
-      global_timer.stop();
-
-      // Timers display
-      if (!writer.isDisabled())
-        std::cout << " {CPU: " << __BLUE__ << cpu_timer.print(true)
-                  << __RESET__ ", IO: " << __BLUE__ << io_timer.print(true)
-                  << __RESET__ "} ";
-      else
-        std::cout << " {CPU: " << __BLUE__ << cpu_timer.print(true)
-                  << __RESET__ ", IO: " << __RED__ << "none" << __RESET__
-                  << "} ";
-
-      // Progress
-      std::cout << utils::progress_bar(n, options->max_time_iterations, t_n,
-                                       options->final_time, 30);
-      std::cout << __BOLD__ << __CYAN__
-                << utils::Timer::print(
-                       utils::eta(n, options->max_time_iterations, t_n,
-                                  options->final_time, deltat_n, global_timer),
-                       true)
-                << __RESET__ << "\r";
-      std::cout.flush();
-
-      cpu_timer.reset();
-      io_timer.reset();
-    } while (continueLoop);
-  }
   /**
    * Job computedeltat called @3.0 in executeTimeLoopN method.
    * In variables: cfl, deltat_n, deltatc
    * Out variables: deltat_nplus1
    */
-  KOKKOS_INLINE_FUNCTION
-  void computedeltat() noexcept {
-    double reduction10(numeric_limits<double>::max());
-    {
-      Kokkos::Min<double> reducer(reduction10);
-      Kokkos::parallel_reduce(
-          "reduction10", nbCells,
-          KOKKOS_LAMBDA(const int& cCells, double& x) {
-            reducer.join(x, deltatc(cCells));
-          },
-          reducer);
-    }
-    deltat_nplus1 =
-        MathFunctions::min(options->cfl * reduction10, deltat_n * 1.05);
-    if (deltat_nplus1 < options->deltat_min) {
-      std::cerr << "Fin de la simulation par pas de temps minimum "
-                << deltat_nplus1 << " < " << options->deltat_min << std::endl;
-      Kokkos::finalize();
-      exit(1);
-    }
-  }
+  void computedeltat() noexcept;
+
   /**
    * Job updateTime called @4.0 in executeTimeLoopN method.
    * In variables: deltat_nplus1, t_n
    * Out variables: t_nplus1
    */
-  KOKKOS_INLINE_FUNCTION
-  void updateTime() noexcept { t_nplus1 = t_n + deltat_nplus1; }
+  void updateTime() noexcept;
 
  public:
-  void simulate() {
-    std::cout << "\n"
-              << __BLUE_BKG__ << __YELLOW__ << __BOLD__
-              << "\tStarting EucclhydRemap ..." << __RESET__ << "\n\n";
-
-    std::cout << "[" << __GREEN__ << "MESH" << __RESET__
-              << "]      X=" << __BOLD__ << options->X_EDGE_ELEMS << __RESET__
-              << ", Y=" << __BOLD__ << options->Y_EDGE_ELEMS << __RESET__
-              << ", X length=" << __BOLD__ << options->X_EDGE_LENGTH
-              << __RESET__ << ", Y length=" << __BOLD__
-              << options->Y_EDGE_LENGTH << __RESET__ << std::endl;
-
-    if (Kokkos::hwloc::available()) {
-      std::cout << "[" << __GREEN__ << "TOPOLOGY" << __RESET__
-                << "]  NUMA=" << __BOLD__
-                << Kokkos::hwloc::get_available_numa_count() << __RESET__
-                << ", Cores/NUMA=" << __BOLD__
-                << Kokkos::hwloc::get_available_cores_per_numa() << __RESET__
-                << ", Threads/Core=" << __BOLD__
-                << Kokkos::hwloc::get_available_threads_per_core() << __RESET__
-                << std::endl;
-    } else {
-      std::cout << "[" << __GREEN__ << "TOPOLOGY" << __RESET__
-                << "]  HWLOC unavailable cannot get topological informations"
-                << std::endl;
-    }
-
-    // std::cout << "[" << __GREEN__ << "KOKKOS" << __RESET__ << "]    " <<
-    // __BOLD__ << (is_same<MyLayout,Kokkos::LayoutLeft>::value?"Left":"Right")"
-    // << __RESET__ << " layout" << std::endl;
-
-    if (!writer.isDisabled())
-      std::cout << "[" << __GREEN__ << "OUTPUT" << __RESET__
-                << "]    VTK files stored in " << __BOLD__
-                << writer.outputDirectory() << __RESET__ << " directory"
-                << std::endl;
-    else
-      std::cout << "[" << __GREEN__ << "OUTPUT" << __RESET__ << "]    "
-                << __BOLD__ << "Disabled" << __RESET__ << std::endl;
-
-    computeCornerNormal();       // @1.0
-    initMeshGeometryForCells();  // @1.0
-    initVpAndFpc();              // @1.0
-    initBoundaryConditions();
-    initCellInternalEnergy();    // @2.0
-    initCellVelocity();          // @2.0
-    initDensity();               // @2.0
-    initMeshGeometryForFaces();  // @2.0
-    if (nbPart != 0) {
-      initPart();
-      updateParticleCoefficients();
-      switchrho_alpharho();  // on travaille avec alpharho sauf pour l'EOS
-    }
-    setUpTimeLoopN();    // @3.0
-    executeTimeLoopN();  // @4.0
-    std::cout << __YELLOW__ << "\n\tDone ! Took " << __MAGENTA__ << __BOLD__
-              << global_timer.print() << __RESET__ << std::endl;
-  }
+  void simulate();
 };
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
-  auto o = new EucclhydRemap::Options();
-  string output;
-  if (argc == 12) {
-    o->X_EDGE_ELEMS = std::atoi(argv[1]);
-    o->Y_EDGE_ELEMS = std::atoi(argv[2]);
-    o->X_EDGE_LENGTH = std::atof(argv[3]);
-    o->Y_EDGE_LENGTH = std::atof(argv[4]);
-    o->testCase = std::atof(argv[5]);
-    o->final_time = std::atof(argv[6]);
-    o->output_time = std::atof(argv[7]);
-    o->projectionLimiterId = std::atof(argv[8]);
-    o->projectionAvecPlateauPente = std::atof(argv[9]);
-    o->projectionLimiteurMixte = std::atof(argv[10]);
-    o->projectionLimiterIdPure = std::atof(argv[11]);
-  } else if (argc == 13) {
-    o->X_EDGE_ELEMS = std::atoi(argv[1]);
-    o->Y_EDGE_ELEMS = std::atoi(argv[2]);
-    o->X_EDGE_LENGTH = std::atof(argv[3]);
-    o->Y_EDGE_LENGTH = std::atof(argv[4]);
-    o->testCase = std::atof(argv[5]);
-    o->final_time = std::atof(argv[6]);
-    o->output_time = std::atof(argv[7]);
-    o->projectionLimiterId = std::atof(argv[8]);
-    o->projectionAvecPlateauPente = std::atof(argv[9]);
-    o->projectionLimiteurMixte = std::atof(argv[10]);
-    o->projectionLimiterIdPure = std::atof(argv[11]);
-    output = argv[11];
-  } else if (argc == 2) {
-    o->testCase = std::atof(argv[1]);
-  } else if (argc != 1) {
-    std::cerr << "[ERROR] Wrong number of arguments. Expecting 4 or 5 args: X "
-                 "Y Xlength Ylength (output)."
-              << std::endl;
-    std::cerr << "(X=100, Y=10, Xlength=0.01, Ylength=0.01 output=current "
-                 "directory with no args)"
-              << std::endl;
-    exit(1);
-  }
+#include "Utiles-Impl.h"
+#include "UtilesRemap-Impl.h"
 
-  auto nm = CartesianMesh2DGenerator::generate(
-      o->X_EDGE_ELEMS, o->Y_EDGE_ELEMS, o->X_EDGE_LENGTH, o->Y_EDGE_LENGTH);
-  auto c = new EucclhydRemap(o, nm, output);
-  c->simulate();
-  delete c;
-  delete nm;
-  delete o;
-  Kokkos::finalize();
-  return 0;
-}
+#endif  // EUCCLHYDREMAP_H

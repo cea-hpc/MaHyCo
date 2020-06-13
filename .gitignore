@@ -33,3 +33,6 @@
 
 # Build directory
 build/
+
+# clangd directory
+.clangd

@@ -1,10 +1,23 @@
+#include <math.h>  // for sqrt
+#include <Kokkos_Core.hpp>
+#include <algorithm>                // for copy
+#include <array>                    // for array
+#include <iostream>                 // for operator<<, basic_ostream::operat...
+#include <vector>                   // for allocator, vector
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
+#include "UtilesRemap-Impl.h"       // for EucclhydRemap::computeIntersectionPP
+#include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
+#include "types/ArrayOperations.h"  // for divide, minus, plus
+#include "types/MathFunctions.h"    // for dot
+#include "types/MultiArray.h"       // for operator<<
+#include "utils/Utils.h"            // for indexOf
+
 /**
  * Job computeGradPhiFace2 called @12.0 in executeTimeLoopN method.
  * In variables: Uremap1, deltaxLagrange, projectionOrder, vLagrange, x_then_y_n
  * Out variables: gradPhiFace2
  */
-KOKKOS_INLINE_FUNCTION
-void computeGradPhiFace2() noexcept {
+void EucclhydRemap::computeGradPhiFace2() noexcept {
   if (options->projectionOrder > 1) {
     if (x_then_y_n) {
       auto innerHorizontalFaces(mesh->getInnerHorizontalFaces());
@@ -21,8 +34,10 @@ void computeGradPhiFace2() noexcept {
             int cbCells(cbId);
             // gradPhiFace2(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(Uremap1(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(Uremap1(cbCells),
-            //vLagrange(cbCells)))), 					       deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(Uremap1(cbCells),
+            // vLagrange(cbCells)))),
+            // deltaxLagrange(fFaces));
             gradPhiFace2(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
@@ -106,8 +121,10 @@ void computeGradPhiFace2() noexcept {
             int cbCells(cbId);
             // gradPhiFace2(fFaces) =
             // ArrayOperations::divide((ArrayOperations::minus(ArrayOperations::divide(Uremap1(cfCells),
-            // vLagrange(cfCells)), 								       ArrayOperations::divide(Uremap1(cbCells),
-            //vLagrange(cbCells)))), 					       deltaxLagrange(fFaces));
+            // vLagrange(cfCells)),
+            // ArrayOperations::divide(Uremap1(cbCells),
+            // vLagrange(cbCells)))),
+            // deltaxLagrange(fFaces));
             gradPhiFace2(fFaces) = ArrayOperations::divide(
                 ArrayOperations::minus(Phi(cfCells), Phi(cbCells)),
                 deltaxLagrange(fFaces));
@@ -184,8 +201,7 @@ void computeGradPhiFace2() noexcept {
  * In variables: gradPhiFace2, projectionLimiterId, projectionOrder, x_then_y_n
  * Out variables: gradPhi2
  */
-KOKKOS_INLINE_FUNCTION
-void computeGradPhi2() noexcept {
+void EucclhydRemap::computeGradPhi2() noexcept {
   if (options->projectionOrder > 1) {
     if (x_then_y_n) {
       // std::cout << " Phase 2 Verticale computeGradPhi2 " << std::endl;
@@ -242,8 +258,8 @@ void computeGradPhi2() noexcept {
               // std::cout << " Phase 2 Verticale " << std::endl;
               RealArray1D<dim> exy = {{0.0, 1.0}};
               // std::cout << " cfCells " << cfCells << " cCells " << cCells <<
-              // " cbCells " << cbCells << std::endl; std::cout << " fbFaces " <<
-              // fbFaces << " fbId" << fbId << std::endl;
+              // " cbCells " << cbCells << std::endl; std::cout << " fbFaces "
+              // << fbFaces << " fbId" << fbId << std::endl;
 
               double Flux_sortant_av =
                   MathFunctions::dot(outerFaceNormal(cCells, fbFacesOfCellC),
@@ -404,8 +420,7 @@ void computeGradPhi2() noexcept {
  * deltaxLagrange, faceNormal, faceNormalVelocity, gradPhi2, vLagrange,
  * x_then_y_n Out variables: phiFace2
  */
-KOKKOS_INLINE_FUNCTION
-void computeUpwindFaceQuantitiesForProjection2() noexcept {
+void EucclhydRemap::computeUpwindFaceQuantitiesForProjection2() noexcept {
   if (x_then_y_n) {
     // std::cout << " Phase Projection 2 Verticale " << std::endl;
     auto innerHorizontalFaces(mesh->getInnerHorizontalFaces());
@@ -508,8 +523,7 @@ void computeUpwindFaceQuantitiesForProjection2() noexcept {
  * In variables: Uremap1, deltat_n, faceLength, faceNormal, faceNormalVelocity,
  * outerFaceNormal, phiFace2, x_then_y_n Out variables: Uremap2
  */
-KOKKOS_INLINE_FUNCTION
-void computeUremap2() noexcept {
+void EucclhydRemap::computeUremap2() noexcept {
   RealArray1D<dim> exy = xThenYToDirection(!x_then_y_n);
   Kokkos::parallel_for(
       "computeUremap2", nbCells, KOKKOS_LAMBDA(const int& cCells) {

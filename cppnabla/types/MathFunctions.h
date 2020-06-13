@@ -10,6 +10,7 @@
 #ifndef TYPES_MATHFUNCTIONS_H_
 #define TYPES_MATHFUNCTIONS_H_
 
+#include <cmath>
 #include "types/Types.h"
 
 namespace nablalib
@@ -17,14 +18,14 @@ namespace nablalib
 
 namespace MathFunctions
 {
-	double fabs(const double& v) noexcept { return std::fabs(v); }
-	double sqrt(const double& v) noexcept { return std::sqrt(v); }
-	double min(const double& a, const double& b) noexcept { return std::min(a, b); }
-	double max(const double& a, const double& b) noexcept { return std::max(a, b); }
-	double sin(const double& v) noexcept { return std::sin(v); }
-	double cos(const double& v) noexcept { return std::cos(v); }
-	double asin(const double& v) noexcept { return std::asin(v); }
-	double acos(const double& v) noexcept { return std::acos(v); }
+    inline double fabs(const double& v) noexcept { return std::fabs(v); }
+    inline double sqrt(const double& v) noexcept { return std::sqrt(v); }
+    inline double min(const double& a, const double& b) noexcept { return std::min(a, b); }
+    inline double max(const double& a, const double& b) noexcept { return std::max(a, b); }
+    inline double sin(const double& v) noexcept { return std::sin(v); }
+    inline double cos(const double& v) noexcept { return std::cos(v); }
+    inline double asin(const double& v) noexcept { return std::asin(v); }
+    inline double acos(const double& v) noexcept { return std::acos(v); }
 
 	/** Scalar product */
 	template<size_t N>
@@ -46,13 +47,13 @@ namespace MathFunctions
 	}
 
 	/** Determinant 2D */
-	double det(const RealArray1D<2>& a, const RealArray1D<2>& b) noexcept
+	inline double det(const RealArray1D<2>& a, const RealArray1D<2>& b) noexcept
 	{
 		return a[0]*b[1] - a[1]*b[0];
 	}
 
 	/** Determinant 2D */
-	double det(const RealArray2D<2, 2>& a) noexcept
+	inline double det(const RealArray2D<2, 2>& a) noexcept
 	{
 		return a[0][0] * a[1][1] - a[0][1] * a[1][0];
 	}

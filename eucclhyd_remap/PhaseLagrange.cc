@@ -1,10 +1,24 @@
+#include <stdlib.h>                 // for exit
+#include <Kokkos_Core.hpp>          // for KOKKOS_LAMBDA
+#include <algorithm>                // for equal, copy
+#include <array>                    // for array, operator!=
+#include <iostream>                 // for operator<<, basic_ostream::ope...
+#include <limits>                   // for numeric_limits
+#include <vector>                   // for vector, allocator
+#include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::...
+#include "Utiles-Impl.h"            // for EucclhydRemap::tensProduct
+#include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
+#include "types/ArrayOperations.h"  // for plus, multiply, minus, divide
+#include "types/MathFunctions.h"    // for max, min, dot, matVectProduct
+#include "types/MultiArray.h"       // for operator<<
+#include "utils/Utils.h"            // for indexOf
+
 /**
  * Job computeCornerNormal called @1.0 in simulate method.
  * In variables: X
  * Out variables: lminus, lpc_n, lplus, nminus, nplus
  */
-KOKKOS_INLINE_FUNCTION
-void computeCornerNormal() noexcept {
+void EucclhydRemap::computeCornerNormal() noexcept {
   Kokkos::parallel_for(
       "computeCornerNormal", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         int cId(cCells);
@@ -51,8 +65,7 @@ void computeCornerNormal() noexcept {
  * In variables: eos, eosPerfectGas, eps_n, gamma, rho_n
  * Out variables: c, p
  */
-KOKKOS_INLINE_FUNCTION
-void computeEOS() noexcept {
+void EucclhydRemap::computeEOS() noexcept {
   if (options->eos == options->eosPerfectGas)
     Kokkos::parallel_for(
         "computeEOS", nbCells, KOKKOS_LAMBDA(const int& cCells) {
@@ -83,8 +96,7 @@ void computeEOS() noexcept {
  * In variables: F_n, Vnode_n, lpc_n, spaceOrder, v
  * Out variables: gradV, gradp, gradp1, gradp2, gradp3
  */
-KOKKOS_INLINE_FUNCTION
-void computeGradients() noexcept {
+void EucclhydRemap::computeGradients() noexcept {
   Kokkos::parallel_for(
       "computeDissipationMatrix", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
         int pId(pNodes);
@@ -186,8 +198,7 @@ void computeGradients() noexcept {
  * In variables: rho_n, v
  * Out variables: m
  */
-KOKKOS_INLINE_FUNCTION
-void computeMass() noexcept {
+void EucclhydRemap::computeMass() noexcept {
   Kokkos::parallel_for(
       "computeMass", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         m(cCells) = rho_n(cCells) * v(cCells);
@@ -200,8 +211,7 @@ void computeMass() noexcept {
  * In variables: c, lminus, lplus, nminus, nplus, rho_n
  * Out variables: M
  */
-KOKKOS_INLINE_FUNCTION
-void computeDissipationMatrix() noexcept {
+void EucclhydRemap::computeDissipationMatrix() noexcept {
   Kokkos::parallel_for(
       "computeDissipationMatrix", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
         int pId(pNodes);
@@ -238,8 +248,7 @@ void computeDissipationMatrix() noexcept {
  * In variables: V_n, c, perim, v
  * Out variables: deltatc
  */
-KOKKOS_INLINE_FUNCTION
-void computedeltatc() noexcept {
+void EucclhydRemap::computedeltatc() noexcept {
   Kokkos::parallel_for(
       "computedeltatc", nbCells, KOKKOS_LAMBDA(const int& cCells) {
         deltatc(cCells) =
@@ -252,8 +261,7 @@ void computedeltatc() noexcept {
  * In variables: V_n, X, Xc, gradV, gradp, p, spaceOrder
  * Out variables: V_extrap, p_extrap, pp_extrap
  */
-KOKKOS_INLINE_FUNCTION
-void extrapolateValue() noexcept {
+void EucclhydRemap::extrapolateValue() noexcept {
   if (options->spaceOrder == 1) {
     Kokkos::parallel_for(
         "extrapolateValue", nbCells, KOKKOS_LAMBDA(const int& cCells) {
@@ -415,31 +423,28 @@ void extrapolateValue() noexcept {
  * In variables: M, V_extrap, lpc_n, p_extrap
  * Out variables: G
  */
-KOKKOS_INLINE_FUNCTION
-void computeG() noexcept {
-  Kokkos::parallel_for(
-      "computeG", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
-        int pId(pNodes);
-        RealArray1D<dim> reduction1 = options->zeroVect;
-        {
-          auto cellsOfNodeP(mesh->getCellsOfNode(pId));
-          for (int cCellsOfNodeP = 0; cCellsOfNodeP < cellsOfNodeP.size();
-               cCellsOfNodeP++) {
-            int cId(cellsOfNodeP[cCellsOfNodeP]);
-            int cCells(cId);
-            int pNodesOfCellC(utils::indexOf(mesh->getNodesOfCell(cId), pId));
-            reduction1 = ArrayOperations::plus(
-                reduction1,
-                (ArrayOperations::plus(
-                    MathFunctions::matVectProduct(
-                        M(pNodes, cCellsOfNodeP),
-                        V_extrap(cCells, pNodesOfCellC)),
-                    ArrayOperations::multiply(p_extrap(cCells, pNodesOfCellC),
-                                              lpc_n(pNodes, cCellsOfNodeP)))));
-          }
-        }
-        G(pNodes) = reduction1;
-      });
+void EucclhydRemap::computeG() noexcept {
+  Kokkos::parallel_for("computeG", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
+    int pId(pNodes);
+    RealArray1D<dim> reduction1 = options->zeroVect;
+    {
+      auto cellsOfNodeP(mesh->getCellsOfNode(pId));
+      for (int cCellsOfNodeP = 0; cCellsOfNodeP < cellsOfNodeP.size();
+           cCellsOfNodeP++) {
+        int cId(cellsOfNodeP[cCellsOfNodeP]);
+        int cCells(cId);
+        int pNodesOfCellC(utils::indexOf(mesh->getNodesOfCell(cId), pId));
+        reduction1 = ArrayOperations::plus(
+            reduction1,
+            (ArrayOperations::plus(
+                MathFunctions::matVectProduct(M(pNodes, cCellsOfNodeP),
+                                              V_extrap(cCells, pNodesOfCellC)),
+                ArrayOperations::multiply(p_extrap(cCells, pNodesOfCellC),
+                                          lpc_n(pNodes, cCellsOfNodeP)))));
+      }
+    }
+    G(pNodes) = reduction1;
+  });
 }
 
 /**
@@ -447,8 +452,7 @@ void computeG() noexcept {
  * In variables: M
  * Out variables: Mnode
  */
-KOKKOS_INLINE_FUNCTION
-void computeNodeDissipationMatrixAndG() noexcept {
+void EucclhydRemap::computeNodeDissipationMatrixAndG() noexcept {
   Kokkos::parallel_for(
       "computeNodeDissipationMatrixAndG", nbNodes,
       KOKKOS_LAMBDA(const int& pNodes) {
@@ -470,25 +474,22 @@ void computeNodeDissipationMatrixAndG() noexcept {
  * In variables: G, Mnode
  * Out variables: Vnode_nplus1
  */
-KOKKOS_INLINE_FUNCTION
-void computeNodeVelocity() noexcept {
+void EucclhydRemap::computeNodeVelocity() noexcept {
   auto innerNodes(mesh->getInnerNodes());
-  Kokkos::parallel_for(
-      "computeNodeVelocity", nbInnerNodes,
-      KOKKOS_LAMBDA(const int& pInnerNodes) {
-        int pId(innerNodes[pInnerNodes]);
-        int pNodes(pId);
-        Vnode_nplus1(pNodes) =
-            MathFunctions::matVectProduct(inverse(Mnode(pNodes)), G(pNodes));
-      });
+  Kokkos::parallel_for("computeNodeVelocity", nbInnerNodes,
+                       KOKKOS_LAMBDA(const int& pInnerNodes) {
+                         int pId(innerNodes[pInnerNodes]);
+                         int pNodes(pId);
+                         Vnode_nplus1(pNodes) = MathFunctions::matVectProduct(
+                             inverse(Mnode(pNodes)), G(pNodes));
+                       });
 }
 /**
  * Job computeFaceVelocity called @5.0 in executeTimeLoopN method.
  * In variables: Vnode_nplus1, faceNormal
  * Out variables: faceNormalVelocity
  */
-KOKKOS_INLINE_FUNCTION
-void computeFaceVelocity() noexcept {
+void EucclhydRemap::computeFaceVelocity() noexcept {
   auto faces(mesh->getFaces());
   Kokkos::parallel_for(
       "computeFaceVelocity", nbFaces, KOKKOS_LAMBDA(const int& fFaces) {
@@ -514,8 +515,7 @@ void computeFaceVelocity() noexcept {
  * In variables: Vnode_nplus1, X, deltat_n
  * Out variables: XLagrange
  */
-KOKKOS_INLINE_FUNCTION
-void computeLagrangePosition() noexcept {
+void EucclhydRemap::computeLagrangePosition() noexcept {
   Kokkos::parallel_for(
       "computeLagrangePosition", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
         XLagrange(pNodes) = ArrayOperations::plus(
@@ -547,8 +547,7 @@ void computeLagrangePosition() noexcept {
  * In variables: M, V_extrap, Vnode_nplus1, lpc_n, p_extrap
  * Out variables: F_nplus1
  */
-KOKKOS_INLINE_FUNCTION
-void computeSubCellForce() noexcept {
+void EucclhydRemap::computeSubCellForce() noexcept {
   Kokkos::parallel_for(
       "computeSubCellForce", nbNodes, KOKKOS_LAMBDA(const int& pNodes) {
         int pId(pNodes);
@@ -598,8 +597,7 @@ void computeSubCellForce() noexcept {
  * Job computeLagrangeVolumeAndCenterOfGravity called @6.0 in executeTimeLoopN
  * method. In variables: XLagrange Out variables: XcLagrange, vLagrange
  */
-KOKKOS_INLINE_FUNCTION
-void computeLagrangeVolumeAndCenterOfGravity() noexcept {
+void EucclhydRemap::computeLagrangeVolumeAndCenterOfGravity() noexcept {
   Kokkos::parallel_for(
       "computeLagrangeVolumeAndCenterOfGravity", nbCells,
       KOKKOS_LAMBDA(const int& cCells) {
@@ -649,8 +647,7 @@ void computeLagrangeVolumeAndCenterOfGravity() noexcept {
  * In variables: XcLagrange, faceNormal
  * Out variables: deltaxLagrange
  */
-KOKKOS_INLINE_FUNCTION
-void computeFacedeltaxLagrange() noexcept {
+void EucclhydRemap::computeFacedeltaxLagrange() noexcept {
   auto faces(mesh->getFaces());
   Kokkos::parallel_for(
       "computeFacedeltaxLagrange", nbFaces, KOKKOS_LAMBDA(const int& fFaces) {
@@ -672,8 +669,7 @@ void computeFacedeltaxLagrange() noexcept {
  * method. In variables: F_nplus1, V_n, Vnode_nplus1, deltat_n, eps_n, lpc_n, m,
  * rho_n, vLagrange Out variables: ULagrange
  */
-KOKKOS_INLINE_FUNCTION
-void updateCellCenteredLagrangeVariables() noexcept {
+void EucclhydRemap::updateCellCenteredLagrangeVariables() noexcept {
   Kokkos::parallel_for(
       "updateCellCenteredLagrangeVariables", nbCells,
       KOKKOS_LAMBDA(const int& cCells) {
@@ -912,19 +908,17 @@ void updateCellCenteredLagrangeVariables() noexcept {
   double reductionE(0.), reductionM(0.);
   {
     Kokkos::Sum<double> reducerE(reductionE);
-    Kokkos::parallel_reduce(
-        "reductionE", nbCells,
-        KOKKOS_LAMBDA(const int& cCells, double& x) {
-          reducerE.join(x, ETOT_L(cCells));
-        },
-        reducerE);
+    Kokkos::parallel_reduce("reductionE", nbCells,
+                            KOKKOS_LAMBDA(const int& cCells, double& x) {
+                              reducerE.join(x, ETOT_L(cCells));
+                            },
+                            reducerE);
     Kokkos::Sum<double> reducerM(reductionM);
-    Kokkos::parallel_reduce(
-        "reductionM", nbCells,
-        KOKKOS_LAMBDA(const int& cCells, double& x) {
-          reducerM.join(x, MTOT_L(cCells));
-        },
-        reducerM);
+    Kokkos::parallel_reduce("reductionM", nbCells,
+                            KOKKOS_LAMBDA(const int& cCells, double& x) {
+                              reducerM.join(x, MTOT_L(cCells));
+                            },
+                            reducerM);
   }
   ETOTALE_L = reductionE;
   MASSET_L = reductionM;
