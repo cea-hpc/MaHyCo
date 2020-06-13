@@ -4,6 +4,7 @@
 #include <iostream>                 // for operator<<, basic_ostream::operat...
 #include <vector>                   // for allocator, vector
 #include "EucclhydRemap.h"          // for EucclhydRemap, EucclhydRemap::Opt...
+#include "UtilesRemap-Impl.h"       // for EucclhydRemap::computeRemapFlux
 #include "mesh/CartesianMesh2D.h"   // for CartesianMesh2D
 #include "types/ArrayOperations.h"  // for multiply, plus
 #include "types/MathFunctions.h"    // for dot, matVectProduct, norm

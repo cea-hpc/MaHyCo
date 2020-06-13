@@ -1,6 +1,9 @@
 #ifndef UTILESREMAP_IMPL_H
 #define UTILESREMAP_IMPL_H
 
+#include "types/MathFunctions.h"
+#include "types/ArrayOperations.h"
+
 template <size_t d>
 RealArray1D<d> EucclhydRemap::computeAndLimitGradPhi(
     int projectionLimiterId, RealArray1D<d> gradphiplus,
