@@ -124,6 +124,6 @@ jobs:
           - ctest -j 4
 stages:
   - name: "Pre-check"
-    if: "$TRAVIS_PULL_REQUEST" != "false"
-  - "Compilation"
-  - "Integration tests"
+    if: branch = master
+  - name: "Compilation"
+  - name: "Integration tests"
