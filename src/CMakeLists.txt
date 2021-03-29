@@ -30,7 +30,6 @@ set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DI
 
 
 # Pour les test NONREG
-set(HOME /home/perlatj/MAHYCO_ARCANE/Mahyco)
 # Test name is also test directory
 set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
@@ -64,7 +63,7 @@ set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
 		"CAS_RiderVortexTimeReverse")
 
 foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME ${TEST_NAME} COMMAND  ${HOME}/NONREGRESSSION/launch_test.sh ${HOME}/src/Mahyco ${HOME}/NONREGRESSSION/${TEST_NAME})
+ add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSSION/launch_test.sh ${TEST_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSSION/${TEST_NAME})
 
 
 #    add_test( NAME ${TEST_NAME}
