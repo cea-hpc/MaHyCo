@@ -9,13 +9,21 @@ et lancer la commande
 Pour tester Mahyco , se placer dans le repertoire src et lancer l'executable (extension .exe) en
 specifiant en argument le jeu de donnees (extension .arc).
 
-Par exemple, pour l'exemple poisson:
+Par exemple :
 
   cd src/
   make
-  ./Mahyco.exe Donnees.arc
+  ./Mahyco Mahyco.arc
 
-Les sorties du cas sont dans le repertoire 'output'. Dans
+Pour tester les évolutions avant rangement :
+
+  cd src
+  make
+  ctest
+
+Si tout est OK (aucune différence entre les passages, Tests tous marqués "Passed"), vous pouvez ranger...
+
+Pour les sorties, elles sont dans le repertoire 'output'. Dans
 ce repertoire, un repertoire 'courbes' contient les courbes
 par iterations et le repertoire 'depouillement' le maillage et
 les variables pour le post-traitement.
@@ -42,16 +50,16 @@ via la variables d'environnement ARCANE_NB_THREAD.
 Par exemple, pour 3 process MPI:
 
  export ARCANE_PARALLEL_SERVICE=Mpi
- mpiexec -n 3 ./Mahyco.exe MicroHydro.arc
+ mpiexec -n 3 ./Mahyco Mahyco.arc
 
 pour 4 threads:
 
  export ARCANE_PARALLEL_SERVICE=Thread
  export ARCANE_NB_THREAD=4
- ./Poisson.exe Poisson.arc
+ ./Mahyco Mahyco.arc
 
 pour 3 process MPI et 4 threads (soit 12 sous-domaines)
 
  export ARCANE_PARALLEL_SERVICE=MpiThread
  export ARCANE_NB_THREAD=4
- mpiexec -n 3 ./Poisson.exe Poisson.arc
+ mpiexec -n 3 ./Mahyco Mahyco.arc
