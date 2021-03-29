@@ -69,7 +69,7 @@ set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
 		"CAS_RiderVortexTimeReverse")
 
 foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSSION/launch_test.sh ${TEST_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSSION/${TEST_NAME})
+ add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME})
 
 
 #    add_test( NAME ${TEST_NAME}
@@ -82,7 +82,7 @@ endforeach()
 
 if(MPIEXEC_EXECUTABLE)
 #  add_test(NAME mahyco_NR1_p4
-#    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 Mahyco ../../NONREGRESSSION/CAS_2D_Lag_BiSodCaseX/Donnees.arc
+#    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 Mahyco ../../NONREGRESSION/CAS_2D_Lag_BiSodCaseX/Donnees.arc
 #    )
   # Teste le lancement avec 'arcane_run'
 #  add_test(NAME mahyco_NR1_p4_run
