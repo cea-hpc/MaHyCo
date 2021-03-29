@@ -845,7 +845,12 @@ computeDeltaT()
         Cell cell = * icell;
         Real cell_dx = m_caracteristic_length[icell];
         Real sound_speed = m_sound_speed[icell];
-        Real dx_sound = cell_dx / sound_speed;
+        Real vmax(0.);
+        if (options()->withProjection)
+          for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
+            vmax = math::max(m_velocity[inode].abs(), vmax);
+          }
+        Real dx_sound = cell_dx / (sound_speed + vmax);
         minimum_aux = math::min(minimum_aux, dx_sound);
         if (minimum_aux == dx_sound) {
             cell_id = icell.localId();
