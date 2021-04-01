@@ -41,6 +41,7 @@ hydroStartInit()
   // Initialises les variables (surcharge l'init d'arcane)
   hydroStartInitVar();
   
+  
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
         IMeshEnvironment* ienv = mm->environments()[i];
@@ -102,7 +103,7 @@ computeCellMass()
   debug() << " Entree dans computeCellMass()";
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
-    m_cell_mass[icell] = m_density[icell] * m_cell_volume[icell];
+    m_cell_mass[cell] = m_density[cell] * m_cell_volume[cell];
   }  
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -133,10 +134,6 @@ computeNodeMass()
     Real contrib_node_mass = 0.125 * m_cell_mass[cell];
     for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
       m_node_mass[inode] += contrib_node_mass; 
-//       if (inode.localId() == 1819) {
-//           info() << inode.localId() << " nod mass recalcule" << m_node_mass[inode] << " avec cont " << cell.localId()
-//           << " = " << contrib_node_mass;
-//       }
     }
   }
   m_node_mass.synchronize();
@@ -387,20 +384,20 @@ updateVelocityWithoutLagrange()
 {
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
-    m_velocity[inode] = m_velocity_n[inode];
+    m_velocity[node] = m_velocity_n[node];
 
     if (options()->casTest == RiderVortexTimeReverse ||
         options()->casTest == MonoRiderVortexTimeReverse ) {
-      m_velocity[inode].x =
-          m_velocity_n[inode].x * cos(Pi * m_global_time() / 4.);
-      m_velocity[inode].y =
-          m_velocity_n[inode].y * cos(Pi * m_global_time() / 4.);
+      m_velocity[node].x =
+          m_velocity_n[node].x * cos(Pi * m_global_time() / 4.);
+      m_velocity[node].y =
+          m_velocity_n[node].y * cos(Pi * m_global_time() / 4.);
     } else if ( options()->casTest == RiderDeformationTimeReverse ||
 		options()->casTest == MonoRiderDeformationTimeReverse) {
-      m_velocity[inode].x =
-          m_velocity_n[inode].x * cos(Pi * m_global_time());
-      m_velocity[inode].y =
-          m_velocity_n[inode].y * cos(Pi * m_global_time());
+      m_velocity[node].x =
+          m_velocity_n[node].x * cos(Pi * m_global_time());
+      m_velocity[node].y =
+          m_velocity_n[node].y * cos(Pi * m_global_time());
     }
   }
 }
@@ -686,7 +683,7 @@ inline double fvnr(double e, double p, double dpde,
 /** */
 /* la derivee de f */
 /** */
-inline double fvnrderiv(double e, double p, double dpde, double rn1, double rn)
+inline double fvnrderiv(double e, double dpde, double rn1, double rn)
 {return 1.+0.5*dpde*(1./rn1-1./rn);};
 /*
  *******************************************************************************
@@ -705,7 +702,6 @@ updateEnergyAndPressure()
       Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
       ENUMERATE_ENVCELL(ienvcell,env){
         EnvCell ev = *ienvcell;
-        Cell cell = ev.globalCell();
         Real pseudo(0.);
         if (pseudo_centree &&
             ((m_pseudo_viscosity_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]) < 0.))
@@ -723,6 +719,7 @@ updateEnergyAndPressure()
                                (1.0 / m_density[ev] - 1.0 / m_density_n[ev]));
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
         // if ((m_cell_coord[cell].x > 0.5) && (m_cell_coord[cell].x < 0.51)) {
+        // Cell cell = ev.globalCell();
         //   info() << cell.localId()
         //          << " nrj " << m_internal_energy[ev]
         //          << " m_global_deltat() " << m_global_deltat()

@@ -129,6 +129,8 @@ computeVariablesForRemap()
       m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
       // // Pseudo partiel pour la quantité de mouvement
       m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
+//       if (cell.localId() == 754) info() << cell.localId() << " pseudo avant proj " << m_pseudo_viscosity[ev] 
+//            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
       
       if (options()->projectionPenteBorne == 1) {     
         // Cell cell = ev.globalCell();

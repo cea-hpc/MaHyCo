@@ -162,10 +162,12 @@ remapVariables()
   
     UniqueArray<Real> internal_energy_env_nplus1(nb_total_env);
     Real energie_nplus1 = 0.;
+    Real pseudo_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
       index_env = ev.environmentId();  
       internal_energy_env_nplus1[index_env] = 0.;
+      
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_total_env + index_env] != 0.) {
         internal_energy_env_nplus1[index_env] =
           m_u_lagrange[cell][2 * nb_total_env + index_env] / m_u_lagrange[cell][nb_total_env + index_env];
@@ -189,7 +191,7 @@ remapVariables()
       index_env = ev.environmentId();  
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
       // recuperation de la pseudo projetee
-      m_pseudo_viscosity[cell] = m_u_lagrange[cell][3 * nb_total_env + 4] / vol;
+      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] / vol;
       // recuperation de la densite
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie
@@ -206,9 +208,12 @@ remapVariables()
       // m_internal_energy_env[ev] += delta_ec;
       // energie interne totale
       energie_nplus1 += m_mass_fraction[ev] * m_internal_energy[ev];
+      pseudo_nplus1 += m_fracvol[ev] * m_pseudo_viscosity[ev];
     }
     // energie interne
     m_internal_energy[cell] = energie_nplus1;
+    // pseudoviscosité
+    m_pseudo_viscosity[cell] = pseudo_nplus1;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;
       index_env = ev.environmentId();  
@@ -247,26 +252,7 @@ remapVariables()
       }
     }
   }
-//   ENUMERATE_CELL(icell, allCells()){
-//     Cell cell = * icell;   
-//         AllEnvCell all_env_cell = all_env_cell_converter[cell];
-//       // if (all_env_cell.nbEnvironment() != 1) {    
-//       info() << " ENERGIE cell " << cell.localId() << " = " << m_internal_energy[cell] << " et dens " << m_density[cell] ;
-//       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-//         EnvCell ev = *ienvcell;
-//         index_env = ev.environmentId();  
-//         info() << index_env << " energie interne env " << m_internal_energy[ev] ;
-//         info() << index_env << " densite env " << m_density[ev] ;
-//       }
-//     // }
-//   }
-//  ENUMERATE_NODE(inode, allNodes()){
-//        if ( m_node_coord[inode].y > 0.5 && m_node_coord[inode].y < 0.5101 ) {
-//       // if ( m_node_coord[inode].x > 0.5 && m_node_coord[inode].x < 0.5101 ) {
-//       info() <<  m_node_coord[inode].y << " " << inode.localId() << " nod mass avant " << m_node_mass[inode] << " et vitesse " << m_velocity[inode] <<
-//       " et m*v " << m_node_mass[inode] * m_velocity[inode];
-//     }
-//   }
+
   if (!options()->sansLagrange) {
   // variables aux noeuds
     ENUMERATE_NODE(inode, allNodes()){
@@ -278,17 +264,10 @@ remapVariables()
       } 
     }
   }
-  
+
   // recalcule de la masse mass_nodale
   computeNodeMass();
-  
-//   ENUMERATE_NODE(inode, allNodes()){
-//       if ( m_node_coord[inode].y > 0.5 && m_node_coord[inode].y < 0.5101 ) {
-//       info() <<  m_node_coord[inode].y << " " << inode.localId() << " nod mass recalcule " << m_node_mass[inode] << " et vitesse " << m_velocity[inode] <<
-//       " et m*v " << m_node_mass[inode] * m_velocity[inode];
-//     }
-//   }
-  
+ 
   // conservation energie totale 
   if (options()->convnerg) {
     ENUMERATE_CELL(icell, allCells()){

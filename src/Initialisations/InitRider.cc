@@ -1,4 +1,4 @@
-#include "MahycoModule.h"
+#include "../MahycoModule.h"
 
 
 void MahycoModule::initMatRiderMono(Real3 Xb)  {
@@ -38,12 +38,12 @@ void MahycoModule::initMatRider(Real3 Xb)  {
     m_materiau[cell] = 1;
     } else if ((rmax >= rb) && (rmin < rb)) {
       double frac_b = (rb - rmin) / (rmax - rmin);
-      m_materiau[cell] = (1. - frac_b);
+      m_materiau[cell] = frac_b;
     }
   }
 }
 void MahycoModule::initVarRiderMono(Real3 Xb)  {
-    
+
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
   double rb(0.15);
@@ -51,6 +51,8 @@ void MahycoModule::initVarRiderMono(Real3 Xb)  {
   info() << " boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
+    // pseudo-viscosité 
+    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
@@ -79,6 +81,8 @@ void MahycoModule::initVarRiderMono(Real3 Xb)  {
       m_density[cell] = frac_b;
       m_pressure[cell] = 0.;
     }
+    m_fracvol[cell] = 1.;
+    m_mass_fraction[cell] = 1.;
   }
   info() << " boucle sur les noeuds";
   ENUMERATE_NODE(inode, allNodes()){
@@ -118,7 +122,7 @@ void MahycoModule::initVarRiderMono(Real3 Xb)  {
   info() << " fin de boucle sur les noeuds";
 }
 void MahycoModule::initVarRider(Real3 Xb)  {
-    
+
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
@@ -126,6 +130,8 @@ void MahycoModule::initVarRider(Real3 Xb)  {
         
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
+    // pseudo-viscosité 
+    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
@@ -139,6 +145,8 @@ void MahycoModule::initVarRider(Real3 Xb)  {
     // Air partout
     m_density[cell] = 0.;
     m_pressure[cell] = 0.;
+    m_fracvol[cell] = 1.;
+    m_mass_fraction[cell] = 1.;
     // bulle surchargera l'aire
     // centre de la bulle
     double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
@@ -149,14 +157,26 @@ void MahycoModule::initVarRider(Real3 Xb)  {
       // maille pure de bulle
       m_density[cell] = 1.;
       m_pressure[cell] = 0.;
+      m_fracvol[cell] = 1.;
+      m_mass_fraction[cell] = 1.;
     } else if ((rmax >= rb) && (rmin < rb)) {
       // cas des cellules mailles mixtes
       double frac_b = (rb - rmin) / (rmax - rmin);
       AllEnvCell all_env_cell = all_env_cell_converter[cell];
       ENUMERATE_CELL_ENVCELL(ienvcell, all_env_cell) {
         EnvCell ev = *ienvcell;
-        if (ev.environmentId() == 0) m_density[ev] = 1.;
-        if (ev.environmentId() == 1) m_density[ev] = 0.;
+        if (ev.environmentId() == 0) {
+          m_density[ev] = 1.;
+          m_fracvol[ev] = frac_b;
+          m_mass_fraction[ev] = frac_b;
+          m_pseudo_viscosity[ev] = 0.;
+        }
+        if (ev.environmentId() == 1) {
+          m_density[ev] = 0.;
+          m_fracvol[ev] = 1-frac_b;
+          m_mass_fraction[ev] = 1-frac_b;
+          m_pseudo_viscosity[ev] = 0.;
+        }
         m_pressure[ev] = 0.;
       }
       m_density[cell] = frac_b;

@@ -1,5 +1,5 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "MahycoModule.h"
+#include "../MahycoModule.h"
 /**
  *******************************************************************************
  * \file computeGradPhiFace1()
@@ -270,7 +270,6 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
  */
 void MahycoModule::computeUremap(Integer idir)  {
     debug() << " Entree dans computeUremap()";
-    
     Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
@@ -286,12 +285,7 @@ void MahycoModule::computeUremap(Integer idir)  {
         
         // recuperation de la surface de la face 
         //m_face_length_lagrange[face][idir] 
-        
-//         if (cell.localId() == 1251) {
-//             info() << " VARFACE cell " << cell.localId() << " face " << face.localId() << " m_face_normal_velocity[face] " << m_face_normal_velocity[face] <<
-//             " m_face_normal[face] " << m_face_normal[face] << " m_outer_face_normal[cell][i] " << m_outer_face_normal[cell][i] << " index " << i << " et " << dirproj
-//             << " m_face_length_lagrange[face][idir]  " << m_face_length_lagrange[face];
-//         }
+ 
 //         if (cell.localId() == 1250) {
 //             info() << " VARFACE cell " << cell.localId() << " face " << face.localId() << " m_face_normal_velocity[face] " << m_face_normal_velocity[face] <<
 //             " m_face_normal[face] " << m_face_normal[face] << " m_outer_face_normal[cell][i] " << m_outer_face_normal[cell][i] << " index " << i << " et " << dirproj
@@ -367,20 +361,22 @@ void MahycoModule::computeUremap(Integer idir)  {
         // Phi volume
         double somme_masse = 0.;
         for (int imat = 0; imat < nbmat; imat++) {
-        m_phi_lagrange[cell][imat] = m_u_lagrange[cell][imat] / somme_volume;
+          m_phi_lagrange[cell][imat] = m_u_lagrange[cell][imat] / somme_volume;
         // Phi masse
         if (m_u_lagrange[cell][imat] != 0.)
-            m_phi_lagrange[cell][nbmat + imat] =
+          m_phi_lagrange[cell][nbmat + imat] =
                 m_u_lagrange[cell][nbmat + imat] / m_u_lagrange[cell][imat];
         else
-            m_phi_lagrange[cell][nbmat + imat] = 0.;
+          m_phi_lagrange[cell][nbmat + imat] = 0.;
         somme_masse += m_u_lagrange[cell][nbmat + imat];
         }
-        // Phi Vitesse
-        m_phi_lagrange[cell][3 * nbmat] =
-            m_u_lagrange[cell][3 * nbmat] / somme_masse;
-        m_phi_lagrange[cell][3 * nbmat + 1] =
-            m_u_lagrange[cell][3 * nbmat + 1] / somme_masse;
+        if (somme_masse!=0) {
+          // Phi Vitesse
+          m_phi_lagrange[cell][3 * nbmat] =
+                m_u_lagrange[cell][3 * nbmat] / somme_masse;
+          m_phi_lagrange[cell][3 * nbmat + 1] =
+                m_u_lagrange[cell][3 * nbmat + 1] / somme_masse;
+        }
         // Phi energie
         for (int imat = 0; imat < nbmat; imat++) {
         if (m_u_lagrange[cell][nbmat + imat] != 0.)
@@ -418,3 +414,4 @@ void MahycoModule::computeUremap(Integer idir)  {
     }
   }
 }
+

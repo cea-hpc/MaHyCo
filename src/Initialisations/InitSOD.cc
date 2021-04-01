@@ -1,5 +1,4 @@
-
-#include "MahycoModule.h"
+#include "../MahycoModule.h"
 
 void MahycoModule::initMatSOD()  {
     
