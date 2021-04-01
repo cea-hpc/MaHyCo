@@ -1,0 +1,2504 @@
+PseudoViscosity
+part
+         1
+hexa8
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+7.90505e-318
+5.95843e-316
+2.24713e-315
+3.59433e-316
+6.33411e-314
+6.55134e-314
+1.91759e-315
+3.73793e-314
+1.89228e-314
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+ 0.00000e+00
+1.35868e-317
+2.46526e-315
+6.63981e-314
+3.48810e-315
+ 0.00000e+00
+5.18769e-317
+5.74475e-316
+1.16105e-317
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+7.08984e-317
+1.35868e-317
+7.74942e-316
+5.92879e-317
+1.60763e-314
+1.05932e-313
+5.16161e-313
+5.25185e-313
+4.35753e-313
+3.05959e-313
+4.38236e-315
+4.91014e-314
+1.02346e-315
+1.85275e-318
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+2.71736e-318
+1.01926e-315
+4.91014e-314
+5.22474e-317
+1.57354e-314
+6.42851e-313
+5.09873e-313
+5.15811e-313
+ 0.00000e+00
+1.58694e-314
+1.18823e-316
+7.74942e-316
+1.43279e-317
+ 0.00000e+00
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.48220e-316
+2.72848e-316
+4.70018e-314
+5.05794e-313
+1.18518e-313
+2.15931e-312
+1.72143e-312
+8.86655e-313
+8.79634e-315
+1.31916e-316
+3.78717e-314
+1.07620e-314
+8.16443e-317
+ 0.00000e+00
+        -nan
+        -nan
+        -nan
+        -nan
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+9.88131e-319
+1.33027e-316
+9.11551e-315
+8.88849e-313
+1.65596e-312
+7.49868e-316
+1.17678e-313
+2.42646e-314
+4.58136e-314
+3.77096e-316
+1.47973e-316
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+8.71976e-315
+3.55369e-315
+2.14906e-312
+2.67641e-313
+5.85102e-312
+3.02790e-312
+2.24248e-314
+3.36831e-313
+1.17985e-313
+3.58615e-314
+2.92857e-316
+3.70549e-319
+4.49723e-316
+        -nan
+        -nan
+        -nan
+        -nan
+ 0.00000e+00
+ 0.00000e+00
+2.20353e-316
+3.57369e-314
+1.17986e-313
+3.36831e-313
+7.12764e-315
+4.40471e-314
+6.42409e-316
+2.67127e-313
+1.44949e-312
+2.39684e-315
+5.90371e-315
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+9.57470e-312
+3.06759e-312
+6.40597e-313
+2.36237e-315
+2.06272e-315
+2.12869e-314
+4.88890e-315
+1.18366e-315
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.18378e-315
+4.83431e-315
+1.44229e-314
+2.06989e-315
+2.36237e-315
+6.48277e-313
+3.02317e-312
+4.12844e-314
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+2.43351e-313
+4.03899e-316
+1.26617e-315
+1.90215e-317
+3.44178e-315
+6.89222e-317
+1.08694e-315
+5.45696e-316
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.74255e-316
+1.08694e-315
+3.90312e-317
+3.44178e-315
+2.00097e-317
+9.47494e-316
+4.03899e-316
+2.43351e-313
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.28539e-311
+2.25335e-314
+1.06468e-313
+2.51158e-315
+6.17582e-319
+2.19242e-316
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.94066e-319
+ 0.00000e+00
+2.49120e-315
+1.07421e-313
+2.25356e-314
+1.28539e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.38762e-311
+1.63360e-312
+1.08897e-313
+2.98873e-315
+2.47033e-319
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+2.47033e-319
+3.82901e-317
+1.59211e-313
+1.63422e-312
+1.40190e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.68578e-311
+2.09357e-312
+1.67984e-313
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+5.82306e-315
+2.09040e-312
+2.49829e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.98960e-313
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.89967e-314
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+6.24889e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.25453e-313
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.00793e-310
+4.27325e-311
+1.02252e-312
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.02422e-312
+4.27326e-311
+1.01241e-310
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.60099e-310
+3.44049e-313
+1.93910e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.94232e-311
+3.44620e-313
+5.34018e-310
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.29480e-310
+2.41053e-311
+4.35135e-314
+2.00047e-315
+9.29564e-314
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+9.29564e-314
+2.00047e-315
+4.35857e-314
+2.41452e-311
+4.30439e-310
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.90841e-312
+2.50850e-311
+7.88993e-312
+4.49086e-310
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+1.57415e-312
+9.15499e-313
+1.03302e-314
+6.65828e-310
+1.16978e-311
+2.51264e-311
+3.46482e-312
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.02252e-311
+2.61959e-313
+2.84446e-314
+2.00494e-312
+1.19056e-314
+1.00124e-312
+1.40823e-312
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+5.31477e-312
+2.57008e-312
+1.50631e-312
+1.39942e-312
+2.55867e-310
+3.30955e-310
+4.06788e-310
+4.48319e-310
+6.26836e-312
+2.62391e-313
+4.02659e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.08369e-311
+ 0.00000e+00
+ 0.00000e+00
+1.23516e-319
+3.13220e-312
+2.88773e-310
+1.80117e-310
+1.01402e-312
+8.62275e-313
+1.49894e-312
+4.79282e-312
+2.88061e-310
+1.48494e-310
+1.01619e-310
+1.20058e-310
+1.09943e-312
+ 0.00000e+00
+3.86435e-310
+4.41416e-310
+4.34094e-312
+ 0.00000e+00
+4.08781e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.09068e-311
+1.97679e-312
+4.55354e-310
+ 0.00000e+00
+8.26819e-315
+1.50713e-312
+1.90916e-312
+7.49631e-311
+4.99467e-311
+7.65714e-311
+2.30078e-310
+ 0.00000e+00
+ 0.00000e+00
+4.92988e-311
+7.47148e-311
+1.98487e-312
+1.50755e-312
+5.07877e-313
+2.81909e-312
+6.75144e-310
+2.93086e-312
+4.09481e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+4.63269e-310
+4.55948e-310
+4.60913e-310
+3.59950e-310
+1.72574e-310
+ 0.00000e+00
+ 0.00000e+00
+3.70963e-311
+1.75792e-310
+ 0.00000e+00
+ 0.00000e+00
+3.30144e-313
+8.09221e-313
+1.70703e-310
+3.58464e-310
+4.60913e-310
+4.55948e-310
+4.67275e-310
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+7.98828e-313
+6.81974e-313
+5.52317e-312
+3.18770e-312
+6.54824e-313
+3.46633e-310
+1.88159e-310
+5.02091e-313
+ 0.00000e+00
+3.67631e-313
+5.14199e-316
+ 0.00000e+00
+2.42646e-314
+1.81359e-311
+5.58219e-311
+ 0.00000e+00
+1.80939e-315
+6.60301e-313
+3.17728e-312
+4.19512e-312
+6.83537e-313
+7.95396e-313
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.70307e-310
+2.36569e-312
+3.83807e-311
+3.79500e-313
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+1.85280e-311
+5.03881e-314
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+3.79879e-313
+3.84190e-311
+2.36569e-312
+3.70306e-310
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+3.04169e-314
+1.92062e-313
+1.94759e-312
+ 0.00000e+00
+2.06336e-310
+7.20629e-312
+2.72906e-314
+3.77493e-313
+5.31998e-315
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+5.32529e-315
+3.77869e-313
+2.72906e-314
+6.82575e-312
+1.39169e-310
+ 0.00000e+00
+1.31361e-312
+1.88604e-313
+8.18914e-316
+ 0.00000e+00
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+6.05230e-318
+        -nan
+        -nan
+        -nan
+        -nan
+3.22872e-316
+2.38745e-315
+3.59896e-314
+7.02021e-312
+5.33638e-311
+3.72572e-313
+ 0.00000e+00
+1.74953e-310
+3.04845e-312
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+7.07040e-313
+7.07207e-313
+2.53372e-314
+6.17755e-315
+ 0.00000e+00
+4.47747e-316
+2.42562e-314
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+5.36084e-313
+7.67479e-311
+ 0.00000e+00
+1.85777e-314
+2.41487e-315
+1.27222e-317
+ 0.00000e+00
+ 1.16456e-05
+ 2.21118e-07
+9.78497e-316
+1.80334e-317
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+ 3.42403e-08
+2.37972e-314
+4.57772e-314
+1.37788e-313
+4.40271e-313
+1.80128e-312
+1.10530e-311
+2.24491e-311
+3.46218e-311
+1.47477e-312
+1.69803e-312
+3.60121e-314
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+ 0.00000e+00
+7.71928e-315
+7.42921e-311
+7.43129e-311
+2.83980e-312
+7.92039e-313
+7.53450e-318
+1.81055e-313
+1.40633e-311
+2.31561e-311
+1.66511e-312
+ 0.00000e+00
+4.19506e-313
+3.33321e-311
+1.11685e-311
+1.72934e-312
+2.30840e-315
+ 0.00000e+00
+ 0.00000e+00
+1.54297e-314
+ 3.45815e-08
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+ 0.00000e+00
+ 0.00000e+00
+1.96652e-312
+6.77760e-311
+6.77760e-311
+1.96580e-312
+ 0.00000e+00
+4.41929e-315
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+2.91437e-315
+9.05116e-314
+6.10681e-311
+1.41603e-312
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.60571e-318
+ 0.00000e+00
+3.98182e-313
+7.36516e-315
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+8.57364e-314
+3.18737e-312
+3.16642e-312
+8.55057e-314
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+1.32607e-315
+5.25641e-314
+6.18682e-311
+2.90205e-312
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+2.68873e-312
+9.87941e-311
+6.78634e-311
+2.74508e-312
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+7.86435e-311
+7.79877e-311
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
+        -nan
