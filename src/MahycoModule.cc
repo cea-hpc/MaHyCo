@@ -594,7 +594,6 @@ computeGeometricValues()
         EnvCell ev = *ienvcell;        
         Cell cell = ev.globalCell();
         m_cell_volume[ev] = m_fracvol[ev] * m_cell_volume[cell];
-        //info() << " volume pour " << cell.localId() << " " << m_cell_volume[ev] << " sur " << m_cell_volume[cell];
       }
     }
   }
@@ -617,13 +616,12 @@ void MahycoModule::
 updateDensity()
 {
   if (options()->sansLagrange) return;
-  debug() << " Entree dans updateDensity() ";
+  info() << " Entree dans updateDensity() ";
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
       EnvCell ev = *ienvcell;
       Cell cell = ev.globalCell();
-       // info() << " cell " << cell.localId() << m_cell_volume[ev];
        Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
        // nouvelle density
        m_density[ev] = new_density;
@@ -644,21 +642,12 @@ updateDensity()
     m_div_u[icell] =
       1.0 / m_global_deltat()  * ( 1.0 / m_density[icell] - 1.0 / m_density_n[icell] )
       / m_tau_density[icell];
-    // if ((m_cell_coord[icell].x > 0.48) && (m_cell_coord[icell].x < 0.52)) {
-    //   info() << cell.localId() << m_cell_coord[icell].x
-    //              <<  " div u calcule " <<  m_div_u[icell]
-    //              << " m_tau_density[icell] " << m_tau_density[icell]
-    //              << " densite_n  " << m_density_n[icell]
-    //              << " densite  " << m_density[icell]
-    //              << " volume n " << m_cell_volume_n[cell]
-    //              << " volume " << m_cell_volume[cell]
-    //              << " m_global_deltat() "  << m_global_deltat();
-    // }
   }
   
   m_density.synchronize();
   m_tau_density.synchronize();
   m_div_u.synchronize();
+  info() << "fin de updateDensity() ";
 }
 /**
  *******************************************************************************
@@ -692,7 +681,7 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   if (options()->sansLagrange) return;
-  debug() << " Entree dans updateEnergyAndPressure()";
+  info() << " Entree dans updateEnergyAndPressure()";
   bool csts = options()->schemaCsts();
   bool pseudo_centree = options()->pseudoCentree();
   // Calcul de l'énergie interne

@@ -97,10 +97,12 @@ remapVariables()
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;     
       index_env = ev.environmentId();        
-      m_fracvol[ev] = vol_nplus1[index_env] / volt_normalise;
+//      m_fracvol[ev] = vol_nplus1[index_env] / volt_normalise;
+       m_fracvol[ev] = vol_nplus1[index_env] / vol;
       if (m_fracvol[ev] < options()->threshold)
         m_fracvol[ev] = 0.;
       somme_frac += m_fracvol[ev];
+    if (cell.localId() == 51) info() << ev.environmentId() << " cell " << cell.localId() << " " << m_fracvol[ev];
     }
 //     info() << " cell " << cell.localId() << " fin des nouvelles ffractions " << somme_frac;
     // apres normamisation
@@ -171,14 +173,6 @@ remapVariables()
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_total_env + index_env] != 0.) {
         internal_energy_env_nplus1[index_env] =
           m_u_lagrange[cell][2 * nb_total_env + index_env] / m_u_lagrange[cell][nb_total_env + index_env];
-         //if (cell.localId() == 250 || cell.localId() == 251 || cell.localId() == 252 || cell.localId() == 253 || cell.localId() == 254) {
-//           if (m_cell_coord[cell].y > 0.5 && m_cell_coord[cell].y < 0.52) { 
-//           // if (m_cell_coord[cell].x > 0.5 && m_cell_coord[cell].x < 0.52) { 
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env << " densite ev avant proj " << m_density[ev];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" energie ev avant proj " << m_internal_energy[ev];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" densite avant proj " << m_density[cell];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" energie avant proj " << m_internal_energy[cell];
-//          }
       }
     }
     // mise à jour des valeurs moyennes aux allCells
@@ -196,13 +190,7 @@ remapVariables()
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie
       m_internal_energy[ev] = internal_energy_env_nplus1[index_env];
-//       if (cell.localId() == 1251) {
-//        info() << " env " << index_env<< " cell " << cell.localId();
-//        info() << " calcul densite env " << m_density[ev] << " et en moyenne " << m_density[cell];
-//        info() << " masse " << m_cell_mass[ev] << " et en moyenne " << m_cell_mass[cell];
-//        info() << " fraction " << m_fracvol[ev];
-//        info() << " fraction masse " << m_mass_fraction[ev];
-//       }
+ 
       // conservation energie totale
       // delta_ec : energie specifique
       // m_internal_energy_env[ev] += delta_ec;
@@ -217,14 +205,7 @@ remapVariables()
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;
       index_env = ev.environmentId();  
-      //if (cell.localId() == 250 || cell.localId() == 251 || cell.localId() == 252 || cell.localId() == 253 || cell.localId() == 254) {
-//        if (m_cell_coord[cell].y > 0.5 && m_cell_coord[cell].y < 0.52) { 
-//        //   if (m_cell_coord[cell].x > 0.5 && m_cell_coord[cell].x < 0.52) { 
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" densite ev apres proj " << m_density[ev];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" energie ev apres proj " << m_internal_energy[ev];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" densite apres proj " << m_density[cell];
-//           info() << m_cell_coord[cell].y << " cell " << cell.localId() << "index_env " << index_env <<" energie apres proj " << m_internal_energy[cell];
-//       }
+
       if (m_density[ev] < 0. || m_internal_energy[ev] < 0.) {
         info() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
                << index_env;

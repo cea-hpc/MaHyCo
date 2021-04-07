@@ -70,6 +70,7 @@ Real MahycoModule::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
                                 Real ypp, Real yppp, Real hmmm,
                                 Real hmm, Real hm, Real hp, Real hpp,
                                 Real hppp, Real vdt) {
+
   Real flux;
   Real gradmm, gradm, gradp, gradpp;
   Real ystarm, ystar, ystarp;
@@ -101,7 +102,7 @@ Real MahycoModule::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
   } else if (vdt < 0.) {
     flux = evaluate_fp(-vdt, hp, yp_m, grad_p, yp6);
   } else if (vdt == 0.) {
-      return 0.;
+    return 0.;
   }
   // Limitation TVD
   Real num, nup, ym_ym, yp_ym;

@@ -41,6 +41,13 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
 //     {
 //         info() << inode.localId() << " coord " << m_node_coord[inode] << " u_duale debut phase  " << idir << "   " << m_u_dual_lagrange[inode];
 //     }
+//       if (idir ==1) {
+//       info() << backbacknode.localId() << " coord " << m_node_coord[backbacknode];
+//       info() << backnode.localId() << " coord " << m_node_coord[backnode];
+//       info() << inode.localId() << " coord " << m_node_coord[inode];
+//       info() << frontnode.localId() << " coord " << m_node_coord[frontnode];
+//       info() << frontfrontnode.localId() << " coord " << m_node_coord[frontfrontnode];
+//       }
     }
   }
   String ajout_interne = "_INTERNE";

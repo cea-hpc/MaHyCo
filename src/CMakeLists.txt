@@ -33,7 +33,8 @@ set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DI
 # Test name is also test directory
 set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
-set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
+set( TEST_NAMES
+                "CAS_2D_Lag_BiSodCaseX"
      		"CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_BiSodCaseZ"
      		"CAS_2D_Lag_SodCaseX"
@@ -51,6 +52,12 @@ set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
      		"CAS_SodCaseX"
 		"CAS_SodCaseY"
      		"CAS_SodCaseZ"
+     		"CAS_SodCaseX_ordre_3"
+		"CAS_SodCaseY_ordre_3"
+     		"CAS_SodCaseZ_ordre_3"
+     		"CAS_BiSodCaseX_ordre_3"
+		"CAS_BiSodCaseY_ordre_3"
+     		"CAS_BiSodCaseZ_ordre_3"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderDeformationTimeReverse"
 		"CAS_MonoRiderRotation"
@@ -66,7 +73,8 @@ set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
 		"CAS_RiderTx"
 		"CAS_RiderTy"
 		"CAS_RiderVortex"
-		"CAS_RiderVortexTimeReverse")
+		"CAS_RiderVortexTimeReverse"
+		)
 
 foreach( TEST_NAME ${TEST_NAMES} )
  add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME})

@@ -167,11 +167,7 @@ computeVariablesForRemap()
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
     m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs();
-//     if ((m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.51 ) && (inode.localId() == 1809 || inode.localId() == 1810) )
-//     {
-//         info() << inode.localId() << " u_duale prepare " << m_u_dual_lagrange[inode];
-//         info() << "vitesse " << m_velocity[inode] << " et masse " << m_node_mass[inode];
-//     }
+
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
      m_phi_dual_lagrange[inode][0] = m_velocity[inode].x;
@@ -197,7 +193,7 @@ computeVariablesForRemap()
 void MahycoModule::remap() {
 
   if (options()->withProjection) {
-    debug() << " Entree dans remap()";
+    info() << " Entree dans remap()";
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
     

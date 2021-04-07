@@ -171,25 +171,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
       Face face = *iface; 
       Cell cellb = face.backCell();
       Cell cellf = face.frontCell();
-      //info() << " calcul pour la face " << face.localId() << " cellb " << cellb.localId() << " cellf " << cellf.localId();
-//       if (cellb.localId() == 1251) {
-//         info() << " cellb " << cellb.localId();
-//         info() << "phi V1 " << m_phi_lagrange[cellb][0] << " phi V2 " << m_phi_lagrange[cellb][1] 
-//         << " phi M1 " << m_phi_lagrange[cellb][2] << " phi M2 " << m_phi_lagrange[cellb][3] 
-//         << " phi E1 " << m_phi_lagrange[cellb][4] << " phi E2 " << m_phi_lagrange[cellb][5]; 
-//         info() << "Gphi V1 " << m_grad_phi[cellb][0] << " Gphi V2 " << m_grad_phi[cellb][1] 
-//         << " Gphi M1 " << m_grad_phi[cellb][2] << " Gphi M2 " << m_grad_phi[cellb][3] 
-//         << " Gphi E1 " << m_grad_phi[cellb][4] << " Gphi E2 " << m_grad_phi[cellb][5]; 
-//       }
-//       if (cellf.localId() == 1251) {
-//         info() << " cellf " << cellf.localId();
-//         info() << "phi V1 " << m_phi_lagrange[cellf][0] << " phi V2 " << m_phi_lagrange[cellf][1] 
-//         << " phi M1 " << m_phi_lagrange[cellf][2] << " phi M2 " << m_phi_lagrange[cellf][3] 
-//         << " phi E1 " << m_phi_lagrange[cellf][4] << " phi E2 " << m_phi_lagrange[cellf][5]; 
-//         info() << "Gphi V1 " << m_grad_phi[cellf][0] << " Gphi V2 " << m_grad_phi[cellf][1] 
-//         << " Gphi M1 " << m_grad_phi[cellf][2] << " Gphi M2 " << m_grad_phi[cellf][3] 
-//         << " Gphi E1 " << m_grad_phi[cellf][4] << " Gphi E2 " << m_grad_phi[cellf][5]; 
-//       }
+    
       // phiFace1 correspond
       // à la valeur de phi(x) à la face pour l'ordre 2 sans plateau pente
       // à la valeur du flux (integration de phi(x)) pour l'ordre 2 avec
@@ -215,30 +197,40 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
                 m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar];
           }
         }
-    } else if (options()->ordreProjection == 3) {
-      Cell cellbb = cellb;
-      Cell cellbbb = cellbb;
-      Cell cellff = cellf;
-      Cell cellfff = cellff;
-      DirCell ccb(cdm.cell(cellb));
-      if (ccb.previous().localId() != -1) {
-        cellbb = ccb.previous();
-        DirCell ccbb(cdm.cell(cellbb));
-        if (ccbb.previous().localId() != -1) {
-          cellbbb = ccbb.previous();
+     } else if (options()->ordreProjection == 3) {      
+         if (idir == 1) {
+           // bug dans arcane pour la direction Y ?
+           // pas de coherence entre backcell et ccb.previous()
+           // il faut inverser cellb et cellf dans la direction Y
+           Cell cell_tmp;
+           cell_tmp = cellb;
+           cellb = cellf;
+           cellf = cell_tmp;
+         } 
+        Cell cellbb = cellb;
+        Cell cellbbb = cellb;
+        Cell cellff = cellf;
+        Cell cellfff = cellf;
+        DirCell ccb(cdm.cell(cellb));
+        if (ccb.previous().localId() != -1) {
+          cellbb = ccb.previous();
+          cellbbb = cellbb;
+          DirCell ccbb(cdm.cell(cellbb));
+          if (ccbb.previous().localId() != -1) {
+            cellbbb = ccbb.previous();
+          }
         }
-      }
-      DirCell ccf(cdm.cell(cellf));
-      if (ccf.next().localId() != -1) {
-        cellff = ccf.next();
-        DirCell ccff(cdm.cell(cellff));
-        if (ccff.next().localId() != -1) {
-          cellfff = ccff.next();   
-        }
-      }
-//      info() << " Bilan face " << face.localId() << " = " << cellbbb.localId() << " - " << cellbb.localId() << " - " 
-//      << cellb.localId() << " - " << cellf.localId() << " - "<< cellff.localId() << " - "<< cellfff.localId();
-      for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
+        DirCell ccf(cdm.cell(cellf));
+        if (ccf.next().localId() != -1) {
+          cellff = ccf.next();
+          cellfff = cellff;
+          DirCell ccff(cdm.cell(cellff));
+          if (ccff.next().localId() != -1) {
+            cellfff = ccff.next();   
+          }
+        } 
+        Real vdt  = m_face_normal_velocity[face] * m_deltat_n;
+        for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
             m_phi_face[face][ivar] = ComputeFluxOrdre3(
                 m_phi_lagrange[cellbbb][ivar],
                 m_phi_lagrange[cellbb][ivar],
@@ -252,9 +244,31 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
                 m_h_cell_lagrange[cellf],
                 m_h_cell_lagrange[cellff],
                 m_h_cell_lagrange[cellfff],
-                m_face_normal_velocity[face] * m_deltat_n);
-      }
-    }
+                vdt);
+        } 
+        bool voisinage_pure = (m_est_mixte[cellb] == 0 && m_est_mixte[cellf] == 0 && 
+        m_est_pure[cellb] == m_est_pure[cellf]);
+        int nbmat = m_nb_env;   
+        if (!voisinage_pure) {
+          // comme dans le pente borne, on evite le pb de debar sur les maille a voisinage mixte
+          // pinfo() << " voisinage mixte " << cellb.localId() << " et " << cellf.localId();
+          for (int imat = 0; imat < nbmat; imat++) {
+            if (vdt>0. && m_phi_lagrange[cellb][imat]!=0. && m_phi_lagrange[cellb][nbmat+imat]!=0.) {
+             m_phi_face[face][nbmat+imat] = (m_phi_lagrange[cellb][nbmat+imat]/m_phi_lagrange[cellb][imat])
+                *m_phi_face[face][imat];
+             m_phi_face[face][2*nbmat+imat] = (m_phi_lagrange[cellb][2*nbmat+imat]/m_phi_lagrange[cellb][nbmat+imat])
+                *m_phi_face[face][nbmat+imat];
+            } else if (vdt<0. && m_phi_lagrange[cellf][imat]!=0. && m_phi_lagrange[cellf][nbmat+imat]!=0.) {
+             m_phi_face[face][nbmat+imat] = (m_phi_lagrange[cellf][nbmat+imat]/m_phi_lagrange[cellf][imat])
+                *m_phi_face[face][imat];
+             m_phi_face[face][2*nbmat+imat] = (m_phi_lagrange[cellf][2*nbmat+imat]/m_phi_lagrange[cellf][nbmat+imat])
+                *m_phi_face[face][nbmat+imat];
+            }
+          }
+        }
+                
+     }
+           
   }
 }
 /**
@@ -286,11 +300,6 @@ void MahycoModule::computeUremap(Integer idir)  {
         // recuperation de la surface de la face 
         //m_face_length_lagrange[face][idir] 
  
-//         if (cell.localId() == 1250) {
-//             info() << " VARFACE cell " << cell.localId() << " face " << face.localId() << " m_face_normal_velocity[face] " << m_face_normal_velocity[face] <<
-//             " m_face_normal[face] " << m_face_normal[face] << " m_outer_face_normal[cell][i] " << m_outer_face_normal[cell][i] << " index " << i << " et " << dirproj
-//             << " m_face_length_lagrange[face][idir]  " << m_face_length_lagrange[face];
-//         }
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
             flux = computeRemapFlux(
                                 options()->ordreProjection,
@@ -303,7 +312,7 @@ void MahycoModule::computeUremap(Integer idir)  {
             // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
             // aux faces pour la quantite de mouvement de
             // Vnr
-            // limotation à trois mat car m_flux_masse_face est real3
+            // limitation à trois mat car m_flux_masse_face est real3
             if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
             
             // doit etre FluxFace2(cCells, fFacesOfCellC) : m_flux_face[cell][i][ivar]
@@ -315,19 +324,13 @@ void MahycoModule::computeUremap(Integer idir)  {
 //             //
 //           }
         }
-        
-//         if (m_cell_coord[icell].x >= 0.5 && m_cell_coord[icell].x < 0.52) { 
-//            info() << m_cell_coord[icell].x << " U cell " << cell.localId() << m_face_length_lagrange[face][idir] << " et " << m_outer_face_normal[cell][i] << " et " << m_face_normal_velocity[face] << " et " << m_face_normal[face] << " _phi_face " << m_phi_face[face];
-//         }
+ 
       }
+ 
       for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
         m_u_lagrange[cell][ivar] -= flux_face[ivar];
       }
-          
-//         if (m_cell_coord[icell].y >= 0.5 && m_cell_coord[icell].y < 0.52) { 
-//            info() << " U cell " << cell.localId() << m_flux_masse_face[cell][i][0] << m_flux_masse_face[cell][i][0]" 0 = " << m_u_lagrange[cell][0] << " 1 = " << m_u_lagrange[cell][1] << " 2 = " << m_u_lagrange[cell][2]  << " 3 = " << m_u_lagrange[cell][3] << " 4 = " << m_u_lagrange[cell][4] << " 5 = " << m_u_lagrange[cell][5];
-//        }
-//     
+
       // diagnostics et controle
       for (int imat = 0; imat < nbmat; imat++) {
         if (m_u_lagrange[cell][nbmat + imat] < 0.) {

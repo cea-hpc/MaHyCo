@@ -643,13 +643,13 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
     Real hplus = m_h_cell_lagrange[frontcell];
     Real hmoins = m_h_cell_lagrange[backcell];
     // calcul des seuils y0plus, y0moins pour cCells
-    y0plus = computeY0(options()->projectionLimiteurId, 
+    y0plus = computeY0(options()->projectionLimiteurId,  // doit etre  projectionLimiterIdPure
                          m_phi_lagrange[cell][ivar],        
                          m_phi_lagrange[frontcell][ivar], 
                          m_phi_lagrange[backcell][ivar], 
                          h0, hplus, hmoins, 0);
       
-    y0moins = computeY0(options()->projectionLimiteurId, 
+    y0moins = computeY0(options()->projectionLimiteurId, // doit etre  projectionLimiterIdPure
                          m_phi_lagrange[cell][ivar],        
                          m_phi_lagrange[frontcell][ivar], 
                          m_phi_lagrange[backcell][ivar], 
