@@ -11,6 +11,7 @@ target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/Remap-ordre-3.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/UtilesRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/DualPhaseRemap.cc)
+target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSEDOV.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)

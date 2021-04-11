@@ -57,19 +57,24 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
       Cell frontcell = cell; // pour les mailles de bord
       Face backFace;
       Face frontFace;
+      Integer indexbackface;
+      Integer indexfrontface;
       Integer cas_possible(0);
       ENUMERATE_FACE(iface, cell.faces()){
         const Face& face = *iface;
+        Integer indexbackface = iface.index(); 
 //         info() << " face " << face.localId() << " est en direction : " << idir << " : "  
 //         << (Integer) m_is_dir_face[face][idir];
         if ( m_is_dir_face[face][idir] == true) {
           if (face.backCell() == cell) {
           frontFace = face;
+          indexfrontface = iface.index(); 
           if (face.frontCell().localId() != -1) frontcell = face.frontCell();
           cas_possible++;
           } 
           else if ( face.frontCell() == cell) {
           backFace = face;
+          indexbackface = iface.index(); 
           if (face.backCell().localId() != -1) backcell = face.backCell();
           cas_possible++;
           }
@@ -98,10 +103,10 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
     
       if (options()->projectionPenteBorne == 1) {
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(flFaces);
-        Real Flux_sortant_ar = math::dot(m_outer_face_normal[cell][backFace.localId()], dirproj) * m_face_normal_velocity[backFace];
+        Real Flux_sortant_ar = math::dot(m_outer_face_normal[cell][indexbackface], dirproj) * m_face_normal_velocity[backFace];
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(frFaces);
 //
-        Real Flux_sortant_av = math::dot(m_outer_face_normal[cell][frontFace.localId()], dirproj) * m_face_normal_velocity[frontFace];
+        Real Flux_sortant_av = math::dot(m_outer_face_normal[cell][indexfrontface], dirproj) * m_face_normal_velocity[frontFace];
         
         Real flux_dual = 0.5 * (m_face_normal_velocity[backFace] + m_face_normal_velocity[frontFace]);
         
@@ -295,7 +300,7 @@ void MahycoModule::computeUremap(Integer idir)  {
       flux_face.fill(0.);
       ENUMERATE_FACE(iface, cell.faces()){
         const Face& face = *iface;
-        Integer i = iface.localId();
+        Integer i = iface.index(); 
         
         // recuperation de la surface de la face 
         //m_face_length_lagrange[face][idir] 

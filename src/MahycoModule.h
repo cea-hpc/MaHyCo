@@ -383,6 +383,10 @@ class MahycoModule
   void initMatRiderMono(Real3 Xb);
   void initVarRider(Real3 Xb);
   void initVarRiderMono(Real3 Xb);
+  void initVarBiSedov();
+  void initMatBiSedov();
+  void initVarSedov();
+  void initMatSedov();
   
   ICartesianMesh* m_cartesian_mesh;
   /* variables membre */
@@ -407,7 +411,7 @@ class MahycoModule
   enum Test {
     // cas test
      UnitTestCase = 0,
-     SedovTestCase = 1,
+     Sedov = 1,
      TriplePoint = 2,
      SodCaseX = 3,
      SodCaseY = 4,
@@ -417,8 +421,8 @@ class MahycoModule
      AdvectionY = 8,
      AdvectionVitX = 9,
      AdvectionVitY = 10,
-     BiUnitTestCase = 11,
-     BiSedovTestCase = 12,
+     BiSedov = 11,
+     BiTriplePoint = 12,
      BiSodCaseX = 13,
      BiSodCaseY = 14,
      BiSodCaseZ = 15,

@@ -69,12 +69,20 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     Face face = *iface;       
     Cell cellb = face.backCell();
     Cell cellf = face.frontCell();
-    if (! options()->getProjectionPenteBorne()) {
+    Integer indexfacecellb(-1), indexfacecellf(-1);
+    ENUMERATE_FACE(jface, cellb.faces()) { 
+      if (jface.localId() == iface.localId()) indexfacecellb = jface.index(); 
+    }
+    ENUMERATE_FACE(jface, cellf.faces()) { 
+      if (jface.localId() == iface.localId()) indexfacecellf = jface.index(); 
+    }
+    if ((indexfacecellb>6) || (indexfacecellf>6)) exit(1);
+    if (! options()->projectionPenteBorne) {
       ENUMERATE_NODE(inode, face.nodes()) {
         // 4 faces dans une direction pour les noeuds --> 0.25  
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
-          m_back_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellb][iface.localId()][index_env] * m_outer_face_normal[cellb][iface.localId()][idir];
-          m_front_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellf][iface.localId()][index_env] * m_outer_face_normal[cellf][iface.localId()][idir];
+          m_back_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellb][indexfacecellb][index_env] * m_outer_face_normal[cellb][indexfacecellb][idir];
+          m_front_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellf][indexfacecellf][index_env] * m_outer_face_normal[cellf][indexfacecellf][idir];
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env]; 

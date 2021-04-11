@@ -17,7 +17,11 @@ using namespace Arcane::Materials;
 void MahycoModule::
 hydroStartInit()
 {
-    
+   IParallelMng* m_parallel_mng = subDomain()->parallelMng();
+   int my_rank = m_parallel_mng->commRank();
+  
+  pinfo() <<  "Mon rang " << my_rank << " et mon nombre de mailles " << allCells().size();
+  
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(8);
@@ -41,6 +45,7 @@ hydroStartInit()
   // Initialises les variables (surcharge l'init d'arcane)
   hydroStartInitVar();
   
+
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -56,12 +61,12 @@ hydroStartInit()
         Cell cell = * icell;
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
         if (all_env_cell.nbEnvironment() !=1) {
-        m_internal_energy[cell] = 0.;
-        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-            EnvCell ev = *ienvcell;        
-            m_internal_energy[cell] += m_internal_energy[ev] * m_mass_fraction[ev];
-            m_sound_speed[cell] = std::max(m_sound_speed[ev], m_sound_speed[cell]);
-        }
+            m_internal_energy[cell] = 0.;
+            ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+                EnvCell ev = *ienvcell;        
+                m_internal_energy[cell] += m_internal_energy[ev] * m_mass_fraction[ev];
+                m_sound_speed[cell] = std::max(m_sound_speed[ev], m_sound_speed[cell]);
+            }
         }
     }
   }
@@ -258,7 +263,7 @@ updateVelocity()
     updateVelocityWithoutLagrange();
     return;
   }
-  debug() << " Entree dans updateVelocity()";
+  pinfo() << " Entree dans updateVelocity()";
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::zero());
 
@@ -296,6 +301,7 @@ updateVelocity()
   }
 
   m_velocity.synchronize();
+  pinfo() << " fin de update velo";
 }
 /**
  *******************************************************************************
@@ -400,6 +406,7 @@ updateVelocityWithoutLagrange()
           m_velocity_n[node].y * cos(Pi * m_global_time());
     }
   }
+  m_velocity.synchronize();
 }
 /**
  *******************************************************************************
@@ -413,7 +420,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
-  debug() << " Entree dans updatePosition()";
+  pinfo() << " Entree dans updatePosition()";
   Real deltat = m_deltat_nplus1;
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
@@ -502,17 +509,15 @@ InitGeometricValues()
     
     // info() << "face " << iFace.localId() << " normal " << 
     // m_face_normal[iFace] << " coord " << m_face_coord[face] << " suface " << m_face_length_lagrange[face];
-    
-    ENUMERATE_CELL(icell,iFace->cells()) {
-      Integer index = iFace.index();
-      m_outer_face_normal[icell][index] = (m_face_coord[face]-m_cell_coord[icell]) 
+  }
+  ENUMERATE_CELL(icell,allCells()) {
+    ENUMERATE_FACE(iface, (*icell).faces()){
+      const Face& face = *iface;
+      Integer index = iface.index(); 
+        m_outer_face_normal[icell][index] = (m_face_coord[face]-m_cell_coord[icell]) 
             / (m_face_coord[face]-m_cell_coord[icell]).abs();
-//       if (m_cell_coord[icell].y >= 0.5 && m_cell_coord[icell].y < 0.52) { 
-//        info() << " cell " << icell.localId() << " et " << index << " outer " << m_outer_face_normal[icell][index];
-//       }
     }
-    
-  } 
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -520,7 +525,7 @@ InitGeometricValues()
 void MahycoModule::
 computeGeometricValues()
 {
-  debug() << " Entree dans computeGeometricValues() ";
+  pinfo() << " Entree dans computeGeometricValues() ";
   // Copie locale des coordonnées des sommets d'une maille
   Real3 coord[8];
   // Coordonnées des centres des faces
@@ -809,7 +814,7 @@ computePressionMoyenne()
 void MahycoModule::
 computeDeltaT()
 {
-  debug() << " Entree dans compute DT avec " << m_deltat_n
+  pinfo() << " Entree dans compute DT avec " << m_deltat_n
          << " et " << options()->deltatInit()
          << " et " << m_deltat_nplus1
          << " et " << options()->deltatMax();
@@ -878,7 +883,7 @@ computeDeltaT()
   bool too_much = ((m_global_time()+new_dt) > stop_time);
 
   
-  debug() << " nouveau pas de temps3 " << new_dt;
+  debug() << " nouveau pas de temps " << new_dt;
   if ( not_yet_finish && too_much){
     new_dt = stop_time - m_global_time();
     subDomain()->timeLoopMng()->stopComputeLoop(true);

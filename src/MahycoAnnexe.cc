@@ -14,6 +14,8 @@ void MahycoModule::hydroStartInitCasTest()
   if (options()->casTest == BiSodCaseX ||
       options()->casTest == BiSodCaseY ||
       options()->casTest == BiSodCaseZ) initMatBiSOD();
+  if (options()->casTest == Sedov) initMatSedov();
+  if (options()->casTest == BiSedov) initMatBiSedov();
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
       if (options()->casTest < MonoRiderRotation) 
           initMatRiderMono({0.20, 0.20, 0.});
@@ -36,6 +38,8 @@ void MahycoModule::hydroStartInitVar()
   if (options()->casTest == BiSodCaseX ||
       options()->casTest == BiSodCaseY ||
       options()->casTest == BiSodCaseZ) initVarBiSOD();
+  if (options()->casTest == Sedov) initVarSedov();
+  if (options()->casTest == BiSedov) initVarBiSedov();
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
       if (options()->casTest < MonoRiderRotation) 
           initVarRiderMono({0.20, 0.20, 0.});
@@ -116,15 +120,15 @@ void MahycoModule::hydroStartInitEnvAndMat()
   m_phi_face.resize(m_nb_vars_to_project);
   m_grad_phi_face.resize(m_nb_vars_to_project);
   m_is_dir_face.resize(3); // dimension 3
-  m_outer_face_normal.resize(allFaces().size()); // dimension 3 - TRES MOCHE
-  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)  - TRES MOCHE
-  m_flux_masse_face.resize(allFaces().size()); 
+  m_outer_face_normal.resize(6); // dimension 6 faces par mailles
+  info() << " ok";
+  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)
+  m_flux_masse_face.resize(6); 
   m_delta_phi_face_ar.resize(m_nb_vars_to_project);
   m_delta_phi_face_av.resize(m_nb_vars_to_project);
   m_dual_phi_flux.resize(m_nb_vars_to_project);
   m_front_flux_mass_env.resize(m_nb_env);
   m_back_flux_mass_env.resize(m_nb_env);
-  
   // saved_envs.size();
   
    ENUMERATE_CELL(icell, allCells()){
