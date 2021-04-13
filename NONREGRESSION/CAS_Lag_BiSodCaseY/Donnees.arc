@@ -25,7 +25,7 @@
   <mesh>
     <meshgenerator>
     <cartesian>
-       <nsd>1 1 1</nsd> 
+       <nsd>1 4 1</nsd> 
        <origine>0.0 0.0 0.0</origine>
        <lx nx='5' prx='1.0'>.1</lx>
 

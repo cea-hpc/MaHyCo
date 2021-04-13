@@ -18,9 +18,13 @@ void MahycoModule::
 hydroStartInit()
 {
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
-   int my_rank = m_parallel_mng->commRank();
+   my_rank = m_parallel_mng->commRank();
+   
   
   pinfo() <<  "Mon rang " << my_rank << " et mon nombre de mailles " << allCells().size();
+  pinfo() <<  " Mes mailles pures : " << ownCells().size();
+  pinfo() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
+  
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   // Dimensionne les variables tableaux
@@ -44,8 +48,6 @@ hydroStartInit()
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
   hydroStartInitVar();
-  
-
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -173,6 +175,16 @@ void MahycoModule::
 saveValuesAtN()
 {
   debug() << " Entree dans saveValuesAtN()";
+  
+  // synchronisation debut de pas de temps (avec projection nécéssaire ?)
+  m_pseudo_viscosity.synchronize();
+  m_density.synchronize();
+  m_internal_energy.synchronize();
+  m_cell_volume.synchronize();
+  m_pressure.synchronize();
+  m_cell_cqs.synchronize();
+  m_velocity.synchronize();
+  
   m_deltat_n = m_deltat_nplus1;
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = *icell;
@@ -525,11 +537,13 @@ InitGeometricValues()
 void MahycoModule::
 computeGeometricValues()
 {
-  pinfo() << " Entree dans computeGeometricValues() ";
+  pinfo() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   // Copie locale des coordonnées des sommets d'une maille
   Real3 coord[8];
   // Coordonnées des centres des faces
   Real3 face_coord[6];
+  
+  m_node_coord.synchronize();
   
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
@@ -547,13 +561,17 @@ computeGeometricValues()
 
     // Calcule les résultantes aux sommets
     computeCQs(coord, face_coord, cell);
-
+  }
+  m_cell_cqs.synchronize();
+  
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;    
     // Calcule le volume de la maille
     {
       Real volume = 0.;
       
       for (Integer inode = 0; inode < 8; ++inode) {
-        volume += math::dot(coord[inode], m_cell_cqs[icell] [inode]);
+        volume += math::dot(m_node_coord[cell.node(inode)], m_cell_cqs[icell] [inode]);
         m_node_volume[cell.node(inode)] += volume;
       }
       volume /= 3.;
@@ -562,29 +580,42 @@ computeGeometricValues()
     }
     
     // Calcule la longueur caractéristique de la maille.
-    if (options()->longueurCaracteristique() == "faces-opposees")
-      {
-        Real3 median1 = face_coord[0] - face_coord[3];
-        Real3 median2 = face_coord[2] - face_coord[5];
-        Real3 median3 = face_coord[1] - face_coord[4];
-        Real d1 = median1.abs();
-        Real d2 = median2.abs();
-        Real d3 = median3.abs();
-        
-        Real dx_numerator = d1 * d2 * d3;
-        Real dx_denominator = d1 * d2 + d1 * d3 + d2 * d3;
-        m_caracteristic_length[icell] = dx_numerator / dx_denominator;
-      }
-    else if (options()->longueurCaracteristique() == "racine-cubique-volume")
-      {
-        m_caracteristic_length[icell] = std::pow(m_cell_volume[icell], 1./3.);
-      }
-    else
-      {
-        info() << " pas de longeur caractéritique definie dans le .arc " << options()->longueurCaracteristique(); 
-        subDomain()->timeLoopMng()->stopComputeLoop(true);
-      }
-    
+    {
+        if (options()->longueurCaracteristique() == "faces-opposees")
+        {
+            // Recopie les coordonnées locales (pour le cache)
+            for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
+                coord[inode.index()] = m_node_coord[inode];
+            }
+            // Calcul les coordonnées des centres des faces
+            face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
+            face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
+            face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
+            face_coord[3] = 0.25 * (coord[4] + coord[5] + coord[6] + coord[7]);
+            face_coord[4] = 0.25 * (coord[1] + coord[2] + coord[6] + coord[5]);
+            face_coord[5] = 0.25 * (coord[2] + coord[3] + coord[7] + coord[6]);
+            
+            Real3 median1 = face_coord[0] - face_coord[3];
+            Real3 median2 = face_coord[2] - face_coord[5];
+            Real3 median3 = face_coord[1] - face_coord[4];
+            Real d1 = median1.abs();
+            Real d2 = median2.abs();
+            Real d3 = median3.abs();
+            
+            Real dx_numerator = d1 * d2 * d3;
+            Real dx_denominator = d1 * d2 + d1 * d3 + d2 * d3;
+            m_caracteristic_length[icell] = dx_numerator / dx_denominator;
+        }
+        else if (options()->longueurCaracteristique() == "racine-cubique-volume")
+        {
+            m_caracteristic_length[icell] = std::pow(m_cell_volume[icell], 1./3.);
+        }
+        else
+        {
+            info() << " pas de longeur caractéritique definie dans le .arc " << options()->longueurCaracteristique(); 
+            subDomain()->timeLoopMng()->stopComputeLoop(true);
+        }
+    }
  
   }
 
@@ -602,6 +633,9 @@ computeGeometricValues()
       }
     }
   }
+  
+  debug() << my_rank << " : " << " fin  de computeGeometricValues() ";
+ 
 }
 /**
  *******************************************************************************
@@ -621,13 +655,15 @@ void MahycoModule::
 updateDensity()
 {
   if (options()->sansLagrange) return;
-  info() << " Entree dans updateDensity() ";
+  debug() << my_rank << " : " << " Entree dans updateDensity() ";
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
       EnvCell ev = *ienvcell;
       Cell cell = ev.globalCell();
+       // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_cell_volume[ev];
        Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
+       // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_density_n[ev];
        // nouvelle density
        m_density[ev] = new_density;
        // volume specifique de l'environnement au temps n+1/2
@@ -652,7 +688,7 @@ updateDensity()
   m_density.synchronize();
   m_tau_density.synchronize();
   m_div_u.synchronize();
-  info() << "fin de updateDensity() ";
+  debug() << my_rank << " : " << "fin de updateDensity() ";
 }
 /**
  *******************************************************************************
@@ -712,21 +748,6 @@ updateEnergyAndPressure()
                                (0.5 * m_pressure[ev] + pseudo) *
                                (1.0 / m_density[ev] - 1.0 / m_density_n[ev]));
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
-        // if ((m_cell_coord[cell].x > 0.5) && (m_cell_coord[cell].x < 0.51)) {
-        // Cell cell = ev.globalCell();
-        //   info() << cell.localId()
-        //          << " nrj " << m_internal_energy[ev]
-        //          << " m_global_deltat() " << m_global_deltat()
-        //          << " pseudo " << pseudo
-        //          << " volume n " <<  m_cell_volume_n[cell]
-        //          << " volume " <<  m_cell_volume[cell];
-        //   info() << " div u " << (1.0 / m_density[ev] - 1.0 / m_density_n[ev])
-        //          << " density " << m_density_n[ev]
-        //          << " density n+1 " << m_density[ev]
-        //          << " tau dens " << m_tau_density[ev]          
-        //          << " pressure " << m_pressure[ev];
-        // }   
-        
       }
     }
   } else {
@@ -769,11 +790,14 @@ updateEnergyAndPressure()
       }
     }
   }
-  // Calcul de la Pression
-  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-    IMeshEnvironment* ienv = mm->environments()[i];
-    // Calcul de la pression et de la vitesse du son
-    options()->environment[i].eosModel()->applyEOS(ienv);
+  if (! options()->withProjection) {
+    // Calcul de la Pression si on ne fait pas de projection 
+    for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+        IMeshEnvironment* ienv = mm->environments()[i];
+        // Calcul de la pression et de la vitesse du son
+        options()->environment[i].eosModel()->applyEOS(ienv);
+    }
+    computePressionMoyenne();
   }
 }   
 /**
@@ -804,7 +828,6 @@ computePressionMoyenne()
         m_pressure[cell] += m_fracvol[ev] * m_pressure[ev];
         m_sound_speed[cell] = std::max(m_sound_speed[ev], m_sound_speed[cell]);
       }
-      //info() << " moyenne des pressions pour " << cell.localId();
     }
   }
 }     

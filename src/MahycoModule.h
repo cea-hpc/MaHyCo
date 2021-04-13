@@ -298,7 +298,9 @@ class MahycoModule
   virtual void computeGradPhiFace(Integer idir, String name);
   virtual void computeGradPhiCell(Integer idir);
   virtual void computeUremap(Integer idir);
+  virtual void synchronizeUremap();
   virtual void computeDualUremap(Integer idir, String name);
+  virtual void synchronizeDualUremap();
   virtual void computeUpwindFaceQuantitiesForProjection(Integer idir, String name);
   virtual void computeAndLimitGradPhi(Integer projectionLimiterId, Face frontFace, Face backFace, Cell cell, Cell frontcell, Cell backcell);
   
@@ -393,11 +395,11 @@ class MahycoModule
   Materials::IMeshMaterialMng* mm;
   Real m_deltat_n;
   Real m_deltat_nplus1;
-  bool m_x_then_y_n;
-  bool m_x_then_y_nplus1;
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
   Integer sens_projection;
+  
+  Integer my_rank;
   enum limiteur {
     minmod, 
     superBee,

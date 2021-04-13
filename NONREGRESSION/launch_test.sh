@@ -15,7 +15,32 @@ function launch_computation {
   fi
   return ${return_code}
 }
-
+# This function launch the computation by calling the executable with arguments
+# taken from args.txt file
+function launch_computation_para_4 {
+  local readonly exe_path=$1
+  local readonly data_dir=$2
+  local return_code=0
+  mpiexec -n 4 $1 $data_dir/Donnees.arc
+  if [[ $? -ne 0 ]]; then
+    echo "A problem occured during test execution."
+    return_code=1
+  fi
+  return ${return_code}
+}
+# This function launch the computation by calling the executable with arguments
+# taken from args.txt file
+function launch_computation_para_8 {
+  local readonly exe_path=$1
+  local readonly data_dir=$2
+  local return_code=0
+  mpiexec -n 8 $1 $data_dir/Donnees.arc
+  if [[ $? -ne 0 ]]; then
+    echo "A problem occured during test execution."
+    return_code=1
+  fi
+  return ${return_code}
+}
 # This function compares the results obtained in the output directory with those
 # expected in the reference directory
 function compare_results {
@@ -35,10 +60,15 @@ function compare_results {
 function main {
   local readonly exe_path=$1
   local readonly test_dir=$2
+  local readonly para=$3
 
   echo "Executable path : ${exe_path}"
   echo "Executing test $(basename ${test_dir})"
-
+  echo "Executing test mode ${para}"
+  if [ ${para} = "para" ]; then
+    echo "Executing test parallele mode ${para}"
+  fi
+  
   tmp_dir=$(mktemp -d -t mahyco-ci-XXXXXXXXXX)
 
   if [[ ! -d ${tmp_dir} ]]; then
@@ -50,7 +80,19 @@ function main {
   cd ${tmp_dir}
   echo "This directory contains the output of the test under ${test_dir}" > README.txt
   pwd
-  launch_computation ${exe_path} ${test_dir}
+  echo ${para}
+  if [ ${para}  = "para_8" ]
+  then
+      echo " lancement parallele sur 8 coeurs" 
+      launch_computation_para_8 ${exe_path} ${test_dir}
+  elif [ ${para}  = "para_4" ]
+  then
+      echo " lancement parallele sur 4 coeurs" 
+      launch_computation_para_4 ${exe_path} ${test_dir}
+  else
+      echo " lancement sequentiel" 
+      launch_computation ${exe_path} ${test_dir}
+  fi    
   if [[ $? -ne 0 ]]; then
     echo "Aborting!"
     exit 1

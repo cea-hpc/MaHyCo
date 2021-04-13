@@ -42,29 +42,15 @@ computeFaceQuantitesForRemap()
    // info() << "longeur face " << m_face_length_lagrange[face];
    // " vitesse " << m_face_normal_velocity[face] << " et " << m_face_normal[face];
   }
+  m_deltax_lagrange.synchronize();
+  m_face_length_lagrange.synchronize();
+  m_face_normal_velocity.synchronize();
 }
-/**
- *******************************************************************************
- * \file computeCellQuantitesForRemap()
- * \brief Calcul du centre des mailles pour la projection
- *
- * \param  varlp->XLagrange
- * \return varlp->XcLagrange
- *******************************************************************************
- */
-//inline void MahycoModule::
-//computeCellQuantitesForRemap()
-//{ 
-
-//         varlp->XcLagrange(cCells) =
-//             (1.0 / (6.0 * varlp->vLagrange(cCells)) * reduction7);
-//       });
-//}
 /**
  *******************************************************************************
  * \file computeVariablesForRemap()
  * \brief Remplissage des variables de la projection et de la projection duale
- *         varlp->ULagrange (variables aux mailles)
+ *         m_u_lagrange (variables aux mailles)
  *                           de 0 à nbmat-1 : volume partiel,
  *                           de nbmat à 2*nbmat-1 : masse partielle
  *                           de 2*nbmat à 3*nbmat-1 : energie partielle
@@ -72,27 +58,26 @@ computeFaceQuantitesForRemap()
  *                           3*nbmat+2 : enegie cinetique
  *                           3*nbmat+3 : pseudo-viscosite * volume
  *
- *         varlp->UDualLagrange (variables aux noeuds)
+ *         m_u_dual_lagrange (variables aux noeuds)
  *                           0 : masse
  *                           1 à 2 : quantite de mouvement
  *                           3 : energie cinetique
  *
  *  Pour l'option projection avec limiteurs pente-borne
  *
- *         varlp->Phi (variables aux mailles)
+ *         m_phi_lagrange (variables aux mailles)
  *                           de 0 à nbmat-1 : fraction volumique
  *                           de nbmat à 2*nbmat-1 : densite partielle
  *                           de 2*nbmat à 3*nbmat-1 : energie specifique
  *partielle de 3*nbmat à 3*nbmat+1 : vitesse 3*nbmat+2 : enegie cinetique
  *specifique 3*nbmat+3 : pseudo-viscosite
  *
- *         varlp->DualPhi (variables aux noeuds)
+ *         m_phi_dual_lagrange (variables aux noeuds)
  *                           0 : densite moyenne
  *                           1 à 2 : vitesse
  *                           3 : energie cinetique specifique
- * \param m_fracvol_env, varlp->vLagrange, m_mass_fraction_env, m_density_nplus1
- *        m_internal_energy_nplus1,
- * \return varlp->ULagrange, varlp->UDualLagrange, varlp->Phi, varlp->DualPhi
+ * \param 
+ * \return m_u_lagrange, m_u_dual_lagrange, m_phi_lagrange, m_phi_dual_lagrange
  *******************************************************************************
  */
 void MahycoModule::
@@ -196,6 +181,8 @@ void MahycoModule::remap() {
     info() << " Entree dans remap()";
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
+    synchronizeUremap();  
+    synchronizeDualUremap();
     
     IMesh* mesh = defaultMesh();
     Integer nb_dir = mesh->dimension();
@@ -217,17 +204,33 @@ void MahycoModule::remap() {
       // (avec limiteur ordinaire) 
       // et pour le pente borne, calcul des flux aux faces des cellules
       computeGradPhiCell(idir);
-      // calcul de phiFace 
+      // calcul de m_phi_face
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
       computeUpwindFaceQuantitiesForProjection(idir, name);
       
       computeUremap(idir);
+      synchronizeUremap();
       
-      if (!options()->sansLagrange) computeDualUremap(idir, name);
+      if (!options()->sansLagrange) {
+        computeDualUremap(idir, name);
+        synchronizeDualUremap();
+      }
     }
     sens_projection++;
     sens_projection = sens_projection%3;
+    
+    // recuperation des quantités aux cells et aux envcell
     remapVariables();
+    
+    if (!options()->sansLagrange) {
+      // Calcul de la Pression
+      for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+        IMeshEnvironment* ienv = mm->environments()[i];
+        // Calcul de la pression et de la vitesse du son
+        options()->environment[i].eosModel()->applyEOS(ienv);
+      }
+      computePressionMoyenne();
+   }
   }
 }

@@ -34,59 +34,72 @@ set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DI
 # Test name is also test directory
 set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
-set( TEST_NAMES
+
+set( TEST_NAMES_PARA_4
                 "CAS_2D_Lag_BiSodCaseX"
-     		"CAS_2D_Lag_BiSodCaseY"
-		"CAS_2D_Lag_BiSodCaseZ"
-     		"CAS_2D_Lag_SodCaseX"
 		"CAS_2D_Lag_SodCaseY"
-     		"CAS_2D_Lag_SodCaseZ"
-		"CAS_Lag_BiSodCaseX"
-     		"CAS_Lag_BiSodCaseY"
 		"CAS_Lag_BiSodCaseZ"
      		"CAS_Lag_SodCaseX"
-		"CAS_Lag_SodCaseY"
-     		"CAS_Lag_SodCaseZ"
-		"CAS_BiSodCaseX"
      		"CAS_BiSodCaseY"
 		"CAS_BiSodCaseZ"
-     		"CAS_SodCaseX"
 		"CAS_SodCaseY"
      		"CAS_SodCaseZ"
-     		"CAS_SodCaseX_ordre_3"
-		"CAS_SodCaseY_ordre_3"
-     		"CAS_SodCaseZ_ordre_3"
-     		"CAS_BiSodCaseX_ordre_3"
-		"CAS_BiSodCaseY_ordre_3"
-     		"CAS_BiSodCaseZ_ordre_3"
-		"CAS_MonoRiderDeformation"
+		)
+set( TEST_NAMES_PARA_8		
 		"CAS_MonoRiderDeformationTimeReverse"
-		"CAS_MonoRiderRotation"
-		"CAS_MonoRiderT45"
-		"CAS_MonoRiderTx"
-		"CAS_MonoRiderTy"
-		"CAS_MonoRiderVortex"
 		"CAS_MonoRiderVortexTimeReverse"
+		"CAS_MonoRiderVortex"
 		"CAS_RiderDeformation"
 		"CAS_RiderDeformationTimeReverse"
 		"CAS_RiderRotation"
-		"CAS_RiderT45"
 		"CAS_RiderTx"
 		"CAS_RiderTy"
 		"CAS_RiderVortex"
 		"CAS_RiderVortexTimeReverse"
 		)
+set( TEST_NAMES
+     		"CAS_2D_Lag_BiSodCaseY"
+		"CAS_2D_Lag_BiSodCaseZ"
+     		"CAS_2D_Lag_SodCaseX"
+     		"CAS_2D_Lag_SodCaseZ"
+		"CAS_Lag_BiSodCaseX"
+     		"CAS_Lag_BiSodCaseY"
+		"CAS_Lag_SodCaseY"
+     		"CAS_Lag_SodCaseZ"
+		"CAS_BiSodCaseX"
+     		"CAS_SodCaseX"
+     		"CAS_SodCaseX_ordre_3"
+     		"CAS_BiSodCaseX_ordre_3"
+		"CAS_MonoRiderDeformation"
+		"CAS_MonoRiderRotation"
+		"CAS_MonoRiderT45"
+		"CAS_MonoRiderTx"
+		"CAS_MonoRiderTy"
+		"CAS_RiderT45"
+		"CAS_SodCaseY_ordre_3"
+     		"CAS_SodCaseZ_ordre_3"
+		"CAS_BiSodCaseY_ordre_3"
+     		"CAS_BiSodCaseZ_ordre_3"
+		)
+		
+set( PARA4 "para_4")
+set( PARA8 "para_8")
+set( SEQ "seq")
 
-foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME})
-
-
-#    add_test( NAME ${TEST_NAME}
-#              COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:mahyco> "${TEST_DIR}/${TEST_NAME}" )
-#    set_tests_properties( ${TEST_NAME} PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1 )
+# sur 4 coeurs
+foreach( TEST_NAME ${TEST_NAMES_PARA_4} )
+ add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} )
 endforeach()
 
+# sur 8 coeurs
+foreach( TEST_NAME ${TEST_NAMES_PARA_8} )
+ add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} )
+endforeach()
 
+# sequentiel
+foreach( TEST_NAME ${TEST_NAMES} )
+ add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ})
+endforeach()
 
 
 if(MPIEXEC_EXECUTABLE)
@@ -95,6 +108,6 @@ if(MPIEXEC_EXECUTABLE)
 #    )
   # Teste le lancement avec 'arcane_run'
 #  add_test(NAME mahyco_NR1_p4_run
-#    COMMAND ${RUN_COMMAND} -n 4 ../../NONREGRESSSION/CAS_2D_Lag_BiSodCaseX/Donnees.arc
+#    COMMAND ${RUN_COMMAND} -n 4 
 #    )
 endif()

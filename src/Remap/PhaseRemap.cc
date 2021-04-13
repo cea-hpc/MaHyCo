@@ -3,11 +3,10 @@
 /**
  *******************************************************************************
  * \file computeGradPhiFace1()
- * \brief phase 1 de projection : premiere etapes
- *  calcul des gradients aux faces verticales ou horizontales suivant le cas
- *  calcul des longueurs des faces verticales ou horizontales suivant le cas
- *  calcul des largeurs de cellule dans le sens verticales ou horizontales
- *suivant le cas \param \return m_grad_phi, LfLagrange (pas utilie), m_h_cell_lagrange
+ * \brief phase de projection : premiere etapes
+ *  calcul des gradients aux faces dans le sens de la projection
+ *  calcul des largeurs de cellule dans le sens de la projection
+ * \param \return m_grad_phi, m_h_cell_lagrange
  *******************************************************************************
  */
 void MahycoModule::
@@ -33,16 +32,18 @@ computeGradPhiFace(Integer idir, String name)  {
       m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
     }
   }
+  m_grad_phi_face.synchronize();
+  m_h_cell_lagrange.synchronize();
 }
 /**
  *******************************************************************************
  * \file computeGradPhi()
  * \brief phase de projection : seconde etape
- *        calcul du gradient aux mailles limites
+ *        calcul du gradient aux mailles limites : m_grad_phi_face
  *        calcul des flux pente-borne arriere ou avant aux mailles
- *                 à partir du gradient precedent
+ *        à partir du gradient precedent : m_delta_phi_face_ar, m_delta_phi_face_av
  * \param
- * \return gradPhi1, deltaPhiFaceAr, deltaPhiFaceAv
+ * \return m_grad_phi_face, m_delta_phi_face_ar, m_delta_phi_face_av
  *******************************************************************************
  */
 void MahycoModule::computeGradPhiCell(Integer idir) {
@@ -157,12 +158,12 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
 /**
 *****************************************************************************
  * \file computeUpwindFaceQuantitiesForProjection1()
- * \brief  phase 1 de projection : troisieme etape
- *        calcul de phiFace1
+ * \brief  phase de projection : troisieme etape
+ *        calcul de m_phi_face
  *     qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables
  * projetees qui contient les flux des variables projetees avec l'option
  * pente-borne \param 
- * \return phiFace1
+ * \return m_phi_face
 *******************************************************************************
 */
 void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String name) {
@@ -271,10 +272,9 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
             }
           }
         }
-                
      }
-           
   }
+  m_phi_face.synchronize();
 }
 /**
  *******************************************************************************
@@ -284,7 +284,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
           Mises à jour de l'indicateur mailles mixtes
           calcul de la valeur de Phi issu de Uremap1
  * \param
- * \return Uremap1, varlp->mixte, varlp->pure, varlp->Phi
+ * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
 void MahycoModule::computeUremap(Integer idir)  {
@@ -422,4 +422,19 @@ void MahycoModule::computeUremap(Integer idir)  {
     }
   }
 }
-
+/**
+ *******************************************************************************
+ * \file synchronizeUremap()
+ * \brief phase de synchronisation des variables de projection apres projection
+ * \return m_phi_lagrange, m_u_lagrange synchonise sur les mailles fantomes
+ *         et m_flux_masse_face pour la projection duale
+ *******************************************************************************
+ */
+void MahycoModule::synchronizeUremap()  {
+    debug() << " Entree dans synchronizeUremap()";
+    m_phi_lagrange.synchronize();
+    m_u_lagrange.synchronize();
+    m_flux_masse_face.synchronize();
+    m_est_mixte.synchronize();
+    m_est_pure.synchronize();
+}

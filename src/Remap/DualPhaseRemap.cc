@@ -5,17 +5,15 @@
  *******************************************************************************
  * \file computeDualUremap1()
  * \brief phase de projection duale
- *   etape 1 - horizontale et verticale suivant le cas
- *   calcul des flux de masses duales a partir des flux de masses primales
- *   selon 3 methodes differentes (A1, A2, PB)
- *           getRightAndLeftFluxMasse...
- *     ou    getTopAndBottomFluxMasse...
- *   reconstruction de la vitesse ou l'energie cinetique a l'ordre 1 ou 2
- *           getLeftUpwindVelocity, getRightUpwindVelocity
- *     ou    getBottomUpwindVelocity, getTopUpwindVelocity
+ *   Calcul du gradient aux noeuds 
+ *   Calcul des flux de masse par environnement 
+ *   m_back_flux_mass_env,  m_front_flux_mass_env
+ *   et en moyenne
+ *   m_back_flux_mass,  m_front_flux_mass
  *
- * \param  varlp->UDualLagrange
- * \return UDualremap1, varlp->DualPhi
+ * \param idir : direction de la projection
+ * \param name : nom du groupe de face suivant la direction demandée
+ * \return m_dual_grad_phi
  *******************************************************************************
  */
 void MahycoModule::computeDualUremap(Integer idir, String name)  {
@@ -49,6 +47,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
 //       info() << frontfrontnode.localId() << " coord " << m_node_coord[frontfrontnode];
 //       }
     }
+    m_dual_grad_phi.synchronize();
   }
   String ajout_interne = "_INTERNE";
   name = name + ajout_interne;
@@ -117,6 +116,12 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       }
     }
   } 
+  // doit etre inutile si on augmente le nombre de mailles fantomes
+  m_back_flux_mass_env.synchronize(); 
+  m_front_flux_mass_env.synchronize();
+  m_back_flux_mass.synchronize(); 
+  m_front_flux_mass.synchronize();
+    
   Real3 FrontupwindVelocity;
   Real3 BackupwindVelocity;
   Real FrontupwindEcin;
@@ -293,4 +298,16 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
 //     }
   }
   info() << " fin de la projection duale pour la direction " << idir;
+}
+/**
+ *******************************************************************************
+ * \file synchronizeUremap()
+ * \brief phase de synchronisation des variables de projection dual apres projection
+ * \return m_phi_dual_lagrange, m_u_dual_lagrange synchonise sur les mailles fantomes
+ *******************************************************************************
+ */
+void MahycoModule::synchronizeDualUremap()  {
+    debug() << " Entree dans synchronizeUremap()";
+    m_phi_dual_lagrange.synchronize();
+    m_u_dual_lagrange.synchronize();
 }

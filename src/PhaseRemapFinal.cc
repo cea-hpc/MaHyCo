@@ -21,7 +21,6 @@ remapVariables()
   
   debug() << " Entree dans remapVariables";
   CellToAllEnvCellConverter all_env_cell_converter(mm);
-  m_x_then_y_nplus1 = !(m_x_then_y_n);
   Integer nb_total_env = mm->environments().size();
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
@@ -48,7 +47,7 @@ remapVariables()
           && cells_marker[icell.localId()] == -1) {
           
         cells_to_add.add(icell.localId());
-        info() << " cell " << icell.localId() << " ajoutée dans l'env " << env->name() << " pour " << m_cell_coord[icell];
+        info() << " cell " << icell.localId() << " ajoutée dans l'env " << env->name();
       }
     }
     
