@@ -22,7 +22,7 @@
     </format>
   </arcane-post-processing>
 
-  <mesh>
+  <mesh nb-ghostlayer="3" ghostlayer-builder-version="3">
     <meshgenerator>
      <cartesian>
        <nsd>1 4 1</nsd> 

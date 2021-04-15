@@ -6,7 +6,7 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>1</output-period>
+    <output-period>5</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -22,16 +22,16 @@
     </format>
   </arcane-post-processing>
 
-  <mesh>
+  <mesh nb-ghostlayer="2" ghostlayer-builder-version="3">
     <meshgenerator>
      <cartesian>
-       <nsd>2 2 1</nsd> 
+       <nsd>2 2 2</nsd> 
        <origine>0.0 0.0 0.0</origine>
-       <lx nx='60' prx='1.0'>1.2</lx>
+       <lx nx='30' prx='1.0'>1.2</lx>
 
-       <ly ny='60' pry='1.0'>1.2</ly>
+       <ly ny='30' pry='1.0'>1.2</ly>
 
-       <lz nz='60' prz='1.0'>1.2</lz>
+       <lz nz='30' prz='1.0'>1.2</lz>
      </cartesian>
 
      </meshgenerator>
@@ -41,7 +41,7 @@
   </mesh>
 
   <arcane-checkpoint>
-    <period>0</period>
+    <period>5</period>
     <!-- Mettre '0' si on souhaite ne pas faire de protections a la fin du calcul -->
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
@@ -78,7 +78,7 @@
      <deltat-max>0.01</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
     <convnerg>false</convnerg>
-    <final-time>1.</final-time>
+    <final-time>1.e-4</final-time>
     
     <boundary-condition>
       <surface>XMIN</surface>
