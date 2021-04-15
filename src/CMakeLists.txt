@@ -44,6 +44,12 @@ set( TEST_NAMES_PARA_4
 		"CAS_BiSodCaseZ"
 		"CAS_SodCaseY"
      		"CAS_SodCaseZ"
+     		"CAS_SodCaseX_ordre_3"
+     		"CAS_BiSodCaseX_ordre_3"
+		"CAS_SodCaseY_ordre_3"
+     		"CAS_SodCaseZ_ordre_3"
+		"CAS_BiSodCaseY_ordre_3"
+     		"CAS_BiSodCaseZ_ordre_3"
 		)
 set( TEST_NAMES_PARA_8		
 		"CAS_MonoRiderDeformationTimeReverse"
@@ -68,18 +74,12 @@ set( TEST_NAMES
      		"CAS_Lag_SodCaseZ"
 		"CAS_BiSodCaseX"
      		"CAS_SodCaseX"
-     		"CAS_SodCaseX_ordre_3"
-     		"CAS_BiSodCaseX_ordre_3"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderRotation"
 		"CAS_MonoRiderT45"
 		"CAS_MonoRiderTx"
 		"CAS_MonoRiderTy"
 		"CAS_RiderT45"
-		"CAS_SodCaseY_ordre_3"
-     		"CAS_SodCaseZ_ordre_3"
-		"CAS_BiSodCaseY_ordre_3"
-     		"CAS_BiSodCaseZ_ordre_3"
 		)
 		
 set( PARA4 "para_4")
