@@ -18,6 +18,7 @@
  */
 void MahycoModule::computeDualUremap(Integer idir, String name)  {
   info() << " Entree dans computeDualUremap() pour la direction " << idir;
+  Real deltat = m_global_deltat();
   NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
   m_dual_grad_phi.fill(Real3::null());
   if (options()->ordreProjection > 1) {
@@ -164,39 +165,39 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       // vittese front upwind
       FrontupwindVelocity[0] = m_phi_dual_lagrange[frontnode][0]
       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][0]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       FrontupwindVelocity[1] = m_phi_dual_lagrange[frontnode][1]
       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][1]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       FrontupwindVelocity[2] = m_phi_dual_lagrange[frontnode][2]
       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][2]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       // energie cinetique
       FrontupwindEcin = m_phi_dual_lagrange[frontnode][4]
       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][4] * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
     
     } else {
       // vittese front upwind
       FrontupwindVelocity[0] = m_phi_dual_lagrange[node][0]
       + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       FrontupwindVelocity[1] = m_phi_dual_lagrange[node][1]
       + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       FrontupwindVelocity[2] = m_phi_dual_lagrange[node][2]
       + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
       
       // energie cinetique
       FrontupwindEcin = m_phi_dual_lagrange[node][4]
       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
-      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - m_deltat_n * ufront));
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
     }
     BackupwindVelocity = 0.;
     BackupwindEcin = 0.;
@@ -211,39 +212,39 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       // vittese back upwind
       BackupwindVelocity[0] = m_phi_dual_lagrange[backnode][0]
       + order2 * ( 0.5 * m_dual_grad_phi[backnode][0]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       BackupwindVelocity[1] = m_phi_dual_lagrange[backnode][1]
       + order2 * ( 0.5 * m_dual_grad_phi[backnode][1]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       BackupwindVelocity[2] = m_phi_dual_lagrange[backnode][2]
       + order2 * ( 0.5 * m_dual_grad_phi[backnode][2]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       // energie cinetique
       BackupwindEcin = m_phi_dual_lagrange[backnode][4]
       + order2 * ( 0.5 * m_dual_grad_phi[backnode][4] * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
     } else {
       // vittese back upwind
       BackupwindVelocity[0] = m_phi_dual_lagrange[node][0]
       + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       BackupwindVelocity[1] = m_phi_dual_lagrange[node][1]
       + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       BackupwindVelocity[2] = m_phi_dual_lagrange[node][2]
       + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
       // energie cinetique
       BackupwindEcin = m_phi_dual_lagrange[node][4]
       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
-      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - m_deltat_n * uback));
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
     }
     // info() << " puis frontupwind " <<  FrontupwindVelocity << " et back " << BackupwindVelocity;
 //     if ((m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.52 ) ) {

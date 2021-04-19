@@ -48,6 +48,7 @@ computeGradPhiFace(Integer idir, String name)  {
  */
 void MahycoModule::computeGradPhiCell(Integer idir) {
   debug() << " Entree dans computeGradPhiCell()";
+  Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
@@ -120,12 +121,12 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
         // calcul de m_delta_phi_face_ar et m_dual_phi_flux
         if (voisinage_pure)
             computeFluxPPPure(cell, frontcell, backcell, Flux_sortant_ar, 
-                            m_deltat_n, 0, options()->threshold, 
+                            deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneComplet, flux_dual,
                             calcul_flux_dual, delta_phi_face, dual_phi_flux);
         else
             computeFluxPP(cell, frontcell, backcell, Flux_sortant_ar, 
-                            m_deltat_n, 0, options()->threshold, 
+                            deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneComplet, flux_dual,
                             calcul_flux_dual, delta_phi_face, dual_phi_flux);
             
@@ -138,12 +139,12 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
         // calcul de m_delta_phi_face_av
         if (voisinage_pure)
             computeFluxPPPure(cell, frontcell, backcell, Flux_sortant_av, 
-                            m_deltat_n, 0, options()->threshold, 
+                            deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneComplet, flux_dual,
                             calcul_flux_dual, delta_phi_face, dual_phi_flux);
         else
             computeFluxPP(cell, frontcell, backcell, Flux_sortant_av, 
-                            m_deltat_n, 0, options()->threshold, 
+                            deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneComplet, flux_dual,
                             calcul_flux_dual, delta_phi_face, dual_phi_flux);
             
@@ -168,6 +169,7 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
 */
 void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String name) {
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
+  Real deltat = m_global_deltat();
   String ajout_interne = "_INTERNE";
   name = name + ajout_interne;
   FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
@@ -235,7 +237,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
             cellfff = ccff.next();   
           }
         } 
-        Real vdt  = m_face_normal_velocity[face] * m_deltat_n;
+        Real vdt  = m_face_normal_velocity[face] * deltat;
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
             m_phi_face[face][ivar] = ComputeFluxOrdre3(
                 m_phi_lagrange[cellbbb][ivar],
@@ -293,6 +295,7 @@ void MahycoModule::computeUremap(Integer idir)  {
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
     int nbmat = m_nb_env;
+    Real deltat = m_global_deltat();
     Real flux;
     ENUMERATE_CELL(icell,allCells()) {
       Cell cell = * icell;
@@ -311,7 +314,7 @@ void MahycoModule::computeUremap(Integer idir)  {
                                 options()->projectionPenteBorne,
                                 m_face_normal_velocity[face], m_face_normal[face],
                                 m_face_length_lagrange[face][idir] , m_phi_face[face][ivar],
-                                m_outer_face_normal[cell][i], dirproj, m_deltat_n);
+                                m_outer_face_normal[cell][i], dirproj, deltat);
             flux_face[ivar] += flux;
             
             // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 

@@ -6,6 +6,7 @@
 #include <arcane/ITimeLoopMng.h>
 
 #include <arcane/geometry/IGeometry.h>
+#include <arcane/mesh/GhostLayerMng.h>
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -25,6 +26,21 @@ hydroStartInit()
   pinfo() <<  " Mes mailles pures : " << ownCells().size();
   pinfo() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
   
+  info() << " Check donnees ";
+  if ((options()->ordreProjection == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
+      pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
+      pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+      pinfo() << " incompatible avec la projection d'ordre " << options()->ordreProjection;
+      pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+      subDomain()->timeLoopMng()->stopComputeLoop(true);
+  }
+  if ((options()->withProjection == true) && (mesh()->ghostLayerMng()->nbGhostLayer() < 2) && (m_parallel_mng->isParallel() == true)) {
+      pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
+      pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+      pinfo() << " incompatible avec la projection ";
+      pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+      subDomain()->timeLoopMng()->stopComputeLoop(true);
+  }
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   // Dimensionne les variables tableaux
@@ -34,14 +50,13 @@ hydroStartInit()
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
   m_global_deltat = deltat_init;
-  m_deltat_n = m_global_deltat();
-  m_deltat_nplus1 = m_global_deltat();
 
   info() << " Initialisation des environnements";
   hydroStartInitEnvAndMat();
  
   // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
   computeGeometricValues(); 
+  
   info() << " Initialisation des groupes de faces";
   PrepareFaceGroup();
   
@@ -92,7 +107,22 @@ hydroStartInit()
         info() << c.localId() << " avec " << inode.localId();
     }
   }
+  
   InitGeometricValues();
+  
+  // deplacé de hydrocontinueInit
+  // calcul des volumes via les cqs, differents deu calcul dans computeGeometricValues ?
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = *icell;
+    // Calcule le volume de la maille et des noeuds
+    Real volume = 0.0;
+    for (Integer inode = 0; inode < 8; ++inode) {
+      volume += math::dot(m_node_coord[cell.node(inode)], m_cell_cqs[icell] [inode]);
+      m_node_volume[cell.node(inode)] += volume; 
+    }
+    volume /= 3.;
+    m_cell_volume[icell] = volume;
+  }
 }
 
 /**
@@ -145,36 +175,45 @@ computeNodeMass()
   }
   m_node_mass.synchronize();
 }
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
+/**
+ *******************************************************************************
+ * \file hydroContinueInit()
+ * \brief Initialisation suite à une reprise
+ *
+ * \param  
+ * \return m_nb_env, m_nb_vars_to_project, m_sens_projection
+ *******************************************************************************
+ */
 
 void MahycoModule::
 hydroContinueInit()
 {
-  debug() << " Entree dans hydroContinueInit()";
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = *icell;
-
-    // Calcule le volume de la maille et des noeuds
-    Real volume = 0.0;
-    Real3 somme = {0. , 0. , 0.};
-    for (Integer inode = 0; inode < 8; ++inode) {
-      volume += math::dot(m_node_coord[cell.node(inode)], m_cell_cqs[icell] [inode]);
-      somme += m_node_coord[cell.node(inode)];
-      m_node_volume[cell.node(inode)] += volume; 
-    }
-    volume /= 3.;
+  if (subDomain()->isContinue()) {
+    info() << " Entree dans hydroContinueInit()";
     
-    m_cell_volume[icell] = volume;
-    m_cell_coord[cell] = somme;
+    // en reprise 
+    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    mm = IMeshMaterialMng::getReference(defaultMesh());
+    info() << mm->name();
+    
+    mm->recreateFromDump();
+    // reprise à l'iteration suivante
+    m_nb_env = mm->environments().size();
+    m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+    m_sens_projection = 0;
   }
+  pinfo() << " m_global_deltat " << m_global_deltat() <<" m_global_old_deltat " << m_global_old_deltat() << " m_global_time " << m_global_time()
+  << " m_global_iteration " << m_global_iteration(); 
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
 saveValuesAtN()
 {
-  debug() << " Entree dans saveValuesAtN()";
+  pinfo() << " Entree dans saveValuesAtN()";
+  
+  pinfo() << " m_global_deltat " << m_global_deltat() <<" m_global_old_deltat " << m_global_old_deltat() << " m_global_time " << m_global_time()
+  << " m_global_iteration " << m_global_iteration(); 
   
   // synchronisation debut de pas de temps (avec projection nécéssaire ?)
   m_pseudo_viscosity.synchronize();
@@ -185,7 +224,6 @@ saveValuesAtN()
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
   
-  m_deltat_n = m_deltat_nplus1;
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = *icell;
     m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
@@ -198,7 +236,6 @@ saveValuesAtN()
       m_cell_cqs_n[icell] [inode.index()] = m_cell_cqs[icell] [inode.index()];
     }
   }
-  
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
@@ -221,6 +258,7 @@ saveValuesAtN()
     }
     // pas besoin de m_cell_coord car recalculé dans hydroContinueInit
   }
+  
 }    
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -294,7 +332,7 @@ updateVelocity()
      }
   }
 
-  const Real dt(0.5 * (m_deltat_n + m_deltat_nplus1));
+  const Real dt(0.5 * (m_global_old_deltat() + m_global_deltat()));
   // Calcule l'impulsion aux noeuds
   ENUMERATE_NODE(inode, allNodes()){
     Real node_mass = m_node_mass[inode];
@@ -305,7 +343,7 @@ updateVelocity()
 //     // //if ((m_node_coord[inode].x > 0.45) && (m_node_coord[inode].x  < 0.55))
 // //     if ( inode.localId() == 1809 || inode.localId() == 1810)
 //        info() <<  " vit " << inode.localId() << " " << m_node_coord[inode] << m_velocity_n[inode]<< m_velocity[inode]
-//          << " " << node_mass << " " << dt  << " " << m_deltat_n  << " " << m_deltat_nplus1 <<  " force " <<  m_force[inode];
+//          << " " << node_mass << " " << dt  << " " << m_global_old_deltat()  << " " << m_global_deltat() <<  " force " <<  m_force[inode];
 //       }
     //if (abs(m_velocity[inode].x) < options()->threshold) m_velocity[inode].x=0.;
     //if (abs(m_velocity[inode].y) < options()->threshold) m_velocity[inode].y=0.;
@@ -341,7 +379,7 @@ updateVelocityBackward()
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
   }
-  const Real dt(-0.5 * m_deltat_n);
+  const Real dt(-0.5 * m_global_old_deltat());
   // Calcule l'impulsion aux noeuds
   ENUMERATE_NODE(inode, allNodes()){
     Real node_mass = m_node_mass[inode];
@@ -378,7 +416,7 @@ updateVelocityForward()
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs[icell] [inode.index()];
   }
-  const Real dt(0.5 * m_deltat_nplus1);
+  const Real dt(0.5 * m_global_deltat());
   // Calcule l'impulsion aux noeuds
   ENUMERATE_NODE(inode, allNodes()){
     Real node_mass = m_node_mass[inode];
@@ -433,7 +471,7 @@ void MahycoModule::
 updatePosition()
 {
   pinfo() << " Entree dans updatePosition()";
-  Real deltat = m_deltat_nplus1;
+  Real deltat = m_global_deltat();
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
     if (((options()->sansLagrange) && (node.nbCell() == 4)) || (!options()->sansLagrange))
@@ -837,10 +875,12 @@ computePressionMoyenne()
 void MahycoModule::
 computeDeltaT()
 {
-  pinfo() << " Entree dans compute DT avec " << m_deltat_n
+  pinfo() << " Entree dans compute DT avec " << m_global_old_deltat()
          << " et " << options()->deltatInit()
-         << " et " << m_deltat_nplus1
+         << " et " << m_global_deltat()
          << " et " << options()->deltatMax();
+         
+  m_global_old_deltat = m_global_deltat;
          
   Real new_dt = FloatInfo < Real >::maxValue();
   if (options()->sansLagrange) {
@@ -879,15 +919,16 @@ computeDeltaT()
     new_dt = parallelMng()->reduce(Parallel::ReduceMin, new_dt);
     
     // respect de taux de croissance max
-    new_dt = math::min(new_dt, 1.05*m_deltat_n);
+    new_dt = math::min(new_dt, 1.05*m_global_old_deltat());
     // respect de la valeur max imposée par le fichier de données .plt
-    debug() << " nouveau pas de temps " << new_dt << " par " << cell_id << " (avec " << nbenvcell << " envs) avec " << cc << " " << ll ;
+    debug() << " nouveau pas de temps " << new_dt << " par " << cell_id << 
+        " (avec " << nbenvcell << " envs) avec " << cc << " " << ll << " et min " << minimum_aux;
     new_dt = math::min(new_dt, options()->deltatMax());
     // respect du pas de temps minimum
     if (new_dt < options()->deltatMin()) {
         info() << " pas de temps minimum ";
         info() << " nouveau pas de temps " << new_dt << " par " << cell_id 
-            << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll ;
+            << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll << " et min " << minimum_aux;
         exit(1);
     }
     
@@ -897,7 +938,6 @@ computeDeltaT()
   
   // Mise à jour du pas de temps
   m_global_deltat = new_dt;
-  m_deltat_nplus1 = new_dt;
   
   // Le dernier calcul se fait exactement au temps stopTime()
   Real stop_time  = options()->finalTime();

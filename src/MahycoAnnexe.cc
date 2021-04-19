@@ -106,7 +106,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
   Integer nb_env = m_block1->nbEnvironment();
   m_nb_env = nb_env;
   m_nb_vars_to_project = 3 * nb_env + 3 + 1 + 1;
-  sens_projection = 0;
+  m_sens_projection = 0;
   // (volumes, ma;sses, energies internes) * nbmatmax
   // + vitesses + energie cinétique + pseudo*
   //

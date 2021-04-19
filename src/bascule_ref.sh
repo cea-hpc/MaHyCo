@@ -15,9 +15,16 @@ for cas in $(cat list_of_cases_to_change.txt); do
         echo $curent_dir
 	echo $test_dir/$cas
 	cp $cas_dir/Donnees.arc .
-	$curent_dir/src/Mahyco Donnees.arc
+	#$curent_dir/build/src/Mahyco Donnees.arc
+		mpiexec -n 4 $curent_dir/build/src/Mahyco Donnees.arc
+	#	mpiexec -n 8 $curent_dir/build/src/Mahyco Donnees.arc
+	#  $curent_dir/build/src/Mahyco -arcane_opt max_iteration 10
+	#  reprise
+	#  $curent_dir/build/src/Mahyco -arcane_opt continue Donnees.arc
+	# avec mpiexec -n 4 ou 8
+	
         paraview $cas_dir/output/depouillement/ensight.case &
-	paraview output/depouillement/ensight.case &
+	#paraview output/depouillement/ensight.case &
         #diff output $cas_dir/reference
 	echo $cas
 	echo "Basculer Yes/No"

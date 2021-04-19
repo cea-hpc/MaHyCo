@@ -42,7 +42,7 @@
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME OLD N	 -->
   <variable field-name="cell_volume_n" name="CellVolumeN" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="false" need-sync="true" />
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME	 -->
   <variable field-name="cell_volume" name="CellVolume" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />

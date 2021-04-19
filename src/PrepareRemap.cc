@@ -176,7 +176,7 @@ computeVariablesForRemap()
  * 
  **/
 void MahycoModule::remap() {
-
+    
   if (options()->withProjection) {
     info() << " Entree dans remap()";
     computeVariablesForRemap();
@@ -191,7 +191,7 @@ void MahycoModule::remap() {
     
     for( Integer i=0; i<nb_dir; ++i){
       
-      idir = (i + sens_projection)%3;
+      idir = (i + m_sens_projection)%3;
       // a ameliorer
       String name;
       if (idir == 0) name="FACE_X";
@@ -217,8 +217,8 @@ void MahycoModule::remap() {
         synchronizeDualUremap();
       }
     }
-    sens_projection++;
-    sens_projection = sens_projection%3;
+    m_sens_projection++;
+    m_sens_projection = m_sens_projection%3;
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables();

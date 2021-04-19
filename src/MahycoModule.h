@@ -393,11 +393,9 @@ class MahycoModule
   ICartesianMesh* m_cartesian_mesh;
   /* variables membre */
   Materials::IMeshMaterialMng* mm;
-  Real m_deltat_n;
-  Real m_deltat_nplus1;
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
-  Integer sens_projection;
+  Integer m_sens_projection;
   
   Integer my_rank;
   enum limiteur {

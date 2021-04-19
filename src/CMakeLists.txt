@@ -37,6 +37,7 @@ set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
 set( TEST_NAMES_PARA_4
                 "CAS_2D_Lag_BiSodCaseX"
+     		"CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
 		"CAS_Lag_BiSodCaseZ"
      		"CAS_Lag_SodCaseX"
@@ -64,27 +65,34 @@ set( TEST_NAMES_PARA_8
 		"CAS_RiderVortexTimeReverse"
 		)
 set( TEST_NAMES
-     		"CAS_2D_Lag_BiSodCaseY"
-		"CAS_2D_Lag_BiSodCaseZ"
-     		"CAS_2D_Lag_SodCaseX"
      		"CAS_2D_Lag_SodCaseZ"
 		"CAS_Lag_BiSodCaseX"
      		"CAS_Lag_BiSodCaseY"
 		"CAS_Lag_SodCaseY"
      		"CAS_Lag_SodCaseZ"
 		"CAS_BiSodCaseX"
-     		"CAS_SodCaseX"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderRotation"
 		"CAS_MonoRiderT45"
-		"CAS_MonoRiderTx"
 		"CAS_MonoRiderTy"
+		)
+
+set( TEST_NAMES_PR
+     		"CAS_2D_Lag_SodCaseX"
+     		"CAS_SodCaseX"
+		"CAS_MonoRiderTx"
 		"CAS_RiderT45"
 		)
 		
 set( PARA4 "para_4")
 set( PARA8 "para_8")
 set( SEQ "seq")
+set( SEQPR "seq_pr")
+
+# protection-reprise
+foreach( TEST_NAME ${TEST_NAMES_PR} )
+ add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ})
+endforeach()
 
 # sur 4 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_4} )
@@ -101,13 +109,3 @@ foreach( TEST_NAME ${TEST_NAMES} )
  add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ})
 endforeach()
 
-
-if(MPIEXEC_EXECUTABLE)
-#  add_test(NAME mahyco_NR1_p4
-#    COMMAND ${MPIEXEC_EXECUTABLE} ${MPIEXEC_NUMPROC_FLAG} 4 Mahyco ../../NONREGRESSION/CAS_2D_Lag_BiSodCaseX/Donnees.arc
-#    )
-  # Teste le lancement avec 'arcane_run'
-#  add_test(NAME mahyco_NR1_p4_run
-#    COMMAND ${RUN_COMMAND} -n 4 
-#    )
-endif()
