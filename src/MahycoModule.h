@@ -395,8 +395,6 @@ class MahycoModule
   Materials::IMeshMaterialMng* mm;
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
-  Integer m_sens_projection;
-  
   Integer my_rank;
   enum limiteur {
     minmod, 

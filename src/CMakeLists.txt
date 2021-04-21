@@ -65,8 +65,8 @@ set( TEST_NAMES_PARA_8
 		"CAS_RiderVortexTimeReverse"
 		)
 set( TEST_NAMES
-     		"CAS_2D_Lag_SodCaseZ"
 		"CAS_Lag_BiSodCaseX"
+     		"CAS_2D_Lag_SodCaseZ"
      		"CAS_Lag_BiSodCaseY"
 		"CAS_Lag_SodCaseY"
      		"CAS_Lag_SodCaseZ"
@@ -91,7 +91,7 @@ set( SEQPR "seq_pr")
 
 # protection-reprise
 foreach( TEST_NAME ${TEST_NAMES_PR} )
- add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ})
+ add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQPR})
 endforeach()
 
 # sur 4 coeurs

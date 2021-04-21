@@ -39,8 +39,6 @@ computeFaceQuantitesForRemap()
        vitesse_moy += m_velocity[face.node(inode)];
    }
    m_face_normal_velocity[face] = math::dot((0.25 * vitesse_moy), m_face_normal[face]);  
-   // info() << "longeur face " << m_face_length_lagrange[face];
-   // " vitesse " << m_face_normal_velocity[face] << " et " << m_face_normal[face];
   }
   m_deltax_lagrange.synchronize();
   m_face_length_lagrange.synchronize();
@@ -178,7 +176,7 @@ computeVariablesForRemap()
 void MahycoModule::remap() {
     
   if (options()->withProjection) {
-    info() << " Entree dans remap()";
+    debug() << " Entree dans remap()";
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
     synchronizeUremap();  
@@ -191,7 +189,7 @@ void MahycoModule::remap() {
     
     for( Integer i=0; i<nb_dir; ++i){
       
-      idir = (i + m_sens_projection)%3;
+      idir = (i + m_sens_projection())%3;
       // a ameliorer
       String name;
       if (idir == 0) name="FACE_X";
@@ -217,8 +215,8 @@ void MahycoModule::remap() {
         synchronizeDualUremap();
       }
     }
-    m_sens_projection++;
-    m_sens_projection = m_sens_projection%3;
+    m_sens_projection = m_sens_projection()+1;
+    m_sens_projection = m_sens_projection()%3;
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables();

@@ -6,7 +6,7 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>5</output-period>
+    <output-period>500</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -27,11 +27,11 @@
      <cartesian>
        <nsd>2 2 2</nsd> 
        <origine>0.0 0.0 0.0</origine>
-       <lx nx='30' prx='1.0'>1.2</lx>
+       <lx nx='60' prx='1.0'>1.2</lx>
 
-       <ly ny='30' pry='1.0'>1.2</ly>
+       <ly ny='60' pry='1.0'>1.2</ly>
 
-       <lz nz='30' prz='1.0'>1.2</lz>
+       <lz nz='60' prz='1.0'>1.2</lz>
      </cartesian>
 
      </meshgenerator>
@@ -41,7 +41,7 @@
   </mesh>
 
   <arcane-checkpoint>
-    <period>5</period>
+    <period>500</period>
     <!-- Mettre '0' si on souhaite ne pas faire de protections a la fin du calcul -->
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />

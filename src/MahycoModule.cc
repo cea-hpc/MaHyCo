@@ -189,31 +189,32 @@ void MahycoModule::
 hydroContinueInit()
 {
   if (subDomain()->isContinue()) {
-    info() << " Entree dans hydroContinueInit()";
     
+    debug() << " Entree dans hydroContinueInit()";
     // en reprise 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     mm = IMeshMaterialMng::getReference(defaultMesh());
     info() << mm->name();
-    
+  
     mm->recreateFromDump();
-    // reprise à l'iteration suivante
     m_nb_env = mm->environments().size();
     m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
-    m_sens_projection = 0;
+    
+    m_global_old_deltat = m_old_deltat;
+    // mise a jour nombre iteration 
+    m_global_iteration = m_global_iteration() +1;
   }
-  pinfo() << " m_global_deltat " << m_global_deltat() <<" m_global_old_deltat " << m_global_old_deltat() << " m_global_time " << m_global_time()
-  << " m_global_iteration " << m_global_iteration(); 
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
 saveValuesAtN()
 {
-  pinfo() << " Entree dans saveValuesAtN()";
+  debug() << " Entree dans saveValuesAtN()";
   
-  pinfo() << " m_global_deltat " << m_global_deltat() <<" m_global_old_deltat " << m_global_old_deltat() << " m_global_time " << m_global_time()
-  << " m_global_iteration " << m_global_iteration(); 
+  // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
+  // donc nous ont remet le bon old pas de temps
+  m_global_old_deltat = m_old_deltat;
   
   // synchronisation debut de pas de temps (avec projection nécéssaire ?)
   m_pseudo_viscosity.synchronize();
@@ -258,7 +259,6 @@ saveValuesAtN()
     }
     // pas besoin de m_cell_coord car recalculé dans hydroContinueInit
   }
-  
 }    
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -281,10 +281,6 @@ computeArtificialViscosity()
              + (adiabatic_cst + 1) / 2.0 * m_caracteristic_length[cell] * m_caracteristic_length[cell]
              * m_div_u[cell] * m_div_u[cell]);
       }
-      // if ((m_cell_coord[cell].x > 0.5) && (m_cell_coord[cell].x < 0.51)) {
-      //   info() << cell.localId() << " " << m_pseudo_viscosity[ev] << " long "
-      //        << m_caracteristic_length[cell] << " sound  " << m_sound_speed[cell] << " div " <<  m_div_u[cell];
-      // }
     }
   }
   // maille mixte
@@ -299,7 +295,6 @@ computeArtificialViscosity()
         EnvCell ev = *ienvcell;        
         m_pseudo_viscosity[cell] += m_pseudo_viscosity[ev] * m_fracvol[ev];
       }
-      //info() << " moyenne des pseudo pour " << cell.localId();
     }
   }
 }
@@ -313,7 +308,7 @@ updateVelocity()
     updateVelocityWithoutLagrange();
     return;
   }
-  pinfo() << " Entree dans updateVelocity()";
+  debug() << " Entree dans updateVelocity()";
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::zero());
 
@@ -324,11 +319,6 @@ updateVelocity()
     Real pressure = m_pressure_n[icell] + m_pseudo_viscosity_n[icell];
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
-//     if ( inode.localId() == 1809 || inode.localId() == 1810)
-//       if ( m_node_coord[inode].y >= 0.5 && m_node_coord[inode].y < 0.5101 ) {
-//        info()  << inode.localId() << " " << inode.index() << " " << icell.localId() << " force " << m_force[inode].z << " pres " << pressure <<  " avec " << m_pressure_n[icell] << " et " << m_pseudo_viscosity_n[icell] << " et " << m_cell_cqs_n[icell] [inode.index()].z << " ou pcqs " << pressure * m_cell_cqs_n[icell] [inode.index()].z;
-//       }
-//       
      }
   }
 
@@ -339,19 +329,9 @@ updateVelocity()
     Real3 old_velocity = m_velocity_n[inode];
     Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
     m_velocity[inode] = new_velocity;
-//       if ( m_node_coord[inode].y >= 0.5 && m_node_coord[inode].y < 0.5101 ) {
-//     // //if ((m_node_coord[inode].x > 0.45) && (m_node_coord[inode].x  < 0.55))
-// //     if ( inode.localId() == 1809 || inode.localId() == 1810)
-//        info() <<  " vit " << inode.localId() << " " << m_node_coord[inode] << m_velocity_n[inode]<< m_velocity[inode]
-//          << " " << node_mass << " " << dt  << " " << m_global_old_deltat()  << " " << m_global_deltat() <<  " force " <<  m_force[inode];
-//       }
-    //if (abs(m_velocity[inode].x) < options()->threshold) m_velocity[inode].x=0.;
-    //if (abs(m_velocity[inode].y) < options()->threshold) m_velocity[inode].y=0.;
-    //if (abs(m_velocity[inode].z) < options()->threshold) m_velocity[inode].z=0.;
   }
 
   m_velocity.synchronize();
-  pinfo() << " fin de update velo";
 }
 /**
  *******************************************************************************
@@ -470,7 +450,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
-  pinfo() << " Entree dans updatePosition()";
+  debug() << " Entree dans updatePosition()";
   Real deltat = m_global_deltat();
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
@@ -543,22 +523,10 @@ InitGeometricValues()
     m_face_normal[iFace].x = produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y);
     m_face_normal[iFace].y = - produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x);
     m_face_normal[iFace].z = produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x);
-    // m_face_normal[iFace] =  math::vecMul(face_vec1, face_vec2);
-    // dimension 2
-    //Real3 dir = nodes_coord[face.node(0)] - nodes_coord[face.node(1)];
-    //m_face_normal[iFace].x = - dir.y;
-    //m_face_normal[iFace].y = dir.x;
-    //m_face_normal[iFace].z = 0.0;
     m_face_normal[iFace] /= m_face_normal[iFace].abs();
     m_face_coord[face] = 0.;
     for (Integer inode = 0; inode < 4; ++inode) 
       m_face_coord[face] +=  0.25 * m_node_coord[face.node(inode)];
-        
-    // m_face_length_lagrange[face] = m_face_normal[iFace].abs();
-    
-    
-    // info() << "face " << iFace.localId() << " normal " << 
-    // m_face_normal[iFace] << " coord " << m_face_coord[face] << " suface " << m_face_length_lagrange[face];
   }
   ENUMERATE_CELL(icell,allCells()) {
     ENUMERATE_FACE(iface, (*icell).faces()){
@@ -575,7 +543,7 @@ InitGeometricValues()
 void MahycoModule::
 computeGeometricValues()
 {
-  pinfo() << my_rank << " : " << " Entree dans computeGeometricValues() ";
+  debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   // Copie locale des coordonnées des sommets d'une maille
   Real3 coord[8];
   // Coordonnées des centres des faces
@@ -671,9 +639,6 @@ computeGeometricValues()
       }
     }
   }
-  
-  debug() << my_rank << " : " << " fin  de computeGeometricValues() ";
- 
 }
 /**
  *******************************************************************************
@@ -726,7 +691,6 @@ updateDensity()
   m_density.synchronize();
   m_tau_density.synchronize();
   m_div_u.synchronize();
-  debug() << my_rank << " : " << "fin de updateDensity() ";
 }
 /**
  *******************************************************************************
@@ -760,7 +724,7 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   if (options()->sansLagrange) return;
-  info() << " Entree dans updateEnergyAndPressure()";
+  debug() << " Entree dans updateEnergyAndPressure()";
   bool csts = options()->schemaCsts();
   bool pseudo_centree = options()->pseudoCentree();
   // Calcul de l'énergie interne
@@ -875,12 +839,13 @@ computePressionMoyenne()
 void MahycoModule::
 computeDeltaT()
 {
-  pinfo() << " Entree dans compute DT avec " << m_global_old_deltat()
+  debug() << " Entree dans compute DT avec " << m_global_old_deltat()
          << " et " << options()->deltatInit()
          << " et " << m_global_deltat()
          << " et " << options()->deltatMax();
          
   m_global_old_deltat = m_global_deltat;
+  m_old_deltat = m_global_old_deltat();
          
   Real new_dt = FloatInfo < Real >::maxValue();
   if (options()->sansLagrange) {

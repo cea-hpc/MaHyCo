@@ -4,6 +4,12 @@
 <description>Descripteur du module Mahyco</description>
 
 <variables>
+    <!-- Pas de temps Old --> 
+  <variable field-name="old_deltat" name="OldDeltat" data-type="real"
+	    dim="0" dump="true" />    
+  <!-- sens de la projection --> 
+  <variable field-name="sens_projection" name="SensProjection" data-type="integer"
+	    dim="0" dump="true" />
   <!-- Materiau -->
   <variable field-name="materiau" name="Materiau" data-type="real" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
