@@ -32,16 +32,32 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
     EnvCell ev = *ienvcell;   
     Real internal_energy = m_internal_energy[ev];
     Real density = m_density[ev];
+    if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
     Real pressure = (adiabatic_cst - 1.) * density * internal_energy;
     m_pressure[ev] = pressure;
-    Cell cell = ev.globalCell();
-    if (pressure < 0.) info() << cell.localId() << " " << pressure << " " << internal_energy << " " << density << " et adia " << adiabatic_cst;
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
+    m_dpde[ev] = (adiabatic_cst - 1.) * density;
   }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+
+void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
+{
+  Real adiabatic_cst = options()->adiabaticCst();
+  // Calcul de la pression et de la vitesse du son
+    Real internal_energy = m_internal_energy[ev];
+    Real density = m_density[ev];
+    if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
+    Real pressure = (adiabatic_cst - 1.) * density * internal_energy;
+    m_pressure[ev] = pressure;
+    m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
+    m_dpde[ev] = (adiabatic_cst - 1.) * density;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 Real PerfectGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
+Real PerfectGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

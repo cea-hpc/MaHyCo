@@ -1,0 +1,2 @@
+<?xml version="1.0"?>
+<arcane-result><config><case-name>output</case-name><host>UN00306408</host><pid>14295</pid></config><execution><return-value>0</return-value><finish-date>2021-05-19T19:24:20</finish-date><date>2021-05-19T19:24:20</date><current-iteration>2030</current-iteration><current-time>0.199980253929383</current-time><end-time>0</end-time><deltat>0.0001</deltat><cpu-time>11.122972</cpu-time><is-finished>1</is-finished></execution></arcane-result>

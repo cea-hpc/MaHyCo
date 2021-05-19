@@ -8,6 +8,7 @@ void MahycoModule::hydroStartInitCasTest()
 {
   info() << " recherhe " << options()->casTest;
   info() << " dispo " << SodCaseX;
+  if (options()->casTest == UnitTestCase) initMatUnitTest();
   if (options()->casTest == SodCaseX ||
       options()->casTest == SodCaseY ||
       options()->casTest == SodCaseZ) initMatSOD();
@@ -32,6 +33,7 @@ void MahycoModule::hydroStartInitCasTest()
 
 void MahycoModule::hydroStartInitVar()
 {
+  if (options()->casTest == UnitTestCase) initVarUnitTest();
   if (options()->casTest == SodCaseX ||
       options()->casTest == SodCaseY ||
       options()->casTest == SodCaseZ) initVarSOD();

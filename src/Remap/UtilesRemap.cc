@@ -405,7 +405,7 @@ computeAndLimitGradPhiDual(int projectionLimiterId, Node inode,
 void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
-                                     Integer projectionPenteBorneComplet, 
+                                     Integer projectionPenteBorneDebarFix, 
                                      Real dual_normal_velocity,
                                      Integer calcul_flux_dual,
                                      RealArrayView Flux, RealArrayView Flux_dual
@@ -441,20 +441,20 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
       xg = computexgxd(m_phi_lagrange[cell][ivar], 
                         m_phi_lagrange[frontcell][ivar], 
                         m_phi_lagrange[backcell][ivar], 
-                        h0, hplus, hmoins, 0);
+                        h0, y0plus, y0moins, 0);
       xd = computexgxd(m_phi_lagrange[cell][ivar], 
                         m_phi_lagrange[frontcell][ivar], 
                         m_phi_lagrange[backcell][ivar], 
-                        h0, hplus, hmoins, 1);
+                        h0, y0plus, y0moins, 1);
       // calcul des valeurs sur ces points d'intersections
       yg = computeygyd(m_phi_lagrange[cell][ivar], 
                         m_phi_lagrange[frontcell][ivar], 
                         m_phi_lagrange[backcell][ivar], 
-                        h0, hplus, hmoins, m_grad_phi[cell][ivar], 0);
+                        h0, y0plus, y0moins, m_grad_phi[cell][ivar], 0);
       yd = computeygyd(m_phi_lagrange[cell][ivar], 
                         m_phi_lagrange[frontcell][ivar], 
                         m_phi_lagrange[backcell][ivar], 
-                        h0, hplus, hmoins, m_grad_phi[cell][ivar], 1);
+                        h0, y0plus, y0moins, m_grad_phi[cell][ivar], 1);
         //  
      if (type == 0)  
          // flux arriere ou en dessous de cCells, integration entre
@@ -480,6 +480,7 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
       if (((m_phi_lagrange[frontcell][ivar] - m_phi_lagrange[cell][ivar]) * 
           (m_phi_lagrange[backcell][ivar] - m_phi_lagrange[cell][ivar])) >= 0.)
         Flux[ivar] = m_phi_lagrange[cell][ivar] * partie_positive_v;
+        
       //
       // et calcul du flux dual si calcul_flux_dual=1
       if (calcul_flux_dual == 1) {
@@ -537,7 +538,8 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
       }
     }
   }
-  if (projectionPenteBorneComplet == 1) {
+  if (projectionPenteBorneDebarFix == 1) {
+    // pinfo() << "projectionPenteBorneDebarFix" << projectionPenteBorneDebarFix;
     // les flux de masse se déduisent des flux de volume en utilisant une valeur
     // moyenne de Rho calculée par le flux de masse / flux de volume Celles des
     // energies massiques avec une valeur moyenne de e calculée par le flux
@@ -568,7 +570,8 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
     } else {
       Flux.fill(0.);
     }
-  } else {
+  } else if (projectionPenteBorneDebarFix == 2) {
+    // pinfo() << "projectionPenteBorneDebarFix" << projectionPenteBorneDebarFix;
     // les flux de masse, de quantité de mouvement et d'energie massique se
     // deduisent des flux de volumes avec la valeur de rho, e et u à la maille
     Real somme_flux_masse = 0.;
@@ -624,7 +627,7 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
 void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
-                                     Integer projectionPenteBorneComplet, 
+                                     Integer projectionPenteBorneDebarFix, 
                                      Real dual_normal_velocity,
                                      Integer calcul_flux_dual,
                                      RealArrayView Flux, RealArrayView Flux_dual
@@ -643,13 +646,13 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
     Real hplus = m_h_cell_lagrange[frontcell];
     Real hmoins = m_h_cell_lagrange[backcell];
     // calcul des seuils y0plus, y0moins pour cCells
-    y0plus = computeY0(options()->projectionLimiteurId,  // doit etre  projectionLimiterIdPure
+    y0plus = computeY0(options()->projectionLimiteurPureId,
                          m_phi_lagrange[cell][ivar],        
                          m_phi_lagrange[frontcell][ivar], 
                          m_phi_lagrange[backcell][ivar], 
                          h0, hplus, hmoins, 0);
       
-    y0moins = computeY0(options()->projectionLimiteurId, // doit etre  projectionLimiterIdPure
+    y0moins = computeY0(options()->projectionLimiteurPureId,
                          m_phi_lagrange[cell][ivar],        
                          m_phi_lagrange[frontcell][ivar], 
                          m_phi_lagrange[backcell][ivar], 
@@ -658,20 +661,20 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
     xg = computexgxd(m_phi_lagrange[cell][ivar], 
                       m_phi_lagrange[frontcell][ivar], 
                       m_phi_lagrange[backcell][ivar], 
-                      h0, hplus, hmoins, 0);
+                      h0, y0plus, y0moins, 0);
     xd = computexgxd(m_phi_lagrange[cell][ivar], 
                       m_phi_lagrange[frontcell][ivar], 
                       m_phi_lagrange[backcell][ivar], 
-                      h0, hplus, hmoins, 1);
+                      h0, y0plus, y0moins, 1);
     // calcul des valeurs sur ces points d'intersections
     yg = computeygyd(m_phi_lagrange[cell][ivar], 
                       m_phi_lagrange[frontcell][ivar], 
                       m_phi_lagrange[backcell][ivar], 
-                      h0, hplus, hmoins, m_grad_phi[cell][ivar], 0);
+                      h0, y0plus, y0moins, m_grad_phi[cell][ivar], 0);
     yd = computeygyd(m_phi_lagrange[cell][ivar], 
                       m_phi_lagrange[frontcell][ivar], 
                       m_phi_lagrange[backcell][ivar], 
-                      h0, hplus, hmoins, m_grad_phi[cell][ivar], 1);
+                      h0, y0plus, y0moins, m_grad_phi[cell][ivar], 1);
      //  
 
     if (type == 0)  // flux arriere ou en dessous de cCells, integration entre
@@ -698,7 +701,7 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
           ((flux1m - flux1) + (flux2m - flux2) + (flux3m - flux3)), 0.);
       // formule 16
       if (((m_phi_lagrange[frontcell][ivar] - m_phi_lagrange[cell][ivar]) * 
-          (m_phi_lagrange[backcell][ivar] - m_phi_lagrange[cell][ivar])) >= 0.)
+          (m_phi_lagrange[backcell][ivar] - m_phi_lagrange[cell][ivar])) >= 0.) 
         Flux[ivar] = m_phi_lagrange[cell][ivar]  * partie_positive_v;
       //
       // et calcul du flux dual si calcul_flux_dual=1
@@ -754,10 +757,9 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
       }
     }
   }
-  if (projectionPenteBorneComplet == 1) {
-    // les flux de masse se déduisent des flux de volume en utilisant une valeur
-    // moyenne de Rho calculée par le flux de masse / flux de volume Celles des
-    // energies massiques avec une valeur moyenne de e calculée par le flux
+  if (projectionPenteBorneDebarFix == 1) {
+    // les flux d' energie se déduisent des flux de masse en utilisant 
+    // une valeur moyenne de e calculée par le flux
     // d'energie / flux de volume Celles de quantité de mouvement avec une
     // valeur moyenne de u calculée par le flux de vitesse / flux de volume
     Real somme_flux_masse = 0.;
@@ -783,9 +785,9 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
     } else {
       Flux.fill(0.);
     }
-  } else {
-    // les flux de masse, de quantité de mouvement et d'energie massique se
-    // deduisent des flux de volumes
+  } else if (projectionPenteBorneDebarFix == 2) {
+    // les flux d'energie massique se
+    // deduisent des flux de volumes * densite (dans phi)
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
     for (size_t imat = 0; imat < nbmat; imat++) {

@@ -93,6 +93,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- 	DPDE	 -->
+		<variable
+			field-name="dpde"
+			name="DpDe"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 	</variables>
 
 	<options>

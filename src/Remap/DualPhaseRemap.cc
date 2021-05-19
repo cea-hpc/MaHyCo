@@ -31,7 +31,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       Node frontnode = dir_node.next();
       DirNode dir_frontnode(ndm[frontnode]);
       Node frontfrontnode = dir_frontnode.next();
-      
+
       computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
 //       if (
 //         // (m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.51 ) )
@@ -64,7 +64,6 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     m_back_flux_mass[inode] = 0.;
     m_front_flux_mass[inode] = 0.;
   }
-  // m_back_flux_mass.fill(0.);
   ENUMERATE_FACE(iface, inner_dir_faces) {
     Face face = *iface;       
     Cell cellb = face.backCell();
@@ -87,32 +86,19 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env]; 
         }
-//         if ( inode.localId() == 1809 || inode.localId() == 1810 ) {
-//           info() <<  " bilan NODE " << inode.localId();
-//           info() <<  " bilan " << m_back_flux_mass[inode] << " et " << m_front_flux_mass[inode];
-//           info() <<  " 0env "  << m_back_flux_mass_env[inode][0] << " et no PB" << m_front_flux_mass_env[inode][0];
-//           info() <<  " 1env "  << m_back_flux_mass_env[inode][1] << " et no PB" << m_front_flux_mass_env[inode][1];
-//           info() << " flux front " << m_flux_masse_face[cellf][iface.localId()][0] << " face " << face.localId() << " " << m_flux_masse_face[cellf][iface.localId()][1]; 
-//           info() << " flux back " << m_flux_masse_face[cellb][iface.localId()][0] << " face " << face.localId() << " " << m_flux_masse_face[cellb][iface.localId()][1]; 
-//           info() << " normal back " <<  m_outer_face_normal[cellb][iface.localId()][idir] << " front " << m_outer_face_normal[cellf][iface.localId()][idir];
-//           info() << " ----------------------------------------------------------------------------------";
-//         }
       }
-    } else {
+    } else {      
+      Real sign(1.);  
+      // if (idir == 1) sign =-1.;
       ENUMERATE_NODE(inode, face.nodes()) {
         // 4 faces dans une direction pour les noeuds --> 0.25  
         // recuperation du flux dual de masse calcule par le pente borne
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
-          m_back_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellb][nb_total_env+index_env];
-          m_front_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellf][nb_total_env+index_env];
+          m_back_flux_mass_env[inode][index_env] += 0.25 * sign *m_dual_phi_flux[cellb][nb_total_env+index_env];
+          m_front_flux_mass_env[inode][index_env] += 0.25 * sign * m_dual_phi_flux[cellf][nb_total_env+index_env];
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env];
-//           if ((m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.52 ) ) {
-//             info() <<  m_back_flux_mass[inode] << " et PB " << m_front_flux_mass[inode];
-//             info() <<  m_back_flux_mass_env[inode][0] << " et PB" << m_front_flux_mass_env[inode][0];
-//             info() <<  m_back_flux_mass_env[inode][1] << " et PB" << m_front_flux_mass_env[inode][1];
-//           }
         }
       }
     }
@@ -134,24 +120,10 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     // info() << " Passage avec le noeud " << node.localId();
     Node backnode = dir_node.previous();
     Node frontnode = dir_node.next();
-    // info() << " Passage avec le noeud " << node.localId() << " backnode " << backnode.localId() << " frontnode " << frontnode.localId();
-    // info() << " u_duale av " << m_u_dual_lagrange[inode];
-//     if ( inode.localId() == 1809 || inode.localId() == 1810 ) {
-//           info() <<  " bilan NODE " << inode.localId();
-//       info() << inode.localId() << " u_duale vitx AV " << m_u_dual_lagrange[inode][0] << " et m*vit " << m_node_mass[inode] * m_velocity[inode][0] ;
-//       info() << inode.localId() << " u_duale vity AV " << m_u_dual_lagrange[inode][1] << " et m*vit " << m_node_mass[inode] * m_velocity[inode][1] ;
-//       info() << inode.localId() << " u_duale vitz AV " << m_u_dual_lagrange[inode][2] << " et m*vit " << m_node_mass[inode] * m_velocity[inode][2] ;
-//       info() << inode.localId() << " u_duale masse AV " << m_u_dual_lagrange[inode][3] << " et mass " << m_node_mass[inode];
-//       info() <<  " bilan " << m_back_flux_mass[inode] << " et " << m_front_flux_mass[inode];
-//           info() << " ----------------------------------------------------------------------------------";
-//     }
+ 
     // flux de masse
     m_u_dual_lagrange[inode][3] += m_back_flux_mass[inode] - m_front_flux_mass[inode];
-    
-//     if ( inode.localId() == 1809 || inode.localId() == 1810 ) {
-//       info() <<  " bilan NODE " << inode.localId();
-//       info() << " m_front_flux_mass[inode] " << m_front_flux_mass[inode] << " et back " << m_back_flux_mass[inode] ;
-//     }
+
     
     FrontupwindVelocity = 0.;
     BackupwindVelocity = 0.;
@@ -246,20 +218,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
     }
-    // info() << " puis frontupwind " <<  FrontupwindVelocity << " et back " << BackupwindVelocity;
-//     if ((m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.52 ) ) {
-//         info() << BackupwindVelocity << " et " << FrontupwindVelocity;
-//         info() <<  m_back_flux_mass[inode] << " et " << m_front_flux_mass[inode];
-//         info() << " phiB " << m_phi_dual_lagrange[backnode];
-//         info() << " phi " << m_phi_dual_lagrange[node];
-//         info() << " phiF " << m_phi_dual_lagrange[frontnode];
-//         info() << " grad phi " << m_dual_grad_phi[node];
-//         info() << " uback " << uback;
-//         info() << " ufront " << ufront;
-//         info() << " Bnode " << backnode.localId() << " = " << m_node_coord[backnode][idir];
-//         info() << " node " << node.localId() << " = " << m_node_coord[node][idir];
-//         info() << " Fnode " << frontnode.localId() << " = " << m_node_coord[frontnode][idir];
-//     }
+     
     m_u_dual_lagrange[inode][0] += m_back_flux_mass[inode] * BackupwindVelocity[0] - 
         m_front_flux_mass[inode] * FrontupwindVelocity[0];
     m_u_dual_lagrange[inode][1] += m_back_flux_mass[inode] * BackupwindVelocity[1] - 
@@ -270,17 +229,6 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
         m_front_flux_mass[inode] * FrontupwindEcin;
         
-//     if ( inode.localId() == 1809 || inode.localId() == 1810 ) {
-//       info() <<  " bilan NODE " << inode.localId();
-//       info() << inode.localId() << " u_duale vitx AP " << m_u_dual_lagrange[inode][0] ;
-//       info() << inode.localId() << " u_duale vity AP " << m_u_dual_lagrange[inode][1] ;
-//       info() << inode.localId() << " u_duale vitz AP " << m_u_dual_lagrange[inode][2] ;
-//       info() << inode.localId() << " u_duale masse AP " << m_u_dual_lagrange[inode][3];
-//       info() << inode.localId() << "BackupwindVelocity[1] " << BackupwindVelocity[1] << " " << m_back_flux_mass[inode];
-//       info() << inode.localId() << " FrontupwindVelocity[1] " << FrontupwindVelocity[1] << " " << m_front_flux_mass[inode];
-//       info() << " ----------------------------------------------------------------------------------";
-//     }
-        
     // recalcul des phi apres cette projection
     // phi vitesse
     m_phi_dual_lagrange[node][0] = m_u_dual_lagrange[inode][0] /  m_u_dual_lagrange[inode][3];
@@ -290,17 +238,10 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     m_phi_dual_lagrange[node][3] = m_u_dual_lagrange[inode][3] ;
     // Phi energie
     m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
-//     if (
-//         // (m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.51 ) )
-//         (inode.localId() == 1809 )
-//          || inode.localId() == 1810) 
-//     {
-//         info() << inode.localId() << " coord " << m_node_coord[inode] << " u_duale fin phase  " << idir << "   " << m_u_dual_lagrange[inode];
-//     }
+    
   }
-  info() << " fin de la projection duale pour la direction " << idir;
 }
-/**
+/*
  *******************************************************************************
  * \file synchronizeUremap()
  * \brief phase de synchronisation des variables de projection dual apres projection

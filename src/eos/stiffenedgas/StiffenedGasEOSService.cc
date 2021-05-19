@@ -38,11 +38,28 @@ void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
     Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);
     m_pressure[ev] = pressure;
     m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
+    m_dpde[ev] = (adiabatic_cst - 1.) * density;
   }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+
+void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
+{
+  // Calcul de la pression et de la vitesse du son
+  Real limit_tension = options()->limitTension();
+  Real adiabatic_cst = options()->adiabaticCst();
+    Real internal_energy = m_internal_energy[ev];
+    Real density = m_density[ev];
+    Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);
+    m_pressure[ev] = pressure;
+    m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
+    m_dpde[ev] = (adiabatic_cst - 1.) * density;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 Real StiffenedGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
+Real StiffenedGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

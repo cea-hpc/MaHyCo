@@ -5,13 +5,14 @@ include(../mahyco.common.cmake)
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSOD.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitRider.cc)
+target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSEDOV.cc)
+target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitUnitTest.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PhaseRemapFinal.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/PhaseRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/Remap-ordre-3.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/UtilesRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/DualPhaseRemap.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSEDOV.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
@@ -63,6 +64,8 @@ set( TEST_NAMES_PARA_8
 		"CAS_RiderTy"
 		"CAS_RiderVortex"
 		"CAS_RiderVortexTimeReverse"
+		"CAS_MonoRiderTy_pb_simple_superbee"
+		"CAS_MonoRiderTy_pb_mixte_superbee_vanleer"
 		)
 set( TEST_NAMES
 		"CAS_Lag_BiSodCaseX"
@@ -75,6 +78,7 @@ set( TEST_NAMES
 		"CAS_MonoRiderRotation"
 		"CAS_MonoRiderT45"
 		"CAS_MonoRiderTy"
+		"CAS_2D_Lag_SodCaseX_newton"
 		)
 
 set( TEST_NAMES_PR

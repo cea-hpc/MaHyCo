@@ -160,7 +160,7 @@ computeVariablesForRemap()
      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
      // Phi energie cinétique
      //     if (options->projectionConservative == 1)
-     m_u_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
+     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
   }
   
 }
@@ -190,12 +190,17 @@ void MahycoModule::remap() {
     for( Integer i=0; i<nb_dir; ++i){
       
       idir = (i + m_sens_projection())%3;
+      // idir = 0;
       // a ameliorer
       String name;
       if (idir == 0) name="FACE_X";
       else if (idir == 1) name="FACE_Y";
       else if (idir == 2) name="FACE_Z";
-      debug() << " projection selon la direction " << idir;
+      pinfo() << " projection selon la direction " << idir;
+      
+      // cas 2D : epaisseur de une maillage dans la direciton de projection
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
+      
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, name);
       // calcul des gradients des quantites à projeter aux cellules

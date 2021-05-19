@@ -48,11 +48,19 @@ public:
    *  et calcule la vitesse du son et la pression. 
    */
   virtual void applyEOS(IMeshEnvironment* env) = 0;
-  
+    /** 
+   *  Applique l'équation d'état au groupe de mailles passé en argument
+   *  et calcule la vitesse du son et la pression pour une cellule
+   */
+  virtual void applyOneCellEOS(IMeshEnvironment* env, EnvCell ev) = 0;
   /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
   virtual Real getAdiabaticCst(IMeshEnvironment* env) = 0;
+  /** 
+   *  Renvoie la constante tension limit de l'environnement. 
+   */
+  virtual Real getTensionLimitCst(IMeshEnvironment* env) = 0;
   
 };
 

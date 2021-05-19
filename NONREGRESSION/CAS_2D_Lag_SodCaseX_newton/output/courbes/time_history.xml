@@ -1,0 +1,9 @@
+<?xml version='1.0' ?>
+<curves>
+<curve name='CpuTime'/>
+<curve name='ElapsedTime'/>
+<curve name='GlobalCpuTime'/>
+<curve name='GlobalElapsedTime'/>
+<curve name='GlobalTime'/>
+<curve name='TotalMemory'/>
+</curves>

@@ -6,7 +6,7 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>500</output-period>
+    <output-period>100</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -78,7 +78,7 @@
      <deltat-max>0.01</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
     <convnerg>false</convnerg>
-    <final-time>1.e-4</final-time>
+    <final-time>1.</final-time>
     
     <boundary-condition>
       <surface>XMIN</surface>
@@ -95,11 +95,5 @@
       <type>Vz</type>
       <value>0.</value>
     </boundary-condition>
-    <boundary-condition>
-      <surface>ZMAX</surface>
-      <type>Vz</type>
-      <value>0.</value>
-    </boundary-condition>
-		
   </mahyco>
 </case>

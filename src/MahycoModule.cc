@@ -695,7 +695,7 @@ updateDensity()
 /**
  *******************************************************************************
  * \file updateEnergy()
- * \brief Calcul de l'energie interne (seul le cas du gaz parfait est codé)
+ * \brief Calcul de l'energie interne ( cas du gaz parfait ou methode de newton)
  *
  * \param  m_density_env_nplus1, m_density_env_n,
  *         m_pseudo_viscosity_env_nplus1, m_pseudo_viscosity_env_n
@@ -704,24 +704,148 @@ updateDensity()
  * \return m_internal_energy_env_nplus1, m_internal_energy_nplus1
  *******************************************************************************
  */
-/** */
-/* la fonction dont on cherche un zero */
-/** */
-inline double fvnr(double e, double p, double dpde,
-		double en, double qnn1, double pn, double rn1,
-		double rn) 
-{return e-en+0.5*(p+pn+2.*qnn1)*(1./rn1-1./rn);};
+void MahycoModule::
+updateEnergyAndPressure()
+{
+  if (options()->withNewton) 
+    updateEnergyAndPressurebyNewton();
+  else
+    updateEnergyAndPressureforGP();  
+    
+  // maille mixte
+  // moyenne sur la maille
+  CellToAllEnvCellConverter all_env_cell_converter(mm);
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    AllEnvCell all_env_cell = all_env_cell_converter[cell];
+    if (all_env_cell.nbEnvironment() !=1) {
+      m_internal_energy[cell] = 0.;
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        EnvCell ev = *ienvcell;
+        m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+      }
+    }
+  }
+  if (! options()->withProjection) {
+    // Calcul de la Pression si on ne fait pas de projection 
+    for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+        IMeshEnvironment* ienv = mm->environments()[i];
+        // Calcul de la pression et de la vitesse du son
+        options()->environment[i].eosModel()->applyEOS(ienv);
+    }
+    computePressionMoyenne();
+  }
+}
+/*
+ *******************************************************************************
+*/
+void MahycoModule::updateEnergyAndPressurebyNewton()  {  
+    
+  if (options()->sansLagrange) return;
+    debug() << " Entree dans updateEnergyAndPressure()";
+    bool csts = options()->schemaCsts();
+    bool pseudo_centree = options()->pseudoCentree();
+    // Calcul de l'énergie interne
+    if (!csts) {
+      ENUMERATE_ENV(ienv,mm){
+        IMeshEnvironment* env = *ienv;
+        Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+        Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst(env);
+        ENUMERATE_ENVCELL(ienvcell,env){
+          EnvCell ev = *ienvcell;
+          Real pseudo(0.);
+          if (pseudo_centree &&
+            ((m_pseudo_viscosity_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]) < 0.))
+          pseudo = 0.5 * (m_pseudo_viscosity[ev] + m_pseudo_viscosity_n[ev]);
+          if (!pseudo_centree &&
+                (m_pseudo_viscosity[ev] * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]) < 0.))
+            pseudo = m_pseudo_viscosity[ev];
+            
+          double rn  = m_density_n[ev];
+          double pn  = m_pressure_n[ev];
+          double qnn1 = pseudo;
+          double m   = m_cell_mass[ev];
+          double rn1 = m_density[ev];
+          double en  = m_internal_energy_n[ev];
+          double g = adiabatic_cst;
+          double t = tension_limit;
+          // les iterations denewton
+          double epsilon = options()->threshold;
+          double itermax = 50;
+          double enew=0, e=en, p, c, dpde;
+          int i = 0;
+        
+          while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
+            {
+              options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
+              p = m_pressure[ev];
+              c = m_sound_speed[ev];
+              dpde = m_dpde[ev];
+              enew = e - fvnr(e, p, dpde, en, qnn1, pn, rn1, rn) / fvnrderiv(e, dpde, rn1, rn);
+              e = enew;
+              i++;
+            }
+          m_internal_energy[ev] = e;
+	      m_sound_speed[ev] = c;
+	      m_pressure[ev] = p;
+        }
+      }
+    } else {
+      ENUMERATE_ENV(ienv,mm){
+        IMeshEnvironment* env = *ienv;
+        Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+        Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst(env);
+        ENUMERATE_ENVCELL(ienvcell,env){
+          EnvCell ev = *ienvcell;
+          Cell cell=ev.globalCell();
+          Real cqs_v_nplus1(0.);
+          Real cqs_v_n(0.);
+          for (Integer inode = 0; inode < 8; ++inode) {
+            cqs_v_nplus1 += math::dot(m_velocity[cell.node(inode)], m_cell_cqs[cell] [inode])
+              * m_global_deltat();
+            cqs_v_n += math::dot(m_velocity[cell.node(inode)], m_cell_cqs_n[cell] [inode])
+              * m_global_deltat();
+          }
+          double rn  = m_density_n[ev];
+          double pn  = m_pressure_n[ev];
+          double qn = m_pseudo_viscosity_n[ev];
+          double qn1 = m_pseudo_viscosity[ev];
+          double m   = m_cell_mass[ev];
+          double rn1 = m_density[ev];
+          double en  = m_internal_energy_n[ev];
+          double g = adiabatic_cst;
+          double t = tension_limit;
+          double cn1 = cqs_v_nplus1;
+          double cn = cqs_v_n;
+          // les iterations denewton
+          double epsilon = options()->threshold;
+          double itermax = 50;
+          double enew=0, e=en, p, c, dpde;
+          int i = 0;
+        
+          while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1))>=epsilon)
+	        {
+              options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
+              p = m_pressure[ev];
+              c = m_sound_speed[ev];
+              dpde = m_dpde[ev];
+              enew = e - f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1) / fderiv(e, p, dpde, cn1, m);
+              e = enew;
+              i++;
+            }
+          m_internal_energy[ev] = e;
+	      m_sound_speed[ev] = c;
+	      m_pressure[ev] = p;
+        }
+      }
+    }
+}
 
-/** */
-/* la derivee de f */
-/** */
-inline double fvnrderiv(double e, double dpde, double rn1, double rn)
-{return 1.+0.5*dpde*(1./rn1-1./rn);};
 /*
  *******************************************************************************
  */
 void MahycoModule::
-updateEnergyAndPressure()
+updateEnergyAndPressureforGP()
 {
   if (options()->sansLagrange) return;
   debug() << " Entree dans updateEnergyAndPressure()";
@@ -777,29 +901,6 @@ updateEnergyAndPressure()
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
       }
     }
-  }
-  // maille mixte
-  // moyenne sur la maille
-  CellToAllEnvCellConverter all_env_cell_converter(mm);
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    AllEnvCell all_env_cell = all_env_cell_converter[cell];
-    if (all_env_cell.nbEnvironment() !=1) {
-      m_internal_energy[cell] = 0.;
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;
-        m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
-      }
-    }
-  }
-  if (! options()->withProjection) {
-    // Calcul de la Pression si on ne fait pas de projection 
-    for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-        IMeshEnvironment* ienv = mm->environments()[i];
-        // Calcul de la pression et de la vitesse du son
-        options()->environment[i].eosModel()->applyEOS(ienv);
-    }
-    computePressionMoyenne();
   }
 }   
 /**

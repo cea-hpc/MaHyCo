@@ -51,11 +51,19 @@ class StiffenedGasEOSService
    *  et calcule la vitesse du son et la pression. 
    */
   virtual void applyEOS(IMeshEnvironment* env);
+   /** 
+   *  Applique l'équation d'état au groupe de mailles passé en argument
+   *  et calcule la vitesse du son et la pression pour une cellule
+   */
+  virtual void applyOneCellEOS(IMeshEnvironment* env, EnvCell ev);
   /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
-  
   virtual Real getAdiabaticCst(IMeshEnvironment* env);
+  /** 
+   *  Renvoie la constante tension limit de l'environnement. 
+   */
+  virtual Real getTensionLimitCst(IMeshEnvironment* env);
 };
 
 #endif
