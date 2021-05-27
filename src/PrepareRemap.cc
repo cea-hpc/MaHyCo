@@ -17,11 +17,6 @@ computeFaceQuantitesForRemap()
 {
   debug() << " Entree dans computeFaceQuantitesForRemap()";
   bool csts = options()->schemaCsts();
-  ENUMERATE_FACE (iFace, allCells().innerFaceGroup()) {
-    m_deltax_lagrange[iFace] = math::dot(
-      (m_cell_coord[iFace->frontCell()] -  m_cell_coord[iFace->backCell()]),
-      m_face_normal[iFace]);
-  }
   ENUMERATE_FACE (iFace, allFaces()) {
    Face face = *iFace;
    Real3 vitesse_moy = {0. , 0. , 0.};

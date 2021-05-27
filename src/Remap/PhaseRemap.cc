@@ -17,10 +17,15 @@ computeGradPhiFace(Integer idir, String name)  {
   m_h_cell_lagrange.fill(0.0);
   if (options()->ordreProjection > 1) {
     FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
+    FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
     ENUMERATE_FACE(iface, inner_dir_faces) {
       Face face = *iface; 
-      Cell cellb = face.backCell();
-      Cell cellf = face.frontCell();
+      DirFace dir_face = fdm[face];
+      Cell cellb = dir_face.previousCell();
+      Cell cellf = dir_face.nextCell();
+      m_deltax_lagrange[face] = math::dot(
+       (m_cell_coord[cellf] -  m_cell_coord[cellb]), m_face_normal[face]); 
+
       for (Integer ivar = 0 ; ivar <  m_nb_vars_to_project ; ++ivar) {
         m_grad_phi_face[iface][ivar] = (m_phi_lagrange[cellf][ivar] - m_phi_lagrange[cellb][ivar]) 
                                     / m_deltax_lagrange[iface];
@@ -52,6 +57,7 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
                    -0.5 * idir * (1 - idir)};  
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
+  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
     ENUMERATE_CELL(icell,allCells()) {
       Cell cell = * icell;
@@ -66,16 +72,17 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
         const Face& face = *iface;
         
         if ( m_is_dir_face[face][idir] == true) {
-          if (face.backCell() == cell) {
+          DirFace dir_face = fdm[face];
+          if (dir_face.previousCell() == cell) {
           frontFace = face;
           indexfrontface = iface.index(); 
-          if (face.frontCell().localId() != -1) frontcell = face.frontCell();
+          if (dir_face.nextCell().localId() != -1) frontcell = dir_face.nextCell();
           cas_possible++;
           } 
-          else if ( face.frontCell() == cell) {
+          else if ( dir_face.nextCell() == cell) {
           backFace = face;
           indexbackface = iface.index(); 
-          if (face.backCell().localId() != -1) backcell = face.backCell();
+          if (dir_face.previousCell().localId() != -1) backcell = dir_face.previousCell();
           cas_possible++;
           }
         }
@@ -93,23 +100,6 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
       computeAndLimitGradPhi(limiter, frontFace, backFace, cell, frontcell, backcell);
   
       if (options()->projectionPenteBorne == 1) {
-          if (idir == 1) {
-           // bug dans arcane pour la direction Y ?
-           // pas de coherence entre backcell et ccb.previous()
-           // il faut inverser cellb et cellf dans la direction Y
-           Cell cell_tmp;
-           cell_tmp = backcell;
-           backcell = frontcell;
-           frontcell = cell_tmp;
-           Face face_tmp;
-           face_tmp = backFace;
-           backFace = frontFace;
-           frontFace = face_tmp;
-           Integer index_tmp;
-           index_tmp = indexbackface;
-           indexbackface = indexfrontface;
-           indexfrontface = index_tmp;
-        } 
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(flFaces);
         Real Flux_sortant_ar = math::dot(m_outer_face_normal[cell][indexbackface], dirproj) * m_face_normal_velocity[backFace];
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(frFaces);
@@ -180,12 +170,14 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
   FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
   ICartesianMesh* m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
+  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
   
   ENUMERATE_FACE(iface, inner_dir_faces) {
       Face face = *iface; 
-      Cell cellb = face.backCell();
-      Cell cellf = face.frontCell();
+      DirFace dir_face = fdm[face];
+      Cell cellb = dir_face.previousCell();
+      Cell cellf = dir_face.nextCell();
       
       // phiFace1 correspond
       // à la valeur de phi(x) à la face pour l'ordre 2 sans plateau pente
@@ -209,30 +201,12 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
         } else {             
           Real sign(1.);  
           // voir le meme probleme que pour l'ordre 3
-          if (idir == 1) {
-           // bug dans arcane pour la direction Y ?
-           // pas de coherence entre backcell et ccb.previous()
-           // il faut inverser cellb et cellf dans la direction Y
-           Cell cell_tmp;
-           cell_tmp = cellb;
-           cellb = cellf;
-           cellf = cell_tmp;
-          } 
           for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
             m_phi_face[face][ivar] = sign *
                 (m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar]);
           }
         }
-     } else if (options()->ordreProjection == 3) {      
-         if (idir == 1) {
-           // bug dans arcane pour la direction Y ?
-           // pas de coherence entre backcell et ccb.previous()
-           // il faut inverser cellb et cellf dans la direction Y
-           Cell cell_tmp;
-           cell_tmp = cellb;
-           cellb = cellf;
-           cellf = cell_tmp;
-         } 
+     } else if (options()->ordreProjection == 3) {    
         Cell cellbb = cellb;
         Cell cellbbb = cellb;
         Cell cellff = cellf;
