@@ -4,20 +4,20 @@ chez vous.
 Pour compiler Mahyco, se placer dans le repertoire correspondant
 et lancer la commande
 
-  cmake .
+  cmake . -B "repertoire build"
 
-Pour tester Mahyco , se placer dans le repertoire src et lancer l'executable (extension .exe) en
+Pour tester Mahyco , se placer dans le repertoire "repertoire build"/src et lancer l'executable en
 specifiant en argument le jeu de donnees (extension .arc).
 
 Par exemple :
 
-  cd src/
+  cd "repertoire build"/src/
   make
   ./Mahyco Mahyco.arc
 
 Pour tester les évolutions avant rangement :
 
-  cd src
+  cd "repertoire build"/src
   make
   ctest
 

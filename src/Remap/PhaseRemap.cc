@@ -303,37 +303,28 @@ void MahycoModule::computeUremap(Integer idir)  {
           Real face_normal_velocity(m_face_normal_velocity[face]);
           Real face_length(m_face_length_lagrange[face][idir]);
           Real3 outer_face_normal(m_outer_face_normal[cell][i]);
+          Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
           if (options()->projectionPenteBorne == 0) {
             for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {  
-                flux = math::dot(outer_face_normal, dirproj) 
-                * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
+                flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
+                // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
+                // aux faces pour la quantite de mouvement de Vnr
+                // limitation à trois mat car m_flux_masse_face est real3
                 if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
             }
           } else {
             for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {  
-                flux = math::dot(outer_face_normal, dirproj) * face_length * m_phi_face[face][ivar];
+                flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
+                // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
+                // aux faces pour la quantite de mouvement de Vnr
+                // limitation à trois mat car m_flux_masse_face est real3
                 if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
             }
          }
         }
          
-            
-//             flux = computeRemapFlux(
-//                                 options()->ordreProjection,
-//                                 options()->projectionPenteBorne,
-//                                 m_face_normal_velocity[face], m_face_normal[face],
-//                                 m_face_length_lagrange[face][idir] , m_phi_face[face][ivar],
-//                                 m_outer_face_normal[cell][i], dirproj, deltat);
-//             flux_face[ivar] += flux;
-//             
-//             // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
-//             // aux faces pour la quantite de mouvement de
-//             // Vnr
-//             // limitation à trois mat car m_flux_masse_face est real3
-//             if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
-
 //           if (cdl->FluxBC > 0) {
 //             // flux exterieur eventuel
 //             reduction8 = reduction8 + (computeBoundaryFluxes(1, cCells, exy));

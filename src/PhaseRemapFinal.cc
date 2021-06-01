@@ -39,7 +39,7 @@ remapVariables()
       if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) < options()->threshold 
           && cells_marker[icell.localId()] == 0) {
         cells_to_remove.add(icell.localId());
-        pinfo() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+        debug() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
       } else if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) > options()->threshold 
           && cells_marker[icell.localId()] == -1) {  
         // verification que le volume normaliseé fournit une fraction de volume au-dessus du threshold             
@@ -52,11 +52,11 @@ remapVariables()
         if ((vol_ev_apres_normalisation / m_euler_volume[icell]) > options()->threshold  
             && m_u_lagrange[icell][nb_total_env + index_env] != 0.) {
           cells_to_add.add(icell.localId());
-          pinfo() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
+          debug() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
             << " ajoutée dans l'env apres normalisation" << env->name();
-          pinfo() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
-          pinfo() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell];
-          pinfo() << " masse projetée " << m_u_lagrange[icell][nb_total_env + index_env];
+          debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
+          debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell];
+          debug() << " masse projetée " << m_u_lagrange[icell][nb_total_env + index_env];
         }
       }
     }
@@ -73,6 +73,9 @@ remapVariables()
   }
   // finalisation avant remplissage des variables
   mm->forceRecompute();
+  UniqueArray<Real> vol_nplus1(nb_total_env);
+  UniqueArray<Real> density_env_nplus1(nb_total_env);
+  UniqueArray<Real> internal_energy_env_nplus1(nb_total_env);
   
   Integer index_env;
   ENUMERATE_CELL(icell, allCells()) {
@@ -81,7 +84,6 @@ remapVariables()
     m_cell_volume[cell] = m_euler_volume[cell]; // retour à la grille euler
     Real volt = 0.;
     Real masset = 0.;
-    UniqueArray<Real> vol_nplus1(nb_total_env);
     AllEnvCell all_env_cell = all_env_cell_converter[cell];
     
     // info() << " cell " << cell.localId() << " calcul des masses et volumes totales " 
@@ -96,18 +98,22 @@ remapVariables()
     /*
     info() << " cell " << cell.localId() << " fin des masses et volumes " << volt;*/
     double volt_normalise = 0.;   
+    Real unsurvolt = 1./ volt;
     // normalisation des volumes + somme 
     for (Integer index_env=0; index_env < nb_total_env ; index_env++) { 
-      vol_nplus1[index_env] *= vol / volt;
+      // vol_nplus1[index_env] *= vol / volt;
+      vol_nplus1[index_env] *= vol * unsurvolt;
       volt_normalise += vol_nplus1[index_env];
     }
     // info() << " cell " << cell.localId() << " fin des masses et volumes normalisées ";
     double somme_frac = 0.;
+    Real unsurvol = 1. / vol;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;     
       index_env = ev.environmentId();        
     //      m_fracvol[ev] = vol_nplus1[index_env] / volt_normalise;
-       m_fracvol[ev] = vol_nplus1[index_env] / vol;
+       // m_fracvol[ev] = vol_nplus1[index_env] / vol;
+       m_fracvol[ev] = vol_nplus1[index_env] * unsurvol;
       if (m_fracvol[ev] < options()->threshold)
         m_fracvol[ev] = 0.;
       somme_frac += m_fracvol[ev];
@@ -115,11 +121,13 @@ remapVariables()
     // apres normamisation
     Integer matcell(0);
     Integer imatpure(-1);  
+    Real unsursomme_frac = 1. / somme_frac;
     index_env = 0;  
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;  
       index_env = ev.environmentId();  
-      m_fracvol[ev] /= somme_frac;
+      // m_fracvol[ev] /= somme_frac; 
+      m_fracvol[ev] *= unsursomme_frac;
       if (m_fracvol[ev] > 0.) {
         matcell++;
         imatpure = index_env;
@@ -138,23 +146,26 @@ remapVariables()
     // massique et on normalise
     Real fmasset = 0.;
     if (masset != 0.) {
+      Real unsurmasset = 1./  masset;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell;  
         index_env = ev.environmentId();  
-        m_mass_fraction[ev] = m_u_lagrange[cell][nb_total_env + index_env] / masset;
+        // m_mass_fraction[ev] = m_u_lagrange[cell][nb_total_env + index_env] / masset;
+        m_mass_fraction[ev] = m_u_lagrange[cell][nb_total_env + index_env] * unsurmasset;
         if (m_fracvol[ev] < options()->threshold) {
           m_mass_fraction[ev] = 0.;
         }
         fmasset += m_mass_fraction[ev];
       }
       if (fmasset!= 0.) {
+        Real unsurfmasset = 1. / fmasset;
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
           EnvCell ev = *ienvcell;  
-          m_mass_fraction[ev] /= fmasset;
+          // m_mass_fraction[ev] /= fmasset;
+          m_mass_fraction[ev] *= unsurfmasset;
         }
       }
     }
-    UniqueArray<Real> density_env_nplus1(nb_total_env);
     Real density_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
@@ -166,7 +177,6 @@ remapVariables()
       density_nplus1 += m_fracvol[ev] * density_env_nplus1[index_env];
       // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
     }
-    UniqueArray<Real> internal_energy_env_nplus1(nb_total_env);
     Real energie_nplus1 = 0.;
     Real pseudo_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
@@ -189,7 +199,8 @@ remapVariables()
       index_env = ev.environmentId();  
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
       // recuperation de la pseudo projetee
-      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] / vol;
+      // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] / vol;
+      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] * unsurvol;
       // recuperation de la densite
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie

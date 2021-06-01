@@ -225,6 +225,7 @@ saveValuesAtN()
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
   
+  
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = *icell;
     m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
@@ -232,10 +233,6 @@ saveValuesAtN()
     m_cell_volume_n[cell] = m_cell_volume[cell];
     m_density_n[cell] = m_density[cell];
     m_internal_energy_n[cell] = m_internal_energy[cell];
-    // sauvegarde des cqs
-    for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
-      m_cell_cqs_n[icell] [inode.index()] = m_cell_cqs[icell] [inode.index()];
-    }
   }
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -248,17 +245,12 @@ saveValuesAtN()
       m_internal_energy_n[ev] = m_internal_energy[ev];
     }
   }
-  if (!options()->sansLagrange) {
-    ENUMERATE_NODE(inode, allNodes()){
-        m_velocity_n[inode] = m_velocity[inode];
-    }
-  }
-  if (options()->withProjection) {
-    ENUMERATE_NODE(inode, allNodes()){
-      m_node_coord[inode] = m_node_coord_0[inode];
-    }
-    // pas besoin de m_cell_coord car recalculé dans hydroContinueInit
-  }
+  
+  m_cell_cqs_n.copy(m_cell_cqs);
+  
+  if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
+  if (options()->withProjection) m_node_coord.copy(m_node_coord_0);
+
 }    
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -283,6 +275,8 @@ computeArtificialViscosity()
       }
     }
   }
+  
+
   // maille mixte
   // moyenne sur la maille
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -298,8 +292,16 @@ computeArtificialViscosity()
     }
   }
 }
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
+/**
+ *******************************************************************************
+ * \file updateVelocity()
+ * \brief Calcul de la vitesse de n-1/2 a n+1/2
+ *
+ * \param  m_global_old_deltat(), m_global_deltat(), m_velocity_n
+ *         m_pressure_n, m_pseudo_viscosity_n, m_cqs_n
+ * \return m_velocity
+ *******************************************************************************
+ */
 
 void MahycoModule::
 updateVelocity()
@@ -308,6 +310,15 @@ updateVelocity()
     updateVelocityWithoutLagrange();
     return;
   }
+  
+  // passage des vitesse de n à n-1/2 si projection 
+  // la vitesse m_velocity_n 
+  // (qui dans le cas de vnr-csts est la vitesse apres projection du pas de temps précédent donc n),
+  // est replacee à n-1/2 pour vnr-csts.
+  // Dans le cas de vnr (pas csts) elle est deja en n-1/2
+  if (options()->schemaCsts() && options()->withProjection) updateVelocityBackward();
+      
+      
   debug() << " Entree dans updateVelocity()";
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::zero());
@@ -321,16 +332,28 @@ updateVelocity()
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
      }
   }
+  
+  VariableNodeReal3InView in_force(viewIn(m_force));
+  VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
+  VariableNodeRealInView  in_mass(viewIn(m_node_mass));
+  VariableNodeReal3OutView out_velocity(viewOut(m_velocity));
 
   const Real dt(0.5 * (m_global_old_deltat() + m_global_deltat()));
   // Calcule l'impulsion aux noeuds
-  ENUMERATE_NODE(inode, allNodes()){
-    Real node_mass = m_node_mass[inode];
-    Real3 old_velocity = m_velocity_n[inode];
-    Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
-    m_velocity[inode] = new_velocity;
+  PRAGMA_IVDEP
+  ENUMERATE_SIMD_NODE(inode, allNodes()){
+    SimdNode snode=*inode;
+    out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
-
+  // Calcule l'impulsion aux noeuds
+//   ENUMERATE_NODE(inode, allNodes()){
+//     Real node_mass = m_node_mass[inode];
+//     Real3 old_velocity = m_velocity_n[inode];
+//     Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
+//     m_velocity[inode] = new_velocity;
+//     if (inode.localId() == 870) pinfo() << m_velocity[inode]  << " force " << m_force[inode]
+//         << " masse " << node_mass << " vitesse " <<  m_velocity_n[inode] ;
+//   }
   m_velocity.synchronize();
 }
 /**
@@ -338,9 +361,9 @@ updateVelocity()
  * \file updateVelocityBackward()
  * \brief Calcul de la vitesse de n a n-1/2
  *
- * \param  gt->deltat_n, m_node_velocity_n
+ * \param  gt->deltat_n, m_velocity_n
  *         m_pressure_n, m_pseudo_viscosity_n, m_cqs_n
- * \return m_node_velocity_nplus1
+ * \return m_velocity_n
  *******************************************************************************
  */
 void MahycoModule::
@@ -359,13 +382,18 @@ updateVelocityBackward()
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
   }
-  const Real dt(-0.5 * m_global_old_deltat());
+  const Real dt(-0.5 * m_global_old_deltat());  
+  
+  VariableNodeReal3InView in_force(viewIn(m_force));
+  VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
+  VariableNodeRealInView  in_mass(viewIn(m_node_mass));
+  VariableNodeReal3OutView out_velocity(viewOut(m_velocity_n));
+
   // Calcule l'impulsion aux noeuds
-  ENUMERATE_NODE(inode, allNodes()){
-    Real node_mass = m_node_mass[inode];
-    Real3 old_velocity = m_velocity_n[inode];
-    Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
-    m_velocity_n[inode] = new_velocity;
+  PRAGMA_IVDEP
+  ENUMERATE_SIMD_NODE(inode, allNodes()){
+    SimdNode snode=*inode;
+    out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
 
   m_velocity_n.synchronize();
@@ -375,9 +403,9 @@ updateVelocityBackward()
  * \file updateVelocityForward()
  * \brief Calcul de la vitesse de n+1/2 a n+1
  *
- * \param  gt->deltat_nplus, m_node_velocity_n
- *         m_pressure_nplus, m_pseudo_viscosity_nplus, m_cqs (calcule juste avant)
- * \return m_node_velocity_nplus1
+ * \param  m_global_deltat, m_velocity
+ *         m_pressure, m_pseudo_viscosity, m_cqs (calcule juste avant)
+ * \return m_velocity
  *******************************************************************************
  */
 void MahycoModule::
@@ -397,12 +425,17 @@ updateVelocityForward()
       m_force[inode] += pressure * m_cell_cqs[icell] [inode.index()];
   }
   const Real dt(0.5 * m_global_deltat());
+  
+  VariableNodeReal3InView in_force(viewIn(m_force));
+  VariableNodeReal3InView in_velocity(viewIn(m_velocity));
+  VariableNodeRealInView  in_mass(viewIn(m_node_mass));
+  VariableNodeReal3OutView out_velocity(viewOut(m_velocity));
+
   // Calcule l'impulsion aux noeuds
-  ENUMERATE_NODE(inode, allNodes()){
-    Real node_mass = m_node_mass[inode];
-    Real3 old_velocity = m_velocity[inode];
-    Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
-    m_velocity[inode] = new_velocity;
+  PRAGMA_IVDEP
+  ENUMERATE_SIMD_NODE(inode, allNodes()){
+    SimdNode snode=*inode;
+    out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
   m_velocity.synchronize();
 }
@@ -418,24 +451,45 @@ updateVelocityForward()
 void MahycoModule::
 updateVelocityWithoutLagrange()
 {
-  ENUMERATE_NODE(inode, allNodes()){
-    Node node = *inode;
-    m_velocity[node] = m_velocity_n[node];
-
-    if (options()->casTest == RiderVortexTimeReverse ||
+  Real factor(0.);
+  Real option(0.);
+  if (options()->casTest == RiderVortexTimeReverse ||
         options()->casTest == MonoRiderVortexTimeReverse ) {
-      m_velocity[node].x =
-          m_velocity_n[node].x * cos(Pi * m_global_time() / 4.);
-      m_velocity[node].y =
-          m_velocity_n[node].y * cos(Pi * m_global_time() / 4.);
-    } else if ( options()->casTest == RiderDeformationTimeReverse ||
+    factor = 1. / 4.;
+    option = 1;
+  } else if ( options()->casTest == RiderDeformationTimeReverse ||
 		options()->casTest == MonoRiderDeformationTimeReverse) {
-      m_velocity[node].x =
-          m_velocity_n[node].x * cos(Pi * m_global_time());
-      m_velocity[node].y =
-          m_velocity_n[node].y * cos(Pi * m_global_time());
-    }
+    factor = 1.;
+    option = 1;
   }
+  
+  VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
+  VariableNodeReal3OutView out_velocity(viewOut(m_velocity));
+
+  PRAGMA_IVDEP
+  ENUMERATE_SIMD_NODE(inode, allNodes()){
+    SimdNode snode=*inode;
+    out_velocity[snode] = in_velocity[snode] * (1. -option)
+          + option * in_velocity[snode] * cos(Pi * m_global_time() * factor);
+  }
+//   ENUMERATE_NODE(inode, allNodes()){
+//     Node node = *inode;
+//     m_velocity[node] = m_velocity_n[node];
+// 
+//     if (options()->casTest == RiderVortexTimeReverse ||
+//         options()->casTest == MonoRiderVortexTimeReverse ) {
+//       m_velocity[node].x =
+//           m_velocity_n[node].x * cos(Pi * m_global_time() / 4.);
+//       m_velocity[node].y =
+//           m_velocity_n[node].y * cos(Pi * m_global_time() / 4.);
+//     } else if ( options()->casTest == RiderDeformationTimeReverse ||
+// 		options()->casTest == MonoRiderDeformationTimeReverse) {
+//       m_velocity[node].x =
+//           m_velocity_n[node].x * cos(Pi * m_global_time());
+//       m_velocity[node].y =
+//           m_velocity_n[node].y * cos(Pi * m_global_time());
+//     }
+//   }
   m_velocity.synchronize();
 }
 /**
@@ -642,16 +696,15 @@ computeGeometricValues()
 }
 /**
  *******************************************************************************
- * \file computeDivU()
+ * \file updateDensity()
  * \brief Calcul de la densité
  * \brief Calcul de la divergence de la vitesse
  * \brief Calcul de la variation du volume specifique (variation de 1/densite)
  *
  * pour les grandeurs moyennes et pour chaque materiau
  *
- * \param  m_density_nplus1, m_density_n, gt->deltat_nplus1,
- *        m_tau_density_nplus1 
- * \return m_divu_nplus1
+ * \param  m_density_n, ,m_cell_mass, m_cell_volume, m_global_deltat()
+ * \return m_density, m_tau_density, m_divu
  *******************************************************************************
  */
 void MahycoModule::
@@ -1028,9 +1081,9 @@ computeDeltaT()
   
 }
 
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 inline void MahycoModule::
 computeCQs(Real3 node_coord[8], Real3 face_coord[6], const Cell & cell)
 {
@@ -1097,7 +1150,7 @@ computeCQs(Real3 node_coord[8], Real3 face_coord[6], const Cell & cell)
 }
 
 /*---------------------------------------------------------------------------*/
-inline Real MahycoModule::produit(Real A, Real B, Real C, Real D)
+Real MahycoModule::produit(Real A, Real B, Real C, Real D)
   {
   return (A*B-C*D);
   }

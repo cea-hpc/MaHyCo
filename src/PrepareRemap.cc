@@ -32,8 +32,10 @@ computeFaceQuantitesForRemap()
        vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
      else
        vitesse_moy += m_velocity[face.node(inode)];
+     if (face.localId() == 1051) pinfo() << face.node(inode).localId() << m_velocity[face.node(inode)];
    }
    m_face_normal_velocity[face] = math::dot((0.25 * vitesse_moy), m_face_normal[face]);  
+   if (face.localId() == 1051) pinfo() << face.localId() << " " << m_face_normal_velocity[face] << " vit moy " << vitesse_moy << " norm " << m_face_normal[face];
   }
   m_deltax_lagrange.synchronize();
   m_face_length_lagrange.synchronize();
@@ -137,9 +139,11 @@ computeVariablesForRemap()
   ENUMERATE_NODE(inode, allNodes()){
     // variables duales
     // quantité de mouvement
+    if (inode.localId() == 870) pinfo() << m_velocity[inode] << " preapre avant maj " << m_node_mass[inode] << " avec " << m_u_dual_lagrange[inode][1];
     m_u_dual_lagrange[inode][0] = m_node_mass[inode] * m_velocity[inode].x;
     m_u_dual_lagrange[inode][1] = m_node_mass[inode] * m_velocity[inode].y;
     m_u_dual_lagrange[inode][2] = m_node_mass[inode] * m_velocity[inode].z;
+    if (inode.localId() == 870) pinfo() << m_velocity[inode] << " prepare avant maj " << m_node_mass[inode] << " avec " << m_u_dual_lagrange[inode][1];
     // masse nodale    
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
@@ -172,6 +176,9 @@ void MahycoModule::remap() {
     
   if (options()->withProjection) {
     debug() << " Entree dans remap()";
+    // passage des vitesse de n+1/2 à n+1 pour la projection
+    if (options()->schemaCsts()) updateVelocityForward();
+    
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
     synchronizeUremap();  

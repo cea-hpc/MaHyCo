@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "../MahycoModule.h"
 
 /**
@@ -33,20 +33,6 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       Node frontfrontnode = dir_frontnode.next();
 
       computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
-//       if (
-//         // (m_node_coord[inode].x > 0.5 ) && (m_node_coord[inode].x < 0.51 ) )
-//         (inode.localId() == 1809 )
-//          || inode.localId() == 1810) 
-//     {
-//         info() << inode.localId() << " coord " << m_node_coord[inode] << " u_duale debut phase  " << idir << "   " << m_u_dual_lagrange[inode];
-//     }
-//       if (idir ==1) {
-//       info() << backbacknode.localId() << " coord " << m_node_coord[backbacknode];
-//       info() << backnode.localId() << " coord " << m_node_coord[backnode];
-//       info() << inode.localId() << " coord " << m_node_coord[inode];
-//       info() << frontnode.localId() << " coord " << m_node_coord[frontnode];
-//       info() << frontfrontnode.localId() << " coord " << m_node_coord[frontfrontnode];
-//       }
     }
     m_dual_grad_phi.synchronize();
   }
@@ -78,8 +64,8 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     if ((indexfacecellb>6) || (indexfacecellf>6)) exit(1);
     if (! options()->projectionPenteBorne) {
       ENUMERATE_NODE(inode, face.nodes()) {
-        // 4 faces dans une direction pour les noeuds --> 0.25  
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
+        // 4 faces dans une direction pour les noeuds --> 0.25  
           m_back_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellb][indexfacecellb][index_env] * m_outer_face_normal[cellb][indexfacecellb][idir];
           m_front_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellf][indexfacecellf][index_env] * m_outer_face_normal[cellf][indexfacecellf][idir];
           // pour le flux total
@@ -88,14 +74,12 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
         }
       }
     } else {      
-      Real sign(1.);  
-      // if (idir == 1) sign =-1.;
       ENUMERATE_NODE(inode, face.nodes()) {
+        for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
         // 4 faces dans une direction pour les noeuds --> 0.25  
         // recuperation du flux dual de masse calcule par le pente borne
-        for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
-          m_back_flux_mass_env[inode][index_env] += 0.25 * sign *m_dual_phi_flux[cellb][nb_total_env+index_env];
-          m_front_flux_mass_env[inode][index_env] += 0.25 * sign * m_dual_phi_flux[cellf][nb_total_env+index_env];
+          m_back_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellb][nb_total_env+index_env];
+          m_front_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellf][nb_total_env+index_env];
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env];
@@ -151,6 +135,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       FrontupwindEcin = m_phi_dual_lagrange[frontnode][4]
       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][4] * 
       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
     
     } else {
       // vittese front upwind
@@ -170,6 +155,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       FrontupwindEcin = m_phi_dual_lagrange[node][4]
       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
     }
     BackupwindVelocity = 0.;
     BackupwindEcin = 0.;
@@ -199,6 +185,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       + order2 * ( 0.5 * m_dual_grad_phi[backnode][4] * 
       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
       
+      
     } else {
       // vittese back upwind
       BackupwindVelocity[0] = m_phi_dual_lagrange[node][0]
@@ -217,6 +204,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       BackupwindEcin = m_phi_dual_lagrange[node][4]
       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
     }
      
     m_u_dual_lagrange[inode][0] += m_back_flux_mass[inode] * BackupwindVelocity[0] - 
@@ -229,6 +217,10 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
         m_front_flux_mass[inode] * FrontupwindEcin;
         
+    // filtre des valeurs abherentes
+    if (abs(m_u_dual_lagrange[node][0]) < m_arithmetic_thresold) m_u_dual_lagrange[node][0]=0.;
+    if (abs(m_u_dual_lagrange[node][1]) < m_arithmetic_thresold) m_u_dual_lagrange[node][1]=0.;
+    if (abs(m_u_dual_lagrange[node][2]) < m_arithmetic_thresold) m_u_dual_lagrange[node][2]=0.;
     // recalcul des phi apres cette projection
     // phi vitesse
     m_phi_dual_lagrange[node][0] = m_u_dual_lagrange[inode][0] /  m_u_dual_lagrange[inode][3];
@@ -238,7 +230,6 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
     m_phi_dual_lagrange[node][3] = m_u_dual_lagrange[inode][3] ;
     // Phi energie
     m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
-    
   }
 }
 /*
