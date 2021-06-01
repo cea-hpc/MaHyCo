@@ -831,15 +831,11 @@ Real MahycoModule::computeRemapFlux(
   if (projectionAvecPlateauPente == 0) {
 // cas projection ordre 3 ou 1 ou 2 sans plateau pente (flux calculé ici
 // avec phi_face)
-    if (std::fabs(math::dot(face_normal, exy)) < 1.0E-10)
-      return (0.0 * phi_face);
     return (math::dot(outer_face_normal, exy) * face_normal_velocity * face_length *
             deltat_n * phi_face);
   } else {
     // cas projection ordre 2 avec plateau pente (flux dans la variable
     // phi_face)
-    if (std::fabs(math::dot(face_normal, exy)) < 1.0E-10)
-      return (0.0 * phi_face);
     return (math::dot(outer_face_normal, exy) * face_length * phi_face);
   }
 }

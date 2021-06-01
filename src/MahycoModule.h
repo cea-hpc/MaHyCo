@@ -9,6 +9,8 @@
 #include "arcane/utils/List.h"
 #include "arcane/utils/OStringStream.h"
 #include "arcane/utils/ValueChecker.h"
+
+#include "arcane/utils/Simd.h"
 #include "arcane/utils/SimdOperation.h"
 
 #include "arcane/IUnitTest.h"
@@ -55,6 +57,35 @@
 // fin ajout au PIF
 
 #include "Mahyco_axl.h"
+
+// Pour les définitions, il faut finir par GCC car Clang et ICC définissent
+// la macro __GNU__
+// Pour CLANG, il n'y a pas encore d'équivalent au pragma ivdep.
+// Celui qui s'en approche le plus est:
+//   #pragma clang loop vectorize(enable)
+// mais il ne force pas la vectorisation.
+#ifdef __clang__
+#  define PRAGMA_IVDEP_VALUE "clang loop vectorize(enable)"
+#else
+#  ifdef __INTEL_COMPILER
+#    define PRAGMA_IVDEP_VALUE "ivdep"
+#  else
+#    ifdef __GNUC__
+// S'assure qu'on compile avec la vectorisation même en '-O2'
+#      pragma GCC optimize ("-ftree-vectorize")
+#      define PRAGMA_IVDEP_VALUE "GCC ivdep"
+#    endif
+#  endif
+#endif
+
+//#undef PRAGMA_IVDEP_VALUE
+
+#ifdef PRAGMA_IVDEP_VALUE
+#define PRAGMA_IVDEP _Pragma(PRAGMA_IVDEP_VALUE)
+#else
+#define PRAGMA_IVDEP
+#define PRAGMA_IVDEP_VALUE ""
+#endif
 
 using namespace Arcane;
 
@@ -361,10 +392,12 @@ class MahycoModule
    * Méthode appelée par le point d'entrée \c computeGeometricValues()
    */
   inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],const Cell& cell);
+  
+  // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
   /**
    * Fonctions diverses
    **/
-  inline Real produit(Real A, Real B, Real C, Real D);
+  Real produit(Real A, Real B, Real C, Real D);
   inline Real norme(Real E, Real F, Real G);
   inline Real INTY(double X, double x0, double y0, double x1, double y1);
   /** */
@@ -496,6 +529,9 @@ class MahycoModule
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
   Integer my_rank;
+  
+  Real m_arithmetic_thresold = 1.e-300;
+  
   enum limiteur {
     minmod, 
     superBee,
