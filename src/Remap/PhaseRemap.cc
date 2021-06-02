@@ -311,16 +311,17 @@ void MahycoModule::computeUremap(Integer idir)  {
                 // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
                 // aux faces pour la quantite de mouvement de Vnr
                 // limitation à trois mat car m_flux_masse_face est real3
-                if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
+                if (ivar >= nbmat && ivar < 2*nbmat)
+                    m_flux_masse_face[cell][i][ivar-nbmat] = flux;
             }
-          } else {
+          } else { 
             for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
                 // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
                 // aux faces pour la quantite de mouvement de Vnr
                 // limitation à trois mat car m_flux_masse_face est real3
-                if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar] = flux;
+                if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar-nbmat] = flux;
             }
          }
         }
