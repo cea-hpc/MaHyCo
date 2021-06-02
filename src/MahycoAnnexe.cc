@@ -118,6 +118,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
   m_u_dual_lagrange.resize(m_nb_vars_to_project);
   m_phi_lagrange.resize(m_nb_vars_to_project);
   m_phi_dual_lagrange.resize(m_nb_vars_to_project);
+  m_dual_grad_phi.resize(m_nb_vars_to_project);
   m_grad_phi.resize(m_nb_vars_to_project);
   m_phi_face.resize(m_nb_vars_to_project);
   m_grad_phi_face.resize(m_nb_vars_to_project);

@@ -20,7 +20,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
   info() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
   NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
-  m_dual_grad_phi.fill(Real3::null());
+  m_dual_grad_phi.fill(0.0);
   if (options()->ordreProjection > 1) {
      ENUMERATE_NODE(inode, ndm.innerNodes()) {
       Node node = *inode;
@@ -40,6 +40,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
   name = name + ajout_interne;
   FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
+  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   Integer nb_total_env = mm->environments().size();
   //m_back_flux_mass_env.fill(0.);
   ENUMERATE_NODE(inode, allNodes()){
@@ -52,8 +53,11 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
   }
   ENUMERATE_FACE(iface, inner_dir_faces) {
     Face face = *iface;       
+    DirFace dir_face = fdm[face];
+    Cell cellb = dir_face.previousCell();
+    Cell cellf = dir_face.nextCell();/*
     Cell cellb = face.backCell();
-    Cell cellf = face.frontCell();
+    Cell cellf = face.frontCell();*/
     Integer indexfacecellb(-1), indexfacecellf(-1);
     ENUMERATE_FACE(jface, cellb.faces()) { 
       if (jface.localId() == iface.localId()) indexfacecellb = jface.index(); 
@@ -66,8 +70,10 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
         // 4 faces dans une direction pour les noeuds --> 0.25  
-          m_back_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellb][indexfacecellb][index_env] * m_outer_face_normal[cellb][indexfacecellb][idir];
-          m_front_flux_mass_env[inode][index_env] += 0.25 * m_flux_masse_face[cellf][indexfacecellf][index_env] * m_outer_face_normal[cellf][indexfacecellf][idir];
+          m_back_flux_mass_env[inode][index_env] += 
+          0.25 * m_flux_masse_face[cellb][indexfacecellb][index_env]; 
+          m_front_flux_mass_env[inode][index_env] += 
+          0.25 * m_flux_masse_face[cellf][indexfacecellf][index_env]; 
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env]; 
@@ -78,8 +84,10 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
         // 4 faces dans une direction pour les noeuds --> 0.25  
         // recuperation du flux dual de masse calcule par le pente borne
-          m_back_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellb][nb_total_env+index_env];
-          m_front_flux_mass_env[inode][index_env] += 0.25 * m_dual_phi_flux[cellf][nb_total_env+index_env];
+          m_back_flux_mass_env[inode][index_env] += 
+          0.25 * m_dual_phi_flux[cellb][nb_total_env+index_env];
+          m_front_flux_mass_env[inode][index_env] += 
+          0.25 * m_dual_phi_flux[cellf][nb_total_env+index_env];
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env];

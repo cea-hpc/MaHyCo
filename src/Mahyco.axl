@@ -128,8 +128,8 @@
     <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
 	      dim="1" dump="true" need-sync="true" />
     <!-- 	GRAD PHI DUAL LAGRANGE	pour les vitesses -->
-    <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real3" item-kind="node"
-	      dim="0" dump="true" need-sync="true" />
+    <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real" item-kind="node"
+	      dim="1" dump="true" need-sync="true" />
     <!-- MIXTE	 -->
     <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
