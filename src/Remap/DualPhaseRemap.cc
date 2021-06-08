@@ -17,9 +17,13 @@
  *******************************************************************************
  */
 void MahycoModule::computeDualUremap(Integer idir, String name)  {
-  info() << " Entree dans computeDualUremap() pour la direction " << idir;
+    
+  debug() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
   NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
+  Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
+                   1.0 * idir * (2 -idir), 
+                   -0.5 * idir * (1 - idir)};  
   m_dual_grad_phi.fill(0.0);
   if (options()->ordreProjection > 1) {
      ENUMERATE_NODE(inode, ndm.innerNodes()) {
@@ -66,7 +70,7 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
       if (jface.localId() == iface.localId()) indexfacecellf = jface.index(); 
     }
     if ((indexfacecellb>6) || (indexfacecellf>6)) exit(1);
-    if (! options()->projectionPenteBorne) {
+    if (!options()->projectionPenteBorne) {
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
         // 4 faces dans une direction pour les noeuds --> 0.25  
@@ -80,14 +84,21 @@ void MahycoModule::computeDualUremap(Integer idir, String name)  {
         }
       }
     } else {      
+      Real3 outer_face_normalb(m_outer_face_normal[cellb][indexfacecellb]);
+      Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
+      Real3 outer_face_normalf(m_outer_face_normal[cellf][indexfacecellf]);
+      Real outer_face_normal_dirf = math::dot(outer_face_normalf, dirproj);
+      
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
-        // 4 faces dans une direction pour les noeuds --> 0.25  
-        // recuperation du flux dual de masse calcule par le pente borne
+        // 2 cellules dans une direction pour les noeuds --> 0.5  
+        // recuperation du flux dual de masse calcule par le pente borne 
+        // mais pas encore multiplié par la normale sortante des faces de la cellule 
+        // donc fait ici
           m_back_flux_mass_env[inode][index_env] += 
-          0.25 * m_dual_phi_flux[cellb][nb_total_env+index_env];
+          0.5 * m_dual_phi_flux[cellb][nb_total_env+index_env] * outer_face_normal_dirb;
           m_front_flux_mass_env[inode][index_env] += 
-          0.25 * m_dual_phi_flux[cellf][nb_total_env+index_env];
+          0.5 * m_dual_phi_flux[cellf][nb_total_env+index_env] * outer_face_normal_dirf;
           // pour le flux total
           m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
           m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env];

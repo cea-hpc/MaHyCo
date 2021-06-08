@@ -62,7 +62,8 @@ hydroStartInit()
   
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
-  hydroStartInitVar();
+  // hydroStartInitVar();
+  options()->casModel()->initVar();
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -211,7 +212,7 @@ void MahycoModule::
 saveValuesAtN()
 {
   debug() << " Entree dans saveValuesAtN()";
-  
+
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
@@ -250,7 +251,7 @@ saveValuesAtN()
   
   if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
   if (options()->withProjection) m_node_coord.copy(m_node_coord_0);
-
+ 
 }    
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -345,15 +346,7 @@ updateVelocity()
     SimdNode snode=*inode;
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
-  // Calcule l'impulsion aux noeuds
-//   ENUMERATE_NODE(inode, allNodes()){
-//     Real node_mass = m_node_mass[inode];
-//     Real3 old_velocity = m_velocity_n[inode];
-//     Real3 new_velocity = old_velocity + ( dt / node_mass) * m_force[inode];
-//     m_velocity[inode] = new_velocity;
-//     if (inode.localId() == 870) pinfo() << m_velocity[inode]  << " force " << m_force[inode]
-//         << " masse " << node_mass << " vitesse " <<  m_velocity_n[inode] ;
-//   }
+
   m_velocity.synchronize();
 }
 /**
@@ -451,29 +444,32 @@ updateVelocityForward()
 void MahycoModule::
 updateVelocityWithoutLagrange()
 {
-  Real factor(0.);
-  Real option(0.);
-  if (options()->casTest == RiderVortexTimeReverse ||
-        options()->casTest == MonoRiderVortexTimeReverse ) {
-    factor = 1. / 4.;
-    option = 1;
-  } else if ( options()->casTest == RiderDeformationTimeReverse ||
-		options()->casTest == MonoRiderDeformationTimeReverse) {
-    factor = 1.;
-    option = 1;
-  }
+  bool option(options()->casModel()->hasReverseOption());
+  Real factor(options()->casModel()->getReverseParameter());
   
+  Real option_real( (Real) option);
+  
+//   if (options()-> == RiderVortexTimeReverse ||
+//         options()->casTest == MonoRiderVortexTimeReverse ) {
+//     factor = 1. / 4.;
+//     option = 1;
+//   } else if ( options()->casTest == RiderDeformationTimeReverse ||
+// 		options()->casTest == MonoRiderDeformationTimeReverse) {
+//     factor = 1.;
+//     option = 1;
+//   }
+
   VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
   VariableNodeReal3OutView out_velocity(viewOut(m_velocity));
 
   PRAGMA_IVDEP
   ENUMERATE_SIMD_NODE(inode, allNodes()){
     SimdNode snode=*inode;
-    out_velocity[snode] = in_velocity[snode] * (1. -option)
-          + option * in_velocity[snode] * cos(Pi * m_global_time() * factor);
+    out_velocity[snode] = in_velocity[snode] * (1. -option_real)
+          + option_real * in_velocity[snode] * cos(Pi * m_global_time() * factor);
   }
-//   ENUMERATE_NODE(inode, allNodes()){
-//     Node node = *inode;
+  
+ 
 //     m_velocity[node] = m_velocity_n[node];
 // 
 //     if (options()->casTest == RiderVortexTimeReverse ||

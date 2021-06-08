@@ -32,10 +32,8 @@ computeFaceQuantitesForRemap()
        vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
      else
        vitesse_moy += m_velocity[face.node(inode)];
-     if (face.localId() == 1051) pinfo() << face.node(inode).localId() << m_velocity[face.node(inode)];
    }
    m_face_normal_velocity[face] = math::dot((0.25 * vitesse_moy), m_face_normal[face]);  
-   if (face.localId() == 1051) pinfo() << face.localId() << " " << m_face_normal_velocity[face] << " vit moy " << vitesse_moy << " norm " << m_face_normal[face];
   }
   m_deltax_lagrange.synchronize();
   m_face_length_lagrange.synchronize();
@@ -128,22 +126,15 @@ computeVariablesForRemap()
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
         }
-        //info() << " PREPARE cell " << cell.localId() << " de coord " << m_cell_coord[cell];
-        //for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) 
-        //  info() << "phi " << ivar <<  "  " << m_phi_lagrange[cell][ivar];
       }
-      
-      // // m_r_lagrange[ev] = m_density[ev];
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
     // variables duales
     // quantité de mouvement
-    if (inode.localId() == 870) pinfo() << m_velocity[inode] << " preapre avant maj " << m_node_mass[inode] << " avec " << m_u_dual_lagrange[inode][1];
     m_u_dual_lagrange[inode][0] = m_node_mass[inode] * m_velocity[inode].x;
     m_u_dual_lagrange[inode][1] = m_node_mass[inode] * m_velocity[inode].y;
     m_u_dual_lagrange[inode][2] = m_node_mass[inode] * m_velocity[inode].z;
-    if (inode.localId() == 870) pinfo() << m_velocity[inode] << " prepare avant maj " << m_node_mass[inode] << " avec " << m_u_dual_lagrange[inode][1];
     // masse nodale    
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
@@ -198,7 +189,6 @@ void MahycoModule::remap() {
       if (idir == 0) name="FACE_X";
       else if (idir == 1) name="FACE_Y";
       else if (idir == 2) name="FACE_Z";
-      pinfo() << " projection selon la direction " << idir;
       
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
@@ -213,6 +203,7 @@ void MahycoModule::remap() {
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
       computeUpwindFaceQuantitiesForProjection(idir, name);
+      
       
       computeUremap(idir);
       synchronizeUremap();

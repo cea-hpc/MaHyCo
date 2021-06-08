@@ -1,16 +1,14 @@
-#include "../MahycoModule.h"
+#include "SODService.h"
 
-void MahycoModule::initMatSOD()  {
+void SODService::initMatMono()  {
     
-  info() << " debut de l'init des cas tests";
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0.;
   }
-  info() << " fin de l'init des cas tests";
 }
 
-void MahycoModule::initVarSOD()  {
+void SODService::initVarMono()  {
     
   // mise à zero puis initialisation des fractions de masses et volumes
   m_mass_fraction.fill(0.0);
@@ -40,8 +38,15 @@ void MahycoModule::initVarSOD()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void MahycoModule::initMatBiSOD()  {
+void SODService::initMat()  {
     
+  info() << options()->casTest;
+  if (options()->casTest == SodCaseX ||
+       options()->casTest == SodCaseY ||
+       options()->casTest == SodCaseZ) {
+        initMatMono();
+        return;
+  }
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
     double r(0.);
@@ -58,12 +63,19 @@ void MahycoModule::initMatBiSOD()  {
   }
 }
 
-void MahycoModule::initVarBiSOD()  {
+void SODService::initVar()  {
     
+    
+ if (options()->casTest == SodCaseX ||
+       options()->casTest == SodCaseY ||
+       options()->casTest == SodCaseZ) {
+        initVarMono();
+        return;
+ }
  // mise à zero puis initialisation des fractions de masses et volumes
  m_mass_fraction.fill(0.0);
  m_fracvol.fill(0.0);
- CellToAllEnvCellConverter all_env_cell_converter(mm);
+ CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
  ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     AllEnvCell all_env_cell = all_env_cell_converter[cell]; 
@@ -111,3 +123,12 @@ void MahycoModule::initVarBiSOD()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
+/*---------------------------------------------------------------------------*/
+
+
+bool SODService::hasReverseOption() { return options()->reverseOption;}
+Real SODService::getReverseParameter() { return options()->parametre;}
+
+/*---------------------------------------------------------------------------*/
+
+ARCANE_REGISTER_SERVICE_SOD(SOD, SODService);

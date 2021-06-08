@@ -66,8 +66,11 @@
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>
-   
+  
+   <cas-model name="SOD">
    <cas-test>14</cas-test>
+   </cas-model>
+
     <pseudo-centree>0</pseudo-centree>
     <with-projection>false</with-projection>
     <schema-csts>0</schema-csts>

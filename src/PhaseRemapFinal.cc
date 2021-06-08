@@ -15,11 +15,9 @@
  *         m_node_velocity_nplus1, m_x_velocity, m_y_velocity
  *******************************************************************************
  */
-void MahycoModule::
-remapVariables()
-{
+void MahycoModule::remapVariables() {
   
-  pinfo() << " Entree dans remapVariables";
+  debug() << " Entree dans remapVariables";
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   Integer nb_total_env = mm->environments().size();
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
@@ -288,7 +286,6 @@ remapVariables()
       }
     }
   }
-  pinfo() << " fin de  remapVariables";
 }
 /**
  *******************************************************************************

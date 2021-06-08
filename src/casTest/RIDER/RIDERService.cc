@@ -1,15 +1,24 @@
-#include "../MahycoModule.h"
+#include "RIDERService.h"
 
 
-void MahycoModule::initMatRiderMono(Real3 Xb)  {
+void RIDERService::initMatMono()  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0;
   }
 }
-void MahycoModule::initMatRider(Real3 Xb)  {
+void RIDERService::initMat()  {
     
+  if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
+    initMatMono();
+    return;
+  } 
+  Real3 Xb;
+  if (options()->casTest < RiderRotation) 
+          Xb = {0.20, 0.20, 0.};
+      else
+          Xb = {0.50, 0.75, 0.};
   // rayon interne et externe
   double rb(0.15);
   ENUMERATE_CELL(icell,allCells()) {
@@ -42,8 +51,13 @@ void MahycoModule::initMatRider(Real3 Xb)  {
     }
   }
 }
-void MahycoModule::initVarRiderMono(Real3 Xb)  {
-
+void RIDERService::initVarMono()  {
+    
+  Real3 Xb;
+  if (options()->casTest < MonoRiderRotation) 
+          Xb = {0.20, 0.20, 0.};
+      else
+          Xb = {0.50, 0.75, 0.};
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
   double rb(0.15);
@@ -84,7 +98,6 @@ void MahycoModule::initVarRiderMono(Real3 Xb)  {
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
   }
-  info() << " boucle sur les noeuds";
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
     if ( options()->casTest == MonoRiderTx) m_velocity[inode].x = 1.;
@@ -119,11 +132,20 @@ void MahycoModule::initVarRiderMono(Real3 Xb)  {
     // sauvegarde des valeurs initiales mises dans m_velocity_n
     m_velocity_n[inode] = m_velocity[inode];
   }
-  info() << " fin de boucle sur les noeuds";
 }
-void MahycoModule::initVarRider(Real3 Xb)  {
+void RIDERService::initVar()  {
 
-  CellToAllEnvCellConverter all_env_cell_converter(mm);
+  if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
+    initVarMono();
+    return;
+  } 
+  Real3 Xb;
+  if (options()->casTest < RiderRotation) 
+          Xb = {0.20, 0.20, 0.};
+      else
+          Xb = {0.50, 0.75, 0.};
+  
+  CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
   double rb(0.15);
@@ -219,3 +241,9 @@ void MahycoModule::initVarRider(Real3 Xb)  {
   }
 }
 
+/*---------------------------------------------------------------------------*/
+
+bool RIDERService::hasReverseOption() { return options()->reverseOption;}
+Real RIDERService::getReverseParameter() { return options()->parametre;}
+
+ARCANE_REGISTER_SERVICE_RIDER(RIDER, RIDERService);

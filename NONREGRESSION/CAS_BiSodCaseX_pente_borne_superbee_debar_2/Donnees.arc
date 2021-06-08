@@ -69,7 +69,9 @@
     </eos-model> 
   </environment>
    
+   <cas-model name="SOD">
    <cas-test>13</cas-test>
+   </cas-model>
     <pseudo-centree>0</pseudo-centree>
     <ordre-projection>2</ordre-projection>
     <projection-pente-borne>true</projection-pente-borne>

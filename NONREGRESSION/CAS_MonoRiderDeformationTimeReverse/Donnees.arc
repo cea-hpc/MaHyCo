@@ -68,7 +68,11 @@
     </eos-model> 
   </environment>
    
+   <cas-model name="RIDER">
    <cas-test>30</cas-test>
+   <reverse-option>true</reverse-option>
+   <parametre>1.</parametre>
+   </cas-model>
     <sans-lagrange>true</sans-lagrange>
     <pseudo-centree>0</pseudo-centree>
     <ordre-projection>2</ordre-projection>

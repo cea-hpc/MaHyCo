@@ -67,7 +67,10 @@
     </eos-model> 
   </environment>
    
+   <cas-model name="SOD">
    <cas-test>14</cas-test>
+   </cas-model>
+   
     <pseudo-centree>0</pseudo-centree>
     <ordre-projection>2</ordre-projection>
     <schema-csts>0</schema-csts>
