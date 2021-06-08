@@ -1,10 +1,10 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "../MahycoModule.h"
+#include "RemapADIService.h"
 
 // fonctions pour l'ordre 3
 // ----------------------------------
 // fonction pour evaluer le gradient
-Real MahycoModule::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
+Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
                             Real y0, Real yp) {
   Real grad;
   grad = h0 / (hm + h0 + hp) *
@@ -14,7 +14,7 @@ Real MahycoModule::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
 }
 // ----------------------------------
 // fonction pour évaluer ystar
-Real MahycoModule::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
+Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
                              Real ymm, Real ym, Real yp, Real ypp,
                              Real gradm, Real gradp) {
   Real ystar, tmp1, tmp2;
@@ -29,7 +29,7 @@ Real MahycoModule::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
 }
 // ----------------------------------
 // fonction pour évaluer fm
-Real MahycoModule::evaluate_fm(Real x, Real dx, Real up, Real du,
+Real RemapADIService::evaluate_fm(Real x, Real dx, Real up, Real du,
                           Real u6) {
   Real fm;
   fm = up - 0.5 * x / dx * (du - (1. - 2. / 3. * x / dx) * u6);
@@ -37,7 +37,7 @@ Real MahycoModule::evaluate_fm(Real x, Real dx, Real up, Real du,
 }
 // ----------------------------------
 // fonction pour évaluer fr
-Real MahycoModule::evaluate_fp(Real x, Real dx, Real um, Real du,
+Real RemapADIService::evaluate_fp(Real x, Real dx, Real um, Real du,
                           Real u6) {
   Real fp;
   fp = um + 0.5 * x / dx * (du - (1. - 2. / 3. * x / dx) * u6);
@@ -45,28 +45,28 @@ Real MahycoModule::evaluate_fp(Real x, Real dx, Real um, Real du,
 }
 // ----------------------------------
 // fonction pour initialiser la structure interval
-MahycoModule::interval MahycoModule::define_interval(Real a, Real b) {
-  interval I;
-  I.inf = math::min(a, b);
-  I.sup = math::max(a, b);
+Real2 RemapADIService::define_interval(Real a, Real b) {
+  Real2 I;
+  I[0] = math::min(a, b);
+  I[1] = math::max(a, b);
   return I;
 }
 // ----------------------------------
 // fonction pour calculer l'intersection entre deux intervals
-MahycoModule::interval MahycoModule::intersection(interval I1, interval I2) {
-  interval I;
-  if ((I1.sup < I2.inf) || (I2.sup < I1.inf)) {
-    I.inf = 0.;
-    I.sup = 0.;
+Real2 RemapADIService::intersection(Real2 I1, Real2 I2) {
+  Real2 I;
+  if ((I1[1] < I2[0]) || (I2[1] < I1[0])) {
+    I[0] = 0.;
+    I[1] = 0.;
   } else {
-    I.inf = math::max(I1.inf, I2.inf);
-    I.sup = math::min(I1.sup, I2.sup);
+    I[0] = math::max(I1[0], I2[0]);
+    I[1] = math::min(I1[1], I2[1]);
   }
   return I;
 }
 // ----------------------------------
 // fonction pour calculer le flux
-Real MahycoModule::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
+Real RemapADIService::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
                                 Real ypp, Real yppp, Real hmmm,
                                 Real hmm, Real hm, Real hp, Real hpp,
                                 Real hppp, Real vdt) {
@@ -106,7 +106,7 @@ Real MahycoModule::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
   }
   // Limitation TVD
   Real num, nup, ym_ym, yp_ym;
-  interval I1, I2, limiteur;
+  Real2 I1, I2, limiteur;
   num = vdt / hm;
   nup = vdt / hp;
   ym_ym = ym + (1. - num) / num * (ym - ymm);
@@ -120,11 +120,11 @@ Real MahycoModule::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
     I2 = define_interval(yp, yp_ym);
   }
   limiteur = intersection(I1, I2);
-  if (flux < limiteur.inf) {
-    flux = limiteur.inf;
+  if (flux < limiteur[0]) {
+    flux = limiteur[0];
   }
-  if (flux > limiteur.sup) {
-    flux = limiteur.sup;
+  if (flux > limiteur[1]) {
+    flux = limiteur[1];
   }
   //
   return flux;

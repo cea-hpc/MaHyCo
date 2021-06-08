@@ -260,8 +260,8 @@ void MahycoModule::remapVariables() {
   // recalcule de la masse mass_nodale
   computeNodeMass();
  
-  // conservation energie totale 
-  if (options()->convnerg) {
+  // conservation energie totale lors du remap
+  if (options()->remap()->hasConservationEnergieTotale()) {
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;
       Real delta_ec(0.);
