@@ -4,6 +4,7 @@
 #include <arcane/ItemGroup.h>
 #include "eos/IEquationOfState.h"
 #include "casTest/IInitialisations.h"
+#include "Remap/IRemap.h"
 
 struct TypesMahyco
 {
@@ -60,5 +61,16 @@ enum Test {
      RiderVortexTimeReverse = 37,
      RiderDeformationTimeReverse = 38,
   };
+  
+  enum limiteur {
+    minmod, 
+    superBee,
+    vanLeer ,
+    minmodG ,
+    superBeeG,
+    vanLeerG,
+    arithmeticG,
+    ultrabeeG,
+  }; 
 #endif
 

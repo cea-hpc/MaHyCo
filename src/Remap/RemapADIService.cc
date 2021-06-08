@@ -1,5 +1,30 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "../MahycoModule.h"
+#include "RemapADIService.h"
+
+Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
+bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
+bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
+/**
+ *******************************************************************************/
+void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) {
+    
+    
+  m_u_lagrange.resize(nb_vars_to_project);
+  m_u_dual_lagrange.resize(nb_vars_to_project);
+  m_phi_lagrange.resize(nb_vars_to_project);
+  m_phi_dual_lagrange.resize(nb_vars_to_project);
+  m_dual_grad_phi.resize(nb_vars_to_project);
+  m_grad_phi.resize(nb_vars_to_project);
+  m_phi_face.resize(nb_vars_to_project);
+  m_grad_phi_face.resize(nb_vars_to_project);
+  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)
+  m_flux_masse_face.resize(6); 
+  m_delta_phi_face_ar.resize(nb_vars_to_project);
+  m_delta_phi_face_av.resize(nb_vars_to_project);
+  m_dual_phi_flux.resize(nb_vars_to_project);
+  m_front_flux_mass_env.resize(nb_env);
+  m_back_flux_mass_env.resize(nb_env);
+}
 /**
  *******************************************************************************
  * \file computeGradPhiFace1()
@@ -9,10 +34,10 @@
  * \param \return m_grad_phi, m_h_cell_lagrange
  *******************************************************************************
  */
-void MahycoModule::
-computeGradPhiFace(Integer idir, String name)  {
+void RemapADIService::computeGradPhiFace(Integer idir, String name, Integer nb_vars_to_project, Integer nb_env)  {
   debug() << " Entree dans computeGradPhiFace()";
   String ajout_interne = "_INTERNE";
+  m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   name = name + ajout_interne;
   m_h_cell_lagrange.fill(0.0);
   if (options()->ordreProjection > 1) {
@@ -26,7 +51,7 @@ computeGradPhiFace(Integer idir, String name)  {
       m_deltax_lagrange[face] = math::dot(
        (m_cell_coord[cellf] -  m_cell_coord[cellb]), m_face_normal[face]); 
 
-      for (Integer ivar = 0 ; ivar <  m_nb_vars_to_project ; ++ivar) {
+      for (Integer ivar = 0 ; ivar <  nb_vars_to_project ; ++ivar) {
         m_grad_phi_face[iface][ivar] = (m_phi_lagrange[cellf][ivar] - m_phi_lagrange[cellb][ivar]) 
                                     / m_deltax_lagrange[iface];
       }
@@ -49,9 +74,10 @@ computeGradPhiFace(Integer idir, String name)  {
  * \return m_grad_phi_face, m_delta_phi_face_ar, m_delta_phi_face_av
  *******************************************************************************
  */
-void MahycoModule::computeGradPhiCell(Integer idir) {
+void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   debug() << " Entree dans computeGradPhiCell()";
+  m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
@@ -87,7 +113,7 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
           cas_possible++;
           }
         }
-        if (cas_possible > 2) info() << " mauvais algo maille " << cell;
+        if (cas_possible > 2) info() << " mauvais algo maille " << cell.localId();
         if (cas_possible == 2) continue;
       }
       bool voisinage_pure = (options()->projectionPenteBorneMixte == true &&
@@ -98,7 +124,7 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
       if ((options()->getProjectionLimiteurPureId() == 1) && voisinage_pure)
         limiter = options()->projectionLimiteurPureId;
       // calcul de m_grad_phi[cell] 
-      computeAndLimitGradPhi(limiter, frontFace, backFace, cell, frontcell, backcell);
+      computeAndLimitGradPhi(limiter, frontFace, backFace, cell, frontcell, backcell, nb_vars_to_project);
   
       if (options()->projectionPenteBorne == 1) {
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(flFaces);
@@ -110,22 +136,24 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
         
         Integer calcul_flux_dual(1); // a supprimer - calcul du flux dual fait en pente borne
         
-        RealUniqueArray delta_phi_face(m_nb_vars_to_project);
-        RealUniqueArray dual_phi_flux(m_nb_vars_to_project);
+        RealUniqueArray delta_phi_face(nb_vars_to_project);
+        RealUniqueArray dual_phi_flux(nb_vars_to_project);
        
         // calcul de m_delta_phi_face_ar et m_dual_phi_flux
         if (voisinage_pure)
             computeFluxPPPure(cell, frontcell, backcell, Flux_sortant_ar, 
                             deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneDebarFix, flux_dual,
-                            calcul_flux_dual, delta_phi_face, dual_phi_flux);
+                            calcul_flux_dual, delta_phi_face, dual_phi_flux,
+                            nb_env, nb_vars_to_project);
         else
             computeFluxPP(cell, frontcell, backcell, Flux_sortant_ar, 
                             deltat, 0, options()->threshold, 
                             options()->projectionPenteBorneDebarFix, flux_dual,
-                            calcul_flux_dual, delta_phi_face, dual_phi_flux);
+                            calcul_flux_dual, delta_phi_face, dual_phi_flux,
+                            nb_env, nb_vars_to_project);
             
-        for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {    
+        for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {    
             m_delta_phi_face_ar[cell][ivar] = delta_phi_face[ivar];
             // et pour avoir un flux dual 2D
             m_dual_phi_flux[cell][ivar] = dual_phi_flux[ivar] * 
@@ -136,14 +164,16 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
             computeFluxPPPure(cell, frontcell, backcell, Flux_sortant_av, 
                             deltat, 1, options()->threshold, 
                             options()->projectionPenteBorneDebarFix, flux_dual,
-                            calcul_flux_dual, delta_phi_face, dual_phi_flux);
+                            calcul_flux_dual, delta_phi_face, dual_phi_flux,
+                            nb_env, nb_vars_to_project);
         else
             computeFluxPP(cell, frontcell, backcell, Flux_sortant_av, 
                             deltat, 1, options()->threshold, 
                             options()->projectionPenteBorneDebarFix, flux_dual,
-                            calcul_flux_dual, delta_phi_face, dual_phi_flux);
+                            calcul_flux_dual, delta_phi_face, dual_phi_flux,
+                            nb_env, nb_vars_to_project);
             
-        for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {    
+        for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {    
             m_delta_phi_face_av[cell][ivar] = delta_phi_face[ivar];
             // dual_phi_flux ne sert pas ici : le flux dual a dèjà été calculé
         }
@@ -153,7 +183,7 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
 }
 /**
 *****************************************************************************
- * \file computeUpwindFaceQuantitiesForProjection1()
+ * \file computeUpwindFaceQuantitiesForProjection()
  * \brief  phase de projection : troisieme etap
  *        calcul de m_phi_face
  *     qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables
@@ -162,14 +192,14 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
  * \return m_phi_face
 *******************************************************************************
 */
-void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String name) {
+void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, String name, Integer nb_vars_to_project, Integer nb_env) {
     
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
+  ICartesianMesh* m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   Real deltat = m_global_deltat();
   String ajout_interne = "_INTERNE";
   name = name + ajout_interne;
   FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
-  ICartesianMesh* m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
@@ -189,12 +219,12 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
         if (options()->projectionPenteBorne == 0) {
           if (m_face_normal_velocity[face] * m_deltax_lagrange[face] > 0.0) {
               // phi_cb + (dot((x_f - x_cb), face_normal) * grad_phi_cb)   
-            for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++)                                          
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)                                          
               m_phi_face[face][ivar] = m_phi_lagrange[cellb][ivar]
                     + math::dot((m_face_coord[face] - m_cell_coord[cellb]), 
                     m_face_normal[face]) * m_grad_phi[cellb][ivar];                                
           } else { 
-            for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++)   
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)   
               m_phi_face[face][ivar] = m_phi_lagrange[cellf][ivar] 
                     + math::dot((m_face_coord[face] - m_cell_coord[cellf]), 
                     m_face_normal[face]) * m_grad_phi[cellf][ivar];
@@ -202,7 +232,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
         } else {             
           Real sign(1.);  
           // voir le meme probleme que pour l'ordre 3
-          for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
+          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
             m_phi_face[face][ivar] = sign *
                 (m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar]);
           }
@@ -231,7 +261,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
           }
         } 
         Real vdt  = m_face_normal_velocity[face] * deltat;
-        for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
+        for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
             m_phi_face[face][ivar] = ComputeFluxOrdre3(
                 m_phi_lagrange[cellbbb][ivar],
                 m_phi_lagrange[cellbb][ivar],
@@ -249,7 +279,7 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
         } 
         bool voisinage_pure = (m_est_mixte[cellb] == 0 && m_est_mixte[cellf] == 0 && 
         m_est_pure[cellb] == m_est_pure[cellf]);
-        int nbmat = m_nb_env;   
+        int nbmat = nb_env;   
         if (!voisinage_pure) {
           // comme dans le pente borne, on evite le pb de debar sur les maille a voisinage mixte
           // pinfo() << " voisinage mixte " << cellb.localId() << " et " << cellf.localId();
@@ -273,8 +303,8 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
 }
 /**
  *******************************************************************************
- * \file computeUremap1()
- * \brief phase 1 de projection : etape finale
+ * \file computeUremap()
+ * \brief phase de projection : etape finale
  *        calcul de la variable Uremap1 par ajout ou retrait des flux
           Mises à jour de l'indicateur mailles mixtes
           calcul de la valeur de Phi issu de Uremap1
@@ -282,18 +312,18 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
  * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
-void MahycoModule::computeUremap(Integer idir)  {
+void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
     
     debug() << " Entree dans computeUremap()";
     Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
-    int nbmat = m_nb_env;
+    int nbmat = nb_env;
     Real deltat = m_global_deltat();
     Real flux;    
     ENUMERATE_CELL(icell,allCells()) {
       Cell cell = * icell;
-      RealUniqueArray flux_face(m_nb_vars_to_project);
+      RealUniqueArray flux_face(nb_vars_to_project);
       flux_face.fill(0.);
       ENUMERATE_FACE(iface, cell.faces()){
         const Face& face = *iface;
@@ -307,7 +337,7 @@ void MahycoModule::computeUremap(Integer idir)  {
           Real3 outer_face_normal(m_outer_face_normal[cell][i]);
           Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
           if (options()->projectionPenteBorne == 0) {
-            for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {  
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
                 // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
@@ -317,7 +347,7 @@ void MahycoModule::computeUremap(Integer idir)  {
                     m_flux_masse_face[cell][i][ivar-nbmat] = flux;
             }
           } else { 
-            for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {  
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
                 // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
@@ -335,7 +365,7 @@ void MahycoModule::computeUremap(Integer idir)  {
 //         }    
       }
  
-      for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {   
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
         m_u_lagrange[cell][ivar] -= flux_face[ivar];
       }
       
@@ -398,13 +428,13 @@ void MahycoModule::computeUremap(Integer idir)  {
             m_phi_lagrange[cell][2 * nbmat + imat] = 0.;
         }
         // Phi energie cinétique
-        if (options()->convnerg == 1)
+        if (options()->conservationEnergieTotale == 1)
           m_phi_lagrange[cell][3 * nbmat + 2] =
             m_u_lagrange[cell][3 * nbmat + 2] / somme_masse;
 
     } else {
         // somme_volume doit etre égale à m_cell_volume[cell]
-      for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
         m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
       }
     }
@@ -433,11 +463,13 @@ void MahycoModule::computeUremap(Integer idir)  {
  *         et m_flux_masse_face pour la projection duale
  *******************************************************************************
  */
-void MahycoModule::synchronizeUremap()  {
+void RemapADIService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
     m_phi_lagrange.synchronize();
     m_u_lagrange.synchronize();
     m_flux_masse_face.synchronize();
     m_est_mixte.synchronize();
     m_est_pure.synchronize();
-}
+}/*---------------------------------------------------------------------------*/
+ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
+/*---------------------------------------------------------------------------*/

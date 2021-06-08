@@ -27,12 +27,12 @@ hydroStartInit()
   pinfo() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
   
   info() << " Check donnees ";
-  if ((options()->ordreProjection == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
-      pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
-      pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
-      pinfo() << " incompatible avec la projection d'ordre " << options()->ordreProjection;
-      pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
-      subDomain()->timeLoopMng()->stopComputeLoop(true);
+   if ((options()->remap()->getOrdreProjection() == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
+       pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
+       pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+       pinfo() << " incompatible avec la projection d'ordre " << options()->remap()->getOrdreProjection();
+       pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+       subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
   if ((options()->withProjection == true) && (mesh()->ghostLayerMng()->nbGhostLayer() < 2) && (m_parallel_mng->isParallel() == true)) {
       pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
@@ -62,7 +62,6 @@ hydroStartInit()
   
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
-  // hydroStartInitVar();
   options()->casModel()->initVar();
   
   if (!options()->sansLagrange) {

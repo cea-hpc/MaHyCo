@@ -1,5 +1,5 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "../MahycoModule.h"
+#include "RemapADIService.h"
 
 /**
  *******************************************************************************
@@ -12,7 +12,7 @@
  * \return valeur du gradient dual et limité
  *******************************************************************************
  */
-void MahycoModule::computeDualGradPhi(Node inode, 
+void RemapADIService::computeDualGradPhi(Node inode, 
                                           Node frontfrontnode, 
                                           Node frontnode, 
                                           Node backnode, 
@@ -79,7 +79,7 @@ void MahycoModule::computeDualGradPhi(Node inode,
  * \return  valeur de l'integral
  *******************************************************************************
  */
-inline Real MahycoModule::INTY(Real X, Real x0, Real y0, Real x1, Real y1) {
+ Real RemapADIService::INTY(Real X, Real x0, Real y0, Real x1, Real y1) {
   Real flux = 0.;
   // std::cout << " x0 " << x0 << std::endl;
   // std::cout << " x1 " << x1 << std::endl;
@@ -101,7 +101,7 @@ inline Real MahycoModule::INTY(Real X, Real x0, Real y0, Real x1, Real y1) {
  * \return valeur du limiteur demandé
  *******************************************************************************
  */
-inline Real MahycoModule::fluxLimiter(int projectionLimiterId, Real r) {
+ Real RemapADIService::fluxLimiter(int projectionLimiterId, Real r) {
   if (projectionLimiterId == minmod) {
     return std::max(0.0, std::min(1.0, r));
   } else if (projectionLimiterId == superBee) {
@@ -123,7 +123,7 @@ inline Real MahycoModule::fluxLimiter(int projectionLimiterId, Real r) {
  *hmoins, gradplus, gradmoins \return valeur du limiteur demandé
  *******************************************************************************
  */
-inline Real MahycoModule::fluxLimiterG(int projectionLimiterId, Real gradplus,
+Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
                            Real gradmoins, Real y0, Real yplus,
                            Real ymoins, Real h0, Real hplus,
                            Real hmoins) {
@@ -180,7 +180,7 @@ inline Real MahycoModule::fluxLimiterG(int projectionLimiterId, Real gradplus,
  * \return y0plus, y0moins
  *******************************************************************************
  */
-inline Real MahycoModule::computeY0(int projectionLimiterId, Real y0, Real yplus,
+Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
                         Real ymoins, Real h0, Real hplus, Real hmoins,
                         int type) {
   // retourne {{y0plus, y0moins}}
@@ -242,7 +242,7 @@ inline Real MahycoModule::computeY0(int projectionLimiterId, Real y0, Real yplus
  * \return xg, xd
  *******************************************************************************
  */
-inline Real MahycoModule::computexgxd(Real y0, Real yplus, 
+Real RemapADIService::computexgxd(Real y0, Real yplus, 
                                           Real ymoins, Real h0,
                           Real y0plus, Real y0moins, int type) {
   // retourne {{xg, xd}}
@@ -272,7 +272,7 @@ inline Real MahycoModule::computexgxd(Real y0, Real yplus,
  * \return yg, yd
  *******************************************************************************
  */
-inline Real MahycoModule::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
+Real RemapADIService::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
                           Real y0plus, Real y0moins, Real grady,
                           int type) {
   // retourne {{yg, yd}}
@@ -302,13 +302,13 @@ inline Real MahycoModule::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
  * \return valeur du gradient limité de chaque variables phi
  *******************************************************************************
  */
-void MahycoModule::
+void RemapADIService::
 computeAndLimitGradPhi(int projectionLimiterId, Face frontFace, Face backFace, 
-                       Cell cell, Cell frontcell, Cell backcell) {
+                       Cell cell, Cell frontcell, Cell backcell, int nb_vars) {
     
    if (projectionLimiterId < minmodG) {
      // info() << " Passage gradient limite Classique ";
-    for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
+    for (Integer ivar = 0; ivar < nb_vars; ivar++) {
       m_grad_phi[cell][ivar] = 0.;
       if (m_grad_phi_face[backFace][ivar] != 0.) 
         m_grad_phi[cell][ivar] += 0.5 * (
@@ -325,7 +325,7 @@ computeAndLimitGradPhi(int projectionLimiterId, Face frontFace, Face backFace,
     }
   } else {
     // info() << " Passage gradient limite Genéralisé ";
-    for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
+    for (Integer ivar = 0; ivar < nb_vars; ivar++) {
       m_grad_phi[cell][ivar] =
           fluxLimiterG(projectionLimiterId, m_grad_phi_face[frontFace][ivar], 
                        m_grad_phi_face[backFace][ivar], m_phi_lagrange[cell][ivar],
@@ -346,7 +346,7 @@ computeAndLimitGradPhi(int projectionLimiterId, Face frontFace, Face backFace,
  
  *******************************************************************************
  */
-void MahycoModule::
+void RemapADIService::
 computeAndLimitGradPhiDual(int projectionLimiterId, Node inode, 
                            Node frontnode, Node backnode, 
                            Real3 grad_front, Real3 grad_back, Real h0, Real hplus, Real hmoins) {
@@ -402,26 +402,26 @@ computeAndLimitGradPhiDual(int projectionLimiterId, Node inode,
  * \return flux des variables phi
  *******************************************************************************
  */
-void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell, 
+void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
                                      Integer projectionPenteBorneDebarFix, 
                                      Real dual_normal_velocity,
                                      Integer calcul_flux_dual,
-                                     RealArrayView Flux, RealArrayView Flux_dual
+                                     RealArrayView Flux, RealArrayView Flux_dual,
+                                     int nbmat, int nb_vars
                                     ) {
     
 
   Flux.fill(0.0);
   Flux_dual.fill(0.0);
-  int nbmat = m_nb_env;
 
   Real y0plus, y0moins, xd, xg, yd, yg;
   Real flux1, flux2, flux3, flux1m, flux2m, flux3m;
   Real partie_positive_v = 0.5 * (face_normal_velocity + abs(face_normal_velocity)) * deltat_n;
   Real partie_positive_dual_v = 0.5 * (dual_normal_velocity + abs(dual_normal_velocity)) * deltat_n;
   Integer cas_PP = 0;
-    for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
+    for (Integer ivar = 0; ivar < nb_vars; ivar++) {
       Real h0 = m_h_cell_lagrange[cell];
       Real hplus = m_h_cell_lagrange[frontcell];
       Real hmoins = m_h_cell_lagrange[backcell];
@@ -624,24 +624,24 @@ void MahycoModule::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
  * \return Flux, Flux_dual
  *******************************************************************************
  */
-void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell, 
+void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
                                      Integer projectionPenteBorneDebarFix, 
                                      Real dual_normal_velocity,
                                      Integer calcul_flux_dual,
-                                     RealArrayView Flux, RealArrayView Flux_dual
+                                     RealArrayView Flux, RealArrayView Flux_dual,
+                                     int nbmat, int nb_vars
                                     ) {
   Flux.fill(0.0);
   Flux_dual.fill(0.0);   
-  int nbmat = m_nb_env;
   Real y0plus, y0moins, xd, xg, yd, yg;
   Real flux1, flux2, flux3, flux1m, flux2m, flux3m;
   Real partie_positive_v = 0.5 * (face_normal_velocity + abs(face_normal_velocity)) * deltat_n;
   Real partie_positive_dual_v = 0.5 * (dual_normal_velocity + abs(dual_normal_velocity)) * deltat_n;
   int cas_PP = 0;
   // on ne fait que la projection des volumes et masses
-  for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
+  for (Integer ivar = 0; ivar < nb_vars; ivar++) {
     Real h0 = m_h_cell_lagrange[cell];
     Real hplus = m_h_cell_lagrange[frontcell];
     Real hmoins = m_h_cell_lagrange[backcell];
@@ -822,7 +822,7 @@ void MahycoModule::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell,
 //  * \return valeur de phi 
 //  *******************************************************************************
 //  */
-Real MahycoModule::computeRemapFlux(
+Real RemapADIService::computeRemapFlux(
         Integer projectionOrder, Integer projectionAvecPlateauPente,
         Real face_normal_velocity, Real3 face_normal,
         Real face_length, Real phi_face,

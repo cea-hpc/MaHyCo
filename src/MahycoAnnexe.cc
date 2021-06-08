@@ -1,61 +1,7 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "MahycoModule.h"
 
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
 
-void MahycoModule::hydroStartInitCasTest()
-{
-//   info() << " recherhe " << options()->casTest;
-//   info() << " dispo " << SodCaseX;
-//   if (options()->casTest == UnitTestCase) initMatUnitTest();
-//   if (options()->casTest == SodCaseX ||
-//       options()->casTest == SodCaseY ||
-//       options()->casTest == SodCaseZ) initMatSOD();
-//   if (options()->casTest == BiSodCaseX ||
-//       options()->casTest == BiSodCaseY ||
-//       options()->casTest == BiSodCaseZ) initMatBiSOD();
-//   if (options()->casTest == Sedov) initMatSedov();
-//   if (options()->casTest == BiSedov) initMatBiSedov();
-//   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
-//       if (options()->casTest < MonoRiderRotation) 
-//           initMatRiderMono({0.20, 0.20, 0.});
-//       else
-//           initMatRiderMono({0.50, 0.75, 0.});
-//   if (options()->casTest >= RiderTx && options()->casTest <= RiderDeformationTimeReverse)
-//       if (options()->casTest < RiderRotation) 
-//           initMatRider({0.20, 0.20, 0.});
-//       else
-//           initMatRider({0.50, 0.75, 0.});
-//    pinfo() << options()->cas.name() << " ou " << options()->cas.serviceName();
-//      options()->casModel()->initMat(options()->casTest);
-      
-}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
-void MahycoModule::hydroStartInitVar()
-{
-//   if (options()->casTest == UnitTestCase) initVarUnitTest();
-//   if (options()->casTest == SodCaseX ||
-//       options()->casTest == SodCaseY ||
-//       options()->casTest == SodCaseZ) initVarSOD();
-//   if (options()->casTest == BiSodCaseX ||
-//       options()->casTest == BiSodCaseY ||
-//       options()->casTest == BiSodCaseZ) initVarBiSOD();
-//   if (options()->casTest == Sedov) initVarSedov();
-//   if (options()->casTest == BiSedov) initVarBiSedov();
-//   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
-//       if (options()->casTest < MonoRiderRotation) 
-//           initVarRiderMono({0.20, 0.20, 0.});
-//       else
-//           initVarRiderMono({0.50, 0.75, 0.});
-//   if (options()->casTest >= RiderTx&& options()->casTest <=    RiderDeformationTimeReverse)
-//       if (options()->casTest < RiderRotation) 
-//           initVarRider({0.20, 0.20, 0.});
-//       else
-//           initVarRider({0.50, 0.75, 0.});
-}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
@@ -117,25 +63,10 @@ void MahycoModule::hydroStartInitEnvAndMat()
   //
   // on redimensionne les tableaux de la projection en fonction
   // du nombre total d'environnements
-  m_u_lagrange.resize(m_nb_vars_to_project);
-  m_u_dual_lagrange.resize(m_nb_vars_to_project);
-  m_phi_lagrange.resize(m_nb_vars_to_project);
-  m_phi_dual_lagrange.resize(m_nb_vars_to_project);
-  m_dual_grad_phi.resize(m_nb_vars_to_project);
-  m_grad_phi.resize(m_nb_vars_to_project);
-  m_phi_face.resize(m_nb_vars_to_project);
-  m_grad_phi_face.resize(m_nb_vars_to_project);
   m_is_dir_face.resize(3); // dimension 3
   m_outer_face_normal.resize(6); // dimension 6 faces par mailles
-  info() << " ok";
-  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)
-  m_flux_masse_face.resize(6); 
-  m_delta_phi_face_ar.resize(m_nb_vars_to_project);
-  m_delta_phi_face_av.resize(m_nb_vars_to_project);
-  m_dual_phi_flux.resize(m_nb_vars_to_project);
-  m_front_flux_mass_env.resize(m_nb_env);
-  m_back_flux_mass_env.resize(m_nb_env);
-  // saved_envs.size();
+  
+  options()->remap()->resizeRemapVariables(m_nb_vars_to_project, m_nb_env);
   
    ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
@@ -146,7 +77,6 @@ void MahycoModule::hydroStartInitEnvAndMat()
   }
   
   info() << " Initialisation du cas test";
-  // hydroStartInitCasTest();
   
   options()->casModel()->initMat();
       

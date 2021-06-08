@@ -2,7 +2,7 @@
 <case codeversion="1.0" codename="Mahyco" xml:lang="en">
   <arcane>
     <title>Exemple Arcane d'un module Hydro tres simplifie</title>
-    <timeloop>MahycoLoop</timeloop>
+    <timeloop>MahycoLagrangeLoop</timeloop>
   </arcane>
 
   <arcane-post-processing>
@@ -77,7 +77,7 @@
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
-    <convnerg>false</convnerg>
+     
     <final-time>.2</final-time>
     
     <boundary-condition>

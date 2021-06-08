@@ -77,7 +77,7 @@
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.01</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
-    <convnerg>false</convnerg>
+     
     <final-time>1.</final-time>
     
     <boundary-condition>

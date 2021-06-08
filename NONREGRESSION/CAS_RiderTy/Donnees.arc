@@ -70,15 +70,18 @@
    <cas-model name="RIDER">
    <cas-test>32</cas-test>
    </cas-model>
+   <remap name="RemapADI">
+    <ordre-projection>2</ordre-projection>
+   </remap>
+   
     <sans-lagrange>true</sans-lagrange>
     <pseudo-centree>0</pseudo-centree>
-    <ordre-projection>2</ordre-projection>
     <schema-csts>0</schema-csts>
      <deltat-init>0.001</deltat-init>
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
-    <convnerg>false</convnerg>
+     
     <final-time>.5</final-time>
     
  <!--   <boundary-condition>

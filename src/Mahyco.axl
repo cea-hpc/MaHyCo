@@ -101,9 +101,6 @@
   <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
   <!-- 	FACE COORD	 -->
-  <variable field-name="deltax_lagrange" name="DeltaxLagrange" data-type="real" item-kind="face"
-	    dim="0" dump="true" need-sync="true" />
-  <!-- 	FACE COORD	 -->
   <variable field-name="face_coord" name="FaceCoord" data-type="real3" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	FACE NORMAL	 -->
@@ -136,43 +133,12 @@
     <!-- PURE	 -->
     <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	PHI FACE 	 -->
-    <variable field-name="phi_face" name="PhiFace" data-type="real" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	GRANDIENT FACE 	 -->
-    <variable field-name="grad_phi_face" name="GradPhiFace" data-type="real" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	GRANDIENT CELL 	 -->
-    <variable field-name="grad_phi" name="GradPhi" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />     
-       <!-- 	DELTA_PHI_FACE_AR 	 -->
-    <variable field-name="delta_phi_face_ar" name="DeltaPhiFaceAr" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-       <!-- 	DELTA_PHI_FACE_AV 	 -->
-    <variable field-name="delta_phi_face_av" name="DeltaPhiFaceAv" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-       <!-- 	DUAL_PHI_FLUX 	     -->
-    <variable field-name="dual_phi_flux" name="DualPhiFlux" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	HCLagrange	 -->
-    <variable field-name="h_cell_lagrange" name="HCellLagrange" data-type="real" item-kind="cell"
-	    dim="0" dump="true" need-sync="true" />
     <!-- 	isDirFace	 -->
     <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
 	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
     <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-    <variable field-name="flux_masse_face" name="FluxMasseFace" data-type="real3" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />
-    <variable field-name="back_flux_mass_env" name="BackFluxMassEnv" data-type="real" item-kind="node"
-	    dim="1" dump="true" need-sync="true" /> 
-    <variable field-name="front_flux_mass_env" name="FrontFluxMassEnv" data-type="real" item-kind="node"
-	    dim="1" dump="true" need-sync="true" /> 
-    <variable field-name="back_flux_mass" name="BackFluxMass" data-type="real" item-kind="node"
-	    dim="0" dump="true" need-sync="true" /> 
-    <variable field-name="front_flux_mass" name="FrontFluxMass" data-type="real" item-kind="node"
-	    dim="0" dump="true" need-sync="true" /> 
-</variables>
+  </variables>
 
 
 <entry-points>
@@ -246,6 +212,12 @@
   
   <service-instance name="cas-model" type="IInitialisations">
   <description>Service d'initialisation du cas test</description>
+  </service-instance>
+  
+  
+   <!-- - - - - - projection - - - - -->
+  <service-instance name="remap" type="IRemap" default="RemapADI">
+    <description>Service de projection </description>
   </service-instance>
 
    <!-- - - - schema csts - - - - -->
@@ -326,38 +298,6 @@
   <simple name="with-projection" type="bool" default="true">
     <description> Calcul avec projection ADI </description>
   </simple>
-  <!-- - - - - - ordre de la projection - - - - -->
-  <simple name="ordre-projection" type="integer" default="2">
-    <description>Définition de la valeur limite des petites fractions et autres </description>
-  </simple>
-   <!-- - - - - - conservation energie projection - - - - -->
-  <simple name="convnerg" type="bool" default="false">
-    <description>Conservation de l energie totale lors de la projection </description>
-  </simple>
-   <!-- - - - - projection-limiteur-mixte- - - - - -->
-  <simple name="projection-pente-borne-mixte" type="bool" default="false">
-    <description> projection pente borne en volume dans les mailles mixtes et en masse dans les mailles pures </description>
-  </simple>
-  <!-- - - - - projection-limiteur-Id- - - - - -->
-  <simple name="projection-limiteur-id" type="integer" default="0">
-    <description> identifiant du limiteur pour les mailles mixtes </description>
-  </simple>
-  <!-- - - - - projection-limiteur-pure-Id- - - - - -->
-  <simple name="projection-limiteur-pure-id" type="integer" default="0">
-    <description> identifiant du limiteur pour les mailles pures</description>
-  </simple> 
-  <!-- - - - - projection-pente-borne- - - - - -->
-  <simple name="projection-pente-borne" type="bool" default="false">
-    <description> projection avec l'algorithme pente-borne </description>
-  </simple>
-  <!-- - - - - projection-pente-borne- - - - - -->
-  <simple name="projection-pente-borne-debar-fix" type="integer" default="0">
-    <description> projection avec l'algorithme pente-borne en evitant l'artefact de debar avec la valeur moyenne (1) ou valeur aux mailles (2) </description>
-  </simple>
-  <!-- - - - - calcul_flux_masse - - - - - -->
-  <simple name="calcul_flux_masse" type="integer" default="0">
-    <description> identifiant de la methode de calcul du flux de masse duale </description>
-  </simple>
   <!-- - - - - - boundary-condition - - - - -->
   <complex name="boundary-condition" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded">
     <description>Condition aux limites</description>
@@ -382,5 +322,6 @@
   <service-instance name="geometry" type="Arcane::Numerics::IGeometryMng" default="Euclidian3Geometry">
     <description>Service Géométrie</description>
   </service-instance>
+  
 </options>
 </module>

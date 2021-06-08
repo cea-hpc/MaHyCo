@@ -4,11 +4,7 @@ include(../mahyco.common.cmake)
 
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PhaseRemapFinal.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Remap/PhaseRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Remap/Remap-ordre-3.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Remap/UtilesRemap.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Remap/DualPhaseRemap.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
@@ -36,7 +32,13 @@ target_include_directories(OTHER PUBLIC .)
 target_link_libraries(OTHER PUBLIC arcane_core)
 
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER)
+add_library(Remap Remap/RemapADIService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/DualPhaseRemap.cc)
+target_include_directories(Remap PUBLIC .)
+target_link_libraries(Remap PUBLIC arcane_core)
+
+
+
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -45,6 +47,8 @@ arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
+
+arcane_target_add_axl(Remap Remap/RemapADI)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)

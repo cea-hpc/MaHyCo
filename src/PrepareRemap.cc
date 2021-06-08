@@ -8,7 +8,7 @@
  *
  * \param  m_cell_coord, m_node_coord, m_face_normal
  *         m_velocity
- * \return m_deltax_lagrange, m_face_coord, m_face_length_lagrange,
+ * \return m_face_coord, m_face_length_lagrange,
  *         m_face_normal_velocity
  *******************************************************************************
  */
@@ -35,7 +35,6 @@ computeFaceQuantitesForRemap()
    }
    m_face_normal_velocity[face] = math::dot((0.25 * vitesse_moy), m_face_normal[face]);  
   }
-  m_deltax_lagrange.synchronize();
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
 }
@@ -110,7 +109,7 @@ computeVariablesForRemap()
 //       if (cell.localId() == 754) info() << cell.localId() << " pseudo avant proj " << m_pseudo_viscosity[ev] 
 //            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
       
-      if (options()->projectionPenteBorne == 1) {     
+      if (options()->remap()->hasProjectionPenteBorne() == 1) {     
         // Cell cell = ev.globalCell();
         m_phi_lagrange[cell][index_env]  = m_fracvol[ev];
         m_phi_lagrange[cell][nb_total_env + index_env] = m_density[ev];
@@ -172,8 +171,8 @@ void MahycoModule::remap() {
     
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
-    synchronizeUremap();  
-    synchronizeDualUremap();
+    options()->remap()->synchronizeUremap();  
+    options()->remap()->synchronizeDualUremap();
     
     IMesh* mesh = defaultMesh();
     Integer nb_dir = mesh->dimension();
@@ -194,23 +193,24 @@ void MahycoModule::remap() {
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
       
       // calcul des gradients des quantites à projeter aux faces 
-      computeGradPhiFace(idir, name);
+      options()->remap()->computeGradPhiFace(idir, name, m_nb_vars_to_project, m_nb_env);
       // calcul des gradients des quantites à projeter aux cellules
       // (avec limiteur ordinaire) 
       // et pour le pente borne, calcul des flux aux faces des cellules
-      computeGradPhiCell(idir);
+      options()->remap()->computeGradPhiCell(idir, m_nb_vars_to_project, m_nb_env);
       // calcul de m_phi_face
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
-      computeUpwindFaceQuantitiesForProjection(idir, name);
+      options()->remap()->computeUpwindFaceQuantitiesForProjection(idir, name, m_nb_vars_to_project, m_nb_env);
       
       
-      computeUremap(idir);
-      synchronizeUremap();
+      
+      options()->remap()->computeUremap(idir, m_nb_vars_to_project, m_nb_env);
+      options()->remap()->synchronizeUremap();
       
       if (!options()->sansLagrange) {
-        computeDualUremap(idir, name);
-        synchronizeDualUremap();
+        options()->remap()->computeDualUremap(idir, name, m_nb_env);
+        options()->remap()->synchronizeDualUremap();
       }
     }
     m_sens_projection = m_sens_projection()+1;
