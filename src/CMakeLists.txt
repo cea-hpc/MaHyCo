@@ -3,10 +3,6 @@ project(Mahyco LANGUAGES C CXX)
 include(../mahyco.common.cmake)
 
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSOD.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitRider.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitSEDOV.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE Initialisations/InitUnitTest.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PhaseRemapFinal.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE Remap/PhaseRemap.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
@@ -22,7 +18,30 @@ add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas)
+
+add_library(RIDER casTest/RIDER/RIDERService.cc)
+target_include_directories(RIDER PUBLIC .)
+target_link_libraries(RIDER PUBLIC arcane_core)
+
+add_library(SOD casTest/SOD/SODService.cc)
+target_include_directories(SOD PUBLIC .)
+target_link_libraries(SOD PUBLIC arcane_core)
+
+add_library(SEDOV casTest/SEDOV/SEDOVService.cc)
+target_include_directories(SEDOV PUBLIC .)
+target_link_libraries(SEDOV PUBLIC arcane_core)
+
+add_library(OTHER casTest/OTHER/OTHERService.cc)
+target_include_directories(OTHER PUBLIC .)
+target_link_libraries(OTHER PUBLIC arcane_core)
+
+
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER)
+
+arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
+arcane_target_add_axl(SOD casTest/SOD/SOD)
+arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
+arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
@@ -52,6 +71,11 @@ set( TEST_NAMES_PARA_4
      		"CAS_SodCaseZ_ordre_3"
 		"CAS_BiSodCaseY_ordre_3"
      		"CAS_BiSodCaseZ_ordre_3"
+		"CAS_BiSodCaseX_pente_borne_minmod_debar_1"
+		"CAS_BiSodCaseX_pente_borne_minmod_debar_2"
+		"CAS_BiSodCaseX_pente_borne_superbee_debar_2"
+		"CAS_BiSodCaseY_pente_borne_minmod_debar_2"
+		"CAS_BiSodCaseY_pente_borne_superbee_debar_2"
 		)
 set( TEST_NAMES_PARA_8		
 		"CAS_MonoRiderDeformationTimeReverse"

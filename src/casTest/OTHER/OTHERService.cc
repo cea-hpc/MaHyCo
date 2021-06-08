@@ -1,7 +1,7 @@
-#include "../MahycoModule.h"
+#include "OTHERService.h"
 
 
-void MahycoModule::initMatUnitTest()  {
+void OTHERService::initMat()  {
     
   // rayon interne et externe
   double rb(0.5);
@@ -17,7 +17,7 @@ void MahycoModule::initMatUnitTest()  {
     } 
   }
 }
-void MahycoModule::initVarUnitTest()  {
+void OTHERService::initVar()  {
 
   // rayon interne et externe
   double rb(0.5);
@@ -53,3 +53,9 @@ void MahycoModule::initVarUnitTest()  {
   info() << " fin de boucle sur les noeuds";
 }
 
+/*---------------------------------------------------------------------------*/
+
+bool OTHERService::hasReverseOption() { return options()->reverseOption;}
+Real OTHERService::getReverseParameter() { return options()->parametre;}
+
+/* ARCANE_REGISTER_SERVICE_OTHER(OTHER, OTHERService); */

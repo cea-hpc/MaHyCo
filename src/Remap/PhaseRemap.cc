@@ -50,7 +50,8 @@ computeGradPhiFace(Integer idir, String name)  {
  *******************************************************************************
  */
 void MahycoModule::computeGradPhiCell(Integer idir) {
-  pinfo() << " Entree dans computeGradPhiCell()";
+    
+  debug() << " Entree dans computeGradPhiCell()";
   Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
@@ -105,10 +106,9 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(frFaces);
         Real Flux_sortant_av = math::dot(m_outer_face_normal[cell][indexfrontface], dirproj) * m_face_normal_velocity[frontFace];
         
-        Real flux_dual = 0.5 * (m_face_normal_velocity[backFace] + m_face_normal_velocity[frontFace]);
+        Real flux_dual = 0.5 * (Flux_sortant_ar + Flux_sortant_av);
         
-        Integer calcul_flux_dual(0);
-        if (options()->calcul_flux_masse == 2) calcul_flux_dual = 1;
+        Integer calcul_flux_dual(1); // a supprimer - calcul du flux dual fait en pente borne
         
         RealUniqueArray delta_phi_face(m_nb_vars_to_project);
         RealUniqueArray dual_phi_flux(m_nb_vars_to_project);
@@ -163,7 +163,8 @@ void MahycoModule::computeGradPhiCell(Integer idir) {
 *******************************************************************************
 */
 void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String name) {
-  pinfo() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
+    
+  debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
   String ajout_interne = "_INTERNE";
   name = name + ajout_interne;
@@ -282,7 +283,8 @@ void MahycoModule::computeUpwindFaceQuantitiesForProjection(Integer idir, String
  *******************************************************************************
  */
 void MahycoModule::computeUremap(Integer idir)  {
-    info() << " Entree dans computeUremap()";
+    
+    debug() << " Entree dans computeUremap()";
     Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  

@@ -6,52 +6,55 @@
 
 void MahycoModule::hydroStartInitCasTest()
 {
-  info() << " recherhe " << options()->casTest;
-  info() << " dispo " << SodCaseX;
-  if (options()->casTest == UnitTestCase) initMatUnitTest();
-  if (options()->casTest == SodCaseX ||
-      options()->casTest == SodCaseY ||
-      options()->casTest == SodCaseZ) initMatSOD();
-  if (options()->casTest == BiSodCaseX ||
-      options()->casTest == BiSodCaseY ||
-      options()->casTest == BiSodCaseZ) initMatBiSOD();
-  if (options()->casTest == Sedov) initMatSedov();
-  if (options()->casTest == BiSedov) initMatBiSedov();
-  if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
-      if (options()->casTest < MonoRiderRotation) 
-          initMatRiderMono({0.20, 0.20, 0.});
-      else
-          initMatRiderMono({0.50, 0.75, 0.});
-  if (options()->casTest >= RiderTx && options()->casTest <= RiderDeformationTimeReverse)
-      if (options()->casTest < RiderRotation) 
-          initMatRider({0.20, 0.20, 0.});
-      else
-          initMatRider({0.50, 0.75, 0.});
+//   info() << " recherhe " << options()->casTest;
+//   info() << " dispo " << SodCaseX;
+//   if (options()->casTest == UnitTestCase) initMatUnitTest();
+//   if (options()->casTest == SodCaseX ||
+//       options()->casTest == SodCaseY ||
+//       options()->casTest == SodCaseZ) initMatSOD();
+//   if (options()->casTest == BiSodCaseX ||
+//       options()->casTest == BiSodCaseY ||
+//       options()->casTest == BiSodCaseZ) initMatBiSOD();
+//   if (options()->casTest == Sedov) initMatSedov();
+//   if (options()->casTest == BiSedov) initMatBiSedov();
+//   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
+//       if (options()->casTest < MonoRiderRotation) 
+//           initMatRiderMono({0.20, 0.20, 0.});
+//       else
+//           initMatRiderMono({0.50, 0.75, 0.});
+//   if (options()->casTest >= RiderTx && options()->casTest <= RiderDeformationTimeReverse)
+//       if (options()->casTest < RiderRotation) 
+//           initMatRider({0.20, 0.20, 0.});
+//       else
+//           initMatRider({0.50, 0.75, 0.});
+//    pinfo() << options()->cas.name() << " ou " << options()->cas.serviceName();
+//      options()->casModel()->initMat(options()->casTest);
+      
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::hydroStartInitVar()
 {
-  if (options()->casTest == UnitTestCase) initVarUnitTest();
-  if (options()->casTest == SodCaseX ||
-      options()->casTest == SodCaseY ||
-      options()->casTest == SodCaseZ) initVarSOD();
-  if (options()->casTest == BiSodCaseX ||
-      options()->casTest == BiSodCaseY ||
-      options()->casTest == BiSodCaseZ) initVarBiSOD();
-  if (options()->casTest == Sedov) initVarSedov();
-  if (options()->casTest == BiSedov) initVarBiSedov();
-  if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
-      if (options()->casTest < MonoRiderRotation) 
-          initVarRiderMono({0.20, 0.20, 0.});
-      else
-          initVarRiderMono({0.50, 0.75, 0.});
-  if (options()->casTest >= RiderTx&& options()->casTest <=    RiderDeformationTimeReverse)
-      if (options()->casTest < RiderRotation) 
-          initVarRider({0.20, 0.20, 0.});
-      else
-          initVarRider({0.50, 0.75, 0.});
+//   if (options()->casTest == UnitTestCase) initVarUnitTest();
+//   if (options()->casTest == SodCaseX ||
+//       options()->casTest == SodCaseY ||
+//       options()->casTest == SodCaseZ) initVarSOD();
+//   if (options()->casTest == BiSodCaseX ||
+//       options()->casTest == BiSodCaseY ||
+//       options()->casTest == BiSodCaseZ) initVarBiSOD();
+//   if (options()->casTest == Sedov) initVarSedov();
+//   if (options()->casTest == BiSedov) initVarBiSedov();
+//   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse) 
+//       if (options()->casTest < MonoRiderRotation) 
+//           initVarRiderMono({0.20, 0.20, 0.});
+//       else
+//           initVarRiderMono({0.50, 0.75, 0.});
+//   if (options()->casTest >= RiderTx&& options()->casTest <=    RiderDeformationTimeReverse)
+//       if (options()->casTest < RiderRotation) 
+//           initVarRider({0.20, 0.20, 0.});
+//       else
+//           initVarRider({0.50, 0.75, 0.});
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -143,8 +146,10 @@ void MahycoModule::hydroStartInitEnvAndMat()
   }
   
   info() << " Initialisation du cas test";
-  hydroStartInitCasTest();
+  // hydroStartInitCasTest();
   
+  options()->casModel()->initMat();
+      
   m_mat1 = mm->environments()[0]->materials()[0];
   m_mat2 = mm->environments()[1]->materials()[0];
   m_env1 = mm->environments()[0];

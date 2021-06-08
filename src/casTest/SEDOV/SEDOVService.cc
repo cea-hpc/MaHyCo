@@ -1,19 +1,24 @@
-#include "../MahycoModule.h"
+#include "SEDOVService.h"
 
 
-void MahycoModule::initMatSedov()  {
+void SEDOVService::initMatMono()  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0;
   }
 }
-void MahycoModule::initMatBiSedov()  {
-    
+void SEDOVService::initMat()  {
+
+  if (options()->casTest == Sedov) {
+    initMatMono();
+    return;
+  }
+
   Real3 Xb={0.0, 0.0, 0.};
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    Real rmin(options()->threshold);  // depot sur 1 maille
+    Real rmin(1.e-10);  // depot sur 1 maille
     Real rmax(0.);
     bool isCenterCell = false;  
     m_materiau[cell] = 0;
@@ -31,14 +36,14 @@ void MahycoModule::initMatBiSedov()  {
     }
   }
 } 
-void MahycoModule::initVarSedov()  {
+void SEDOVService::initVarMono()  {
     
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = 1.;
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(options()->threshold);  // depot sur 1 maille
+  Real rmin(1.e-10);  // depot sur 1 maille
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -69,15 +74,20 @@ void MahycoModule::initVarSedov()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void MahycoModule::initVarBiSedov()  { 
-  // pour l'instant meme fonction  que Sedov 
+void SEDOVService::initVar()  { 
+  // pour l'instant meme fonction  que la version MonoMat
+
+  if (options()->casTest == Sedov) {
+    initVarMono();
+    return;
+  }
 
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = 1.;
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(options()->threshold);  // depot sur 1 maille
+  Real rmin(1.e-10);  // depot sur 1 maille
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -107,3 +117,11 @@ void MahycoModule::initVarBiSedov()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
+/*---------------------------------------------------------------------------*/
+
+bool SEDOVService::hasReverseOption() { return options()->reverseOption;}
+Real SEDOVService::getReverseParameter() { return options()->parametre;}
+/*---------------------------------------------------------------------------*/
+
+
+ARCANE_REGISTER_SERVICE_SEDOV(SEDOV, SEDOVService);

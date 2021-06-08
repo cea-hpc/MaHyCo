@@ -241,14 +241,13 @@
    <service-instance name="eos-model" type="IEquationOfState">
     <description>Service d'equation d'état</description>
    </service-instance>
-   
+
   </complex>
   
- <!-- - - - - - cas test - - - - -->
-  <simple name="cas-test" type="integer" >
-    <description>Numéro du cas test</description>
-  </simple>
-  
+  <service-instance name="cas-model" type="IInitialisations">
+  <description>Service d'initialisation du cas test</description>
+  </service-instance>
+
    <!-- - - - schema csts - - - - -->
   <simple name="schema-csts" type="bool">
     <description>

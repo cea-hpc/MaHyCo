@@ -67,8 +67,11 @@
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>
-   
+  
+   <cas-model name="RIDER">
    <cas-test>31</cas-test>
+   </cas-model>
+
     <sans-lagrange>true</sans-lagrange>
     <pseudo-centree>0</pseudo-centree>
     <ordre-projection>2</ordre-projection>
