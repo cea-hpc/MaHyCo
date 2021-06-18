@@ -32,7 +32,7 @@ target_include_directories(OTHER PUBLIC .)
 target_link_libraries(OTHER PUBLIC arcane_core)
 
 
-add_library(Remap Remap/RemapADIService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/DualPhaseRemap.cc)
+add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
@@ -49,6 +49,7 @@ arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
+arcane_target_add_axl(Remap Remap/RemapALE)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)

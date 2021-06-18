@@ -389,6 +389,7 @@ class MahycoModule
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
   Integer my_rank;
+  Integer m_dimension;
  
 };
 

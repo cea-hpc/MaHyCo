@@ -16,24 +16,38 @@ void MahycoModule::
 computeFaceQuantitesForRemap()
 {
   debug() << " Entree dans computeFaceQuantitesForRemap()";
-  bool csts = options()->schemaCsts();
+  bool csts = options()->schemaCsts();  
+  Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
+  if (m_dimension == 3) {
+    ENUMERATE_FACE (iFace, allFaces()) {
+    Face face = *iFace;
+    Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
+    Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)]; 
+    m_face_length_lagrange[face][0]  = 0.5 * math::abs(produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y));
+    m_face_length_lagrange[face][1]  = 0.5 * math::abs(produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x));
+    m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
+    }
+  } else {
+     ENUMERATE_FACE (iFace, allFaces()) {
+        Face face = *iFace;
+        m_face_length_lagrange[face] = m_node_coord[face.node(1)] - m_node_coord[face.node(0)]; 
+        m_face_length_lagrange[face][0] = math::abs(m_face_length_lagrange[face][0]);
+        m_face_length_lagrange[face][1] = math::abs(m_face_length_lagrange[face][1]);
+        m_face_length_lagrange[face][2] = math::abs(m_face_length_lagrange[face][2]);
+    }
+  }
   ENUMERATE_FACE (iFace, allFaces()) {
-   Face face = *iFace;
-   Real3 vitesse_moy = {0. , 0. , 0.};
-   Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
-   Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)]; 
-   m_face_length_lagrange[face][0]  = 0.5 * math::abs(produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y));
-   m_face_length_lagrange[face][1]  = 0.5 * math::abs(produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x));
-   m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
-   m_face_coord[face]=0.;
-   for (Integer inode = 0; inode < 4; ++inode) {
-     m_face_coord[face] +=  0.25 * m_node_coord[face.node(inode)];
-     if (csts)
-       vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
-     else
-       vitesse_moy += m_velocity[face.node(inode)];
-   }
-   m_face_normal_velocity[face] = math::dot((0.25 * vitesse_moy), m_face_normal[face]);  
+    Face face = *iFace;
+    Real3 vitesse_moy = {0. , 0. , 0.};
+    m_face_coord[face]=0.;
+    for (Integer inode = 0; inode < face.nbNode(); ++inode) {
+        m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
+        if (csts)
+        vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
+        else
+        vitesse_moy += m_velocity[face.node(inode)];
+    }
+    m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
   }
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
@@ -72,8 +86,7 @@ computeFaceQuantitesForRemap()
  * \return m_u_lagrange, m_u_dual_lagrange, m_phi_lagrange, m_phi_dual_lagrange
  *******************************************************************************
  */
-void MahycoModule::
-computeVariablesForRemap()
+void MahycoModule::computeVariablesForRemap()
 {
   debug() << " Entree dans computeVariablesForRemap()";
   Integer nb_total_env = mm->environments().size();
@@ -126,6 +139,7 @@ computeVariablesForRemap()
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
         }
       }
+      
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
@@ -166,55 +180,16 @@ void MahycoModule::remap() {
     
   if (options()->withProjection) {
     debug() << " Entree dans remap()";
+    
+    Integer withDualProjection = 0;
     // passage des vitesse de n+1/2 à n+1 pour la projection
     if (options()->schemaCsts()) updateVelocityForward();
+    if (!options()->sansLagrange) withDualProjection = 1;
     
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
-    options()->remap()->synchronizeUremap();  
-    options()->remap()->synchronizeDualUremap();
     
-    IMesh* mesh = defaultMesh();
-    Integer nb_dir = mesh->dimension();
-    Integer idir(-1);
-    m_cartesian_mesh->computeDirections();
-    
-    for( Integer i=0; i<nb_dir; ++i){
-      
-      idir = (i + m_sens_projection())%3;
-      // idir = 0;
-      // a ameliorer
-      String name;
-      if (idir == 0) name="FACE_X";
-      else if (idir == 1) name="FACE_Y";
-      else if (idir == 2) name="FACE_Z";
-      
-      // cas 2D : epaisseur de une maillage dans la direciton de projection
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
-      
-      // calcul des gradients des quantites à projeter aux faces 
-      options()->remap()->computeGradPhiFace(idir, name, m_nb_vars_to_project, m_nb_env);
-      // calcul des gradients des quantites à projeter aux cellules
-      // (avec limiteur ordinaire) 
-      // et pour le pente borne, calcul des flux aux faces des cellules
-      options()->remap()->computeGradPhiCell(idir, m_nb_vars_to_project, m_nb_env);
-      // calcul de m_phi_face
-      // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
-      // et qui contient les flux des variables projetees avec l'option pente-borne
-      options()->remap()->computeUpwindFaceQuantitiesForProjection(idir, name, m_nb_vars_to_project, m_nb_env);
-      
-      
-      
-      options()->remap()->computeUremap(idir, m_nb_vars_to_project, m_nb_env);
-      options()->remap()->synchronizeUremap();
-      
-      if (!options()->sansLagrange) {
-        options()->remap()->computeDualUremap(idir, name, m_nb_env);
-        options()->remap()->synchronizeDualUremap();
-      }
-    }
-    m_sens_projection = m_sens_projection()+1;
-    m_sens_projection = m_sens_projection()%3;
+    options()->remap()->appliRemap(withDualProjection, m_nb_vars_to_project, m_nb_env);
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables();

@@ -16,7 +16,7 @@
  * \return m_dual_grad_phi
  *******************************************************************************
  */
-void RemapADIService::computeDualUremap(Integer idir, String name, Integer nb_env)  {
+void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
@@ -40,9 +40,6 @@ void RemapADIService::computeDualUremap(Integer idir, String name, Integer nb_en
     }
     m_dual_grad_phi.synchronize();
   }
-  String ajout_interne = "_INTERNE";
-  name = name + ajout_interne;
-  FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   //m_back_flux_mass_env.fill(0.);
@@ -54,7 +51,7 @@ void RemapADIService::computeDualUremap(Integer idir, String name, Integer nb_en
     m_back_flux_mass[inode] = 0.;
     m_front_flux_mass[inode] = 0.;
   }
-  ENUMERATE_FACE(iface, inner_dir_faces) {
+  ENUMERATE_FACE(iface, fdm.innerFaces()) {
     Face face = *iface;       
     DirFace dir_face = fdm[face];
     Cell cellb = dir_face.previousCell();

@@ -43,9 +43,10 @@ hydroStartInit()
   }
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+  m_dimension = mesh()->dimension();
   // Dimensionne les variables tableaux
-  m_cell_cqs.resize(8);
-  m_cell_cqs_n.resize(8);
+  m_cell_cqs.resize(4*(m_dimension-1));
+  m_cell_cqs_n.resize(4*(m_dimension-1));
   
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
@@ -116,11 +117,11 @@ hydroStartInit()
     Cell cell = *icell;
     // Calcule le volume de la maille et des noeuds
     Real volume = 0.0;
-    for (Integer inode = 0; inode < 8; ++inode) {
+    for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
       volume += math::dot(m_node_coord[cell.node(inode)], m_cell_cqs[icell] [inode]);
       m_node_volume[cell.node(inode)] += volume; 
     }
-    volume /= 3.;
+    volume /= m_dimension;
     m_cell_volume[icell] = volume;
   }
 }
@@ -166,9 +167,10 @@ computeNodeMass()
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
   m_node_mass.fill(0.);
+  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
   ENUMERATE_CELL(icell, allCells()){    
     Cell cell = * icell;
-    Real contrib_node_mass = 0.125 * m_cell_mass[cell];
+    Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
     for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
       m_node_mass[inode] += contrib_node_mass; 
     }
@@ -193,8 +195,8 @@ hydroContinueInit()
     debug() << " Entree dans hydroContinueInit()";
     // en reprise 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    m_dimension = mesh()->dimension();
     mm = IMeshMaterialMng::getReference(defaultMesh());
-    info() << mm->name();
   
     mm->recreateFromDump();
     m_nb_env = mm->environments().size();
@@ -448,16 +450,6 @@ updateVelocityWithoutLagrange()
   
   Real option_real( (Real) option);
   
-//   if (options()-> == RiderVortexTimeReverse ||
-//         options()->casTest == MonoRiderVortexTimeReverse ) {
-//     factor = 1. / 4.;
-//     option = 1;
-//   } else if ( options()->casTest == RiderDeformationTimeReverse ||
-// 		options()->casTest == MonoRiderDeformationTimeReverse) {
-//     factor = 1.;
-//     option = 1;
-//   }
-
   VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
   VariableNodeReal3OutView out_velocity(viewOut(m_velocity));
 
@@ -467,24 +459,7 @@ updateVelocityWithoutLagrange()
     out_velocity[snode] = in_velocity[snode] * (1. -option_real)
           + option_real * in_velocity[snode] * cos(Pi * m_global_time() * factor);
   }
-  
- 
-//     m_velocity[node] = m_velocity_n[node];
-// 
-//     if (options()->casTest == RiderVortexTimeReverse ||
-//         options()->casTest == MonoRiderVortexTimeReverse ) {
-//       m_velocity[node].x =
-//           m_velocity_n[node].x * cos(Pi * m_global_time() / 4.);
-//       m_velocity[node].y =
-//           m_velocity_n[node].y * cos(Pi * m_global_time() / 4.);
-//     } else if ( options()->casTest == RiderDeformationTimeReverse ||
-// 		options()->casTest == MonoRiderDeformationTimeReverse) {
-//       m_velocity[node].x =
-//           m_velocity_n[node].x * cos(Pi * m_global_time());
-//       m_velocity[node].y =
-//           m_velocity_n[node].y * cos(Pi * m_global_time());
-//     }
-//   }
+
   m_velocity.synchronize();
 }
 /**
@@ -506,12 +481,13 @@ updatePosition()
     if (((options()->sansLagrange) && (node.nbCell() == 4)) || (!options()->sansLagrange))
         m_node_coord[inode] += deltat * m_velocity[inode];
   }
+  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
     Real3 somme = {0. , 0. , 0.};
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       somme += m_node_coord[inode];
-    m_cell_coord[cell] = 0.125 * somme;
+    m_cell_coord[cell] = one_over_nbnode * somme;
   }
 }
 
@@ -565,17 +541,30 @@ InitGeometricValues()
   ENUMERATE_NODE(inode, allNodes()){
       m_node_coord_0[inode] = m_node_coord[inode];
   }
+  Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
+  if ( m_dimension == 3) {
+    ENUMERATE_FACE (iFace, allFaces()) {
+        Face face = *iFace;
+        Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
+        Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)];
+        m_face_normal[iFace].x = produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y);
+        m_face_normal[iFace].y = - produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x);
+        m_face_normal[iFace].z = produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x);
+        m_face_normal[iFace] /= m_face_normal[iFace].abs();
+    }
+  } else {
+    ENUMERATE_FACE (iFace, allFaces()) {
+      Face face = *iFace;
+      m_face_normal[iFace].x = math::abs(m_node_coord[face.node(1)].y - m_node_coord[face.node(0)].y); 
+      m_face_normal[iFace].y = math::abs(m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
+      m_face_normal[iFace] /= m_face_normal[iFace].abs();
+    }
+  }
   ENUMERATE_FACE (iFace, allFaces()) {
-    Face face = *iFace;
-    Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
-    Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)];
-    m_face_normal[iFace].x = produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y);
-    m_face_normal[iFace].y = - produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x);
-    m_face_normal[iFace].z = produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x);
-    m_face_normal[iFace] /= m_face_normal[iFace].abs();
-    m_face_coord[face] = 0.;
-    for (Integer inode = 0; inode < 4; ++inode) 
-      m_face_coord[face] +=  0.25 * m_node_coord[face.node(inode)];
+      Face face = *iFace;
+      m_face_coord[face] = 0.;
+      for (Integer inode = 0; inode < face.nbNode(); ++inode) 
+        m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
   }
   ENUMERATE_CELL(icell,allCells()) {
     ENUMERATE_FACE(iface, (*icell).faces()){
@@ -598,25 +587,46 @@ computeGeometricValues()
   // Coordonnées des centres des faces
   Real3 face_coord[6];
   
+  Real racine = m_dimension == 2 ? .5  : 1./3. ;
   m_node_coord.synchronize();
-  
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    // Recopie les coordonnées locales (pour le cache)
-    for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
-      coord[inode.index()] = m_node_coord[inode];
-    }
-    // Calcul les coordonnées des centres des faces
-    face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
-    face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
-    face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
-    face_coord[3] = 0.25 * (coord[4] + coord[5] + coord[6] + coord[7]);
-    face_coord[4] = 0.25 * (coord[1] + coord[2] + coord[6] + coord[5]);
-    face_coord[5] = 0.25 * (coord[2] + coord[3] + coord[7] + coord[6]);
+  if ( m_dimension == 3) {
+    ENUMERATE_CELL(icell, allCells()){
+        Cell cell = * icell;
+        // Recopie les coordonnées locales (pour le cache)
+        for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
+        coord[inode.index()] = m_node_coord[inode];
+        }
+        // Calcul les coordonnées des centres des faces
+        face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
+        face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
+        face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
+        face_coord[3] = 0.25 * (coord[4] + coord[5] + coord[6] + coord[7]);
+        face_coord[4] = 0.25 * (coord[1] + coord[2] + coord[6] + coord[5]);
+        face_coord[5] = 0.25 * (coord[2] + coord[3] + coord[7] + coord[6]);
 
-    // Calcule les résultantes aux sommets
-    computeCQs(coord, face_coord, cell);
-  }
+        // Calcule les résultantes aux sommets
+        computeCQs(coord, face_coord, cell);
+    }
+  } else {
+    Real3 npc[5];
+    ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;
+      // Recopie les coordonnées locales (pour le cache)
+      for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
+        coord[inode.index()] = m_node_coord[inode];
+      }
+      coord[4] = coord[0];
+      for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
+        npc[inode.index()+1].x = 0.5 * (coord[inode.index()+1].y -  coord[inode.index()].y);
+        npc[inode.index()+1].y = 0.5 * (coord[inode.index()].x -  coord[inode.index()+1].x);
+        // npc[inode.index()+1] = npc[inode.index()+1] / npc[inode.index()+1].abs();
+      }
+      npc[0] = npc[4];
+      for (Integer ii = 0; ii < 4; ++ii) {
+        m_cell_cqs[icell][ii] = npc[ii+1] + npc[ii]; 
+      }
+    }  
+ }
   m_cell_cqs.synchronize();
   
   ENUMERATE_CELL(icell, allCells()){
@@ -625,11 +635,12 @@ computeGeometricValues()
     {
       Real volume = 0.;
       
-      for (Integer inode = 0; inode < 8; ++inode) {
+      for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
         volume += math::dot(m_node_coord[cell.node(inode)], m_cell_cqs[icell] [inode]);
+      // pinfo() << cell.localId() << " coor " << m_node_coord[cell.node(inode)] << " et " << m_cell_cqs[icell] [inode];
         m_node_volume[cell.node(inode)] += volume;
       }
-      volume /= 3.;
+      volume /= m_dimension;
       
       m_cell_volume[cell] = volume;
     }
@@ -663,7 +674,7 @@ computeGeometricValues()
         }
         else if (options()->longueurCaracteristique() == "racine-cubique-volume")
         {
-            m_caracteristic_length[icell] = std::pow(m_cell_volume[icell], 1./3.);
+            m_caracteristic_length[icell] = std::pow(m_cell_volume[icell], racine);
         }
         else
         {
@@ -848,7 +859,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           Cell cell=ev.globalCell();
           Real cqs_v_nplus1(0.);
           Real cqs_v_n(0.);
-          for (Integer inode = 0; inode < 8; ++inode) {
+          for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
             cqs_v_nplus1 += math::dot(m_velocity[cell.node(inode)], m_cell_cqs[cell] [inode])
               * m_global_deltat();
             cqs_v_n += math::dot(m_velocity[cell.node(inode)], m_cell_cqs_n[cell] [inode])
@@ -933,7 +944,7 @@ updateEnergyAndPressureforGP()
         Cell cell = ev.globalCell();
         Real cqs_v_nplus1(0.);
         Real cqs_v_n(0.);
-        for (Integer inode = 0; inode < 8; ++inode) {
+        for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
           cqs_v_nplus1 += math::dot(m_velocity[cell.node(inode)], m_cell_cqs[cell] [inode])
             * m_global_deltat();
           cqs_v_n += math::dot(m_velocity[cell.node(inode)], m_cell_cqs_n[cell] [inode])
@@ -1015,7 +1026,7 @@ computeDeltaT()
         Real sound_speed = m_sound_speed[icell];
         Real vmax(0.);
         if (options()->withProjection)
-          for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
+          for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
             vmax = math::max(m_velocity[inode].abs(), vmax);
           }
         Real dx_sound = cell_dx / (sound_speed + vmax);

@@ -25,13 +25,10 @@
   <mesh>
     <meshgenerator>
     <cartesian>
-       <nsd>1 4 1</nsd> 
+       <nsd>1 4</nsd> 
        <origine>0.0 0.0 0.0</origine>
-       <lx nx='1' prx='1.0'>.1</lx>
-
+       <lx nx='5' prx='1.0'>.1</lx>
        <ly ny='100' pry='1.0'>1.0</ly>
-
-       <lz nz='5' prz='1.0'>0.1</lz>
      </cartesian>
      </meshgenerator>
     <initialisation>

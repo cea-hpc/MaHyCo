@@ -68,12 +68,13 @@ void MahycoModule::hydroStartInitEnvAndMat()
   
   options()->remap()->resizeRemapVariables(m_nb_vars_to_project, m_nb_env);
   
+  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
    ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
     Real3 somme = {0. , 0. , 0.};
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       somme += m_node_coord[inode];
-    m_cell_coord[cell] = 0.125 * somme ;
+    m_cell_coord[cell] = one_over_nbnode * somme ;
   }
   
   info() << " Initialisation du cas test";
@@ -93,7 +94,6 @@ void MahycoModule::hydroStartInitEnvAndMat()
   info() << " Trie par environnements  ";
   ENUMERATE_CELL(icell,allCells()){
     Cell cell = *icell;
-    Int64 cell_index = cell.uniqueId();
     if (m_materiau[icell] == 0.) {
       mat1_indexes.add(icell.itemLocalId());
     } else if (m_materiau[icell] == 1.) {
@@ -130,18 +130,12 @@ void MahycoModule::hydroStartInitEnvAndMat()
  *******************************************************************************
  */
 void MahycoModule::PrepareFaceGroup() {
-  Int32UniqueArray face_x_lid;
-  Int32UniqueArray face_y_lid;
-  Int32UniqueArray face_z_lid;
   Int32UniqueArray face_x0_lid;
   Int32UniqueArray face_y0_lid;
   Int32UniqueArray face_z0_lid;
   Int32UniqueArray face_xmax_lid;
   Int32UniqueArray face_ymax_lid;
   Int32UniqueArray face_zmax_lid;
-  Int32UniqueArray face_interne_x_lid;
-  Int32UniqueArray face_interne_y_lid;
-  Int32UniqueArray face_interne_z_lid;
   Real3 ex = {1. , 0. , 0.};
   Real3 ey = {0. , 1. , 0.};
   Real3 ez = {0. , 0. , 1.};
@@ -154,61 +148,31 @@ void MahycoModule::PrepareFaceGroup() {
   ENUMERATE_FACE(iface, allFaces()){
      const Face& face = *iface;
      Integer face_local_id = face.localId();
-     for (Integer idir = 0 ; idir <  3 ; ++idir) {
+     for (Integer idir = 0 ; idir <  mesh()->dimension() ; ++idir) {
          m_is_dir_face[face][idir] = false;
      }
-     // on prend un vecteur quelconque de la 
-     Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
-     Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)]; 
-     Real productx = math::dot(face_vec2, ex);
-     Real producty = math::dot(face_vec2, ey);
-     Real productz = math::dot(face_vec1, ez);
-     if (m_node_coord[face.node(0)].x < options()->threshold 
-         && m_node_coord[face.node(1)].x < options()->threshold 
-         && m_node_coord[face.node(2)].x < options()->threshold 
-         && m_node_coord[face.node(3)].x < options()->threshold) {
-         face_x0_lid.add(face_local_id);
-     } else if (m_node_coord[face.node(0)].y < options()->threshold 
-         && m_node_coord[face.node(1)].y < options()->threshold 
-         && m_node_coord[face.node(2)].y < options()->threshold 
-         && m_node_coord[face.node(3)].y < options()->threshold) {
-         face_y0_lid.add(face_local_id);
-     } else if (m_node_coord[face.node(0)].z < options()->threshold 
-         && m_node_coord[face.node(1)].z < options()->threshold 
-         && m_node_coord[face.node(2)].z < options()->threshold 
-         && m_node_coord[face.node(3)].z < options()->threshold) {
-         face_z0_lid.add(face_local_id);
+     bool flag_x0(true);
+     bool flag_y0(true);
+     bool flag_z0(true);
+     bool flag_xmax(true);
+     bool flag_ymax(true);
+     bool flag_zmax(true);
+     for (NodeEnumerator inode(face.nodes()); inode.index() < face.nbNode(); ++inode) {
+         if (m_node_coord[inode].x > options()->threshold)  flag_x0 = false;
+         if (m_node_coord[inode].y > options()->threshold)  flag_y0 = false;
+         if (m_node_coord[inode].z > options()->threshold)  flag_z0 = false;
+         if (math::abs(m_node_coord[inode].x - maxCoor.x) > options()->threshold) flag_xmax = false;
+         if (math::abs(m_node_coord[inode].y - maxCoor.y) > options()->threshold) flag_ymax = false;
+         if (math::abs(m_node_coord[inode].z - maxCoor.z) > options()->threshold) flag_zmax = false;
      }
-     if (math::abs(m_node_coord[face.node(0)].x - maxCoor.x)< options()->threshold 
-         && math::abs(m_node_coord[face.node(1)].x - maxCoor.x)< options()->threshold 
-         && math::abs(m_node_coord[face.node(2)].x - maxCoor.x)< options()->threshold 
-         && math::abs(m_node_coord[face.node(3)].x - maxCoor.x)< options()->threshold) {
-         face_xmax_lid.add(face_local_id);
-     } else if (math::abs(m_node_coord[face.node(0)].y - maxCoor.y)< options()->threshold 
-         && math::abs(m_node_coord[face.node(1)].y - maxCoor.y)< options()->threshold 
-         && math::abs(m_node_coord[face.node(2)].y - maxCoor.y)< options()->threshold 
-         && math::abs(m_node_coord[face.node(3)].y - maxCoor.y)< options()->threshold) {
-         face_ymax_lid.add(face_local_id);
-     } else if (math::abs(m_node_coord[face.node(0)].z - maxCoor.z) < options()->threshold 
-         && math::abs(m_node_coord[face.node(1)].z - maxCoor.z)< options()->threshold 
-         && math::abs(m_node_coord[face.node(2)].z - maxCoor.z)< options()->threshold 
-         && math::abs(m_node_coord[face.node(3)].z - maxCoor.z)< options()->threshold) {
-         face_zmax_lid.add(face_local_id);
-     }
-     if (math::abs(productx) < options()->threshold) {
-         face_x_lid.add(face_local_id);
-         m_is_dir_face[face][0] = true;
-         if (face.nbCell() == 2) face_interne_x_lid.add(face_local_id);
-     } else if (math::abs(producty) < options()->threshold) {
-         face_y_lid.add(face_local_id);
-         m_is_dir_face[face][1] = true;
-         if (face.nbCell() == 2) face_interne_y_lid.add(face_local_id);
-     } else if (math::abs(productz) < options()->threshold) {
-         face_z_lid.add(face_local_id);
-         m_is_dir_face[face][2] = true;
-         if (face.nbCell() == 2) face_interne_z_lid.add(face_local_id);
-     }
+     if (flag_x0 == true) face_x0_lid.add(face_local_id);
+     if (flag_y0 == true) face_y0_lid.add(face_local_id);
+     if (flag_z0 == true) face_z0_lid.add(face_local_id);
+     if (flag_xmax == true) face_xmax_lid.add(face_local_id);
+     if (flag_ymax == true) face_ymax_lid.add(face_local_id);
+     if (flag_zmax == true) face_zmax_lid.add(face_local_id);
    }
+   
    mesh()->faceFamily()->createGroup("XMIN", face_x0_lid,true);
    mesh()->faceFamily()->createGroup("YMIN", face_y0_lid,true);
    mesh()->faceFamily()->createGroup("ZMIN", face_z0_lid,true);
@@ -229,30 +193,8 @@ void MahycoModule::PrepareFaceGroup() {
    info() << " taille y max " << faceymax.size();
    info() << " taille z max " << facezmax.size();
    
-   mesh()->faceFamily()->createGroup("FACE_X", face_x_lid,true);
-   mesh()->faceFamily()->createGroup("FACE_X_INTERNE", face_interne_x_lid,true);
-   FaceGroup inner_x_faces = mesh()->faceFamily()->findGroup("FACE_X");
-   FaceGroup inner_interne_x_faces = mesh()->faceFamily()->findGroup("FACE_X_INTERNE");
-   info() << " taille x interne " << inner_interne_x_faces.size();
-   info() << " taille x " << inner_x_faces.size();
-   
-   mesh()->faceFamily()->createGroup("FACE_Y", face_y_lid,true);
-   mesh()->faceFamily()->createGroup("FACE_Y_INTERNE", face_interne_y_lid,true);
-   FaceGroup inner_y_faces = mesh()->faceFamily()->findGroup("FACE_Y");
-   FaceGroup inner_interne_y_faces = mesh()->faceFamily()->findGroup("FACE_Y_INTERNE");
-   info() << " taille y interne " << inner_interne_y_faces.size();
-   info() << " taille y " << inner_y_faces.size();
-   
-   mesh()->faceFamily()->createGroup("FACE_Z", face_z_lid,true);
-   mesh()->faceFamily()->createGroup("FACE_Z_INTERNE", face_interne_z_lid,true);
-   FaceGroup inner_z_faces = mesh()->faceFamily()->findGroup("FACE_Z");
-   FaceGroup inner_interne_z_faces = mesh()->faceFamily()->findGroup("FACE_Z_INTERNE");
-   info() << " taille z interne " << inner_interne_z_faces.size();
-   info() << " taille z " << inner_z_faces.size();
-   
-   info() << " taille totale confirmee " << inner_x_faces.size() + inner_y_faces.size() + inner_z_faces.size();
-   info() << " taille totale interne confirmee " << inner_interne_x_faces.size() + inner_interne_y_faces.size() + inner_interne_z_faces.size();
+ 
    info() << " nombre total de face " << allFaces().size();
    
-   info() << " creation des groupes OK ";
+   info() << " creation des groupes de dimension " << m_dimension;
 } 

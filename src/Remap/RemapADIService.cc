@@ -6,6 +6,47 @@ bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPe
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
 /**
  *******************************************************************************/
+void RemapADIService::appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+    
+    synchronizeUremap();  
+    synchronizeDualUremap();
+    
+    Integer idir(-1);
+    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    m_cartesian_mesh->computeDirections();
+    
+    for( Integer i=0; i< mesh()->dimension(); ++i){
+      
+      idir = (i + m_sens_projection())%3;
+      // cas 2D : epaisseur de une maillage dans la direciton de projection
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
+      
+      // calcul des gradients des quantites à projeter aux faces 
+      computeGradPhiFace(idir, nb_vars_to_project, nb_env);
+      // calcul des gradients des quantites à projeter aux cellules
+      // (avec limiteur ordinaire) 
+      // et pour le pente borne, calcul des flux aux faces des cellules
+      computeGradPhiCell(idir, nb_vars_to_project, nb_env);
+      // calcul de m_phi_face
+      // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
+      // et qui contient les flux des variables projetees avec l'option pente-borne
+      computeUpwindFaceQuantitiesForProjection(idir, nb_vars_to_project, nb_env);
+      
+      
+      computeUremap(idir, nb_vars_to_project, nb_env);
+      synchronizeUremap();
+      
+      if (withDualProjection) {
+        computeDualUremap(idir, nb_env);
+        synchronizeDualUremap();
+      }
+    }
+    m_sens_projection = m_sens_projection()+1;
+    m_sens_projection = m_sens_projection()%3;
+    
+}
+/**
+ *******************************************************************************/
 void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) {
     
     
@@ -34,16 +75,17 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  * \param \return m_grad_phi, m_h_cell_lagrange
  *******************************************************************************
  */
-void RemapADIService::computeGradPhiFace(Integer idir, String name, Integer nb_vars_to_project, Integer nb_env)  {
+void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
   debug() << " Entree dans computeGradPhiFace()";
-  String ajout_interne = "_INTERNE";
-  m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-  name = name + ajout_interne;
   m_h_cell_lagrange.fill(0.0);
+  
+  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  ENUMERATE_FACE(iface, fdm.allFaces()) {
+    Face face = *iface; 
+    m_is_dir_face[face][idir] = true;
+  }
   if (options()->ordreProjection > 1) {
-    FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
-    FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
-    ENUMERATE_FACE(iface, inner_dir_faces) {
+    ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
       DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
@@ -77,7 +119,6 @@ void RemapADIService::computeGradPhiFace(Integer idir, String name, Integer nb_v
 void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   debug() << " Entree dans computeGradPhiCell()";
-  m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
@@ -192,19 +233,14 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
  * \return m_phi_face
 *******************************************************************************
 */
-void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, String name, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
-  ICartesianMesh* m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   Real deltat = m_global_deltat();
-  String ajout_interne = "_INTERNE";
-  name = name + ajout_interne;
-  FaceGroup inner_dir_faces = mesh()->faceFamily()->findGroup(name);
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
-  
-  ENUMERATE_FACE(iface, inner_dir_faces) {
+  ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
       DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
