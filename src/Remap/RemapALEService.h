@@ -94,7 +94,7 @@ public:
 private:
     
   void computeLissage();
-  void computeNewVolumes();
+  void computeVolumes();
   
   Real m_arithmetic_thresold = 1.e-300;
   

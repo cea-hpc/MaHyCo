@@ -80,23 +80,46 @@ void RemapALEService::computeLissage(){
   }
 }
 
-void RemapALEService::computeNewVolumes(){
+void RemapALEService::computeVolumes(){
     
     Real3 u1,u2,u3,u4;
+    Real deltavol;
+    
     ENUMERATE_CELL(icell, allCells()){
         Cell cell = * icell;
+        u1 = 0.5 * ( m_node_coord[cell.node(1)] + m_node_coord[cell.node(2)] - m_node_coord[cell.node(0)] - m_node_coord[cell.node(3)]);
+        u2 = 0.5 * ( m_node_coord[cell.node(2)] + m_node_coord[cell.node(3)] - m_node_coord[cell.node(0)] - m_node_coord[cell.node(1)]);
         
-        u1 = 0.375 * (m_node_coord[cell.node(1)]-m_node_coord[cell.node(0)]) + 0.125 * (m_node_coord[cell.node(2)]-m_node_coord[cell.node(3)]);
-        u2 = 0.125 * (m_node_coord[cell.node(1)]-m_node_coord[cell.node(0)]) + 0.375 * (m_node_coord[cell.node(2)]-m_node_coord[cell.node(3)]);
+        m_cell_volume[cell] = math::vecMul2D(u1, u2);
         
-        u3 = 0.375 * (m_node_coord[cell.node(3)]-m_node_coord[cell.node(0)]) + 0.125 * (m_node_coord[cell.node(2)]-m_node_coord[cell.node(1)]);
-        u4 = 0.125 * (m_node_coord[cell.node(3)]-m_node_coord[cell.node(0)]) + 0.375 * (m_node_coord[cell.node(2)]-m_node_coord[cell.node(1)]);
-        m_cell_volume_partial[cell][0] = math::vecMul2D(u1, u3);
-        m_cell_volume_partial[cell][1] = math::vecMul2D(u1, u4);
-        m_cell_volume_partial[cell][2] = math::vecMul2D(u2, u4);
-        m_cell_volume_partial[cell][3] = math::vecMul2D(u2, u3);
+        u1 = 0.375 * (m_node_coord_0[cell.node(1)]-m_node_coord_0[cell.node(0)]) + 0.125 * (m_node_coord_0[cell.node(2)]-m_node_coord_0[cell.node(3)]);
+        u2 = 0.125 * (m_node_coord_0[cell.node(1)]-m_node_coord_0[cell.node(0)]) + 0.375 * (m_node_coord_0[cell.node(2)]-m_node_coord_0[cell.node(3)]);
         
-        m_cell_volume[cell] = m_cell_volume_partial[cell][ 0] + m_cell_volume_partial[cell][1] + m_cell_volume_partial[cell][2] + m_cell_volume_partial[cell][3];
+        u3 = 0.375 * (m_node_coord_0[cell.node(3)]-m_node_coord_0[cell.node(0)]) + 0.125 * (m_node_coord_0[cell.node(2)]-m_node_coord_0[cell.node(1)]);
+        u4 = 0.125 * (m_node_coord_0[cell.node(3)]-m_node_coord_0[cell.node(0)]) + 0.375 * (m_node_coord_0[cell.node(2)]-m_node_coord_0[cell.node(1)]);
+        m_cell_volume_partial_0[cell][0] = math::vecMul2D(u1, u3);
+        m_cell_volume_partial_0[cell][1] = math::vecMul2D(u1, u4);
+        m_cell_volume_partial_0[cell][2] = math::vecMul2D(u2, u4);
+        m_cell_volume_partial_0[cell][3] = math::vecMul2D(u2, u3);
+        
+        m_cell_volume_0[cell] = m_cell_volume_partial_0[cell][0] + m_cell_volume_partial_0[cell][1] 
+                              + m_cell_volume_partial_0[cell][2] + m_cell_volume_partial_0[cell][3];
+    }
+    m_cell_delta_volume.fill(0.0);
+    ENUMERATE_FACE(iface, allFaces()) {
+        const Face& face = *iface;
+        Cell cell = face.cell(0);
+        Cell cellvois = face.cell(1);
+        u1 = 0.5 * (m_node_coord_0[face.node(1)] + m_node_coord[face.node(1)] - m_node_coord_0[face.node(0)] - m_node_coord[face.node(0)]);
+        u2 = 0.5 * (m_node_coord[face.node(0)] + m_node_coord[face.node(1)] - m_node_coord_0[face.node(0)] - m_node_coord[face.node(1)]);
+        deltavol = math::vecMul2D(u1, u2);
+        if ( deltavol >= 0.) {
+          m_cell_delta_volume[cell][iface.index()] = deltavol;
+          m_cell_delta_volume[cellvois][iface.index()] = 0.;
+        } else {
+          m_cell_delta_volume[cell][iface.index()] = 0.;
+          m_cell_delta_volume[cellvois][iface.index()] = -deltavol;
+        }
     }
     
 }

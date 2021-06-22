@@ -29,6 +29,15 @@
   <!-- CELL VOLUME PARTIEL	 -->
   <variable field-name="cell_volume_partial" name="VolumePartiel" data-type="real" item-kind="cell"
 	    dim="1" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME	 -->
+  <variable field-name="cell_volume_0" name="OldCellVolume" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME PARTIEL	 -->
+  <variable field-name="cell_volume_partial_0" name="OldVolumePartiel" data-type="real" item-kind="cell"
+	    dim="1" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME PARTIEL	 -->
+  <variable field-name="cell_delta_volume" name="CellDeltaVol" data-type="real" item-kind="cell"
+	    dim="1" material="false" dump="true" need-sync="true" />
   <!-- 	VELOCITY -->
   <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />

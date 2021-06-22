@@ -55,6 +55,7 @@ void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_front_flux_mass_env.resize(nb_env);
   m_back_flux_mass_env.resize(nb_env);
   m_cell_volume_partial.resize(4);
+  m_cell_delta_volume.resize(4);
 }
 /**
  *******************************************************************************
