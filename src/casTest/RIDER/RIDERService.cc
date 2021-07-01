@@ -26,7 +26,7 @@ void RIDERService::initMat()  {
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
       Real rnode = std::sqrt((m_node_coord[inode][0] - Xb[0]) *
-                                       (m_node_coord[inode][0] - Xb[0]) +
+                                (m_node_coord[inode][0] - Xb[0]) +
                                    (m_node_coord[inode][1] - Xb[1]) *
                                        (m_node_coord[inode][1] - Xb[1]));
       rmin = std::min(rmin, rnode);

@@ -43,7 +43,8 @@ hydroStartInit()
   }
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-  m_dimension = mesh()->dimension();
+  m_dimension = mesh()->dimension(); 
+  
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
@@ -195,7 +196,8 @@ hydroContinueInit()
     debug() << " Entree dans hydroContinueInit()";
     // en reprise 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-    m_dimension = mesh()->dimension();
+    m_dimension = mesh()->dimension(); 
+    
     mm = IMeshMaterialMng::getReference(defaultMesh());
   
     mm->recreateFromDump();
@@ -251,7 +253,7 @@ saveValuesAtN()
   m_cell_cqs_n.copy(m_cell_cqs);
   
   if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
-  if (options()->withProjection) m_node_coord.copy(m_node_coord_0);
+  if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0);
  
 }    
 /*---------------------------------------------------------------------------*/

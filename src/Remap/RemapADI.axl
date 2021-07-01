@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
+<?xml version="1.0" ?>
 <service name="RemapADI" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service Remap</description>
-  <interface name="IRemap" />
+<description>Jeu de données du service Remap</description>
+<interface name="IRemap" />
   
 <variables>   
   <!-- sens de la projection --> 
@@ -16,6 +16,9 @@
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- MASS FRACTION-->
   <variable field-name="mass_fraction" name="MassFraction" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL MASS -->
+  <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- INTERNAL ENERGY	 -->
   <variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
@@ -124,7 +127,10 @@
   <simple name="threshold" type="real" default="1.e-10">
     <description>Définition de la valeur limite des petites fractions et autres </description>
   </simple>
-
+  <!-- - - - - projection-Euler - - - - -->
+  <simple name="is-euler-scheme" type="bool" default="true">
+    <description> projection type Euler (retour sur maillage initial </description>
+  </simple>
   <!-- - - - - - ordre de la projection - - - - -->
   <simple name="ordre-projection" type="integer" default="2">
     <description>Définition de la valeur limite des petites fractions et autres </description>

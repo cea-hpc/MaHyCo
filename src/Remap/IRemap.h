@@ -42,27 +42,11 @@ public:
    /**
    * main du remap
    **/
-  virtual void appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) = 0;
+  virtual void appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) = 0;
   /**
    * resize les variables du remap
    **/
   virtual void resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) = 0;
-  /**
-   * calcul des gradients aux faces
-   **/
-  virtual void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env) = 0;
-  /**
-   * calcul des gradients aux faces ou flux aux faces 
-   **/
-  virtual void computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) = 0;
-  /**
-   * calcul des flux aux faces des cellules 
-   **/
-  virtual void computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) = 0;
-  /**
-   * calcul des valeurs aux cellules 
-   **/
-  virtual void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env) = 0;
   /**
    * synchronisation des valeurs aux cellules 
    **/
@@ -71,7 +55,12 @@ public:
   
   virtual Integer getOrdreProjection() = 0;
   virtual bool hasProjectionPenteBorne() = 0;    
-  virtual bool hasConservationEnergieTotale() = 0;    
+  virtual bool hasConservationEnergieTotale() = 0;   
+  virtual bool isEuler() = 0;
+    /**
+   * fonction final de la projection
+   **/
+  virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env)  = 0;
 };
 
 #endif

@@ -4,34 +4,150 @@
 Integer RemapALEService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapALEService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapALEService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
+bool RemapALEService::isEuler() {return options()->getIsEulerScheme();}
 /**
  *******************************************************************************/
-void RemapALEService::appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
     
     synchronizeUremap();  
-    Integer idir = 0; // pas de direction, ce n'est pas de l'ADI
-    // deplacement des noeuds : lissage
+    resizeRemapVariables( nb_vars_to_project,  nb_env);
+    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    m_cartesian_mesh->computeDirections();
+    info() << "creation liste des noeuds à relaxer";
+    ComputeNodeGroupToRelax();
+    
+    info() << "deplacement des noeuds : lissage";
     computeLissage();
-      
-    // calcul des gradients des quantites à projeter aux faces 
-    computeGradPhiFace(idir, nb_vars_to_project, nb_env);
-    // calcul des gradients des quantites à projeter aux cellules
-    // (avec limiteur ordinaire) 
-    // et pour le pente borne, calcul des flux aux faces des cellules
-    computeGradPhiCell(idir, nb_vars_to_project, nb_env);
-    // calcul de m_phi_face
-    // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
-    // et qui contient les flux des variables projetees avec l'option pente-borne
-    computeUpwindFaceQuantitiesForProjection(idir, nb_vars_to_project, nb_env);
+    ENUMERATE_NODE(inode, allNodes()){
+      Node n1 = *inode;/*
+      info() << n1.localId() << m_node_coord_l[n1];
+      info() << n1.localId() << m_node_coord[n1];*/
+    }
+    // Calcul des volumes anciens et nouveau et des volumes partiels
+    computeVolumes();
+    // Calcul des flux de volumes 
+    computeFlux();
     
+    // en multimateriaux, c'est la qu'il faut creer les nouvelles mailles mixtes
     
-    computeUremap(idir, nb_vars_to_project, nb_env);
-    synchronizeUremap();
+    pinfo() << " Projection de la masse " ;
+    /************************************************************/
+    ENUMERATE_CELL(icell,allCells()){
+      Cell c = *icell;
+      m_phi[c] = m_density[c];
+      m_density_l[c] = m_density[c];
       
-//       if (withDualProjection) {
-//         computeDualUremap(idir, nb_env);
-//         synchronizeDualUremap();
-//       }
+    }
+    computeApproPhi(m_cell_volume_partial_l, m_cell_delta_volume);
+    m_appro_phi.synchronize();
+    // calcul de la masse dans les nouvelles cellules
+    computeNewPhi(m_cell_volume_l, m_cell_volume, m_cell_delta_volume);
+    
+    m_node_mass_l.copy(m_node_mass);
+    m_node_mass.fill(0.0);
+    ENUMERATE_CELL(icell,allCells()){
+      Cell c = *icell;
+      m_density[c] = m_phi[c];
+      m_cell_mass[c] = m_density[c] * m_cell_volume[c];
+      Real contrib_node_mass = 0.25 * m_cell_mass[c];
+      for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode){
+        m_node_mass[inode] += contrib_node_mass; 
+      }
+      pinfo() << c.localId() << " " << m_density_l[c] << " donne " << m_density[c];
+    }
+    if (withDualProjection) {
+      // Calcul des masses partiels et des flux de masses utilisant 
+      // m_appro_phi qui contient encore la densité approchée aux faces
+      ENUMERATE_CELL(icell,allCells()){
+       Cell c = *icell;
+       m_cell_one[c] = 1.;
+       m_cell_zero[c] = 0.;
+       for (Integer ii = 0; ii < 4; ++ii) {
+        // m_appro_phi contient encore l'approximation de la densité
+        m_cell_delta_masse[c][ii] =  m_cell_delta_volume[c][ii] * m_appro_phi[c][ii];
+        m_cell_masse_partial_l[c][ii] = m_cell_volume_partial_l[c][ii] * m_density_l[c];
+       }
+      }
+      pinfo() << " Projection de la vitesse en X";
+      /************************************************************/
+      // Projection de la vitesse X aux mailles
+      ENUMERATE_CELL(icell,allCells()){
+       Cell c = *icell;
+       m_phi[c] = 0.25 * (m_velocity[c.node(0)].x + m_velocity[c.node(1)].x + m_velocity[c.node(2)].x + m_velocity[c.node(3)].x);
+      }
+      computeApproPhi(m_cell_masse_partial_l, m_cell_delta_masse); // avec masses partiels et des flux de masses
+      m_appro_phi.synchronize();
+      // mise à zero de la variable phi grace à m_cell_zero
+      // calcul de la nouvelle valeur de phi (*m_cell_one, qui vaut 1)
+      computeNewPhi(m_cell_zero, m_cell_one, m_cell_delta_masse); 
+      
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+       // pinfo() << node.localId() << " AV P " << m_velocity[node].x;
+        m_velocity[node].x *= m_node_mass_l[node];
+      }
+      
+      ENUMERATE_CELL(icell, allCells()){  
+        Cell c = *icell; 
+        for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode){
+          m_velocity[inode].x += 0.25 * m_phi[icell];
+        }
+      }
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+        m_velocity[node].x /= m_node_mass[node];
+       // pinfo() << node.localId() << " AP P" << m_velocity[node].x;
+      }  
+      pinfo() << " Projection de la vitesse en Y";
+      /************************************************************/
+      // Projection de la vitesse Y aux mailles
+      ENUMERATE_CELL(icell,allCells()){
+       Cell c = *icell;
+       m_phi[c] = 0.25 * (m_velocity[c.node(0)].y + m_velocity[c.node(1)].y + m_velocity[c.node(2)].y + m_velocity[c.node(3)].y);
+      }
+      computeApproPhi(m_cell_masse_partial_l, m_cell_delta_masse); // avec masses partiels et des flux de masses
+      m_appro_phi.synchronize();
+      // mise à zero de la variable phi grace à m_cell_zero
+      // calcul de la nouvelle valeur de phi (*m_cell_one, qui vaut 1)
+      computeNewPhi(m_cell_zero, m_cell_one, m_cell_delta_masse); 
+      
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+       // pinfo() << node.localId() << " AV P " << m_velocity[node].y;
+        m_velocity[node].y *= m_node_mass_l[node];
+      }
+      
+      ENUMERATE_CELL(icell, allCells()){  
+        Cell c = *icell;
+        for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode){
+          m_velocity[inode].y +=  0.25 * m_phi[icell];
+        } 
+      }
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+        m_velocity[node].y /= m_node_mass[node];
+       // pinfo() << node.localId() << " AP P " << m_velocity[node].y;
+      }    
+       
+      /************************************************************/ 
+      // Projection de l'energie interne 
+      ENUMERATE_CELL(icell,allCells()){
+        Cell c = *icell;
+        m_phi[c] = m_internal_energy[c] * m_density_l[c];
+      }
+      computeApproPhi(m_cell_volume_partial_l, m_cell_delta_volume);
+      m_appro_phi.synchronize();
+      // calcul de la masse dans les nouvelles cellules
+      computeNewPhi(m_cell_volume_l, m_cell_volume, m_cell_delta_volume);
+        
+      ENUMERATE_CELL(icell,allCells()){
+        Cell c = *icell;
+        info() << " cell " << c.localId() << " AV energ= " << m_internal_energy[c];
+        m_internal_energy[c] = m_phi[c] / m_density[c];
+        info() << " cell " << c.localId() << " AP energ= " << m_internal_energy[c];
+      }
+    
+    }
     
 }
 /**
@@ -41,7 +157,7 @@ void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
     
   m_u_lagrange.resize(nb_vars_to_project);
   m_u_dual_lagrange.resize(nb_vars_to_project);
-  m_phi_lagrange.resize(nb_vars_to_project);
+  
   m_phi_dual_lagrange.resize(nb_vars_to_project);
   m_dual_grad_phi.resize(nb_vars_to_project);
   m_grad_phi.resize(nb_vars_to_project);
@@ -54,92 +170,14 @@ void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_dual_phi_flux.resize(nb_vars_to_project);
   m_front_flux_mass_env.resize(nb_env);
   m_back_flux_mass_env.resize(nb_env);
-  m_cell_volume_partial.resize(4);
+  m_cell_volume_partial_l.resize(4);
+  m_cell_masse_partial_l.resize(4);
   m_cell_delta_volume.resize(4);
+  m_appro_phi.resize(4);
 }
 /**
- *******************************************************************************
- * \file computeGradPhiFace1()
- * \brief phase de projection : premiere etapes
- *  calcul des gradients aux faces dans le sens de la projection
- *  calcul des largeurs de cellule dans le sens de la projection
- * \param \return m_grad_phi, m_h_cell_lagrange
- *******************************************************************************
- */
-void RemapALEService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
-  debug() << " Entree dans computeGradPhiFace()";
-  m_h_cell_lagrange.fill(0.0);
-  
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
-  ENUMERATE_FACE(iface, fdm.allFaces()) {
-    Face face = *iface; 
-    m_is_dir_face[face][idir] = true;
-  }
-  if (options()->ordreProjection > 1) {
-    ENUMERATE_FACE(iface, fdm.innerFaces()) {
-      Face face = *iface; 
-      DirFace dir_face = fdm[face];
-      Cell cellb = dir_face.previousCell();
-      Cell cellf = dir_face.nextCell();
-      m_deltax_lagrange[face] = math::dot(
-       (m_cell_coord[cellf] -  m_cell_coord[cellb]), m_face_normal[face]); 
-
-      for (Integer ivar = 0 ; ivar <  nb_vars_to_project ; ++ivar) {
-        m_grad_phi_face[iface][ivar] = (m_phi_lagrange[cellf][ivar] - m_phi_lagrange[cellb][ivar]) 
-                                    / m_deltax_lagrange[iface];
-      }
-      // somme des distances entre le milieu de la maille et le milieu de la face
-      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).abs();
-      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
-    }
-  }
-  m_grad_phi_face.synchronize();
-  m_h_cell_lagrange.synchronize();
-}
-/**
- *******************************************************************************
- * \file computeGradPhi()
- * \brief phase de projection : seconde etape
- *        calcul du gradient aux mailles limites : m_grad_phi_face
- *        calcul des flux pente-borne arriere ou avant aux mailles
- *        à partir du gradient precedent : m_delta_phi_face_ar, m_delta_phi_face_av
- * \param
- * \return m_grad_phi_face, m_delta_phi_face_ar, m_delta_phi_face_av
- *******************************************************************************
- */
-void RemapALEService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
-    
- 
-}
-/**
-*****************************************************************************
- * \file computeUpwindFaceQuantitiesForProjection()
- * \brief  phase de projection : troisieme etap
- *        calcul de m_phi_face
- *     qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables
- * projetees qui contient les flux des variables projetees avec l'option
- * pente-borne \param 
- * \return m_phi_face
-*******************************************************************************
-*/
-void RemapALEService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
-    
- 
-}
-/**
- *******************************************************************************
- * \file computeUremap()
- * \brief phase de projection : etape finale
- *        calcul de la variable Uremap1 par ajout ou retrait des flux
-          Mises à jour de l'indicateur mailles mixtes
-          calcul de la valeur de Phi issu de Uremap1
- * \param
- * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
- *******************************************************************************
- */
-void RemapALEService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
-    
-
+ *******************************************************************************/
+void RemapALEService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
 }
 /**
  *******************************************************************************
@@ -151,9 +189,9 @@ void RemapALEService::computeUremap(Integer idir, Integer nb_vars_to_project, In
  */
 void RemapALEService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
-    m_phi_lagrange.synchronize();
-    m_u_lagrange.synchronize();
-    m_flux_masse_face.synchronize();
+    m_density.synchronize();
+    m_velocity.synchronize();
+    m_internal_energy.synchronize();
     m_est_mixte.synchronize();
     m_est_pure.synchronize();
 }/*---------------------------------------------------------------------------*/

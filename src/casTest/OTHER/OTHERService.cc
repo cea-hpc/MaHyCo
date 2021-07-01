@@ -1,6 +1,8 @@
 #include "OTHERService.h"
 
 
+void OTHERService::initMatMono()  {
+}
 void OTHERService::initMat()  {
     
   // rayon interne et externe
@@ -16,6 +18,8 @@ void OTHERService::initMat()  {
     m_materiau[cell] = 1;
     } 
   }
+}
+void OTHERService::initVarMono()  {
 }
 void OTHERService::initVar()  {
 
@@ -46,7 +50,8 @@ void OTHERService::initVar()  {
   info() << " boucle sur les noeuds";
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
-    m_velocity[inode].x = 1.;
+    //m_velocity[inode].x = 1.;  
+    //m_velocity[inode].y = 1.;
     // sauvegarde des valeurs initiales mises dans m_velocity_n
     m_velocity_n[inode] = m_velocity[inode];
   }
@@ -58,4 +63,4 @@ void OTHERService::initVar()  {
 bool OTHERService::hasReverseOption() { return options()->reverseOption;}
 Real OTHERService::getReverseParameter() { return options()->parametre;}
 
-/* ARCANE_REGISTER_SERVICE_OTHER(OTHER, OTHERService); */
+ARCANE_REGISTER_SERVICE_OTHER(OTHER, OTHERService); 

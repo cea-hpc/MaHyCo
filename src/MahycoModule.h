@@ -333,10 +333,6 @@ class MahycoModule
    * point d'entree pour la phase de projection
    **/
   virtual void remap();
-  /**
-   * reaffectation des variables arcane apres projection
-   **/
-  virtual void remapVariables();
  
   /** Retourne le numéro de version du module */
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }

@@ -11,11 +11,17 @@
   <!-- DENSITY -->
   <variable field-name="density" name="Density" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- DENSITY OLD-->
+  <variable field-name="density_l" name="DensityLagrange" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- PSEUDO -->
   <variable field-name="pseudo_viscosity" name="PseudoViscosity" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- MASS FRACTION-->
   <variable field-name="mass_fraction" name="MassFraction" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL MASS -->
+  <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- INTERNAL ENERGY	 -->
   <variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
@@ -30,22 +36,40 @@
   <variable field-name="cell_volume_partial" name="VolumePartiel" data-type="real" item-kind="cell"
 	    dim="1" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME	 -->
-  <variable field-name="cell_volume_0" name="OldCellVolume" data-type="real" item-kind="cell"
+  <variable field-name="cell_volume_l" name="CellVolumeLagrange" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME PARTIEL	 -->
-  <variable field-name="cell_volume_partial_0" name="OldVolumePartiel" data-type="real" item-kind="cell"
+  <variable field-name="cell_volume_partial_l" name="VolumePartielLagrange" data-type="real" item-kind="cell"
 	    dim="1" material="true" dump="true" need-sync="true" />
-  <!-- CELL VOLUME PARTIEL	 -->
+  <!-- CELL MASSE PARTIEL	 -->
+  <variable field-name="cell_masse_partial_l" name="MassePartielLagrange" data-type="real" item-kind="cell"
+	    dim="1" material="true" dump="true" need-sync="true" />
+  <!-- CELL DELTA VOLUME 	 -->
   <variable field-name="cell_delta_volume" name="CellDeltaVol" data-type="real" item-kind="cell"
-	    dim="1" material="false" dump="true" need-sync="true" />
+	    dim="1" material="false" dump="true" need-sync="true" /> 
+  <!-- CELL DELTA MASSE 	 -->
+  <variable field-name="cell_delta_masse" name="CellDeltaMass" data-type="real" item-kind="cell"
+	    dim="1" material="false" dump="true" need-sync="true" /> 
+  <!-- CELL ONE	 -->
+  <variable field-name="cell_one" name="CellOne" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL ZERO	 -->
+  <variable field-name="cell_zero" name="CellZero" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- 	VELOCITY -->
   <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE MASS	 -->
   <variable field-name="node_mass" name="NodeMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	NODE MASS	 -->
+  <variable field-name="node_mass_l" name="NodeMassLagrange" data-type="real" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE COORD	 -->
   <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	NODE COORD LAGRANGE -->
+  <variable field-name="node_coord_l" name="NodeCoordLagrange" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE COORD_0	 -->
   <variable field-name="node_coord_0" name="NodeCoord0" data-type="real3" item-kind="node"
@@ -74,8 +98,11 @@
   <!-- 	U DUAL LAGRANGE	 -->
     <variable field-name="u_dual_lagrange" name="UDualLagrange" data-type="real" item-kind="node"
 	    dim="1" dump="true" need-sync="true" />
-  <!-- 	PHI LAGRANGE	 -->
-    <variable field-name="phi_lagrange" name="PhiLagrange" data-type="real" item-kind="cell"
+  <!-- 	PHI 	 -->
+    <variable field-name="phi" name="Phi" data-type="real" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	APPRO PHI 	 -->
+    <variable field-name="appro_phi" name="ApproPhi" data-type="real" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
    <!-- 	PHI DUAL LAGRANGE	 -->
     <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
@@ -133,7 +160,18 @@
   <simple name="threshold" type="real" default="1.e-10">
     <description>Définition de la valeur limite des petites fractions et autres </description>
   </simple>
-
+  <!-- - - - - - critere de remaillage en volume - - - - -->
+  <simple name="volum-criteria" type="real" default="1.">
+    <description>Critere de remaillage d'un noeud sur le rapport du volume min et max des elements entourant ce noeud </description>
+  </simple>
+  <!-- - - - - - critere de remaillage en angle - - - - -->
+  <simple name="angle-criteria" type="real" default="-1.">
+    <description>Critere de remaillage d'un noeud sur le sinus des angles de l'élément </description>
+  </simple>
+  <!-- - - - - projection-Euler - - - - -->
+  <simple name="is-euler-scheme" type="bool" default="false">
+    <description> projection type Euler (retour sur maillage initial </description>
+  </simple>
   <!-- - - - - - ordre de la projection - - - - -->
   <simple name="ordre-projection" type="integer" default="2">
     <description>Définition de la valeur limite des petites fractions et autres </description>

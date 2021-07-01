@@ -4,9 +4,10 @@
 Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
+bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
 /**
  *******************************************************************************/
-void RemapADIService::appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
     
     synchronizeUremap();  
     synchronizeDualUremap();
@@ -44,6 +45,8 @@ void RemapADIService::appliRemap(Integer withDualProjection, Integer nb_vars_to_
     m_sens_projection = m_sens_projection()+1;
     m_sens_projection = m_sens_projection()%3;
     
+    // recuperation des quantités aux cells et aux envcell
+    remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
 }
 /**
  *******************************************************************************/

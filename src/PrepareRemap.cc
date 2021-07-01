@@ -91,12 +91,7 @@ void MahycoModule::computeVariablesForRemap()
   debug() << " Entree dans computeVariablesForRemap()";
   Integer nb_total_env = mm->environments().size();
   Integer index_env;
-//   ENUMERATE_CELL(icell, allCells()) {
-//     Cell cell = *icell;
-//     for (Integer index = 0; index < m_nb_vars_to_project; index++) { 
-//       m_u_lagrange[cell][index] = 0.;
-//     }
-//   }
+
   m_u_lagrange.fill(0.);
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -189,10 +184,8 @@ void MahycoModule::remap() {
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();
     
-    options()->remap()->appliRemap(withDualProjection, m_nb_vars_to_project, m_nb_env);
+    options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
-    // recuperation des quantités aux cells et aux envcell
-    remapVariables();
     
     if (!options()->sansLagrange) {
       // Calcul de la Pression

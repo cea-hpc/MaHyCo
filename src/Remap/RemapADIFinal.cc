@@ -1,5 +1,5 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "MahycoModule.h"
+#include "RemapADIService.h"
 
 /**
  *******************************************************************************
@@ -15,15 +15,15 @@
  *         m_node_velocity_nplus1, m_x_velocity, m_y_velocity
  *******************************************************************************
  */
-void MahycoModule::remapVariables() {
+void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
   debug() << " Entree dans remapVariables";
+  mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
-  Integer nb_total_env = mm->environments().size();
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
   Int32UniqueArray cells_to_remove;
-  for (Integer index_env=0; index_env < nb_total_env ; index_env++) { 
+  for (Integer index_env=0; index_env < nb_env ; index_env++) { 
     IMeshEnvironment* env = envs[index_env];
     CellGroup env_cells = env->cells();
     cells_to_add.clear();
@@ -37,43 +37,43 @@ void MahycoModule::remapVariables() {
       if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) < options()->threshold 
           && cells_marker[icell.localId()] == 0) {
         cells_to_remove.add(icell.localId());
-        debug() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
       } else if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) > options()->threshold 
           && cells_marker[icell.localId()] == -1) {  
         // verification que le volume normaliseé fournit une fraction de volume au-dessus du threshold             
         Real volt(0.), vol_ev_apres_normalisation(0.) ;
-        for (Integer index_env_loc=0; index_env_loc < nb_total_env; index_env_loc++) { 
+        for (Integer index_env_loc=0; index_env_loc < nb_env; index_env_loc++) { 
           // somme des volumes
           volt += m_u_lagrange[icell][index_env_loc] ;
         }
         vol_ev_apres_normalisation = m_u_lagrange[icell][index_env] *  m_euler_volume[icell] / volt;
         if ((vol_ev_apres_normalisation / m_euler_volume[icell]) > options()->threshold  
-            && m_u_lagrange[icell][nb_total_env + index_env] != 0.) {
+            && m_u_lagrange[icell][nb_env + index_env] != 0.) {
           cells_to_add.add(icell.localId());
-          debug() << " Pe " << my_rank << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
+          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
             << " ajoutée dans l'env apres normalisation" << env->name();
           debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
           debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell];
-          debug() << " masse projetée " << m_u_lagrange[icell][nb_total_env + index_env];
+          debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
         }
       }
     }
     
     if (!cells_to_add.empty()) {
-      pinfo() << " Pe " << my_rank << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
+      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
       env_cells.addItems(cells_to_add);
     }
     if (!cells_to_remove.empty()){
-      pinfo() << " Pe " << my_rank << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
       env_cells.removeItems(cells_to_remove);
     }
     
   }
   // finalisation avant remplissage des variables
   mm->forceRecompute();
-  UniqueArray<Real> vol_nplus1(nb_total_env);
-  UniqueArray<Real> density_env_nplus1(nb_total_env);
-  UniqueArray<Real> internal_energy_env_nplus1(nb_total_env);
+  UniqueArray<Real> vol_nplus1(nb_env);
+  UniqueArray<Real> density_env_nplus1(nb_env);
+  UniqueArray<Real> internal_energy_env_nplus1(nb_env);
   
   Integer index_env;
   ENUMERATE_CELL(icell, allCells()) {
@@ -86,19 +86,19 @@ void MahycoModule::remapVariables() {
     
     // info() << " cell " << cell.localId() << " calcul des masses et volumes totales " 
     //        << m_u_lagrange[cell][0] << " et " << m_u_lagrange[cell][1];
-    for (Integer index_env=0; index_env < nb_total_env; index_env++) { 
+    for (Integer index_env=0; index_env < nb_env; index_env++) { 
       vol_nplus1[index_env] = m_u_lagrange[cell][index_env];
       // somme des volumes
       volt += vol_nplus1[index_env];
       // somme des masses
-      masset += m_u_lagrange[cell][nb_total_env + index_env];
+      masset += m_u_lagrange[cell][nb_env + index_env];
     }
     /*
     info() << " cell " << cell.localId() << " fin des masses et volumes " << volt;*/
     double volt_normalise = 0.;   
     Real unsurvolt = 1./ volt;
     // normalisation des volumes + somme 
-    for (Integer index_env=0; index_env < nb_total_env ; index_env++) { 
+    for (Integer index_env=0; index_env < nb_env ; index_env++) { 
       // vol_nplus1[index_env] *= vol / volt;
       vol_nplus1[index_env] *= vol * unsurvolt;
       volt_normalise += vol_nplus1[index_env];
@@ -148,8 +148,8 @@ void MahycoModule::remapVariables() {
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell;  
         index_env = ev.environmentId();  
-        // m_mass_fraction[ev] = m_u_lagrange[cell][nb_total_env + index_env] / masset;
-        m_mass_fraction[ev] = m_u_lagrange[cell][nb_total_env + index_env] * unsurmasset;
+        // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
+        m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] * unsurmasset;
         if (m_fracvol[ev] < options()->threshold) {
           m_mass_fraction[ev] = 0.;
         }
@@ -170,7 +170,7 @@ void MahycoModule::remapVariables() {
       index_env = ev.environmentId();  
       density_env_nplus1[index_env] = 0.;
       if (m_fracvol[ev] > options()->threshold)
-        density_env_nplus1[index_env] = m_u_lagrange[cell][nb_total_env + index_env] 
+        density_env_nplus1[index_env] = m_u_lagrange[cell][nb_env + index_env] 
                 / vol_nplus1[index_env];
       density_nplus1 += m_fracvol[ev] * density_env_nplus1[index_env];
       // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
@@ -182,9 +182,9 @@ void MahycoModule::remapVariables() {
       index_env = ev.environmentId();  
       internal_energy_env_nplus1[index_env] = 0.;
       
-      if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_total_env + index_env] != 0.) {
+      if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_env + index_env] != 0.) {
         internal_energy_env_nplus1[index_env] =
-          m_u_lagrange[cell][2 * nb_total_env + index_env] / m_u_lagrange[cell][nb_total_env + index_env];
+          m_u_lagrange[cell][2 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
       }
     }
     // mise à jour des valeurs moyennes aux allCells
@@ -197,8 +197,8 @@ void MahycoModule::remapVariables() {
       index_env = ev.environmentId();  
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
       // recuperation de la pseudo projetee
-      // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] / vol;
-      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_total_env + 4] * unsurvol;
+      // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
+      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] * unsurvol;
       // recuperation de la densite
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie
@@ -246,7 +246,7 @@ void MahycoModule::remapVariables() {
     } 
   }   
 
-  if (!options()->sansLagrange) {
+  if (withDualProjection) {
   // variables aux noeuds
     ENUMERATE_NODE(inode, allNodes()){
       Real mass_nodale_proj = m_u_dual_lagrange[inode][3];
@@ -258,10 +258,19 @@ void MahycoModule::remapVariables() {
     }
   }
   // recalcule de la masse mass_nodale
-  computeNodeMass();
+  m_node_mass.fill(0.);
+  Real one_over_nbnode = dimension == 2 ? .25  : .125 ;
+  ENUMERATE_CELL(icell, allCells()){    
+    Cell cell = * icell;
+    Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
+    for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
+      m_node_mass[inode] += contrib_node_mass; 
+    }
+  }
+  m_node_mass.synchronize();
  
   // conservation energie totale lors du remap
-  if (options()->remap()->hasConservationEnergieTotale()) {
+  if (hasConservationEnergieTotale()) {
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;
       Real delta_ec(0.);

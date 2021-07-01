@@ -55,32 +55,17 @@ public:
     double inf, sup;
   };
   ICartesianMesh* m_cartesian_mesh;
+  Materials::IMeshMaterialMng* mm;
 
 public:
    /**
    * main du remap
    **/
-  virtual void appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
-  /**
+  virtual void appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
+   /**
    * resize les variables du remap
    **/
-  virtual void resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des gradients aux faces
-   **/
-  virtual void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des gradients aux faces ou flux aux faces 
-   **/
-  virtual void computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des flux aux faces des cellules 
-   **/
-  virtual void computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des valeurs aux cellules 
-   **/
-  virtual void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+  virtual  void resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env);
   /**
    * synchronisation des valeurs aux cellules 
    **/
@@ -89,10 +74,34 @@ public:
   
   virtual Integer getOrdreProjection();
   virtual bool hasProjectionPenteBorne();
-  virtual bool hasConservationEnergieTotale();    
+  virtual bool hasConservationEnergieTotale();   
+  virtual bool isEuler();
   
-  
+    /**
+   * fonction final de la projection
+   **/
+   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
+   
 private:
+    
+ 
+  /**
+   * calcul des gradients aux faces
+   **/
+   void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+  /**
+   * calcul des gradients aux faces ou flux aux faces 
+   **/
+   void computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+  /**
+   * calcul des flux aux faces des cellules 
+   **/
+   void computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+  /**
+   * calcul des valeurs aux cellules 
+   **/
+   void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+
   /**
    * fonction pour la phase de projection duales
    **/

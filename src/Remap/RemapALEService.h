@@ -60,27 +60,11 @@ public:
    /**
    * main du remap
    **/
-  virtual void appliRemap(Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
+  virtual void appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
   /**
    * resize les variables du remap
    **/
   virtual void resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des gradients aux faces
-   **/
-  virtual void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des gradients aux faces ou flux aux faces 
-   **/
-  virtual void computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des flux aux faces des cellules 
-   **/
-  virtual void computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env);
-  /**
-   * calcul des valeurs aux cellules 
-   **/
-  virtual void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
   /**
    * synchronisation des valeurs aux cellules 
    **/
@@ -89,12 +73,20 @@ public:
   
   virtual Integer getOrdreProjection();
   virtual bool hasProjectionPenteBorne();
-  virtual bool hasConservationEnergieTotale();    
+  virtual bool hasConservationEnergieTotale(); 
+  virtual bool isEuler();   
+  
+  virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
   
 private:
     
+  void ComputeNodeGroupToRelax();
   void computeLissage();
   void computeVolumes();
+  void computeFlux();
+  void computeApproPhi(MaterialVariableCellArrayReal, VariableCellArrayReal);
+  void computeNewPhi(MaterialVariableCellReal, MaterialVariableCellReal, VariableCellArrayReal);
+  
   
   Real m_arithmetic_thresold = 1.e-300;
   

@@ -3,7 +3,6 @@ project(Mahyco LANGUAGES C CXX)
 include(../mahyco.common.cmake)
 
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE PhaseRemapFinal.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
@@ -32,7 +31,7 @@ target_include_directories(OTHER PUBLIC .)
 target_link_libraries(OTHER PUBLIC arcane_core)
 
 
-add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
+add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
