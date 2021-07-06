@@ -555,8 +555,8 @@ InitGeometricValues()
   } else {
     ENUMERATE_FACE (iFace, allFaces()) {
       Face face = *iFace;
-      m_face_normal[iFace].x = math::abs(m_node_coord[face.node(1)].y - m_node_coord[face.node(0)].y); 
-      m_face_normal[iFace].y = math::abs(m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
+      m_face_normal[iFace].x = (m_node_coord[face.node(1)].y - m_node_coord[face.node(0)].y); 
+      m_face_normal[iFace].y = -(m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
       m_face_normal[iFace] /= m_face_normal[iFace].abs();
     }
   }

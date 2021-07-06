@@ -31,9 +31,9 @@ computeFaceQuantitesForRemap()
      ENUMERATE_FACE (iFace, allFaces()) {
         Face face = *iFace;
         m_face_length_lagrange[face] = m_node_coord[face.node(1)] - m_node_coord[face.node(0)]; 
-        m_face_length_lagrange[face][0] = math::abs(m_face_length_lagrange[face][0]);
-        m_face_length_lagrange[face][1] = math::abs(m_face_length_lagrange[face][1]);
-        m_face_length_lagrange[face][2] = math::abs(m_face_length_lagrange[face][2]);
+        m_face_length_lagrange[face][0] = math::abs(m_face_length_lagrange[face][1]);
+        m_face_length_lagrange[face][1] = math::abs(m_face_length_lagrange[face][0]);
+        m_face_length_lagrange[face][2] = 0.;
     }
   }
   ENUMERATE_FACE (iFace, allFaces()) {
@@ -46,6 +46,7 @@ computeFaceQuantitesForRemap()
         vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
         else
         vitesse_moy += m_velocity[face.node(inode)];
+        
     }
     m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
   }
@@ -193,7 +194,7 @@ void MahycoModule::remap() {
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables();
-    
+
     if (!options()->sansLagrange) {
       // Calcul de la Pression
       for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {

@@ -190,6 +190,7 @@ void MahycoModule::remapVariables() {
     // mise à jour des valeurs moyennes aux allCells
     // densite
     m_density[cell] = density_nplus1;
+    // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
     // recalcul de la masse
     m_cell_mass[cell] = m_euler_volume[cell] * density_nplus1;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {

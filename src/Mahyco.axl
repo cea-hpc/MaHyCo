@@ -99,7 +99,7 @@
 	    dim="1" dump="true" need-sync="true" />
   <!-- 	CELL OLD CQS	 -->
   <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />
+	    dim="1" dump="true" need-sync="true" /> 
   <!-- 	FACE COORD	 -->
   <variable field-name="face_coord" name="FaceCoord" data-type="real3" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />

@@ -47,8 +47,6 @@ void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_grad_phi.resize(nb_vars_to_project);
   m_phi_face.resize(nb_vars_to_project);
   m_grad_phi_face.resize(nb_vars_to_project);
-  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)
-  m_flux_masse_face.resize(6); 
   m_delta_phi_face_ar.resize(nb_vars_to_project);
   m_delta_phi_face_av.resize(nb_vars_to_project);
   m_dual_phi_flux.resize(nb_vars_to_project);
@@ -146,14 +144,12 @@ void RemapALEService::computeUremap(Integer idir, Integer nb_vars_to_project, In
  * \file synchronizeUremap()
  * \brief phase de synchronisation des variables de projection apres projection
  * \return m_phi_lagrange, m_u_lagrange synchonise sur les mailles fantomes
- *         et m_flux_masse_face pour la projection duale
  *******************************************************************************
  */
 void RemapALEService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
     m_phi_lagrange.synchronize();
     m_u_lagrange.synchronize();
-    m_flux_masse_face.synchronize();
     m_est_mixte.synchronize();
     m_est_pure.synchronize();
 }/*---------------------------------------------------------------------------*/
