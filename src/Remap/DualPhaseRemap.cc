@@ -51,57 +51,54 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_back_flux_mass[inode] = 0.;
     m_front_flux_mass[inode] = 0.;
   }
-  ENUMERATE_FACE(iface, fdm.innerFaces()) {
+  ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface;       
     DirFace dir_face = fdm[face];
-    Cell cellb = dir_face.previousCell();
-    Cell cellf = dir_face.nextCell();/*
-    Cell cellb = face.backCell();
-    Cell cellf = face.frontCell();*/
     Integer indexfacecellb(-1), indexfacecellf(-1);
-    ENUMERATE_FACE(jface, cellb.faces()) { 
+    Cell cellb = dir_face.previousCell();
+    if (cellb.localId() != -1) {
+     ENUMERATE_FACE(jface, cellb.faces()) { 
       if (jface.localId() == iface.localId()) indexfacecellb = jface.index(); 
-    }
-    ENUMERATE_FACE(jface, cellf.faces()) { 
-      if (jface.localId() == iface.localId()) indexfacecellf = jface.index(); 
-    }
-    if ((indexfacecellb>6) || (indexfacecellf>6)) exit(1);
-    if (!options()->projectionPenteBorne) {
-      ENUMERATE_NODE(inode, face.nodes()) {
+     }
+     Real3 outer_face_normalb(m_outer_face_normal[cellb][indexfacecellb]);
+     Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
+     ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 4 faces dans une direction pour les noeuds --> 0.25  
-          m_back_flux_mass_env[inode][index_env] += 
-          0.25 * m_flux_masse_face[cellb][indexfacecellb][index_env]; 
-          m_front_flux_mass_env[inode][index_env] += 
-          0.25 * m_flux_masse_face[cellf][indexfacecellf][index_env]; 
-          // pour le flux total
-          m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
-          m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env]; 
+        // 2 cellules dans une direction pour les noeuds --> 0.5  
+        // recuperation du flux dual de masse calcule par le pente borne ou 
+        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
+        // mais pas encore multiplié par la normale sortante des faces de la cellule 
+        // donc fait ici
+        m_back_flux_mass_env[inode][index_env] += 
+        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        // pour le flux total
+        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
         }
+     }
+    }
+    Cell cellf = dir_face.nextCell();
+    if (cellf.localId() != -1) {
+      ENUMERATE_FACE(jface, cellf.faces()) { 
+       if (jface.localId() == iface.localId()) indexfacecellf = jface.index(); 
       }
-    } else {      
-      Real3 outer_face_normalb(m_outer_face_normal[cellb][indexfacecellb]);
-      Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
       Real3 outer_face_normalf(m_outer_face_normal[cellf][indexfacecellf]);
       Real outer_face_normal_dirf = math::dot(outer_face_normalf, dirproj);
-      
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
         // 2 cellules dans une direction pour les noeuds --> 0.5  
-        // recuperation du flux dual de masse calcule par le pente borne 
+        // recuperation du flux dual de masse calcule par le pente borne ou 
+        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
         // mais pas encore multiplié par la normale sortante des faces de la cellule 
         // donc fait ici
-          m_back_flux_mass_env[inode][index_env] += 
-          0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
-          m_front_flux_mass_env[inode][index_env] += 
-          0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
-          // pour le flux total
-          m_back_flux_mass[inode]  +=  m_back_flux_mass_env[inode][index_env];
-          m_front_flux_mass[inode] +=  m_front_flux_mass_env[inode][index_env];
+        m_front_flux_mass_env[inode][index_env] += 
+        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        // pour le flux total
+        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
         }
       }
     }
-  } 
+  }
+  
   // doit etre inutile si on augmente le nombre de mailles fantomes
   m_back_flux_mass_env.synchronize(); 
   m_front_flux_mass_env.synchronize();

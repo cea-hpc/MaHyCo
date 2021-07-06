@@ -106,10 +106,9 @@
 	    dim="0" dump="true" need-sync="true" />
     <!-- 	isDirFace	 -->
     <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
-    <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-    <variable field-name="flux_masse_face" name="FluxMasseFace" data-type="real3" item-kind="cell"
+    <!-- 	U REMAP2	 -->
+    <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
     <variable field-name="back_flux_mass_env" name="BackFluxMassEnv" data-type="real" item-kind="node"
 	    dim="1" dump="true" need-sync="true" /> 

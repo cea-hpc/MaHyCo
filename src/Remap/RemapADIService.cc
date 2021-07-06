@@ -15,10 +15,10 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     Integer idir(-1);
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     m_cartesian_mesh->computeDirections();
-    
+   
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
-      idir = (i + m_sens_projection())%3;
+      idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
       
@@ -43,7 +43,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       }
     }
     m_sens_projection = m_sens_projection()+1;
-    m_sens_projection = m_sens_projection()%3;
+    m_sens_projection = m_sens_projection()%(mesh()->dimension();
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
@@ -61,8 +61,6 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_grad_phi.resize(nb_vars_to_project);
   m_phi_face.resize(nb_vars_to_project);
   m_grad_phi_face.resize(nb_vars_to_project);
-  // dimension 3 - nombre de cell pour une face pour chaque meteriaux (donc limité à 3)
-  m_flux_masse_face.resize(6); 
   m_delta_phi_face_ar.resize(nb_vars_to_project);
   m_delta_phi_face_av.resize(nb_vars_to_project);
   m_dual_phi_flux.resize(nb_vars_to_project);
@@ -268,12 +266,9 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
                     + math::dot((m_face_coord[face] - m_cell_coord[cellf]), 
                     m_face_normal[face]) * m_grad_phi[cellf][ivar];
           }
-        } else {             
-          Real sign(1.);  
-          // voir le meme probleme que pour l'ordre 3
+        } else {         
           for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
-            m_phi_face[face][ivar] = sign *
-                (m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar]);
+            m_phi_face[face][ivar] = (m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar]);
           }
         }
      } else if (options()->ordreProjection == 3) {    
@@ -367,9 +362,6 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
       ENUMERATE_FACE(iface, cell.faces()){
         const Face& face = *iface;
         Integer i = iface.index(); 
-        
-        // recuperation de la surface de la face 
-        //m_face_length_lagrange[face][idir] 
         if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
           Real face_normal_velocity(m_face_normal_velocity[face]);
           Real face_length(m_face_length_lagrange[face][idir]);
@@ -379,35 +371,21 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
-                // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
-                // aux faces pour la quantite de mouvement de Vnr
-                // limitation à trois mat car m_flux_masse_face est real3
-                if (ivar >= nbmat && ivar < 2*nbmat)
-                    m_flux_masse_face[cell][i][ivar-nbmat] = flux;
             }
           } else { 
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
-                // stockage des flux de masses (ivar = nbmat + imat, imat =0,..,nbmat) 
-                // aux faces pour la quantite de mouvement de Vnr
-                // limitation à trois mat car m_flux_masse_face est real3
-                if (ivar >= nbmat && ivar < 2*nbmat) m_flux_masse_face[cell][i][ivar-nbmat] = flux;
             }
          }
         }
-         
-//           if (cdl->FluxBC > 0) {
-//             // flux exterieur eventuel
-//             reduction8 = reduction8 + (computeBoundaryFluxes(1, cCells, exy));
-//           }
-//         }    
       }
  
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
+        // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
+        m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
         m_u_lagrange[cell][ivar] -= flux_face[ivar];
       }
-      
       // diagnostics et controle
       for (int imat = 0; imat < nbmat; imat++) {
         if (m_u_lagrange[cell][nbmat + imat] < 0.) {
@@ -499,16 +477,15 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
  * \file synchronizeUremap()
  * \brief phase de synchronisation des variables de projection apres projection
  * \return m_phi_lagrange, m_u_lagrange synchonise sur les mailles fantomes
- *         et m_flux_masse_face pour la projection duale
  *******************************************************************************
  */
 void RemapADIService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
     m_phi_lagrange.synchronize();
     m_u_lagrange.synchronize();
-    m_flux_masse_face.synchronize();
     m_est_mixte.synchronize();
     m_est_pure.synchronize();
+    m_dual_phi_flux.synchronize();
 }/*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
 /*---------------------------------------------------------------------------*/
