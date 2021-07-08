@@ -74,7 +74,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   UniqueArray<Real> vol_nplus1(nb_env);
   UniqueArray<Real> density_env_nplus1(nb_env);
   UniqueArray<Real> internal_energy_env_nplus1(nb_env);
-  
+  m_cell_mass.fill(0.0);
   Integer index_env;
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = * icell;   

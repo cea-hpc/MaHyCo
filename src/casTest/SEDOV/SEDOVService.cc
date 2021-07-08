@@ -1,17 +1,17 @@
 #include "SEDOVService.h"
 
 
-void SEDOVService::initMatMono()  {
+void SEDOVService::initMatMono(Integer dim)  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0;
   }
 }
-void SEDOVService::initMat()  {
+void SEDOVService::initMat(Integer dim)  {
 
   if (options()->casTest == Sedov) {
-    initMatMono();
+    initMatMono(dim);
     return;
   }
 
@@ -36,14 +36,14 @@ void SEDOVService::initMat()  {
     }
   }
 } 
-void SEDOVService::initVarMono()  {
+void SEDOVService::initVarMono(Integer dim)  {
     
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = 1.;
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(1.e-10);  // depot sur 1 maille
+  Real rmin(0.06);  // depot sur 1 maille
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -60,7 +60,7 @@ void SEDOVService::initVarMono()  {
                                        (m_node_coord[inode].x- Xb.x) +
                                    (m_node_coord[inode].y- Xb.y) *
                                        (m_node_coord[inode].y - Xb.y)+
-                                   (m_node_coord[inode].z- Xb.z) *
+                                       (3-dim)*(m_node_coord[inode].z- Xb.z) *
                                        (m_node_coord[inode].z - Xb.z));
       if (rnode < rmin) isCenterCell = true;
     }
@@ -74,11 +74,11 @@ void SEDOVService::initVarMono()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void SEDOVService::initVar()  { 
+void SEDOVService::initVar(Integer dim)  { 
   // pour l'instant meme fonction  que la version MonoMat
 
   if (options()->casTest == Sedov) {
-    initVarMono();
+    initVarMono(dim);
     return;
   }
 
@@ -87,7 +87,7 @@ void SEDOVService::initVar()  {
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(1.e-10);  // depot sur 1 maille
+  Real rmin(0.06);  // depot sur 1 maille
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -104,7 +104,7 @@ void SEDOVService::initVar()  {
                                        (m_node_coord[inode].x- Xb.x) +
                                    (m_node_coord[inode].y- Xb.y) *
                                        (m_node_coord[inode].y - Xb.y)+
-                                   (m_node_coord[inode].z- Xb.z) *
+                                   (3-dim)*(m_node_coord[inode].z- Xb.z) *
                                        (m_node_coord[inode].z - Xb.z));
       if (rnode < rmin) isCenterCell = true;
     }

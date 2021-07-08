@@ -64,6 +64,7 @@ function compare_results {
   if ! diff -r output/depouillement "$reference_dir/output/depouillement" > /dev/null 2>&1; then
       echo "Test failure! Output is different from reference"
       echo ${test_dir} >>  list_of_cases_to_change
+      diff -r output/depouillement "$reference_dir/output/depouillement" > DIFF.txt
     return_code=1
   fi
   return ${return_code}

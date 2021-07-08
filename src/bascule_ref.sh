@@ -51,6 +51,8 @@ for cas in $(cat list_of_cases_to_change.txt); do
 	    rm -rf $cas_dir/output
 	    mv output $cas_dir/output
 	    rm -rf $cas_dir/output/listing*
+	    rm -rf $cas_dir/output/checkpoint_info.xml
+	    rm -rf $cas_dir/output/protection
 	fi
     fi
 done

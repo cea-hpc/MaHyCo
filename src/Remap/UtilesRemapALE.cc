@@ -50,7 +50,7 @@ void RemapALEService::computeLissage(){
   Real3 coordphi, coordpsi, delta;
   Real jacob;
   Real alpha, beta, gamma, weight, dplmax, dplmin;
-  Real tauxdlp = 0.0025;
+  Real tauxdlp = 0.00025;
   Real3 cc = {0.5, 0.5, 0.};
   
   
@@ -60,7 +60,7 @@ void RemapALEService::computeLissage(){
   if (! options()->getIsEulerScheme()) {
    NodeGroup Nodes_to_relax = mesh()->nodeFamily()->findGroup("NodeToRelax");
    pinfo() << " nombre de noeuds à relaxer " << Nodes_to_relax.size();
-   for( Integer iter=0; iter< 50; ++iter){
+   for( Integer iter=0; iter< options()->nbIterationWinslow ; ++iter){
     ENUMERATE_NODE(inode, Nodes_to_relax){
       Node n1 = *inode;
       if (n1.nbCell() == 4) {

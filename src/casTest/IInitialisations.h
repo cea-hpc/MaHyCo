@@ -41,10 +41,10 @@ public:
   /** 
    *  Initialise les cas test en mono ou multimatériau
    */
-  virtual void initMatMono()  = 0;
-  virtual void initVarMono() = 0;
-  virtual void initMat()  = 0;
-  virtual void initVar() = 0;
+  virtual void initMatMono(Integer dim)  = 0;
+  virtual void initVarMono(Integer dim) = 0;
+  virtual void initMat(Integer dim)  = 0;
+  virtual void initVar(Integer dim) = 0;
   virtual bool hasReverseOption() = 0;
   virtual Real getReverseParameter() = 0;
 };

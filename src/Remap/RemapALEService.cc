@@ -12,7 +12,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     synchronizeUremap();  
     resizeRemapVariables( nb_vars_to_project,  nb_env);
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-    m_cartesian_mesh->computeDirections();
+    // m_cartesian_mesh->computeDirections();
     info() << "creation liste des noeuds à relaxer";
     ComputeNodeGroupToRelax();
     
@@ -53,7 +53,6 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       for( NodeEnumerator inode(c.nodes()); inode.hasNext(); ++inode){
         m_node_mass[inode] += contrib_node_mass; 
       }
-      pinfo() << c.localId() << " " << m_density_l[c] << " donne " << m_density[c];
     }
     if (withDualProjection) {
       // Calcul des masses partiels et des flux de masses utilisant 
@@ -113,7 +112,6 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       
       ENUMERATE_NODE(inode, allNodes()){
         Node node= *inode;
-       // pinfo() << node.localId() << " AV P " << m_velocity[node].y;
         m_velocity[node].y *= m_node_mass_l[node];
       }
       
@@ -126,7 +124,6 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       ENUMERATE_NODE(inode, allNodes()){
         Node node= *inode;
         m_velocity[node].y /= m_node_mass[node];
-       // pinfo() << node.localId() << " AP P " << m_velocity[node].y;
       }    
        
       /************************************************************/ 
@@ -142,9 +139,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         
       ENUMERATE_CELL(icell,allCells()){
         Cell c = *icell;
-        info() << " cell " << c.localId() << " AV energ= " << m_internal_energy[c];
         m_internal_energy[c] = m_phi[c] / m_density[c];
-        info() << " cell " << c.localId() << " AP energ= " << m_internal_energy[c];
       }
     
     }

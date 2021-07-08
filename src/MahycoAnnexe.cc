@@ -79,7 +79,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
   
   info() << " Initialisation du cas test";
   
-  options()->casModel()->initMat();
+  options()->casModel()->initMat(m_dimension);
       
   m_mat1 = mm->environments()[0]->materials()[0];
   m_mat2 = mm->environments()[1]->materials()[0];

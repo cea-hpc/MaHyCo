@@ -1,6 +1,6 @@
 #include "SODService.h"
 
-void SODService::initMatMono()  {
+void SODService::initMatMono(Integer dim)  {
     
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
@@ -8,7 +8,7 @@ void SODService::initMatMono()  {
   }
 }
 
-void SODService::initVarMono()  {
+void SODService::initVarMono(Integer dim)  {
     
   // mise à zero puis initialisation des fractions de masses et volumes
   m_mass_fraction.fill(0.0);
@@ -38,13 +38,13 @@ void SODService::initVarMono()  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void SODService::initMat()  {
+void SODService::initMat(Integer dim)  {
     
   info() << options()->casTest;
   if (options()->casTest == SodCaseX ||
        options()->casTest == SodCaseY ||
        options()->casTest == SodCaseZ) {
-        initMatMono();
+        initMatMono(dim);
         return;
   }
   ENUMERATE_CELL(icell, allCells()) {
@@ -63,13 +63,13 @@ void SODService::initMat()  {
   }
 }
 
-void SODService::initVar()  {
+void SODService::initVar(Integer dim)  {
     
     
  if (options()->casTest == SodCaseX ||
        options()->casTest == SodCaseY ||
        options()->casTest == SodCaseZ) {
-        initVarMono();
+        initVarMono(dim);
         return;
  }
  pinfo() << " on rentre ici"; 

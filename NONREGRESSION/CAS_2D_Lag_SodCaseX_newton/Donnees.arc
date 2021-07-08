@@ -36,7 +36,7 @@
   </mesh>
 
   <arcane-checkpoint>
-    <period>10</period>
+    <period>0</period>
     <!-- Mettre '0' si on souhaite ne pas faire de protections a la fin du calcul -->
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />

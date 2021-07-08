@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <service name="RIDER" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service RIDER</description>
+<description>Jeu de données du service RIDER</description>
   <interface name="IInitialisations" />
 
 	<variables>

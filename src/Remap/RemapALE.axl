@@ -166,6 +166,10 @@
   <simple name="angle-criteria" type="real" default="-1.">
     <description>Critere de remaillage d'un noeud sur le sinus des angles de l'élément </description>
   </simple>
+  <!-- - - - - - nombre d'iteration de winslow - - - - -->
+  <simple name="nb-iteration-winslow" type="integer" default="3">
+    <description>Nombre d'itération de lissage du maillage</description>
+  </simple>
   <!-- - - - - projection-Euler - - - - -->
   <simple name="is-euler-scheme" type="bool" default="false">
     <description> projection type Euler (retour sur maillage initial </description>

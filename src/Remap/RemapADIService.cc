@@ -14,7 +14,6 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     Integer idir(-1);
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-    m_cartesian_mesh->computeDirections();
    
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
@@ -43,7 +42,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       }
     }
     m_sens_projection = m_sens_projection()+1;
-    m_sens_projection = m_sens_projection()%(mesh()->dimension();
+    m_sens_projection = m_sens_projection()%(mesh()->dimension());
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);

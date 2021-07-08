@@ -1,17 +1,17 @@
 #include "RIDERService.h"
 
 
-void RIDERService::initMatMono()  {
+void RIDERService::initMatMono(Integer dim)  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0;
   }
 }
-void RIDERService::initMat()  {
+void RIDERService::initMat(Integer dim)  {
     
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
-    initMatMono();
+    initMatMono(dim);
     return;
   } 
   Real3 Xb;
@@ -51,7 +51,7 @@ void RIDERService::initMat()  {
     }
   }
 }
-void RIDERService::initVarMono()  {
+void RIDERService::initVarMono(Integer dim)  {
     
   Real3 Xb;
   if (options()->casTest < MonoRiderRotation) 
@@ -133,10 +133,10 @@ void RIDERService::initVarMono()  {
     m_velocity_n[inode] = m_velocity[inode];
   }
 }
-void RIDERService::initVar()  {
+void RIDERService::initVar(Integer dim)  {
 
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
-    initVarMono();
+    initVarMono(dim);
     return;
   } 
   Real3 Xb;

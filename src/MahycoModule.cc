@@ -44,6 +44,7 @@ hydroStartInit()
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   m_dimension = mesh()->dimension(); 
+  m_cartesian_mesh->computeDirections();
   
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
@@ -64,7 +65,7 @@ hydroStartInit()
   
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
-  options()->casModel()->initVar();
+  options()->casModel()->initVar(m_dimension);
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -197,6 +198,7 @@ hydroContinueInit()
     // en reprise 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     m_dimension = mesh()->dimension(); 
+    m_cartesian_mesh->computeDirections();
     
     mm = IMeshMaterialMng::getReference(defaultMesh());
   
@@ -838,6 +840,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
         
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
             {
+              m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
               c = m_sound_speed[ev];
@@ -886,6 +889,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
         
           while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1))>=epsilon)
 	        {
+              m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
               c = m_sound_speed[ev];

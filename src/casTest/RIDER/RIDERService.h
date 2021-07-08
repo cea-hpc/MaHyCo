@@ -42,10 +42,10 @@ public:
   virtual ~RIDERService() {};
 
 public:
-  virtual void initMatMono();
-  virtual void initVarMono();
-  virtual void initMat();
-  virtual void initVar();
+  virtual void initMatMono(Integer dim);
+  virtual void initVarMono(Integer dim);
+  virtual void initMat(Integer dim);
+  virtual void initVar(Integer dim);
   virtual bool hasReverseOption();
   virtual Real getReverseParameter();
 };
