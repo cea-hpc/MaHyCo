@@ -43,7 +43,9 @@ void SEDOVService::initVarMono(Integer dim)  {
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(0.06);  // depot sur 1 maille
+  Real rmin(1.e-10);  // depot sur 1 maille
+  Real rnode(0.);
+  
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -51,23 +53,27 @@ void SEDOVService::initVarMono(Integer dim)  {
     bool isCenterCell = false;  
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
-    m_pressure[cell] = 0.4 * rhoInit * e1;
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
+    m_pressure[cell] = 0.4 * rhoInit * e1;
     Real vol = m_cell_volume[cell]; 
     ENUMERATE_NODE(inode, cell.nodes()) {
-      Real rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+        if (dim == 3) rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
                                        (m_node_coord[inode].x- Xb.x) +
                                    (m_node_coord[inode].y- Xb.y) *
                                        (m_node_coord[inode].y - Xb.y)+
-                                       (3-dim)*(m_node_coord[inode].z- Xb.z) *
+                                   (m_node_coord[inode].z- Xb.z) *
                                        (m_node_coord[inode].z - Xb.z));
+        else rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+                                       (m_node_coord[inode].x- Xb.x) +
+                                   (m_node_coord[inode].y- Xb.y) *
+                                       (m_node_coord[inode].y - Xb.y));
       if (rnode < rmin) isCenterCell = true;
     }
     if (isCenterCell) { 
       pinfo() << rmin << " cell " << cell.localId();
       m_internal_energy[cell] += total_energy_deposit / vol;
-      m_pressure[cell] = 0.4 * rhoInit * (e1 + total_energy_deposit / vol);
+      m_pressure[cell] = 0.4 * rhoInit * m_internal_energy[cell];
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
@@ -87,30 +93,36 @@ void SEDOVService::initVar(Integer dim)  {
   Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
-  Real rmin(0.06);  // depot sur 1 maille
-    
+  Real rmin(1.e-10);  // depot sur 1 maille
+  Real rnode(0.);
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     Real rmax(0.);
     bool isCenterCell = false;  
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
-    m_pressure[cell] = 0.4 * rhoInit * e1;
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
+    m_pressure[cell] = 0.4 * rhoInit * e1;
     Real vol = m_cell_volume[cell];
     ENUMERATE_NODE(inode, cell.nodes()) {
-      Real rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+        if (dim == 3) rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
                                        (m_node_coord[inode].x- Xb.x) +
                                    (m_node_coord[inode].y- Xb.y) *
                                        (m_node_coord[inode].y - Xb.y)+
-                                   (3-dim)*(m_node_coord[inode].z- Xb.z) *
+                                   (m_node_coord[inode].z- Xb.z) *
                                        (m_node_coord[inode].z - Xb.z));
+        else rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+                                       (m_node_coord[inode].x- Xb.x) +
+                                   (m_node_coord[inode].y- Xb.y) *
+                                       (m_node_coord[inode].y - Xb.y));
+      
       if (rnode < rmin) isCenterCell = true;
     }
     if (isCenterCell) { 
       m_internal_energy[cell] += total_energy_deposit / vol;
-      m_pressure[cell] = 0.4 * rhoInit * (e1 + total_energy_deposit / vol);
+      m_pressure[cell] = 0.4 * rhoInit * m_internal_energy[cell];
     }
   }
   ENUMERATE_NODE(inode, allNodes()){

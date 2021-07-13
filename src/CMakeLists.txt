@@ -94,6 +94,7 @@ set( TEST_NAMES_PARA_8
 		"CAS_RiderVortexTimeReverse"
 		"CAS_MonoRiderTy_pb_simple_superbee"
 		"CAS_MonoRiderTy_pb_mixte_superbee_vanleer"
+		"CAS_Sedov"
 		)
 set( TEST_NAMES
 		"CAS_Lag_BiSodCaseX"
@@ -107,6 +108,7 @@ set( TEST_NAMES
 		"CAS_MonoRiderT45"
 		"CAS_MonoRiderTy"
 		"CAS_2D_Lag_SodCaseX_newton"
+		"CAS_2D_Sedov"
 		)
 
 set( TEST_NAMES_PR
