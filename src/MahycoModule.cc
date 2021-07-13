@@ -560,7 +560,7 @@ InitGeometricValues()
     ENUMERATE_FACE (iFace, allFaces()) {
       Face face = *iFace;
       m_face_normal[iFace].x = (m_node_coord[face.node(1)].y - m_node_coord[face.node(0)].y); 
-      m_face_normal[iFace].y = -(m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
+      m_face_normal[iFace].y = (m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
       m_face_normal[iFace] /= m_face_normal[iFace].abs();
     }
   }
@@ -1050,7 +1050,7 @@ computeDeltaT()
     new_dt = parallelMng()->reduce(Parallel::ReduceMin, new_dt);
     
     // respect de taux de croissance max
-    new_dt = math::min(new_dt, 1.05*m_global_old_deltat());
+    new_dt = math::min(new_dt, 1.05 * m_global_old_deltat());
     // respect de la valeur max imposée par le fichier de données .plt
     debug() << " nouveau pas de temps " << new_dt << " par " << cell_id << 
         " (avec " << nbenvcell << " envs) avec " << cc << " " << ll << " et min " << minimum_aux;

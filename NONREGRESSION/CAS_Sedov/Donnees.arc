@@ -6,7 +6,7 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>100</output-period>
+    <output-period>10</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -41,7 +41,7 @@
   </mesh>
 
   <arcane-checkpoint>
-    <period>500</period>
+    <period>0</period>
     <!-- Mettre '0' si on souhaite ne pas faire de protections a la fin du calcul -->
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
@@ -69,16 +69,24 @@
     </eos-model> 
   </environment>
    
-   <cas-test>11</cas-test>
-    <pseudo-centree>0</pseudo-centree>
+  
+   <cas-model name="SEDOV">
+   <cas-test>1</cas-test>
+   </cas-model>
+   <remap name="RemapADI">
+    <!-- <is-euler-scheme>true</is-euler-scheme>
+    <volum-criteria>0.8</volum-criteria>
+    <nb-iteration-winslow>10</nb-iteration-winslow> -->
     <ordre-projection>2</ordre-projection>
+   </remap>
     <schema-csts>0</schema-csts>
+    <pseudo-centree>0</pseudo-centree>
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.01</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
-    <final-time>1.</final-time>
+    <final-time>1.e-3</final-time>
     
     <boundary-condition>
       <surface>XMIN</surface>

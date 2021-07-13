@@ -6,7 +6,7 @@ bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPe
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
 bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
 /**
- *******************************************************************************/
+ **************************************-*****************************************/
 void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
     
     synchronizeUremap();  
@@ -14,7 +14,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     Integer idir(-1);
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
-   
+    
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
@@ -166,7 +166,8 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
         limiter = options()->projectionLimiteurPureId;
       // calcul de m_grad_phi[cell] 
       computeAndLimitGradPhi(limiter, frontFace, backFace, cell, frontcell, backcell, nb_vars_to_project);
-  
+      
+
       if (options()->projectionPenteBorne == 1) {
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(flFaces);
         Real Flux_sortant_ar = math::dot(m_outer_face_normal[cell][indexbackface], dirproj) * m_face_normal_velocity[backFace];
@@ -371,11 +372,13 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
                 flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
             }
+            
           } else { 
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
             }
+            
          }
         }
       }

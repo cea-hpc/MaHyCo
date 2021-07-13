@@ -28,11 +28,12 @@ computeFaceQuantitesForRemap()
     m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
     }
   } else {
+     Real3 tempveclen;
      ENUMERATE_FACE (iFace, allFaces()) {
         Face face = *iFace;
-        m_face_length_lagrange[face] = m_node_coord[face.node(1)] - m_node_coord[face.node(0)]; 
-        m_face_length_lagrange[face][0] = math::abs(m_face_length_lagrange[face][1]);
-        m_face_length_lagrange[face][1] = math::abs(m_face_length_lagrange[face][0]);
+        tempveclen = m_node_coord[face.node(1)] - m_node_coord[face.node(0)]; 
+        m_face_length_lagrange[face][0] = math::abs(tempveclen.y);
+        m_face_length_lagrange[face][1] = math::abs(tempveclen.x);
         m_face_length_lagrange[face][2] = 0.;
     }
   }

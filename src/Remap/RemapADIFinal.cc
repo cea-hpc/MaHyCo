@@ -138,7 +138,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       m_est_mixte[cell] = 0;
       m_est_pure[cell] = imatpure;
     }
-     // info() << " cell " << cell.localId() << " fin du trie des mailles mixtes " << vol_nplus1[0] << " et " << vol_nplus1[1] << " et " << masset;
+    
     // on ne recalcule par les mailles à masses nulles - cas advection
     // on enleve les petits fractions de volume aussi sur la fraction
     // massique et on normalise
@@ -215,6 +215,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     m_internal_energy[cell] = energie_nplus1;
     // pseudoviscosité
     m_pseudo_viscosity[cell] = pseudo_nplus1;
+    
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;
       index_env = ev.environmentId();  
