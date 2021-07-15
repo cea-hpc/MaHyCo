@@ -16,6 +16,7 @@ configure_file(${EXAMPLE_NAME}.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 arcane_add_arcane_libraries_to_target(${EXAMPLE_NAME})
 target_include_directories(${EXAMPLE_NAME} PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 
+
 # ----------------------------------------------------------------------------
 # Local Variables:
 # tab-width: 2

@@ -63,3 +63,28 @@ pour 3 process MPI et 4 threads (soit 12 sous-domaines)
  export ARCANE_PARALLEL_SERVICE=MpiThread
  export ARCANE_NB_THREAD=4
  mpiexec -n 3 ./Mahyco Mahyco.arc
+
+
+---------------------------
+MEMO POUR LES ACCELERATEURS
+---------------------------
+
+Pour le support des accélérateurs dans Arcane, on suppose que l'on compile et installe Arcane dans un répertoire dédié "Arcane_ROOT".
+Puis on compile Mahyco via cmake avec les commandes suivantes : 
+
+rm -rf build
+mkdir build
+cd build
+# Build with makefiles in parallel
+cmake ..  -DWANT_CUDA=TRUE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT="/your/path/to/installed/arcane"
+#cmake ..  
+cmake --build . -- -j16
+# Build with Ninja (natively parallel)
+#cmake .. -G Ninja -DARCANE_WANT_CUDA=ON
+#cmake --build . 
+cmake --build . --target test
+
+
+
+
+
