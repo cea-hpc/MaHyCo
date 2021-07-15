@@ -65,6 +65,7 @@ pour 3 process MPI et 4 threads (soit 12 sous-domaines)
  mpiexec -n 3 ./Mahyco Mahyco.arc
 
 
+
 ---------------------------
 MEMO POUR LES ACCELERATEURS
 ---------------------------
