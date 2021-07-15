@@ -66,6 +66,8 @@ pour 3 process MPI et 4 threads (soit 12 sous-domaines)
 
 
 
+
+
 ---------------------------
 MEMO POUR LES ACCELERATEURS
 ---------------------------
