@@ -5,8 +5,8 @@ using namespace Arcane;
 int
 main(int argc,char* argv[])
 {
-  auto& app_info = ArcaneLauncher::applicationInfo();
-  app_info.setCommandLineArguments(CommandLineArguments(&argc,&argv));
-  app_info.setCodeName("Mahyco");
+  ArcaneLauncher::init(CommandLineArguments(&argc,&argv));
+  auto& app_build_info = ArcaneLauncher::applicationBuildInfo();
+  app_build_info.setCodeName("Mahyco");
   return ArcaneLauncher::run();
 }

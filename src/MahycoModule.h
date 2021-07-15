@@ -56,6 +56,14 @@
 #include "arcane/cea/CartesianConnectivity.h"
 // fin ajout au PIF
 
+// Ajout pour accélérateur
+#include "arcane/IApplication.h"
+#include "arcane/accelerator/Reduce.h"
+#include "arcane/accelerator/Runner.h"
+#include "arcane/accelerator/Views.h"
+#include "arcane/UnstructuredMeshConnectivity.h"
+//
+
 #include "Mahyco_axl.h"
 
 // Pour les définitions, il faut finir par GCC car Clang et ICC définissent
@@ -88,6 +96,54 @@
 #endif
 
 using namespace Arcane;
+
+/*---------------------------------------------------------------------------*/
+/* Pour les accélérateurs                                                    */
+/*---------------------------------------------------------------------------*/
+
+namespace ax = Arcane::Accelerator;
+
+template<typename ItemType>
+class ItemRunCommand
+{
+ public:
+  ItemRunCommand(ax::RunCommand& command,const ItemVectorViewT<ItemType>& items)
+  : m_command(command), m_items(items)
+  {
+  }
+  ax::RunCommand& m_command;
+  ItemVectorViewT<ItemType> m_items;
+};
+
+template<typename ItemType> ItemRunCommand<ItemType>
+operator<<(ax::RunCommand& command,const ItemGroupT<ItemType>& items)
+{
+  return ItemRunCommand<ItemType>(command,items.view());
+}
+
+template<typename ItemType> ItemRunCommand<ItemType>
+operator<<(ax::RunCommand& command,const ItemVectorViewT<ItemType>& items)
+{
+  return ItemRunCommand<ItemType>(command,items);
+}
+
+template<typename ItemType,typename Lambda>
+void operator<<(ItemRunCommand<ItemType>&& nr,Lambda f)
+{
+  run(nr.m_command,nr.m_items,std::forward<Lambda>(f));
+}
+template<typename ItemType,typename Lambda>
+void operator<<(ItemRunCommand<ItemType>& nr,Lambda f)
+{
+  run(nr.m_command,nr.m_items,std::forward<Lambda>(f));
+}
+
+#define RUNCOMMAND_ENUMERATE(ItemNameType,iter_name,item_group)  \
+  item_group << [=] ARCCORE_HOST_DEVICE (ItemNameType##LocalId iter_name)
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
 
 /**
  * Représente un module d'hydrodynamique lagrangienne très simplifié :
@@ -125,6 +181,10 @@ class MahycoModule
     double inf, sup;
   };
  public:
+
+  //! Initialise l'environnement pour les accélérateurs
+  void accBuild() override;
+
   /** 
    *  Initialise le module. 
    *  L'initialisation comporte deux parties distinctes:
@@ -387,6 +447,10 @@ class MahycoModule
   Integer my_rank;
   Integer m_dimension;
  
+  // Pour l'utilisation des accélérateurs
+  ax::Runner m_runner;
+
+  UnstructuredMeshConnectivityView m_connectivity_view;
 };
 
 #endif

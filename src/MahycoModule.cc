@@ -8,9 +8,21 @@
 #include <arcane/geometry/IGeometry.h>
 #include <arcane/mesh/GhostLayerMng.h>
 
+#include <arcane/AcceleratorRuntimeInitialisationInfo.h>
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+accBuild()
+{
+  info() << "Using MaHyCo with accelerator";
+  IApplication* app = subDomain()->application();
+  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -18,6 +30,8 @@ using namespace Arcane::Materials;
 void MahycoModule::
 hydroStartInit()
 {
+  m_connectivity_view.setMesh(this->mesh());
+
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
    my_rank = m_parallel_mng->commRank();
    

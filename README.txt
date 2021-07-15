@@ -76,11 +76,14 @@ rm -rf build
 mkdir build
 cd build
 # Build with makefiles in parallel
-cmake ..  -DWANT_CUDA=TRUE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT="/your/path/to/installed/arcane"
+cmake ..  -DWANT_CUDA=TRUE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT=/your/path/to/installed/arcane -DCMAKE_CUDA_COMPILER=/chemin/vers/bin/nvcc
 #cmake ..  
 cmake --build . -- -j16
 # Build with Ninja (natively parallel)
 #cmake .. -G Ninja -DARCANE_WANT_CUDA=ON
 #cmake --build . 
 cmake --build . --target test
+
+Execution sur une machine avec accélérateur :
+ /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
 

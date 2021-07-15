@@ -145,6 +145,7 @@
 
 
 <entry-points>
+  <entry-point method-name="accBuild" name="AccBuild" where="build" property="none" />
   <entry-point method-name="hydroStartInit" name="HydroStartInit" where="start-init" property="none" />
   <entry-point method-name="hydroContinueInit" name="HydroContinueInit" where="continue-init" property="none" />
   <entry-point method-name="computeCellMass" name="ComputeCellMass" where="start-init" property="none" />
