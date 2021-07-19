@@ -1,5 +1,6 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
+#include "AcceleratorUtils.h"
 
 /**
  *******************************************************************************
@@ -18,6 +19,7 @@
  */
 void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
   NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
@@ -243,6 +245,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     // Phi energie
     m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
   }
+  PROF_ACC_END;
 }
 /*
  *******************************************************************************

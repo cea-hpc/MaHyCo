@@ -15,6 +15,7 @@
 void MahycoModule::
 computeFaceQuantitesForRemap()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeFaceQuantitesForRemap()";
   bool csts = options()->schemaCsts();  
   Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
@@ -53,6 +54,7 @@ computeFaceQuantitesForRemap()
   }
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -90,6 +92,7 @@ computeFaceQuantitesForRemap()
  */
 void MahycoModule::computeVariablesForRemap()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeVariablesForRemap()";
   Integer nb_total_env = mm->environments().size();
   Integer index_env;
@@ -163,6 +166,7 @@ void MahycoModule::computeVariablesForRemap()
      m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs2();
   }
   
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -176,6 +180,7 @@ void MahycoModule::computeVariablesForRemap()
 void MahycoModule::remap() {
     
   if (options()->withProjection) {
+    PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans remap()";
     
     Integer withDualProjection = 0;
@@ -215,5 +220,6 @@ void MahycoModule::remap() {
       }
       computePressionMoyenne();
    }
+    PROF_ACC_END;
   }
 }

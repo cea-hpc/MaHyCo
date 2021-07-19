@@ -1,5 +1,6 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
+#include "AcceleratorUtils.h"
 
 Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
@@ -9,6 +10,7 @@ bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
  **************************************-*****************************************/
 void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
     
+    PROF_ACC_BEGIN(__FUNCTION__);
     synchronizeUremap();  
     synchronizeDualUremap();
     
@@ -46,6 +48,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
+    PROF_ACC_END;
 }
 /**
  *******************************************************************************/
@@ -76,6 +79,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  *******************************************************************************
  */
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
   m_h_cell_lagrange.fill(0.0);
   
@@ -104,6 +108,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -118,6 +123,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
  */
 void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell()";
   Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
@@ -222,6 +228,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
       }
     }     
   }
+  PROF_ACC_END;
 }
 /**
 *****************************************************************************
@@ -236,6 +243,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
 */
 void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
@@ -334,6 +342,7 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
      }
   }
   m_phi_face.synchronize();      
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
@@ -348,6 +357,7 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
  */
 void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
     
+    PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans computeUremap()";
     Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
@@ -473,6 +483,7 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
       m_est_pure[cell] = imatpure;
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************

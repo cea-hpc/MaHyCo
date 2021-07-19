@@ -36,6 +36,33 @@ target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
 
+# Pour la gestion des accélérateurs et des sources à compiler avec le
+# compilateur pour accélérateur
+if(WANT_CUDA)
+  enable_language(CUDA)
+  find_package(CUDAToolkit REQUIRED)
+  set_source_files_properties(MahycoModule.cc 
+      PrepareRemap.cc 
+      Remap/DualPhaseRemap.cc
+      Remap/RemapADIFinal.cc
+      Remap/RemapADIService.cc
+      Remap/RemapALEService.cc
+      Remap/Remap-ordre-3.cc
+      Remap/UtilesRemapALE.cc
+      Remap/UtilesRemap.cc
+      PROPERTIES LANGUAGE CUDA)
+  target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
+endif()
+
+# Pour la gestion du profiling sur accélérateur
+option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
+if (WANT_PROF_ACC)
+  target_compile_definitions(${EXAMPLE_NAME} PRIVATE PROF_ACC)
+  target_compile_definitions(PerfectGas PRIVATE PROF_ACC)
+  target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
+  target_compile_definitions(Remap PRIVATE PROF_ACC)
+endif()
+
 
 target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap)
 

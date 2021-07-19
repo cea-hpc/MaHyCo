@@ -76,7 +76,8 @@ rm -rf build
 mkdir build
 cd build
 # Build with makefiles in parallel
-cmake ..  -DWANT_CUDA=TRUE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT=/your/path/to/installed/arcane -DCMAKE_CUDA_COMPILER=/chemin/vers/bin/nvcc
+cmake ..  -DWANT_CUDA=TRUE -DWANT_PROF_ACC=FALSE -DCMAKE_BUILD_TYPE=Debug -DArcane_ROOT=/your/path/to/installed/arcane -DCMAKE_CUDA_COMPILER=/chemin/vers/bin/nvcc
+[Pour profiling avec nvtx : -DWANT_PROF_ACC=TRUE]
 #cmake ..  
 cmake --build . -- -j16
 # Build with Ninja (natively parallel)

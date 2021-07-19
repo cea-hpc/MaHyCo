@@ -16,13 +16,6 @@ configure_file(${EXAMPLE_NAME}.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 arcane_add_arcane_libraries_to_target(${EXAMPLE_NAME})
 target_include_directories(${EXAMPLE_NAME} PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
 
-if(WANT_CUDA)
-  enable_language(CUDA)
-  find_package(CUDAToolkit REQUIRED)
-  set_source_files_properties(MahycoModule.cc PROPERTIES LANGUAGE CUDA)
-  target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
-endif()
-
 # ----------------------------------------------------------------------------
 # Local Variables:
 # tab-width: 2

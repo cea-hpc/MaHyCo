@@ -1,5 +1,6 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
+#include "AcceleratorUtils.h"
 
 /**
  *******************************************************************************
@@ -17,6 +18,7 @@
  */
 void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans remapVariables";
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -306,6 +308,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       }
     }
   }
+  PROF_ACC_END;
 }
 /**
  *******************************************************************************
