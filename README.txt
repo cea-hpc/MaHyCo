@@ -88,3 +88,11 @@ cmake --build . --target test
 Execution sur une machine avec accélérateur :
  /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
 
+Execution avec instrumentation nsys [si projet configuré avec
+-DWANT_PROF_ACC=TRUE, prise en compte des points d'entrée] :
+ nsys profile --stats=true --force-overwrite true -o mahyco /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+
+Exécution avec instrumentation nvprof (sortie ASCII dans mahyco.lognvprof) 
+[si projet configuré avec -DWANT_PROF_ACC=TRUE, prise en compte des points d'entrée] :
+ nvprof --print-api-trace --print-gpu-trace --log-file mahyco.lognvprof /chemin/vers/build/src/Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+
