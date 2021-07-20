@@ -636,36 +636,45 @@ computeGeometricValues()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
-  // Copie locale des coordonnées des sommets d'une maille
-  Real3 coord[8];
-  // Coordonnées des centres des faces
-  Real3 face_coord[6];
   
   Real racine = m_dimension == 2 ? .5  : 1./3. ;
   m_node_coord.synchronize();
   if ( m_dimension == 3) {
-    ENUMERATE_CELL(icell, allCells()){
-        Cell cell = * icell;
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+
+    auto in_node_coord = ax::viewIn(command,m_node_coord);
+    auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
+
+    auto cnc = m_connectivity_view.cellNode();
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
         // Recopie les coordonnées locales (pour le cache)
-        for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
-        coord[inode.index()] = m_node_coord[inode];
+        Real3 coord[8];
+        Int32 index=0;
+        for( NodeLocalId nid : cnc.nodes(cid) ){
+          coord[index]=in_node_coord[nid];
+          ++index;
         }
         // Calcul les coordonnées des centres des faces
-        face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
-        face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
-        face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
-        face_coord[3] = 0.25 * (coord[4] + coord[5] + coord[6] + coord[7]);
-        face_coord[4] = 0.25 * (coord[1] + coord[2] + coord[6] + coord[5]);
-        face_coord[5] = 0.25 * (coord[2] + coord[3] + coord[7] + coord[6]);
+        Real3 face_coord[6] = {
+          0.25 * (coord[0] + coord[3] + coord[2] + coord[1]),
+          0.25 * (coord[0] + coord[4] + coord[7] + coord[3]),
+          0.25 * (coord[0] + coord[1] + coord[5] + coord[4]),
+          0.25 * (coord[4] + coord[5] + coord[6] + coord[7]),
+          0.25 * (coord[1] + coord[2] + coord[6] + coord[5]),
+          0.25 * (coord[2] + coord[3] + coord[7] + coord[6])
+        };
 
         // Calcule les résultantes aux sommets
-        computeCQs(coord, face_coord, cell);
-    }
+        computeCQs(coord, face_coord, out_cell_cqs[cid]);
+    };
   } else {
     Real3 npc[5];
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;
       // Recopie les coordonnées locales (pour le cache)
+      Real3 coord[8];
       for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
         coord[inode.index()] = m_node_coord[inode];
       }
@@ -704,10 +713,12 @@ computeGeometricValues()
         if (options()->longueurCaracteristique() == "faces-opposees")
         {
             // Recopie les coordonnées locales (pour le cache)
+            Real3 coord[8];
             for (NodeEnumerator inode(cell.nodes()); inode.index() < 8; ++inode) {
                 coord[inode.index()] = m_node_coord[inode];
             }
             // Calcul les coordonnées des centres des faces
+            Real3 face_coord[6];
             face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
             face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
             face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
@@ -1182,7 +1193,7 @@ computeDeltaT()
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 inline void MahycoModule::
-computeCQs(Real3 node_coord[8], Real3 face_coord[6], const Cell & cell)
+computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs)
 {
   const Real3 c0 = face_coord[0];
   const Real3 c1 = face_coord[1];
@@ -1228,21 +1239,21 @@ computeCQs(Real3 node_coord[8], Real3 face_coord[6], const Cell & cell)
   const Real3 n6a07 = 0.5 * math::vecMul(node_coord[6] - c5, node_coord[2] - c5);
 
   // Calcul des résultantes aux sommets :
-  m_cell_cqs[cell] [0] = (5. * (n1a01 + n1a04 + n2a04 + n2a05 + n3a05 + n3a01) +
+  out_cqs[0] = (5. * (n1a01 + n1a04 + n2a04 + n2a05 + n3a05 + n3a01) +
                           (n1a02 + n1a03 + n2a08 + n2a12 + n3a06 + n3a09)) * (1. / 12.);
-  m_cell_cqs[cell] [1] = (5. * (n1a01 + n1a02 + n3a01 + n3a06 + n5a06 + n5a02) +
+  out_cqs[1] = (5. * (n1a01 + n1a02 + n3a01 + n3a06 + n5a06 + n5a02) +
                           (n1a04 + n1a03 + n3a09 + n3a05 + n5a10 + n5a07)) * (1. / 12.);
-  m_cell_cqs[cell] [2] = (5. * (n1a02 + n1a03 + n5a07 + n5a02 + n6a07 + n6a03) +
+  out_cqs[2] = (5. * (n1a02 + n1a03 + n5a07 + n5a02 + n6a07 + n6a03) +
                           (n1a01 + n1a04 + n5a06 + n5a10 + n6a11 + n6a08)) * (1. / 12.);
-  m_cell_cqs[cell] [3] = (5. * (n1a03 + n1a04 + n2a08 + n2a04 + n6a08 + n6a03) +
+  out_cqs[3] = (5. * (n1a03 + n1a04 + n2a08 + n2a04 + n6a08 + n6a03) +
                           (n1a01 + n1a02 + n2a05 + n2a12 + n6a07 + n6a11)) * (1. / 12.);
-  m_cell_cqs[cell] [4] = (5. * (n2a05 + n2a12 + n3a05 + n3a09 + n4a09 + n4a12) +
+  out_cqs[4] = (5. * (n2a05 + n2a12 + n3a05 + n3a09 + n4a09 + n4a12) +
                           (n2a08 + n2a04 + n3a01 + n3a06 + n4a10 + n4a11)) * (1. / 12.);
-  m_cell_cqs[cell] [5] = (5. * (n3a06 + n3a09 + n4a09 + n4a10 + n5a10 + n5a06) +
+  out_cqs[5] = (5. * (n3a06 + n3a09 + n4a09 + n4a10 + n5a10 + n5a06) +
                           (n3a01 + n3a05 + n4a12 + n4a11 + n5a07 + n5a02)) * (1. / 12.);
-  m_cell_cqs[cell] [6] = (5. * (n4a11 + n4a10 + n5a10 + n5a07 + n6a07 + n6a11) +
+  out_cqs[6] = (5. * (n4a11 + n4a10 + n5a10 + n5a07 + n6a07 + n6a11) +
                           (n4a12 + n4a09 + n5a06 + n5a02 + n6a03 + n6a08)) * (1. / 12.);
-  m_cell_cqs[cell] [7] = (5. * (n2a08 + n2a12 + n4a12 + n4a11 + n6a11 + n6a08) +
+  out_cqs[7] = (5. * (n2a08 + n2a12 + n4a12 + n4a11 + n6a11 + n6a08) +
                           (n2a04 + n2a05 + n4a09 + n4a10 + n6a07 + n6a03)) * (1. / 12.);
 }
 

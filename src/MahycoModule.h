@@ -354,7 +354,7 @@ class MahycoModule
    * La méthode utilisée est celle du découpage en quatre triangles.
    * Méthode appelée par le point d'entrée \c computeGeometricValues()
    */
-  inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],const Cell& cell);
+  ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
   /**
