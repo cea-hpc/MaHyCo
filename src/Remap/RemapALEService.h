@@ -55,6 +55,7 @@ public:
     double inf, sup;
   };
   ICartesianMesh* m_cartesian_mesh;
+  Materials::IMeshMaterialMng* mm;
 
 public:
    /**
@@ -83,9 +84,10 @@ private:
   void ComputeNodeGroupToRelax();
   void computeLissage();
   void computeVolumes();
+  void computeNewEnvCells(Integer index_env);
   void computeFlux();
-  void computeApproPhi(MaterialVariableCellArrayReal, VariableCellArrayReal);
-  void computeNewPhi(MaterialVariableCellReal, MaterialVariableCellReal, VariableCellArrayReal);
+  void computeApproPhi(Integer index_env, VariableCellArrayReal, VariableCellArrayReal);
+  void computeNewPhi(Integer index_env, VariableCellReal, VariableCellReal, VariableCellArrayReal);
   
   
   Real m_arithmetic_thresold = 1.e-300;

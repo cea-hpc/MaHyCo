@@ -29,21 +29,27 @@
   <!-- FRACVOL -->
   <variable field-name="fracvol" name="FracVol" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- FRACVOL -->
+  <variable field-name="fracvol_l" name="FracVolLagrange" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME	 -->
   <variable field-name="cell_volume" name="CellVolume" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL NEW VOLUME	 -->
+  <variable field-name="cell_new_volume" name="CellNewVolume" data-type="real" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
   <!-- CELL VOLUME PARTIEL	 -->
   <variable field-name="cell_volume_partial" name="VolumePartiel" data-type="real" item-kind="cell"
-	    dim="1" material="true" dump="true" need-sync="true" />
+	    dim="1" material="false" dump="true" need-sync="true" />
   <!-- CELL VOLUME	 -->
   <variable field-name="cell_volume_l" name="CellVolumeLagrange" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
   <!-- CELL VOLUME PARTIEL	 -->
   <variable field-name="cell_volume_partial_l" name="VolumePartielLagrange" data-type="real" item-kind="cell"
-	    dim="1" material="true" dump="true" need-sync="true" />
+	    dim="1" material="false" dump="true" need-sync="true" />
   <!-- CELL MASSE PARTIEL	 -->
   <variable field-name="cell_masse_partial_l" name="MassePartielLagrange" data-type="real" item-kind="cell"
-	    dim="1" material="true" dump="true" need-sync="true" />
+	    dim="1" material="false" dump="true" need-sync="true" />
   <!-- CELL DELTA VOLUME 	 -->
   <variable field-name="cell_delta_volume" name="CellDeltaVol" data-type="real" item-kind="cell"
 	    dim="1" material="false" dump="true" need-sync="true" /> 
@@ -52,13 +58,16 @@
 	    dim="1" material="false" dump="true" need-sync="true" /> 
   <!-- CELL ONE	 -->
   <variable field-name="cell_one" name="CellOne" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
   <!-- CELL ZERO	 -->
   <variable field-name="cell_zero" name="CellZero" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
   <!-- 	VELOCITY -->
   <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	VELOCITY LAGRANGE -->
+  <variable field-name="velocity_l" name="VelocityLagrange" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />    
   <!-- 	NODE MASS	 -->
   <variable field-name="node_mass" name="NodeMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
@@ -83,73 +92,21 @@
   <!-- 	FACE COORD	 -->
   <variable field-name="face_coord" name="FaceCoord" data-type="real3" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
-  <!-- 	FACE NORMAL	 -->
-  <variable field-name="face_normal" name="FaceNormal" data-type="real3" item-kind="face"
-	    dim="0" dump="true" need-sync="true" />
-  <!-- 	FACE NORMAL VELOCITY	 -->
-  <variable field-name="face_normal_velocity" name="FaceNormalVelocity" data-type="real" item-kind="face"
-	    dim="0" dump="true" need-sync="true" />
-  <!-- 	FACE LENGHT	 -->
-  <variable field-name="face_length_lagrange" name="FaceLenghtLagrange" data-type="real3" item-kind="face"
-	    dim="0" dump="true" need-sync="true" />
-  <!-- 	U LAGRANGE	 -->
-    <variable field-name="u_lagrange" name="ULagrange" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />
-  <!-- 	U DUAL LAGRANGE	 -->
-    <variable field-name="u_dual_lagrange" name="UDualLagrange" data-type="real" item-kind="node"
-	    dim="1" dump="true" need-sync="true" />
   <!-- 	PHI 	 -->
     <variable field-name="phi" name="Phi" data-type="real" item-kind="cell"
-	    dim="0" dump="true" need-sync="true" />
+	    dim="1" dump="true" need-sync="true" />
   <!-- 	APPRO PHI 	 -->
     <variable field-name="appro_phi" name="ApproPhi" data-type="real" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-   <!-- 	PHI DUAL LAGRANGE	 -->
-    <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
-	      dim="1" dump="true" need-sync="true" />
-    <!-- 	GRAD PHI DUAL LAGRANGE	pour les vitesses -->
-    <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real" item-kind="node"
-	      dim="1" dump="true" need-sync="true" />
+  <!-- 	APPRO RHO 	 -->
+    <variable field-name="appro_density" name="ApproDensity" data-type="real" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />    
     <!-- MIXTE	 -->
     <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
     <!-- PURE	 -->
     <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	PHI FACE 	 -->
-    <variable field-name="phi_face" name="PhiFace" data-type="real" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	GRANDIENT FACE 	 -->
-    <variable field-name="grad_phi_face" name="GradPhiFace" data-type="real" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	GRANDIENT CELL 	 -->
-    <variable field-name="grad_phi" name="GradPhi" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />     
-       <!-- 	DELTA_PHI_FACE_AR 	 -->
-    <variable field-name="delta_phi_face_ar" name="DeltaPhiFaceAr" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-       <!-- 	DELTA_PHI_FACE_AV 	 -->
-    <variable field-name="delta_phi_face_av" name="DeltaPhiFaceAv" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-       <!-- 	DUAL_PHI_FLUX 	     -->
-    <variable field-name="dual_phi_flux" name="DualPhiFlux" data-type="real" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-    <!-- 	HCLagrange	 -->
-    <variable field-name="h_cell_lagrange" name="HCellLagrange" data-type="real" item-kind="cell"
-	    dim="0" dump="true" need-sync="true" />
-    <!-- 	isDirFace	 -->
-    <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
-    <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />
-    <variable field-name="back_flux_mass_env" name="BackFluxMassEnv" data-type="real" item-kind="node"
-	    dim="1" dump="true" need-sync="true" /> 
-    <variable field-name="front_flux_mass_env" name="FrontFluxMassEnv" data-type="real" item-kind="node"
-	    dim="1" dump="true" need-sync="true" /> 
-    <variable field-name="back_flux_mass" name="BackFluxMass" data-type="real" item-kind="node"
-	    dim="0" dump="true" need-sync="true" /> 
-    <variable field-name="front_flux_mass" name="FrontFluxMass" data-type="real" item-kind="node"
-	    dim="0" dump="true" need-sync="true" /> 
 </variables>
 
 <options>
@@ -202,9 +159,9 @@
   <simple name="projection-pente-borne-debar-fix" type="integer" default="0">
     <description> projection avec l'algorithme pente-borne en evitant l'artefact de debar avec la valeur moyenne (1) ou valeur aux mailles (2) </description>
   </simple>
-  <!-- - - - - calcul_flux_masse - - - - - -->
-  <simple name="calcul_flux_masse" type="integer" default="0">
-    <description> identifiant de la methode de calcul du flux de masse duale </description>
+  <!-- - - - - methode de projection duale - - - - - -->
+  <simple name="projection_dual" type="integer" default="0">
+    <description> identifiant de la methode de projection duale </description>
   </simple>
  
 </options>

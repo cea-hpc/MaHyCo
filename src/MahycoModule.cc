@@ -352,7 +352,7 @@ updateVelocity()
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
 
-  m_velocity.synchronize();
+  m_velocity.synchronize();  
 }
 /**
  *******************************************************************************
@@ -396,6 +396,7 @@ updateVelocityBackward()
 
   m_velocity_n.synchronize();
   
+
 }
 /*******************************************************************************
  * \file updateVelocityForward()
@@ -729,12 +730,12 @@ updateDensity()
       Cell cell = ev.globalCell();
        // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_cell_volume[ev];
        Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
-       // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_density_n[ev];
        // nouvelle density
        m_density[ev] = new_density;
        // volume specifique de l'environnement au temps n+1/2
        m_tau_density[ev] = 
         0.5 * (1.0 / m_density_n[ev] + 1.0 / m_density[ev]);
+        
     }
   }
   ENUMERATE_CELL(icell,allCells()){
@@ -924,6 +925,7 @@ updateEnergyAndPressureforGP()
       ENUMERATE_ENVCELL(ienvcell,env){
         EnvCell ev = *ienvcell;
         Real pseudo(0.);
+        Cell cell = ev.globalCell();
         if (pseudo_centree &&
             ((m_pseudo_viscosity_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]) < 0.))
           pseudo = 0.5 * (m_pseudo_viscosity[ev] + m_pseudo_viscosity_n[ev]);
