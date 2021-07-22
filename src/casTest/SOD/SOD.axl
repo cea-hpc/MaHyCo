@@ -63,45 +63,6 @@
 			dim="0"
 			dump="true"
 			need-sync="true" />
-		<!-- 	ADIABATIC CONSTANT	 -->
-		<variable
-			field-name="adiabatic_cst"
-			name="AdiabaticCst"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />
-		<!-- 	CARACTERISTIC LENGTH	 -->
-		<variable
-			field-name="caracteristic_length"
-			name="CaracteristicLength"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			dump="true"
-			need-sync="true" />
-		<!-- 	SOUND SPEED	 -->
-		<variable
-			field-name="sound_speed"
-			name="SoundSpeed"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />
-		<!-- 	DPDE	 -->
-		<variable
-			field-name="dpde"
-			name="DpDe"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />
 		<!-- 	CELL COORD	 -->
 		<variable
 			field-name="cell_coord"

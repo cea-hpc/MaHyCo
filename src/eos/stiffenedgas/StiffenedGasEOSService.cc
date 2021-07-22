@@ -10,8 +10,8 @@ using namespace Arcane::Materials;
 void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
 {
   // Initialise l'énergie et la vitesse du son
-  Real limit_tension = options()->limitTension();
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real limit_tension = getTensionLimitCst(env);
+  Real adiabatic_cst = getAdiabaticCst(env);
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -28,8 +28,8 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
 void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
 {
   // Calcul de la pression et de la vitesse du son
-  Real limit_tension = options()->limitTension();
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real limit_tension = getTensionLimitCst(env);
+  Real adiabatic_cst = getAdiabaticCst(env);
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -47,8 +47,8 @@ void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
 void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
   // Calcul de la pression et de la vitesse du son
-  Real limit_tension = options()->limitTension();
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real limit_tension = getTensionLimitCst(env);
+  Real adiabatic_cst = getAdiabaticCst(env);
     Real internal_energy = m_internal_energy[ev];
     Real density = m_density[ev];
     Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);

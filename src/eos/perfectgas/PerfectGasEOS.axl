@@ -63,16 +63,6 @@
 			dim="0"
 			dump="true"
 			need-sync="true" />
-		<!-- 	ADIABATIC CONSTANT	 -->
-		<variable
-			field-name="adiabatic_cst"
-			name="AdiabaticCst"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />
 		<!-- 	CARACTERISTIC LENGTH	 -->
 		<variable
 			field-name="caracteristic_length"

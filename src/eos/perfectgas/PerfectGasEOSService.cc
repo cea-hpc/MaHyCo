@@ -8,7 +8,7 @@ using namespace Arcane::Materials;
 
 void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
 {
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real adiabatic_cst = getAdiabaticCst(env);
   // Initialise l'énergie et la vitesse du son
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -25,7 +25,7 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
 
 void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
 {
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real adiabatic_cst = getAdiabaticCst(env);
   // Calcul de la pression et de la vitesse du son
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -44,7 +44,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
 
 void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
-  Real adiabatic_cst = options()->adiabaticCst();
+  Real adiabatic_cst = getAdiabaticCst(env);
   // Calcul de la pression et de la vitesse du son
     Real internal_energy = m_internal_energy[ev];
     Real density = m_density[ev];

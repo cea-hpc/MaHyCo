@@ -103,10 +103,10 @@
 	    dim="1" dump="true" need-sync="true" />    
     <!-- MIXTE	 -->
     <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
     <!-- PURE	 -->
     <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
 </variables>
 
 <options>

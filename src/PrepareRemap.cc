@@ -188,6 +188,15 @@ void MahycoModule::remap() {
     
     options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
+    // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees
+    // pour les nouveaux envirronements crees dans les mailles mixtes par la projection
+    m_pseudo_viscosity_n.fill(0.0);
+    m_internal_energy_n.fill(0.0);
+    m_cell_volume_n.fill(0.0);
+    m_pressure_n.fill(0.0);
+    m_density_n.fill(0.0);
+    m_tau_density.fill(0.0);
+    
     // m_materiau.fill(0.0);
     for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
         IMeshEnvironment* ienv = mm->environments()[index_env];

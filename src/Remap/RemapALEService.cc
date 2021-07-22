@@ -241,8 +241,6 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       }
     }
 
-   
-    // withDualProjection=false;
     if (withDualProjection) {
       if (nb_env >1) { 
         m_appro_phi.fill(0.0);

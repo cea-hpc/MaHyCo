@@ -136,7 +136,7 @@ class MahycoModule
    *    par maille,
    *  - la deuxième partie qui consiste à initialiser les variables avec
    *    leur valeur de départ. Pour les variables \c Pressure, \c Density et
-   *    \c AdiabaticCst, c'est ARCANE qui les initialisent directement
+   *    c'est ARCANE qui les initialisent directement
    *    à partir du jeu de donnée. La variable \c NodeCoord est aussi
    *    initialisée par l'architecture lors de la lecture du maillage. Les
    *    autres variables sont calculées comme suit :
