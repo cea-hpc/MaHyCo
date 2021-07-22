@@ -1,0 +1,37 @@
+FORMAT
+type: ensight gold
+
+GEOMETRY
+model: 1 ensight.geo/ensight.geo******
+
+VARIABLE
+scalar per element:    1   CellMass CellMass/CellMass******
+scalar per element:    1   Pressure Pressure/Pressure******
+scalar per element:    1   Density Density/Density******
+vector per node:       1   Velocity Velocity/Velocity******
+scalar per node:       1   NodeMass NodeMass/NodeMass******
+scalar per element:    1   InternalEnergy InternalEnergy/InternalEnergy******
+scalar per element:    1   PseudoViscosity PseudoViscosity/PseudoViscosity******
+scalar per element:    1   Materiau Materiau/Materiau******
+
+TIME
+time set:              1
+number of steps:       14
+filename start number: 0
+filename increment:    1
+time values:
+0.0712555984995524
+0.157555580107327
+0.238867025732831
+0.317733361509039
+0.394649801535455
+0.469891365858121
+0.543898406213315
+0.617238065550728
+0.690329312668324
+0.763282008416066
+0.836021588035172
+0.908409676571581
+0.980356215491018
+0.999943487263913
+

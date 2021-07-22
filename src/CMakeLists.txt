@@ -109,6 +109,8 @@ set( TEST_NAMES
 		"CAS_MonoRiderTy"
 		"CAS_2D_Lag_SodCaseX_newton"
 		"CAS_2D_Sedov"
+		"CAS_2D_ALE_Sedov_euler"
+		"CAS_2D_ALE_BiSedov_euler"
 		)
 
 set( TEST_NAMES_PR

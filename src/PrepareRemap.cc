@@ -188,12 +188,21 @@ void MahycoModule::remap() {
     
     options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
+    // m_materiau.fill(0.0);
+    for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
+        IMeshEnvironment* ienv = mm->environments()[index_env];
+        // calcul de la fraction de matiere 
+        ENUMERATE_ENVCELL(ienvcell,ienv){
+          EnvCell ev = *ienvcell;
+          Cell cell = ev.globalCell();
+          // m_materiau[cell] += index_env*m_fracvol[ev];
+        }
+    }
     if (!options()->sansLagrange) {
-      // Calcul de la Pression
-      for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-        IMeshEnvironment* ienv = mm->environments()[i];
+        for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
+        IMeshEnvironment* ienv = mm->environments()[index_env];
         // Calcul de la pression et de la vitesse du son
-        options()->environment[i].eosModel()->applyEOS(ienv);
+        options()->environment[index_env].eosModel()->applyEOS(ienv);
       }
       computePressionMoyenne();
    }

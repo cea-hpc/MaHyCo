@@ -13,10 +13,6 @@ void MahycoModule::hydroStartInitEnvAndMat()
   // lecture des environnements
   MeshBlockBuildInfo mbbi("BLOCK1",allCells());
   UniqueArray<IMeshEnvironment*> saved_envs;
-  IMeshMaterial* m_mat1;
-  IMeshMaterial* m_mat2;
-  IMeshEnvironment* m_env1;
-  IMeshEnvironment* m_env2;
 
   info() << "Lit les infos des matériaux du JDD ";
   // Lit les infos des matériaux du JDD et les enregistre dans le gestionnaire
@@ -46,6 +42,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
       mbbi.addEnvironment(env);
     }
   }
+  
   
   info() << " Rangement des mailles  ";
   
@@ -77,30 +74,31 @@ void MahycoModule::hydroStartInitEnvAndMat()
     m_cell_coord[cell] = one_over_nbnode * somme ;
   }
   
+  IMeshMaterial* m_mat[nb_env];
+  IMeshEnvironment* m_env[nb_env];
   info() << " Initialisation du cas test";
   
   options()->casModel()->initMat(m_dimension);
       
-  m_mat1 = mm->environments()[0]->materials()[0];
-  m_mat2 = mm->environments()[1]->materials()[0];
-  m_env1 = mm->environments()[0];
-  m_env2 = mm->environments()[1];
+  for (Integer i= 0 ; i <  nb_env; ++i) {
+    m_mat[i] = mm->environments()[i]->materials()[0];
+    m_env[i] = mm->environments()[0];
+  }
   
   
-  Int32UniqueArray mat1_indexes;
-  Int32UniqueArray mat2_indexes;
+  Int32UniqueArray mat_indexes[nb_env];
   info() << " Nb environments " << nb_env ;
   
   info() << " Trie par environnements  ";
   ENUMERATE_CELL(icell,allCells()){
     Cell cell = *icell;
     if (m_materiau[icell] == 0.) {
-      mat1_indexes.add(icell.itemLocalId());
+      mat_indexes[0].add(icell.itemLocalId());
     } else if (m_materiau[icell] == 1.) {
-      mat2_indexes.add(icell.itemLocalId());
+      mat_indexes[1].add(icell.itemLocalId());
     } else {
-      mat1_indexes.add(icell.itemLocalId());
-      mat2_indexes.add(icell.itemLocalId());
+      mat_indexes[0].add(icell.itemLocalId());
+      mat_indexes[1].add(icell.itemLocalId());
     }
         
   }
@@ -109,18 +107,15 @@ void MahycoModule::hydroStartInitEnvAndMat()
  
   
   info() << " fin de la boucle sur les mailles  ";
-  info() << " mat 1 " << mat1_indexes.size();
-  info() << " mat 2 " << mat2_indexes.size();
-  if (m_mat1){
-    Materials::MeshMaterialModifier modifier(mm);
-    modifier.addCells(m_mat1, mat1_indexes);
-    info() << " mat1 modifie ";
-  }    
-  if (m_mat2){
-    Materials::MeshMaterialModifier modifier(mm);
-    modifier.addCells(m_mat2, mat2_indexes);
-    info() << " mat2 modifie ";
+  Materials::MeshMaterialModifier modifier(mm);
+  for (Integer i= 0 ; i <  nb_env; ++i) {
+   info() << " mat " << i << " : " << mat_indexes[i].size();
+   if (m_mat[i]){
+     modifier.addCells(m_mat[i], mat_indexes[i]);
+     info() << " mat " << i << " modifié ";
+   }
   }
+ 
   
 }
 /**
