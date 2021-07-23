@@ -67,9 +67,6 @@
   <!-- TAUX DENSITY	 -->
   <variable field-name="tau_density" name="TauxDensity" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="false" need-sync="true" />
-  <!-- CELL VOLUME G -->
-  <variable field-name="cell_volume_g" name="CellVolumeG" data-type="real" item-kind="cell"
-       dim="0" dump="false" need-sync="false" />
   <!-- FORCE	 -->
   <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
