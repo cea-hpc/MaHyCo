@@ -6,6 +6,7 @@
 #include "arcane/accelerator/Runner.h"
 #include "arcane/accelerator/Views.h"
 #include "arcane/accelerator/Accelerator.h"
+#include "arcane/accelerator/RunCommandLoop.h"
 
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
@@ -84,6 +85,18 @@ void operator<<(ItemRunCommand<ItemType>& nr,Lambda f)
 #endif
 
 #endif
+
+/*---------------------------------------------------------------------------*/
+/* Pour créer une vue sur les valeurs d'un environnement                     */
+/*---------------------------------------------------------------------------*/
+using namespace Arcane;
+using namespace Arcane::Materials;
+
+template<typename value_type>
+ArrayView<value_type> envView(CellMaterialVariableScalarRef<value_type>& var_menv, IMeshEnvironment* env) {
+  // Pour rappel, [0] fait référence à .globalVariable() d'où le +1
+  return var_menv._internalValue()[env->id()+1];
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

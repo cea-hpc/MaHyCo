@@ -413,6 +413,13 @@ class MahycoModule
   void _initBoundaryConditionsForAcc();
 
   /**
+   * Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
+   * l'identifiant de la maille globale
+   */
+  void _computeMultiEnvGlobalCellId();
+  void _checkMultiEnvGlobalCellId();
+
+  /**
    * Fonctions diverses
    **/
   Real produit(Real A, Real B, Real C, Real D);

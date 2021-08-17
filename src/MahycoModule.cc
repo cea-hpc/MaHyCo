@@ -115,6 +115,46 @@ _initBoundaryConditionsForAcc() {
 }
 
 /*---------------------------------------------------------------------------*/
+/* Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte) */
+/* l'identifiant de la maille globale                                        */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_computeMultiEnvGlobalCellId() {
+  debug() << "_computeMultiEnvGlobalCellId";
+
+  // Calcul des cell_id globaux 
+  CellToAllEnvCellConverter all_env_cell_converter(mm);
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Integer cell_id = cell.localId();
+    m_global_cell[cell] = cell_id;
+    AllEnvCell all_env_cell = all_env_cell_converter[cell];
+    if (all_env_cell.nbEnvironment() !=1) {
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        EnvCell ev = *ienvcell;
+        m_global_cell[ev] = cell_id;
+      }
+    }
+  }
+
+  _checkMultiEnvGlobalCellId();
+}
+
+void MahycoModule::
+_checkMultiEnvGlobalCellId() {
+  debug() << "_checkMultiEnvGlobalCellId";
+
+  // Vérification
+  ENUMERATE_ENV(ienv, mm) {
+    IMeshEnvironment* env = *ienv;
+    ENUMERATE_ENVCELL(ienvcell,env){
+      EnvCell ev = *ienvcell;
+      ARCANE_ASSERT(ev.globalCell().localId()==m_global_cell[ev], ("lid differents"));
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::
@@ -1140,20 +1180,39 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
+  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
+  _computeMultiEnvGlobalCellId();
+  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+
   // maille mixte
   // moyenne sur la maille
-  CellToAllEnvCellConverter all_env_cell_converter(mm);
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    AllEnvCell all_env_cell = all_env_cell_converter[cell];
-    if (all_env_cell.nbEnvironment() !=1) {
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;        
-        Cell cell = ev.globalCell();
-        m_cell_volume[ev] = m_fracvol[ev] * m_cell_volume[cell];
-      }
-    }
+  auto queue = makeQueue(m_runner);
+  queue.setAsync(true);
+
+  ENUMERATE_ENV(ienv, mm) {
+    IMeshEnvironment* env = *ienv;
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    // Des sortes de vues sur les valeurs impures pour l'environnement env
+    Span<Real> cell_volume_env(envView(m_cell_volume, env));
+    Span<const Real> fracvol_env(envView(m_fracvol, env));
+    Span<const Integer> global_cell_env(envView(m_global_cell, env));
+
+    // Les kernels sont lancés de manière asynchrone environnement par environnement
+    auto command = makeCommand(queue);
+
+    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
+
+    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(global_cell_env[imix]); // on récupère l'identifiant de la maille globale
+      cell_volume_env[imix] = fracvol_env[imix] * in_cell_volume_g[cid];
+    };
   }
+
+  queue.barrier();
   PROF_ACC_END;
 }
 /**
