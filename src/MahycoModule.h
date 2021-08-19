@@ -122,14 +122,19 @@ class MahycoModule
 {
  public:
   /** Constructeur de la classe */
-  MahycoModule(const ModuleBuildInfo& mbi)
-    : ArcaneMahycoObject(mbi) {}
+  MahycoModule(const ModuleBuildInfo& mbi);
   /** Destructeur de la classe */
   ~MahycoModule() {}
   
   struct interval {
     double inf, sup;
   };
+
+  // Note: il faut mettre ce champs statique si on veut que sa valeur
+  // soit correcte lors de la capture avec CUDA (sinon on passe par this et
+  // cela provoque une erreur mémoire)
+  static const Integer MAX_NODE_CELL = 8;
+
  public:
 
   //! Initialise l'environnement pour les accélérateurs
@@ -200,7 +205,18 @@ class MahycoModule
    */
   virtual void computeArtificialViscosity();
   
-		
+  /**
+   * Calcul générique de m_force et de v_velocity_out
+   * Remarque : cette méthode ne peut pas être private ou protected
+   * car elle déporte du calcul sur accélérateur
+   */
+  void updateForceAndVelocity(Real dt,
+      const MaterialVariableCellReal& v_pressure,
+      const MaterialVariableCellReal& v_pseudo_viscosity,
+      const VariableCellArrayReal3& v_cell_cqs,
+      const VariableNodeReal3& v_velocity_in,
+      VariableNodeReal3& v_velocity_out);
+
   /**
    * Calcule la force (\c m_force) qui s'applique aux noeuds en
    * ajoutant l'éventuelle contribution de la pseudo-viscosité. Calcule 
@@ -357,6 +373,12 @@ class MahycoModule
   ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
+
+  /**
+   * Permet la lecture des cqs quand on boucle sur les noeuds
+   */
+  void _computeNodeIndexInCells();
+
   /**
    * Fonctions diverses
    **/
@@ -397,6 +419,9 @@ class MahycoModule
   Integer my_rank;
   Integer m_dimension;
  
+  //! Indice de chaque noeud dans la maille
+  UniqueArray<Int16> m_node_index_in_cells;
+
   // Pour l'utilisation des accélérateurs
   ax::Runner m_runner;
 

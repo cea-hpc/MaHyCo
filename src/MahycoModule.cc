@@ -14,6 +14,15 @@ using namespace Arcane;
 using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
+/* Constructeur */
+/*---------------------------------------------------------------------------*/
+MahycoModule::
+  MahycoModule(const ModuleBuildInfo& mbi)
+: ArcaneMahycoObject(mbi), 
+  m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator())
+{}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::
@@ -26,6 +35,37 @@ accBuild()
   initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
 
   PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_computeNodeIndexInCells() {
+  debug() << "_computeNodeIndexInCells";
+  // Un noeud est connecté au maximum à MAX_NODE_CELL mailles
+  // Calcul pour chaque noeud son index dans chacune des
+  // mailles à laquelle il est connecté.
+  NodeGroup nodes = allNodes();
+  Integer nb_node = nodes.size();
+  m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
+  m_node_index_in_cells.fill(-1);
+  auto node_cell_cty = m_connectivity_view.nodeCell();
+  auto cell_node_cty = m_connectivity_view.cellNode();
+  ENUMERATE_NODE(inode,nodes){
+    NodeLocalId node = *inode;
+    Int32 index = 0; 
+    Int32 first_pos = node.localId() * MAX_NODE_CELL;
+    for( CellLocalId cell : node_cell_cty.cells(node) ){
+      Int16 node_index_in_cell = 0; 
+      for( NodeLocalId cell_node : cell_node_cty.nodes(cell) ){
+        if (cell_node==node)
+          break;
+        ++node_index_in_cell;
+      }    
+      m_node_index_in_cells[first_pos + index] = node_index_in_cell;
+      ++index;
+    }    
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -69,6 +109,9 @@ hydroStartInit()
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
+
+  // Permet la lecture des cqs quand on boucle sur les noeuds
+  _computeNodeIndexInCells();
   
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
@@ -422,6 +465,90 @@ computeArtificialViscosity()
 }
 /**
  *******************************************************************************
+ * \file updateForceAndVelocity()
+ * \brief Calcul de la force et de la vitesse 
+ *
+ * \param  dt, velocity_in
+ *         v_pressure, v_pseudo_viscosity, v_cell_cqs
+ * \return m_force et v_velocity_out
+ *******************************************************************************
+ */
+void MahycoModule::
+updateForceAndVelocity(Real dt,
+    const MaterialVariableCellReal& v_pressure,
+    const MaterialVariableCellReal& v_pseudo_viscosity,
+    const VariableCellArrayReal3& v_cell_cqs,
+    const VariableNodeReal3& v_velocity_in,
+    VariableNodeReal3& v_velocity_out) 
+{
+  debug() << " Entree dans updateForceAndVelocity()";
+ 
+#if 0 
+  // Remise à zéro du vecteur des forces.
+  m_force.fill(Real3::zero());
+
+  // Calcul pour chaque noeud de chaque maille la contribution
+  // des forces de pression
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real pressure = v_pressure[icell] + v_pseudo_viscosity[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += pressure * v_cell_cqs[icell] [inode.index()];
+     }
+  }
+
+  VariableNodeReal3InView in_force(viewIn(m_force));
+  VariableNodeReal3InView in_velocity(viewIn(v_velocity_in));
+  VariableNodeRealInView  in_mass(viewIn(m_node_mass));
+  VariableNodeReal3OutView out_velocity(viewOut(v_velocity_out));
+
+  // Calcule l'impulsion aux noeuds
+  PRAGMA_IVDEP
+  ENUMERATE_SIMD_NODE(inode, allNodes()){
+    SimdNode snode=*inode;
+    out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
+  }
+#else
+  {
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+
+    auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
+    auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
+    auto in_cell_cqs         = ax::viewIn(command, v_cell_cqs);
+    // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
+    auto out_force           = ax::viewOut(command, m_force);
+
+    auto node_index_in_cells = m_node_index_in_cells.constSpan();
+    auto nc_cty = m_connectivity_view.nodeCell();
+
+    auto in_mass      = ax::viewIn(command, m_node_mass);
+    auto in_velocity  = ax::viewIn(command, v_velocity_in);
+    auto out_velocity = ax::viewOut(command, v_velocity_out);
+    
+    command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+      Int32 first_pos = nid.localId() * MAX_NODE_CELL;
+      Integer index = 0;
+      Real3 node_force = Real3::zero();
+      for( CellLocalId cid : nc_cty.cells(nid) ){
+        Int16 node_index = node_index_in_cells[first_pos + index];
+        node_force += (in_pressure[cid]+in_pseudo_viscosity[cid]) 
+          * in_cell_cqs[cid][node_index];
+        ++index;
+      }
+      out_force[nid] = node_force;
+
+      // On peut mettre la vitesse à jour dans la foulée
+      out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
+    };
+  }
+#endif
+
+  v_velocity_out.synchronize();
+}
+
+/**
+ *******************************************************************************
  * \file updateVelocity()
  * \brief Calcul de la vitesse de n-1/2 a n+1/2
  *
@@ -450,6 +577,7 @@ updateVelocity()
       
       
   debug() << " Entree dans updateVelocity()";
+#if 0
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::zero());
 
@@ -477,6 +605,11 @@ updateVelocity()
   }
 
   m_velocity.synchronize();
+#else
+  updateForceAndVelocity(0.5 * (m_global_old_deltat() + m_global_deltat()),
+        /* calcul m_force : */ m_pressure_n, m_pseudo_viscosity_n, m_cell_cqs_n,
+        /* calcul m_velocity : */ m_velocity_n, m_velocity);
+#endif
   PROF_ACC_END;
 }
 /**
@@ -495,6 +628,7 @@ updateVelocityBackward()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateVelocityBackward()";
+#if 0
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::null());
 
@@ -521,7 +655,11 @@ updateVelocityBackward()
   }
 
   m_velocity_n.synchronize();
-  
+#else
+  updateForceAndVelocity(-0.5 * m_global_old_deltat(),
+      /* calcul m_force : */ m_pressure_n, m_pseudo_viscosity_n, m_cell_cqs_n,
+      /* calcul m_velocity_n : */ m_velocity_n, m_velocity_n);
+#endif
   PROF_ACC_END;
 }
 /*******************************************************************************
@@ -539,6 +677,7 @@ updateVelocityForward()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateVelocityForward()";
+#if 0
   // Remise à zéro du vecteur des forces.
   m_force.fill(Real3::null());
 
@@ -564,6 +703,11 @@ updateVelocityForward()
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
   m_velocity.synchronize();
+#else
+  updateForceAndVelocity(0.5 * m_global_deltat(),
+      /* calcul m_force : */ m_pressure, m_pseudo_viscosity, m_cell_cqs,
+      /* calcul m_velocity : */ m_velocity, m_velocity);
+#endif
   PROF_ACC_END;
 }
 /**
