@@ -300,16 +300,6 @@ saveValuesAtN()
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
   
-  
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = *icell;
-    m_pseudo_viscosity_nmoins1[cell] = m_pseudo_viscosity_n[cell];
-    m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
-    m_pressure_n[cell] = m_pressure[cell];
-    m_cell_volume_n[cell] = m_cell_volume[cell];
-    m_density_n[cell] = m_density[cell];
-    m_internal_energy_n[cell] = m_internal_energy[cell];
-  }
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
@@ -322,11 +312,69 @@ saveValuesAtN()
       m_internal_energy_n[ev] = m_internal_energy[ev];
     }
   }
-  
-  m_cell_cqs_n.copy(m_cell_cqs);
-  
-  if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
-  if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0);
+  auto queue = makeQueue(m_runner);
+  // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
+  queue.setAsync(true); 
+
+  {
+    auto command = makeCommand(queue);
+
+    auto in_pseudo_viscosity = ax::viewIn(command,m_pseudo_viscosity.globalVariable());
+    auto in_pressure         = ax::viewIn(command,m_pressure.globalVariable());
+    auto in_cell_volume      = ax::viewIn(command,m_cell_volume.globalVariable());
+    auto in_density          = ax::viewIn(command,m_density.globalVariable());
+    auto in_internal_energy  = ax::viewIn(command,m_internal_energy.globalVariable());
+    auto in_cell_cqs         = ax::viewIn(command,m_cell_cqs);
+
+    auto inout_pseudo_viscosity_n = ax::viewInOut(command,m_pseudo_viscosity_n.globalVariable());
+
+    auto out_pseudo_viscosity_nmoins1 = ax::viewOut(command,m_pseudo_viscosity_nmoins1.globalVariable());
+    auto out_pressure_n         = ax::viewOut(command,m_pressure_n.globalVariable());
+    auto out_cell_volume_n      = ax::viewOut(command,m_cell_volume_n.globalVariable());
+    auto out_density_n          = ax::viewOut(command,m_density_n.globalVariable());
+    auto out_internal_energy_n  = ax::viewOut(command,m_internal_energy_n.globalVariable());
+    auto out_cell_cqs_n         = ax::viewInOut(command,m_cell_cqs_n);
+
+    const Integer nb_node_in_cell = m_cell_cqs.arraySize();
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+      out_pseudo_viscosity_nmoins1[cid] = inout_pseudo_viscosity_n[cid];
+      inout_pseudo_viscosity_n[cid] = in_pseudo_viscosity[cid];
+      out_pressure_n[cid] = in_pressure[cid];
+      out_cell_volume_n[cid] = in_cell_volume[cid];
+      out_density_n[cid] = in_density[cid];
+      out_internal_energy_n[cid] = in_internal_energy[cid];
+
+      // anciennement .copy(...)
+      for(Integer i=0 ; i<nb_node_in_cell ; ++i) {
+        out_cell_cqs_n[cid][i] = in_cell_cqs[cid][i];
+      }
+    }; // asynchrone
+  }
+
+  bool copy_velocity = !options()->sansLagrange;
+  bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
+
+  if (copy_velocity || copy_node_coord) {
+    auto command = makeCommand(queue);
+
+    // if (!options()->sansLagrange) m_velocity_n.copy(m_velocity)
+    auto in_velocity = ax::viewIn(command, m_velocity);
+    auto out_velocity_n = ax::viewOut(command, m_velocity_n);
+
+    // if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0)
+    auto in_node_coord_0 = ax::viewIn(command, m_node_coord_0);
+    auto out_node_coord = ax::viewOut(command, m_node_coord);
+
+    command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+      if (copy_velocity)
+        out_velocity_n[nid] = in_velocity[nid];
+      if (copy_node_coord)
+        out_node_coord[nid] = in_node_coord_0[nid];
+    }; // asynchrone
+  }
+
+  queue.barrier();
  
   PROF_ACC_END;
 }    
