@@ -141,7 +141,7 @@ hydroStartInit()
 
     auto in_node_coord = ax::viewIn(command,m_node_coord);
     auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
-    auto out_cell_volume_g  = ax::viewInOut(command,m_cell_volume.globalVariable()); 
+    auto out_cell_volume_g  = ax::viewOut(command,m_cell_volume.globalVariable()); 
 
     auto cnc = m_connectivity_view.cellNode();
 
@@ -770,7 +770,7 @@ computeGeometricValues()
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
       auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
-      auto out_cell_volume_g        = ax::viewInOut(command,m_cell_volume.globalVariable()); 
+      auto out_cell_volume_g        = ax::viewOut(command,m_cell_volume.globalVariable()); 
       auto out_caracteristic_length = ax::viewOut(command,m_caracteristic_length);
       
       auto cnc = m_connectivity_view.cellNode();
@@ -854,18 +854,33 @@ updateDensity()
         
     }
   }
-  ENUMERATE_CELL(icell,allCells()){
-    Cell cell = * icell;
-    Real new_density = m_cell_mass[icell] / m_cell_volume[icell];
-    // nouvelle density
-    m_density[icell] = new_density;
-    // volume specifique moyen au temps n+1/2
-    m_tau_density[icell] = 
-        0.5 * (1.0 / m_density_n[icell] + 1.0 / m_density[icell]);
-    // divergence de la vitesse mode A1
-    m_div_u[icell] =
-      1.0 / m_global_deltat()  * ( 1.0 / m_density[icell] - 1.0 / m_density_n[icell] )
-      / m_tau_density[icell];
+  {
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+
+    Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
+
+    auto in_cell_mass_g   = ax::viewIn(command, m_cell_mass.globalVariable());
+    auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
+    auto in_density_n_g   = ax::viewIn(command, m_density_n.globalVariable());
+
+    auto iou_density_g     = ax::viewInOut(command, m_density.globalVariable());
+    auto iou_tau_density_g = ax::viewInOut(command, m_tau_density.globalVariable());
+
+    auto out_div_u = ax::viewOut(command, m_div_u);
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+      Real new_density = in_cell_mass_g[cid] / in_cell_volume_g[cid];
+      // nouvelle density
+      iou_density_g[cid] = new_density;
+      // volume specifique moyen au temps n+1/2
+      iou_tau_density_g[cid] = 
+        0.5 * (1.0 / in_density_n_g[cid] + 1.0 / iou_density_g[cid]);
+      // divergence de la vitesse mode A1
+      out_div_u[cid] =
+        inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
+        / iou_tau_density_g[cid];
+    };
   }
   
   m_density.synchronize();
