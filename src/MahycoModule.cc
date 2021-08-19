@@ -182,10 +182,18 @@ computeCellMass()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeCellMass()";
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    m_cell_mass[cell] = m_density[cell] * m_cell_volume[cell];
-  }  
+  {
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+
+    auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
+    auto in_density_g     = ax::viewIn(command, m_density.globalVariable());
+    auto out_cell_mass_g  = ax::viewOut(command, m_cell_mass.globalVariable());
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+      out_cell_mass_g[cid] = in_density_g[cid] * in_cell_volume_g[cid];
+    };
+  }
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
