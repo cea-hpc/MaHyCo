@@ -219,14 +219,28 @@ computeNodeMass()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
-  m_node_mass.fill(0.);
-  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
-  ENUMERATE_CELL(icell, allCells()){    
-    Cell cell = * icell;
-    Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
-    for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
-      m_node_mass[inode] += contrib_node_mass; 
-    }
+  {
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+
+    Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+    auto nc_cty = m_connectivity_view.nodeCell();
+
+    auto in_cell_mass_g = ax::viewIn(command,m_cell_mass.globalVariable());
+    auto out_node_mass = ax::viewOut(command, m_node_mass);
+
+    // Le calcul sur les noeuds fantômes externes n'est pas correct
+    // de toute façon (d'où m_node_mass.synchronize) autant ne calculer
+    // que sur ownNodes()
+    //NodeGroup node_group = allNodes();
+    NodeGroup node_group = ownNodes();
+
+    command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
+      Real sum_mass = 0.;
+      for( CellLocalId cid : nc_cty.cells(nid) )
+        sum_mass += in_cell_mass_g[cid];
+      out_node_mass[nid] = one_over_nbnode * sum_mass;
+    };
   }
   m_node_mass.synchronize();
   PROF_ACC_END;
