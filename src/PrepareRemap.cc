@@ -19,16 +19,43 @@ computeFaceQuantitesForRemap()
   debug() << " Entree dans computeFaceQuantitesForRemap()";
   bool csts = options()->schemaCsts();  
   Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
+  
   if (m_dimension == 3) {
-    ENUMERATE_FACE (iFace, allFaces()) {
-    Face face = *iFace;
-    Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
-    Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)]; 
-    m_face_length_lagrange[face][0]  = 0.5 * math::abs(produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y));
-    m_face_length_lagrange[face][1]  = 0.5 * math::abs(produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x));
-    m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
-    }
-  } else {
+//     ENUMERATE_FACE (iFace, allFaces()) {
+//     Face face = *iFace;
+//     Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
+//     Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)]; 
+//     m_face_length_lagrange[face][0]  = 0.5 * math::abs(produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y));
+//     m_face_length_lagrange[face][1]  = 0.5 * math::abs(produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x));
+//     m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
+//     }
+    
+    auto fnc = m_connectivity_view.faceNode();
+    
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+    
+    auto in_node_coord = ax::viewIn(command,m_node_coord);
+    auto out_face_length = ax::viewOut(command,m_face_length_lagrange);
+    
+    command << RUNCOMMAND_ENUMERATE(Face,fid,allFaces()) {
+    
+      auto nodes = fnc.nodes(fid);
+      Real3 coord[4];
+      Int32 index=0;
+      for( NodeLocalId nid : fnc.nodes(fid) ){
+        coord[index]=in_node_coord[nid];
+        ++index;
+      }
+     
+      Real3 face_vec1 = coord[2] - coord[0];
+      Real3 face_vec2 = coord[3] - coord[1];
+      
+      out_face_length[fid] = 0.5 * math::abs(math::cross(face_vec1, face_vec2)); // TODO ABS REAL3 sur GPU ???
+  };
+    
+  } 
+  else {
      Real3 tempveclen;
      ENUMERATE_FACE (iFace, allFaces()) {
         Face face = *iFace;
@@ -38,6 +65,7 @@ computeFaceQuantitesForRemap()
         m_face_length_lagrange[face][2] = 0.;
     }
   }
+  
   ENUMERATE_FACE (iFace, allFaces()) {
     Face face = *iFace;
     Real3 vitesse_moy = {0. , 0. , 0.};
