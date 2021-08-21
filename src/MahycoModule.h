@@ -383,12 +383,20 @@ class MahycoModule
   
  private:
   
+  void _computeNodeIndexInCells();
+  void _computeNodeIndexInFaces();
+
+     //! Indice de chaque noeud dans la maille
+  UniqueArray<Int16> m_node_index_in_cells;
+  UniqueArray<Int16> m_node_index_in_faces;
+
+  
   /**
    * Calcule les résultantes aux noeuds d'une maille hexaédrique.
    * La méthode utilisée est celle du découpage en quatre triangles.
    * Méthode appelée par le point d'entrée \c computeGeometricValues()
    */
-  ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],Span<Real3> out_cqs);
+  ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
 
@@ -456,6 +464,10 @@ class MahycoModule
 
   UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
+
+  static const Integer MAX_NODE_CELL = 8;
+  static const Integer MAX_NODE_FACE = 4;
+ 
 };
 
 #endif

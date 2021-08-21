@@ -154,7 +154,10 @@ hydroStartInit()
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
- 
+
+  _computeNodeIndexInCells();
+  _computeNodeIndexInFaces();
+  
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
   m_global_deltat = deltat_init;
@@ -1771,6 +1774,73 @@ computeDeltaT()
   PROF_ACC_END;
 }
 
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+_computeNodeIndexInCells()
+{
+  info() << "ComputeNodeIndexInCells";
+  // Un noeud est connecté au maximum à MAX_NODE_CELL mailles
+  // Calcul pour chaque noeud son index dans chacune des
+  // mailles à laquelle il est connecté.
+  NodeGroup nodes = allNodes();
+  Integer nb_node = nodes.size();
+  m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
+  m_node_index_in_cells.fill(-1);
+  auto node_cell_cty = m_connectivity_view.nodeCell();
+  auto cell_node_cty = m_connectivity_view.cellNode();
+  ENUMERATE_NODE(inode,nodes){
+    NodeLocalId node = *inode;
+    Int32 index = 0;
+    Int32 first_pos = node.localId() * MAX_NODE_CELL;
+    for( CellLocalId cell : node_cell_cty.cells(node) ){
+      Int16 node_index_in_cell = 0;
+      for( NodeLocalId cell_node : cell_node_cty.nodes(cell) ){
+        if (cell_node==node)
+          break;
+        ++node_index_in_cell;
+      }
+      m_node_index_in_cells[first_pos + index] = node_index_in_cell;
+      ++index;
+    }
+  }
+}
+
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+_computeNodeIndexInFaces()
+{
+  info() << "ComputeNodeIndexInFaces";
+  // Un noeud est connecté au maximum à MAX_NODE_FACE facettes
+  // Calcul pour chaque noeud son index dans chacune des
+  // faces à laquelle il est connecté.
+  NodeGroup nodes = allNodes();
+  Integer nb_node = nodes.size();
+  m_node_index_in_faces.resize(MAX_NODE_FACE*nb_node);
+  m_node_index_in_faces.fill(-1);
+  auto node_face_cty = m_connectivity_view.nodeFace();
+  auto face_node_cty = m_connectivity_view.faceNode();
+  ENUMERATE_NODE(inode,nodes){
+    NodeLocalId node = *inode;
+    Int32 index = 0;
+    Int32 first_pos = node.localId() * MAX_NODE_FACE;
+    for( FaceLocalId face : node_face_cty.faces(node) ){
+      Int16 node_index_in_face = 0;
+      for( NodeLocalId face_node : face_node_cty.nodes(face) ){
+        if (face_node==node)
+          break;
+        ++node_index_in_face;
+      }
+      m_node_index_in_faces[first_pos + index] = node_index_in_face;
+      ++index;
+    }
+  }
+}
+
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -1841,14 +1911,14 @@ computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs)
 
 /*---------------------------------------------------------------------------*/
 Real MahycoModule::produit(Real A, Real B, Real C, Real D)
-  {
+{
   return (A*B-C*D);
-  }
+}
 /*---------------------------------------------------------------------------*/
 inline Real MahycoModule::norme(Real E, Real F, Real G)
-  {
+{
   return (sqrt((E*E)+(F*F)+(G*G)));
-  }
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

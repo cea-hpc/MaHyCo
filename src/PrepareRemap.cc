@@ -66,20 +66,32 @@ computeFaceQuantitesForRemap()
     }
   }
   
-  ENUMERATE_FACE (iFace, allFaces()) {
-    Face face = *iFace;
-    Real3 vitesse_moy = {0. , 0. , 0.};
-    m_face_coord[face]=0.;
-    for (Integer inode = 0; inode < face.nbNode(); ++inode) {
+  if (csts) {
+    ENUMERATE_FACE (iFace, allFaces()) {
+      Face face = *iFace;
+      Real3 vitesse_moy = {0. , 0. , 0.};
+      m_face_coord[face]=0.;
+      for (Integer inode = 0; inode < face.nbNode(); ++inode) {
         m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
-        if (csts)
         vitesse_moy += 0.5 * (m_velocity[face.node(inode)] + m_velocity_n[face.node(inode)]);
-        else
-        vitesse_moy += m_velocity[face.node(inode)];
-        
+      }
+      m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
     }
-    m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
   }
+  else {
+    ENUMERATE_FACE (iFace, allFaces()) {
+      Face face = *iFace;
+      Real3 vitesse_moy = {0. , 0. , 0.};
+      m_face_coord[face]=0.;
+      for (Integer inode = 0; inode < face.nbNode(); ++inode) {
+        m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
+        vitesse_moy += m_velocity[face.node(inode)];
+      }
+      m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
+    }
+  }
+  
+  
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
   PROF_ACC_END;
