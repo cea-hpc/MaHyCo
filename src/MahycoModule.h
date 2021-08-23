@@ -135,6 +135,15 @@ class MahycoModule
   // cela provoque une erreur mémoire)
   static const Integer MAX_NODE_CELL = 8;
 
+  // les paramètres pour appliquer les conditions aux limites sur des noeuds de bord
+  struct BoundaryCondition
+  {
+    NodeGroup nodes; //!< le groupe de noeuds sur lequel s'applique la CL
+    NodeVectorView boundary_nodes; //!< vue relative à ce groupe de noeuds
+    Real value; //!< la valeur appliquée à la composante de vitesse
+    TypesMahyco::eBoundaryCondition type; //!< le type de CL
+  };
+
  public:
 
   //! Initialise l'environnement pour les accélérateurs
@@ -426,6 +435,7 @@ class MahycoModule
   ax::Runner m_runner;
 
   UnstructuredMeshConnectivityView m_connectivity_view;
+  UniqueArray<BoundaryCondition> m_boundary_conditions;
 };
 
 #endif

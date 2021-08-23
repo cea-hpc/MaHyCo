@@ -207,7 +207,28 @@ hydroStartInit()
       out_cell_volume_g[cid] = volume;
     };
   }
-  
+ 
+  // Remplit la structure contenant les informations sur les conditions aux limites
+  // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
+  // de manière concurrente aux données.
+  {
+    m_boundary_conditions.clear();
+    for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
+      String NomBC = options()->boundaryCondition[i]->surface;
+      FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
+      Real value = options()->boundaryCondition[i]->value();
+      TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
+
+      BoundaryCondition bcn;
+      bcn.nodes = face_group.nodeGroup();
+      // attention, cette vue sera à reconstruire si bcn.nodes est modifié
+      bcn.boundary_nodes = bcn.nodes.view(); 
+      bcn.value = value;
+      bcn.type = type;
+      m_boundary_conditions.add(bcn);
+    }
+  }
+
   PROF_ACC_END;
 }
 
@@ -821,6 +842,7 @@ applyBoundaryCondition()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans applyBoundaryCondition()";
+#if 0
   for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
     String NomBC = options()->boundaryCondition[i]->surface;
     FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
@@ -853,6 +875,35 @@ applyBoundaryCondition()
       }
     }
   }
+#else
+  auto queue = makeQueue(m_runner);
+
+  // Pour cette méthode, comme les conditions aux limites sont sur des groupes
+  // indépendants (ou alors avec la même valeur si c'est sur les mêmes noeuds),
+  // on peut exécuter les noyaux en asynchrone.
+  queue.setAsync(true);
+
+  for( auto bc : m_boundary_conditions ) {
+    Real value = bc.value;
+    TypesMahyco::eBoundaryCondition type = bc.type;
+
+    auto command = makeCommand(queue);
+    auto inout_velocity = ax::viewInOut(command,m_velocity);
+
+    command << RUNCOMMAND_ENUMERATE(Node,nid,bc.boundary_nodes) {
+      Real3 velocity = inout_velocity[nid];
+      switch(type) {
+        case TypesMahyco::VelocityX: velocity.x = value; break;
+        case TypesMahyco::VelocityY: velocity.y = value; break;
+        case TypesMahyco::VelocityZ: velocity.z = value; break;
+        case TypesMahyco::Unknown: break;
+      }
+      inout_velocity[nid] = velocity;
+    }; // non-bloquant
+  }
+
+  queue.barrier();
+#endif
   PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
