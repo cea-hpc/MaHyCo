@@ -207,29 +207,63 @@ void MahycoModule::computeVariablesForRemap()
       
     }
   }
-  ENUMERATE_NODE(inode, allNodes()){
+  
+//   ENUMERATE_NODE(inode, allNodes()){
+//     // variables duales
+//     // quantité de mouvement
+//     m_u_dual_lagrange[inode][0] = m_node_mass[inode] * m_velocity[inode].x;
+//     m_u_dual_lagrange[inode][1] = m_node_mass[inode] * m_velocity[inode].y;
+//     m_u_dual_lagrange[inode][2] = m_node_mass[inode] * m_velocity[inode].z;
+//     // masse nodale    
+//     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
+//     // projection de l'energie cinétique
+//     //     if (options->projectionConservative == 1)
+//     m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs();
+// 
+//     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
+//     // *** variables Phi
+//      m_phi_dual_lagrange[inode][0] = m_velocity[inode].x;
+//      m_phi_dual_lagrange[inode][1] = m_velocity[inode].y;
+//      m_phi_dual_lagrange[inode][2] = m_velocity[inode].z;
+//      // masse nodale
+//      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
+//      // Phi energie cinétique
+//      //     if (options->projectionConservative == 1)
+//      m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
+//   }
+  
+  auto queue = makeQueue(m_runner);
+  auto command = makeCommand(queue);
+  
+  auto in_node_mass = ax::viewIn(command,m_node_mass);
+  auto in_velocity = ax::viewIn(command,m_velocity);
+  
+  auto out_u_dual_lagrange = ax::viewOut(command,m_u_dual_lagrange);
+  auto out_phi_dual_lagrange = ax::viewOut(command,m_phi_dual_lagrange);
+  
+  command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
     // variables duales
     // quantité de mouvement
-    m_u_dual_lagrange[inode][0] = m_node_mass[inode] * m_velocity[inode].x;
-    m_u_dual_lagrange[inode][1] = m_node_mass[inode] * m_velocity[inode].y;
-    m_u_dual_lagrange[inode][2] = m_node_mass[inode] * m_velocity[inode].z;
+    out_u_dual_lagrange[nid][0] = in_node_mass[nid] * in_velocity[nid][0];
+    out_u_dual_lagrange[nid][1] = in_node_mass[nid] * in_velocity[nid][1];
+    out_u_dual_lagrange[nid][2] = in_node_mass[nid] * in_velocity[nid][2];
     // masse nodale    
-    m_u_dual_lagrange[inode][3] = m_node_mass[inode];
+    out_u_dual_lagrange[nid][3] = in_node_mass[nid];
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
-    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs2();
-
+    out_u_dual_lagrange[nid][4] = 0.5 * in_node_mass[nid] * in_velocity[nid].normL2();
+    
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
-     m_phi_dual_lagrange[inode][0] = m_velocity[inode].x;
-     m_phi_dual_lagrange[inode][1] = m_velocity[inode].y;
-     m_phi_dual_lagrange[inode][2] = m_velocity[inode].z;
-     // masse nodale
-     m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
-     // Phi energie cinétique
-     //     if (options->projectionConservative == 1)
-     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs2();
-  }
+    out_phi_dual_lagrange[nid][0] = in_velocity[nid][0];
+    out_phi_dual_lagrange[nid][1] = in_velocity[nid][1];
+    out_phi_dual_lagrange[nid][2] = in_velocity[nid][2];
+    // masse nodale
+    out_phi_dual_lagrange[nid][3] = in_node_mass[nid];
+    // Phi energie cinétique
+    //     if (options->projectionConservative == 1)
+    out_phi_dual_lagrange[nid][4] = 0.5 * in_velocity[nid].normL2();
+  };
   
   PROF_ACC_END;
 }
