@@ -756,6 +756,7 @@ updatePosition()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updatePosition()";
   Real deltat = m_global_deltat();
+#if 0
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
     if (((options()->sansLagrange) && (node.nbCell() == 4)) || (!options()->sansLagrange))
@@ -769,6 +770,46 @@ updatePosition()
       somme += m_node_coord[inode];
     m_cell_coord[cell] = one_over_nbnode * somme;
   }
+#else
+  auto queue = makeQueue(m_runner);
+  if (!options()->sansLagrange)
+  {
+    auto command = makeCommand(queue);
+
+    auto in_velocity    = ax::viewIn(command,m_velocity);
+    auto out_node_coord = ax::viewOut(command,m_node_coord);
+
+    command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+      out_node_coord[nid] += deltat * in_velocity[nid];
+    };
+  }
+  else // options()->sansLagrange == true
+  {
+    ENUMERATE_NODE(inode, allNodes()){
+      Node node = *inode;
+      if (node.nbCell() == 4) {
+        m_node_coord[inode] += deltat * m_velocity[inode];
+      }
+    }
+  }
+  {
+    Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+
+    auto command = makeCommand(queue);
+
+    auto in_node_coord  = ax::viewIn(command,m_node_coord);
+    auto out_cell_coord = ax::viewOut(command,m_cell_coord);
+    auto cnc = m_connectivity_view.cellNode();
+
+    command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      Real3 somme = {0. , 0. , 0.};
+      for( NodeLocalId nid : cnc.nodes(cid) ){
+        somme += in_node_coord[nid];
+      }
+      out_cell_coord[cid] = one_over_nbnode * somme;
+    };
+  }
+#endif
   PROF_ACC_END;
 }
 
