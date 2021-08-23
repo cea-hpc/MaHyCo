@@ -40,7 +40,6 @@ computeFaceQuantitesForRemap()
     
     command << RUNCOMMAND_ENUMERATE(Face,fid,allFaces()) {
     
-      auto nodes = fnc.nodes(fid);
       Real3 coord[4];
       Int32 index=0;
       for( NodeLocalId nid : fnc.nodes(fid) ){
@@ -51,7 +50,7 @@ computeFaceQuantitesForRemap()
       Real3 face_vec1 = coord[2] - coord[0];
       Real3 face_vec2 = coord[3] - coord[1];
       
-      out_face_length[fid] = 0.5 * math::abs(math::cross(face_vec1, face_vec2)); // TODO ABS REAL3 sur GPU ???
+      out_face_length[fid] = 0.5 * math::abs(math::cross(face_vec1, face_vec2));
   };
     
   } 
@@ -79,18 +78,43 @@ computeFaceQuantitesForRemap()
     }
   }
   else {
-    ENUMERATE_FACE (iFace, allFaces()) {
-      Face face = *iFace;
+//     ENUMERATE_FACE (iFace, allFaces()) {
+//       Face face = *iFace;
+//       Real3 vitesse_moy = {0. , 0. , 0.};
+//       m_face_coord[face]=0.;
+//       for (Integer inode = 0; inode < face.nbNode(); ++inode) {
+//         m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
+//         vitesse_moy += m_velocity[face.node(inode)];
+//       }
+//       m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
+//     }
+    
+    auto fnc = m_connectivity_view.faceNode();
+    
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+    
+    auto in_node_coord = ax::viewIn(command,m_node_coord);
+    auto in_velocity = ax::viewIn(command,m_velocity);
+    auto in_face_normal = ax::viewIn(command,m_face_normal);
+    
+    auto out_face_coord = ax::viewOut(command,m_face_coord);
+    auto out_face_normal_velocity = ax::viewOut(command,m_face_normal_velocity);
+    
+    command << RUNCOMMAND_ENUMERATE(Face,fid,allFaces()) {
+
       Real3 vitesse_moy = {0. , 0. , 0.};
-      m_face_coord[face]=0.;
-      for (Integer inode = 0; inode < face.nbNode(); ++inode) {
-        m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node(inode)];
-        vitesse_moy += m_velocity[face.node(inode)];
-      }
-      m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
-    }
+      out_face_coord[fid] = Real3(0., 0., 0.);
+      
+      Int32 index=0;
+      for( NodeLocalId nid : fnc.nodes(fid) ){
+        out_face_coord[fid] += one_over_nbnode * in_node_coord[nid];
+        vitesse_moy += in_velocity[nid];
+        ++index;
+      }    
+      out_face_normal_velocity[fid] = math::dot((one_over_nbnode * vitesse_moy), in_face_normal[fid]);
+    };
   }
-  
   
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
