@@ -50,8 +50,9 @@ computeFaceQuantitesForRemap()
       Real3 face_vec1 = coord[2] - coord[0];
       Real3 face_vec2 = coord[3] - coord[1];
       
-      out_face_length[fid] = 0.5 * math::abs(math::cross(face_vec1, face_vec2));
-  };
+      Real3 out_face_length_temp = 0.5 * math::cross(face_vec1, face_vec2);
+      out_face_length[fid] = out_face_length_temp.absolute();
+    };
     
   } 
   else {
