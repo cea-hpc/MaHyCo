@@ -7,6 +7,7 @@
 
 #include <arcane/geometry/IGeometry.h>
 #include <arcane/mesh/GhostLayerMng.h>
+#include <arcane/utils/StringBuilder.h>
 
 #include <arcane/AcceleratorRuntimeInitialisationInfo.h>
 
@@ -1468,6 +1469,163 @@ computePressionMoyenne()
   }
   PROF_ACC_END;
 }     
+
+/*---------------------------------------------------------------------------*/
+/* DtCellInfo : type pour stocker les infos à la maille qui fait le pas de temps */
+/* DtCellInfoVoid : type vide, aucune info demandée                          */
+/*---------------------------------------------------------------------------*/
+class DtCellInfo {
+ public:
+  // VarCellSetter pour affecter une variable var sur accélérateur
+  class VarCellSetter {
+   public:
+    VarCellSetter(ax::RunCommand& command, VariableCellReal& var) :
+      m_out_var (ax::viewOut(command, var))
+    {}
+
+    ARCCORE_HOST_DEVICE VarCellSetter(const VarCellSetter& other) :
+      m_out_var (other.m_out_var)
+    {}
+
+    ARCCORE_HOST_DEVICE inline void setCellValue(CellLocalId cid, Real value) const {
+      m_out_var.setValue(cid, value);
+    }
+
+    ax::VariableCellRealOutView m_out_var;
+  };
+
+  DtCellInfo(IMesh* mesh) :
+    m_dx_sound (VariableBuildInfo(mesh, "TemporaryCellDxSound")),
+    m_minimum_aux (FloatInfo < Real >::maxValue()),
+    m_cell_id(-1), m_nbenvcell(-1),
+    m_cc(0.), m_ll(0.)
+  {}
+
+  VarCellSetter dxSoundSetter(ax::RunCommand& command) {
+    return VarCellSetter(command, m_dx_sound);
+  }
+
+  Real computeMinCellInfo(CellGroup cell_group, Materials::IMeshMaterialMng* mm, 
+      const Materials::MaterialVariableCellReal& v_sound_speed,
+      const VariableCellReal& v_caracteristic_length) {
+    CellToAllEnvCellConverter all_env_cell_converter(mm);
+
+    // On recherche en séquentiel sur CPU les infos de la maille qui a le plus petit dx_sound
+    m_minimum_aux = FloatInfo < Real >::maxValue(); 
+    ENUMERATE_CELL(icell, cell_group){
+      Cell cell = * icell;
+      Real dx_sound = m_dx_sound[icell];
+      m_minimum_aux = math::min(m_minimum_aux, dx_sound);
+      if (m_minimum_aux == dx_sound) {
+        m_cell_id = icell.localId();
+        m_cc = v_sound_speed[icell];
+        m_ll = v_caracteristic_length[icell];
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        m_nbenvcell = all_env_cell.nbEnvironment();
+      }
+    }
+    return m_minimum_aux;
+  }
+
+  String strInfo() const {
+    StringBuilder strb;
+    strb+=" par ";
+    strb+=m_cell_id;
+    strb+=" (avec ";
+    strb+=m_nbenvcell;
+    strb+=" envs) avec ";
+    strb+=m_cc;
+    strb+=" ";
+    strb+=m_ll;
+    strb+=" et min ";
+    strb+=m_minimum_aux;
+    return strb.toString();
+  }
+
+protected:
+  VariableCellReal m_dx_sound;
+  Real m_minimum_aux;
+  Integer m_cell_id;
+  Integer m_nbenvcell;
+  Real m_cc;
+  Real m_ll;
+};
+
+class DtCellInfoVoid {
+ public:
+  // VarCellSetter vide, n'affecte rien aucune variable sur accélérateur
+  class VarCellSetter {
+   public:
+
+    ARCCORE_HOST_DEVICE inline void setCellValue(CellLocalId cid, Real value) const {
+      // aucune valeur modifiée
+    }
+  };
+
+  VarCellSetter dxSoundSetter(ax::RunCommand& command) {
+    return VarCellSetter();
+  }
+
+  Real computeMinCellInfo(CellGroup cell_group, Materials::IMeshMaterialMng* mm, 
+      const Materials::MaterialVariableCellReal& v_sound_speed,
+      const VariableCellReal& v_caracteristic_length) {
+    return FloatInfo < Real >::maxValue();
+  }
+
+  String strInfo() const {
+    return String(" (aucune info sur les mailles)");
+  }
+};
+
+/*---------------------------------------------------------------------------*/
+/* Calcul d'un pas de temps à partir des grandeurs hydrodynamiques           */
+/*---------------------------------------------------------------------------*/
+template<typename DtCellInfoType>
+Real MahycoModule::
+computeHydroDeltaT(DtCellInfoType &dt_cell_info)
+{
+  // Calcul du pas de temps pour le respect du critère de CFL
+  Real minimum_aux;
+  {
+    auto queue = makeQueue(m_runner);
+    auto command = makeCommand(queue);
+    ax::ReducerMin<Real> minimum_aux_reducer(command);
+
+    bool with_projection = options()->withProjection;
+
+    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
+    auto in_velocity             = ax::viewIn(command, m_velocity);
+    auto out_dx_sound(dt_cell_info.dxSoundSetter(command));
+
+    auto cnc = m_connectivity_view.cellNode();
+
+    command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      Real cell_dx = in_caracteristic_length[cid];
+      Real sound_speed = in_sound_speed[cid];
+      Real vmax(0.);
+      if (with_projection) {
+        for( NodeLocalId nid : cnc.nodes(cid) ){
+          vmax = math::max(in_velocity[nid].abs(), vmax);
+        }
+      }
+      Real dx_sound = cell_dx / (sound_speed + vmax);
+      minimum_aux_reducer.min(dx_sound);
+      // On récupère éventuellement (ça va dépendre du type de dt_cell_info) la valeur de dx_sound sur cid
+      out_dx_sound.setCellValue(cid, dx_sound);
+    };
+    minimum_aux = minimum_aux_reducer.reduce();
+  }
+  // En fonction du type de dt_cell_info, on calcule ou pas les infos sur la maille qui fait le pas de temps
+  Real h_minimum_aux = dt_cell_info.computeMinCellInfo(allCells(), mm, m_sound_speed, m_caracteristic_length);
+  ARCANE_ASSERT(h_minimum_aux==minimum_aux, ("Les minimum_aux calculés sur CPU et GPU sont différents"));
+
+  Real dt_hydro = options()->cfl() * minimum_aux;
+  dt_hydro = parallelMng()->reduce(Parallel::ReduceMin, dt_hydro);
+
+  return dt_hydro;
+}
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
@@ -1489,6 +1647,7 @@ computeDeltaT()
     new_dt = options()->deltatInit();
     
   } else {
+#if 0
     CellToAllEnvCellConverter all_env_cell_converter(mm);
 
     // Calcul du pas de temps pour le respect du critère de CFL
@@ -1532,6 +1691,29 @@ computeDeltaT()
             << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll << " et min " << minimum_aux;
         exit(1);
     }
+#else
+#ifdef ARCANE_DEBUG
+    DtCellInfo dt_cell_info(defaultMesh()); // en debug, collecte des infos sur la maille qui fait le pas de temps
+#else
+    DtCellInfoVoid dt_cell_info; // en optimisé, on ne calcule pas les infos sur la maille qui fait le pas de temps
+#endif
+    new_dt = computeHydroDeltaT(dt_cell_info);
+    
+    // respect de taux de croissance max
+    new_dt = math::min(new_dt, 1.05 * m_global_old_deltat());
+    // respect de la valeur max imposée par le fichier de données .plt
+    debug() << " nouveau pas de temps " << new_dt << dt_cell_info.strInfo();
+    new_dt = math::min(new_dt, options()->deltatMax());
+    // respect du pas de temps minimum
+    if (new_dt < options()->deltatMin()) {
+      // On RECALCULE le pas de temps en récupérant les infos sur la maille cette fois-ci
+      DtCellInfo dt_cell_info_min(defaultMesh());
+      new_dt = computeHydroDeltaT(dt_cell_info_min);
+      info() << " pas de temps minimum ";
+      info() << " nouveau pas de temps " << new_dt << dt_cell_info_min.strInfo();
+      exit(1);
+    }
+#endif
     
     debug() << " nouveau pas de temps2 " << new_dt;
         

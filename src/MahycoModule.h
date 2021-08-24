@@ -315,7 +315,16 @@ class MahycoModule
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
   virtual void computePressionMoyenne();
-		
+	
+  /**
+   * Calcul d'un pas de temps à partir des grandeurs hydrodynamiques
+   * et affectation d'informations sur la maille qui fait le pas de temps
+   *
+   * \return Valeur du pas de temps hydro
+   */
+  template<typename DtCellInfoType>
+  Real computeHydroDeltaT(DtCellInfoType &dt_cell_info);
+
   /**
    * Détermine la valeur du pas de temps pour l'itération suivante. 
    * Le pas de temps est contraint par :
