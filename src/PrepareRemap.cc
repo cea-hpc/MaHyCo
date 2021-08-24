@@ -149,7 +149,7 @@ void MahycoModule::computeVariablesForRemap()
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
-    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs();
+    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs2();
 
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
@@ -160,7 +160,7 @@ void MahycoModule::computeVariablesForRemap()
      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
      // Phi energie cinétique
      //     if (options->projectionConservative == 1)
-     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
+     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs2();
   }
   
 }
@@ -197,14 +197,14 @@ void MahycoModule::remap() {
     m_density_n.fill(0.0);
     m_tau_density.fill(0.0);
     
-    // m_materiau.fill(0.0);
+    m_materiau.fill(0.0);
     for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
         IMeshEnvironment* ienv = mm->environments()[index_env];
         // calcul de la fraction de matiere 
         ENUMERATE_ENVCELL(ienvcell,ienv){
           EnvCell ev = *ienvcell;
           Cell cell = ev.globalCell();
-          // m_materiau[cell] += index_env*m_fracvol[ev];
+          m_materiau[cell] += index_env*m_fracvol[ev];
         }
     }
     if (!options()->sansLagrange) {

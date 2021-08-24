@@ -234,6 +234,7 @@ saveValuesAtN()
   
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = *icell;
+    m_pseudo_viscosity_nmoins1[cell] = m_pseudo_viscosity_n[cell];
     m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
     m_pressure_n[cell] = m_pressure[cell];
     m_cell_volume_n[cell] = m_cell_volume[cell];
@@ -244,6 +245,7 @@ saveValuesAtN()
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
       EnvCell ev = *ienvcell;
+      m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
       m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
       m_pressure_n[ev] = m_pressure[ev];
       m_cell_volume_n[ev] = m_cell_volume[ev];
@@ -865,11 +867,17 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           Cell cell=ev.globalCell();
           Real cqs_v_nplus1(0.);
           Real cqs_v_n(0.);
+          Real cqs_delta_v(0.);
+          Real cqs_v_old_n(0.);
           for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
             cqs_v_nplus1 += math::dot(m_velocity[cell.node(inode)], m_cell_cqs[cell] [inode])
               * m_global_deltat();
             cqs_v_n += math::dot(m_velocity[cell.node(inode)], m_cell_cqs_n[cell] [inode])
               * m_global_deltat();
+            cqs_delta_v +=  math::dot(m_velocity[cell.node(inode)] - m_velocity_n[cell.node(inode)], m_cell_cqs_n[cell] [inode])
+            * (m_global_deltat() - m_global_old_deltat());
+            cqs_v_old_n += math::dot(m_velocity_n[cell.node(inode)], m_cell_cqs_n[cell] [inode])
+            * m_global_old_deltat();
           }
           double rn  = m_density_n[ev];
           double pn  = m_pressure_n[ev];
@@ -882,20 +890,23 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double t = tension_limit;
           double cn1 = cqs_v_nplus1;
           double cn = cqs_v_n;
-          // les iterations denewton
+          double cdn = cqs_delta_v;
+          double cdon = 0. ;
+          double qnm1 = m_pseudo_viscosity_nmoins1[ev]; 
+          // les iterations de newton
           double epsilon = options()->threshold;
           double itermax = 50;
           double enew=0, e=en, p, c, dpde;
           int i = 0;
         
-          while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1))>=epsilon)
+          while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1, cdn, cdon, qnm1))>=epsilon)
 	        {
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
               c = m_sound_speed[ev];
               dpde = m_dpde[ev];
-              enew = e - f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1) / fderiv(e, p, dpde, cn1, m);
+              enew = e - f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1, cdn, cdon, qnm1) / fderiv(e, p, dpde, cn1, m);
               e = enew;
               i++;
             }
@@ -952,19 +963,31 @@ updateEnergyAndPressureforGP()
         Cell cell = ev.globalCell();
         Real cqs_v_nplus1(0.);
         Real cqs_v_n(0.);
+        Real cqs_delta_v(0.);
+        Real cqs_v_old_n(0.);
         for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
           cqs_v_nplus1 += math::dot(m_velocity[cell.node(inode)], m_cell_cqs[cell] [inode])
             * m_global_deltat();
           cqs_v_n += math::dot(m_velocity[cell.node(inode)], m_cell_cqs_n[cell] [inode])
             * m_global_deltat();
+          cqs_delta_v +=  math::dot(m_velocity[cell.node(inode)] - m_velocity_n[cell.node(inode)], m_cell_cqs_n[cell] [inode])
+            * (m_global_deltat() - m_global_old_deltat());
+          cqs_v_old_n += math::dot(m_velocity_n[cell.node(inode)], m_cell_cqs_n[cell] [inode])
+            * m_global_old_deltat();
         }
         Real denom_accrois_nrj(1 + 0.5 * (adiabatic_cst - 1.0)
-                               * m_density[ev] * cqs_v_n / m_cell_mass[ev]) ;
+                               * m_density[ev] * cqs_v_nplus1 / m_cell_mass[ev]) ;
         Real numer_accrois_nrj(m_internal_energy[ev]
-                               - (0.5 * (m_pressure[ev] + m_pseudo_viscosity[ev])
+                               - (0.5 * (m_pressure_n[ev] + m_pseudo_viscosity_n[ev])
                                   * cqs_v_n / m_cell_mass[ev])
                                - (0.5 * m_pseudo_viscosity[ev]
-                                  * cqs_v_nplus1 / m_cell_mass[ev]));	
+                                  * cqs_v_nplus1 / m_cell_mass[ev])
+                               + (0.25 * (m_pressure_n[ev] + m_pseudo_viscosity_n[ev]) 
+                                  * cqs_delta_v / m_cell_mass[ev])
+                               - (0.5 * (m_pseudo_viscosity_n[ev] - m_pseudo_viscosity_nmoins1[ev]) 
+                                  * cqs_v_old_n / m_cell_mass[ev])
+                               );
+
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
       }
     }

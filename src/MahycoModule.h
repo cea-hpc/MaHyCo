@@ -370,8 +370,8 @@ class MahycoModule
    /** */
    inline double f(double e, double p,double dpde,
 		  double en,double qn, double pn, double cn1,
-		  double cn, double m, double qn1) 
-     {return e-en+0.5*(p+qn1)*cn1/m +0.5*(pn+qn)*cn/m;};
+		  double cn, double m, double qn1, double cdn, double cdon, double qnm1) 
+     {return e-en+0.5*(p+qn1)*cn1/m +0.5*(pn+qn)*cn/m-0.25*(pn+qn)*cdn/m + 0.5*(qn1-qnm1)*cdon/m;};
    /** */
    /* la derivee de f */
    /** */

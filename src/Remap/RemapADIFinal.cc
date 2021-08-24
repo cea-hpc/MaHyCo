@@ -295,7 +295,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           delta_ec += 0.25 * ( ec_proj - ec_reconst);
         }
       }
-      //delta_ec = std::max(0., delta_ec);
+      delta_ec = std::max(0., delta_ec);
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell; 
         m_internal_energy[ev] += m_mass_fraction[ev] * delta_ec;
