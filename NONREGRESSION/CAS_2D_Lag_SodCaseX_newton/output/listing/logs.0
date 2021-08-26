@@ -1,7 +1,7 @@
 *L-Init     The mesh file is 
 *L-TimeLoopMng Registering the time loop MahycoLoop
 *L-TimeLoopMng Registering the time loop MahycoLagrangeLoop
-*L-TimeLoopMng [07/08/2021 16:12:56] Using time loop MahycoLagrangeLoop
+*L-TimeLoopMng [08/26/2021 13:22:31] Using time loop MahycoLagrangeLoop
 *L-CaseMng  Register case option <arcane-cea-verifier>
 *L-TimeLoopMng  Add an entry point <ArcaneCeaVerifier::VerifierOnExit>
 *L-TimeLoopMng  Add an entry point <ArcaneCeaVerifier::VerifierOnInit>
@@ -19,6 +19,7 @@
 *L-TimeLoopMng  Add an entry point <ArcanePostProcessing::PostProcessingInit>
 *L-TimeLoopMng  Add an entry point <ArcanePostProcessing::PostProcessingExit>
 *L-CaseMng  Register case option <mahyco>
+*L-TimeLoopMng  Add an entry point <Mahyco::AccBuild>
 *L-TimeLoopMng  Add an entry point <Mahyco::HydroStartInit>
 *L-TimeLoopMng  Add an entry point <Mahyco::HydroContinueInit>
 *L-TimeLoopMng  Add an entry point <Mahyco::ComputeCellMass>
@@ -35,6 +36,7 @@
 *L-TimeLoopMng  Add an entry point <Mahyco::ComputePressionMoyenne>
 *L-TimeLoopMng  Add an entry point <Mahyco::Remap>
 *L-TimeLoopMng  Add an entry point <Mahyco::ComputeDeltaT>
+*L-TimeLoopMng Looking for entry point 'Mahyco.AccBuild'
 *L-TimeLoopMng Looking for entry point 'Mahyco.SaveValuesAtN'
 *L-TimeLoopMng Looking for entry point 'Mahyco.UpdateVelocity'
 *L-TimeLoopMng Looking for entry point 'Mahyco.ApplyBoundaryCondition'
@@ -65,6 +67,7 @@
 *L-TimeLoopMng Adding the entry point `Master::MasterBuild' to the execution
 *L-TimeLoopMng Adding the entry point `ArcanePostProcessing::PostProcessingExportDataStart' to the execution
 *L-TimeLoopMng Adding the entry point `ArcanePostProcessing::PostProcessingStartInit' to the execution
+*L-TimeLoopMng Adding the entry point `Mahyco::AccBuild' to the execution
 *L-TimeLoopMng Adding the entry point `Mahyco::SaveValuesAtN' to the execution
 *L-TimeLoopMng Adding the entry point `Mahyco::UpdateVelocity' to the execution
 *L-TimeLoopMng Adding the entry point `Mahyco::ApplyBoundaryCondition' to the execution
@@ -90,36 +93,36 @@
 *L-TimeLoopMng Adding the entry point `TimeHistoryMng::ArcaneTimeHistoryStartInitEnd' to the execution
 *L-TimeLoopMng Adding the entry point `TimeHistoryMng::ArcaneTimeHistoryEnd' to the execution
 *L-TimeLoopMng Adding the entry point `ArcaneMasterInternal::ArcaneTimeLoopEnd' to the execution
-*L-Internal [07/08/2021 16:12:56] Initialisation du code.
+*L-Internal [08/26/2021 13:22:31] Initialisation du code.
 *L-Internal Mesh file: 
-*L-Mesh     ItemSharedInfoList: write: Node count=9 changed=1
-*L-Mesh     ItemSharedInfoList: write: Face count=3 changed=1
+*L-Mesh     ItemSharedInfoList: write: Node count=1 changed=1
+*L-Mesh     ItemSharedInfoList: write: Face count=1 changed=1
 *L-Mesh     ItemSharedInfoList: write: Cell count=1 changed=1
-*L-Internal [07/08/2021 16:12:56] Info output in 'coderesult.xml'
-*L-Internal [07/08/2021 16:12:57] Execution of the end of compute entry points
+*L-Internal [08/26/2021 13:22:31] Info output in 'coderesult.xml'
+*L-Internal [08/26/2021 13:22:33] Execution of the end of compute entry points
 *L-Internal TimeStats:{
  "EntryPoints": [{
    "Name": "ArcaneTimeLoopBegin",
-   "TotalCpuTime": 0.02800000086426735,
-   "TotalElapsedTime": 0.06629085540771485,
+   "TotalCpuTime": 0.04499999713152647,
+   "TotalElapsedTime": 0.09219145774841309,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ArcaneTimeLoopEnd",
-   "TotalCpuTime": 0.015999999828636648,
-   "TotalElapsedTime": 0.04014754295349121,
+   "TotalCpuTime": 0.047000003047287467,
+   "TotalElapsedTime": 0.0789334774017334,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ArcaneMasterStartInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000069141387939453129,
+   "TotalElapsedTime": 0.000015735626220703126,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "ArcaneMasterInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000001430511474609375,
+   "TotalElapsedTime": 0.0000050067901611328129,
    "NbCall": 1,
    "Where": "Init"
   }, {
@@ -131,7 +134,7 @@
   }, {
    "Name": "ArcaneMasterLoopExit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000019073486328125,
+   "TotalElapsedTime": 0.0000057220458984375,
    "NbCall": 1,
    "Where": "Exit"
   }, {
@@ -148,26 +151,26 @@
    "Where": "Restore"
   }, {
    "Name": "ArcaneTimeHistoryBegin",
-   "TotalCpuTime": 0.003999999724328518,
-   "TotalElapsedTime": 0.004344463348388672,
+   "TotalCpuTime": 0.006000000052154064,
+   "TotalElapsedTime": 0.011992692947387696,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ArcaneTimeHistoryEnd",
-   "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0038890838623046877,
+   "TotalCpuTime": 0.007999999448657036,
+   "TotalElapsedTime": 0.011985301971435547,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ArcaneTimeHistoryInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.00008368492126464844,
+   "TotalElapsedTime": 0.002138376235961914,
    "NbCall": 1,
    "Where": "Init"
   }, {
    "Name": "ArcaneTimeHistoryStartInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.00003409385681152344,
+   "TotalElapsedTime": 0.0024394989013671877,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
@@ -179,7 +182,7 @@
   }, {
    "Name": "ArcaneTimeHistoryStartInitEnd",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000003337860107421875,
+   "TotalElapsedTime": 0.000009775161743164063,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
@@ -191,79 +194,85 @@
   }, {
    "Name": "VerifierOnExit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000020503997802734376,
+   "TotalElapsedTime": 0.000017881393432617189,
    "NbCall": 1,
    "Where": "Exit"
   }, {
    "Name": "VerifierOnInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000054836273193359379,
+   "TotalElapsedTime": 0.0000171661376953125,
    "NbCall": 1,
    "Where": "Init"
   }, {
    "Name": "MasterBuild",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.00000476837158203125,
+   "TotalElapsedTime": 0.000019073486328125,
    "NbCall": 1,
    "Where": "Build"
   }, {
    "Name": "ArcaneCheckpointCheckAndWriteData",
-   "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0025758743286132814,
+   "TotalCpuTime": 0.0059999991208314899,
+   "TotalElapsedTime": 0.009987592697143555,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ArcaneCheckpointStartInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000002384185791015625,
+   "TotalElapsedTime": 0.0000054836273193359379,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "ArcaneCheckpointInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000013828277587890625,
+   "TotalElapsedTime": 0.000025510787963867189,
    "NbCall": 1,
    "Where": "Init"
   }, {
    "Name": "ArcaneCheckpointExit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000026226043701171877,
+   "TotalElapsedTime": 0.000016927719116210939,
    "NbCall": 1,
    "Where": "Exit"
   }, {
    "Name": "PostProcessingExportData",
-   "TotalCpuTime": 0.08799999579787255,
-   "TotalElapsedTime": 0.10016131401062012,
+   "TotalCpuTime": 0.15599999390542508,
+   "TotalElapsedTime": 1.6597850322723389,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "PostProcessingExportDataStart",
-   "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0032939910888671877,
+   "TotalCpuTime": 0.011999998241662979,
+   "TotalElapsedTime": 0.010594606399536133,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "PostProcessingStartInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000004291534423828125,
+   "TotalElapsedTime": 0.000011682510375976563,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "PostProcessingInit",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.00007128715515136719,
+   "TotalElapsedTime": 0.0015785694122314454,
    "NbCall": 1,
    "Where": "Init"
   }, {
    "Name": "PostProcessingExit",
-   "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.002459287643432617,
+   "TotalCpuTime": 0.004999999888241291,
+   "TotalElapsedTime": 0.03593277931213379,
    "NbCall": 1,
    "Where": "Exit"
   }, {
-   "Name": "HydroStartInit",
+   "Name": "AccBuild",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0026357173919677736,
+   "TotalElapsedTime": 0.00006413459777832031,
+   "NbCall": 1,
+   "Where": "Build"
+  }, {
+   "Name": "HydroStartInit",
+   "TotalCpuTime": 0.003999999724328518,
+   "TotalElapsedTime": 0.015524148941040039,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
@@ -275,67 +284,67 @@
   }, {
    "Name": "ComputeCellMass",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000040531158447265629,
+   "TotalElapsedTime": 0.000014781951904296875,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "ComputeNodeMass",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0000059604644775390629,
+   "TotalElapsedTime": 0.0007615089416503906,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "PrepareFaceGroup",
    "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.000064849853515625,
+   "TotalElapsedTime": 0.00010609626770019531,
    "NbCall": 1,
    "Where": "StartInit"
   }, {
    "Name": "SaveValuesAtN",
-   "TotalCpuTime": 0.019999999552965165,
-   "TotalElapsedTime": 0.029226064682006837,
+   "TotalCpuTime": 0.02900000289082527,
+   "TotalElapsedTime": 0.03516221046447754,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "UpdateVelocity",
-   "TotalCpuTime": 0.023999999277293683,
-   "TotalElapsedTime": 0.02887868881225586,
+   "TotalCpuTime": 0.020000001415610315,
+   "TotalElapsedTime": 0.026737451553344728,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ApplyBoundaryCondition",
-   "TotalCpuTime": 0.055999998934566978,
-   "TotalElapsedTime": 0.035944461822509769,
+   "TotalCpuTime": 0.016000001691281797,
+   "TotalElapsedTime": 0.01827073097229004,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "UpdatePosition",
-   "TotalCpuTime": 0.019999999552965165,
-   "TotalElapsedTime": 0.01336979866027832,
+   "TotalCpuTime": 0.01699999812990427,
+   "TotalElapsedTime": 0.020965576171875,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ComputeGeometricValues",
-   "TotalCpuTime": 0.14400000404566527,
-   "TotalElapsedTime": 0.14147591590881349,
+   "TotalCpuTime": 0.1260000029578805,
+   "TotalElapsedTime": 0.1079549789428711,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "UpdateDensity",
-   "TotalCpuTime": 0.01599999889731407,
-   "TotalElapsedTime": 0.014919042587280274,
+   "TotalCpuTime": 0.018000000156462194,
+   "TotalElapsedTime": 0.022670984268188478,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "ComputeArtificialViscosity",
-   "TotalCpuTime": 0.016000001691281797,
-   "TotalElapsedTime": 0.007111072540283203,
+   "TotalCpuTime": 0.009000001475214959,
+   "TotalElapsedTime": 0.014350414276123047,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
    "Name": "UpdateEnergyAndPressure",
-   "TotalCpuTime": 0.04000000096857548,
-   "TotalElapsedTime": 0.03436994552612305,
+   "TotalCpuTime": 0.033999999053776267,
+   "TotalElapsedTime": 0.044690608978271487,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }, {
@@ -352,8 +361,8 @@
    "Where": "ComputeLoop"
   }, {
    "Name": "ComputeDeltaT",
-   "TotalCpuTime": 0.0,
-   "TotalElapsedTime": 0.0067288875579833988,
+   "TotalCpuTime": 0.015999999828636648,
+   "TotalElapsedTime": 0.01917719841003418,
    "NbCall": 2029,
    "Where": "ComputeLoop"
   }],
@@ -366,12 +375,12 @@
     "Name": "ArcaneProperties",
     "DataType": "Byte",
     "Dimension": 1,
-    "NbElement": 3200,
+    "NbElement": 3456,
     "ItemFamily": null,
     "Mesh": null,
     "Group": "Alls",
     "Property": 64,
-    "AllocatedMemory": 3200.0
+    "AllocatedMemory": 3456.0
    }, {
     "Used": true,
     "Name": "Mesh0ChildMeshesName",
@@ -487,12 +496,12 @@
     "Name": "CellFamilyItemsData",
     "DataType": "Int32",
     "Dimension": 1,
-    "NbElement": 5000,
+    "NbElement": 3000,
     "ItemFamily": null,
     "Mesh": "Mesh0",
     "Group": "Alls",
     "Property": 64,
-    "AllocatedMemory": 20000.0
+    "AllocatedMemory": 12000.0
    }, {
     "Used": true,
     "Name": "CellFamilyItemsShared",
@@ -570,17 +579,6 @@
     "Group": "AllCells",
     "Property": 0,
     "AllocatedMemory": 12000.0
-   }, {
-    "Used": true,
-    "Name": "CellFamilyNewOwner",
-    "DataType": "Int32",
-    "Dimension": 1,
-    "NbElement": 500,
-    "ItemFamily": "Cell",
-    "Mesh": "Mesh0",
-    "Group": "AllCells",
-    "Property": 33,
-    "AllocatedMemory": 2000.0
    }, {
     "Used": true,
     "Name": "CellFamilyNewOwnerName",
@@ -1598,12 +1596,12 @@
     "Name": "FaceFamilyItemsData",
     "DataType": "Int32",
     "Dimension": 1,
-    "NbElement": 6630,
+    "NbElement": 4420,
     "ItemFamily": null,
     "Mesh": "Mesh0",
     "Group": "Alls",
     "Property": 64,
-    "AllocatedMemory": 26520.0
+    "AllocatedMemory": 17680.0
    }, {
     "Used": true,
     "Name": "FaceFamilyItemsShared",
@@ -1730,12 +1728,12 @@
     "Name": "Face_SharedInfoList",
     "DataType": "Int32",
     "Dimension": 2,
-    "NbElement": 27,
+    "NbElement": 9,
     "ItemFamily": null,
     "Mesh": "Mesh0",
     "Group": "Alls",
     "Property": 0,
-    "AllocatedMemory": 108.0
+    "AllocatedMemory": 36.0
    }, {
     "Used": true,
     "Name": "GROUP_CellAllCells",
@@ -2522,12 +2520,12 @@
     "Name": "NodeFamilyItemsData",
     "DataType": "Int32",
     "Dimension": 1,
-    "NbElement": 6060,
+    "NbElement": 1212,
     "ItemFamily": null,
     "Mesh": "Mesh0",
     "Group": "Alls",
     "Property": 64,
-    "AllocatedMemory": 24240.0
+    "AllocatedMemory": 4848.0
    }, {
     "Used": true,
     "Name": "NodeFamilyItemsShared",
@@ -2662,17 +2660,6 @@
     "AllocatedMemory": 4848.0
    }, {
     "Used": true,
-    "Name": "NodeVolum",
-    "DataType": "Real",
-    "Dimension": 1,
-    "NbElement": 606,
-    "ItemFamily": "Node",
-    "Mesh": "Mesh0",
-    "Group": "AllNodes",
-    "Property": 3,
-    "AllocatedMemory": 4848.0
-   }, {
-    "Used": true,
     "Name": "PhiDualLagrange",
     "DataType": "Real",
     "Dimension": 2,
@@ -2687,12 +2674,12 @@
     "Name": "Node_SharedInfoList",
     "DataType": "Int32",
     "Dimension": 2,
-    "NbElement": 81,
+    "NbElement": 9,
     "ItemFamily": null,
     "Mesh": "Mesh0",
     "Group": "Alls",
     "Property": 0,
-    "AllocatedMemory": 324.0
+    "AllocatedMemory": 36.0
    }, {
     "Used": true,
     "Name": "UDualLagrange",
@@ -2872,228 +2859,238 @@
    }]
  },
  "TimeStats": {
-  "Main": {
-   "Local": "0.00283718109130859 0 0",
-   "Cumulative": "0.483987331390381 0.00152802467346191 0.0994222164154053",
-   "SubActions": ["Init", {
-     "Local": "0.00661659240722656 6.91413879394531e-06 0",
-     "Cumulative": "0.0103158950805664 6.91413879394531e-06 0",
-     "SubActions": ["AllocateMesh", {
-       "Local": "4.05311584472656e-06 0 0",
-       "Cumulative": "4.05311584472656e-06 0 0"
-      }, "BuildtEntryPoints", {
-       "Local": "1.85966491699219e-05 0 0",
-       "Cumulative": "2.19345092773438e-05 0 0",
-       "SubActions": ["Master", {
-         "Local": "2.14576721191406e-06 0 0",
-         "Cumulative": "3.33786010742188e-06 0 0",
-         "SubActions": ["MasterBuild", {
-           "Local": "1.19209289550781e-06 0 0",
-           "Cumulative": "1.19209289550781e-06 0 0"
-          }]
-        }]
-      }, "CompactItemsBegin", {
-       "Local": "0.000229597091674805 0 0",
-       "Cumulative": "0.000229597091674805 0 0"
-      }, "CompactUpdateInternalReferences", {
-       "Local": "6.31809234619141e-05 0 0",
-       "Cumulative": "6.31809234619141e-05 0 0"
-      }, "CompactItemFinish", {
-       "Local": "0.00036168098449707 0 0",
-       "Cumulative": "0.00036168098449707 0 0"
-      }, "CompactItemSortReferences", {
-       "Local": "2.40802764892578e-05 0 0",
-       "Cumulative": "2.40802764892578e-05 0 0"
-      }, "CompactConnectivityData", {
-       "Local": "2.14576721191406e-05 0 0",
-       "Cumulative": "2.14576721191406e-05 0 0"
-      }, "CompactVariables", {
-       "Local": "1.16825103759766e-05 0 0",
-       "Cumulative": "1.16825103759766e-05 0 0"
-      }, "InitEntryPoints", {
-       "Local": "2.83718109130859e-05 0 0",
-       "Cumulative": "0.00296163558959961 0 0",
-       "SubActions": ["ArcaneMasterInternal", {
-         "Local": "1.9073486328125e-06 0 0",
-         "Cumulative": "7.62939453125e-06 0 0",
-         "SubActions": ["ArcaneMasterStartInit", {
-           "Local": "5.24520874023438e-06 0 0",
-           "Cumulative": "5.24520874023438e-06 0 0"
-          }, "ArcaneMasterInit", {
-           "Local": "4.76837158203125e-07 0 0",
-           "Cumulative": "4.76837158203125e-07 0 0"
-          }]
-        }, "TimeHistoryMng", {
-         "Local": "3.09944152832031e-06 0 0",
-         "Cumulative": "0.000120401382446289 0 0",
-         "SubActions": ["ArcaneTimeHistoryInit", {
-           "Local": "8.22544097900391e-05 0 0",
-           "Cumulative": "8.22544097900391e-05 0 0"
-          }, "ArcaneTimeHistoryStartInit", {
-           "Local": "3.26633453369141e-05 0 0",
-           "Cumulative": "3.26633453369141e-05 0 0"
-          }, "ArcaneTimeHistoryStartInitEnd", {
-           "Local": "2.38418579101562e-06 0 0",
-           "Cumulative": "2.38418579101562e-06 0 0"
-          }]
-        }, "ArcaneCeaVerifier", {
-         "Local": "9.5367431640625e-07 0 0",
-         "Cumulative": "5.24520874023438e-06 0 0",
-         "SubActions": ["VerifierOnInit", {
-           "Local": "4.29153442382812e-06 0 0",
-           "Cumulative": "4.29153442382812e-06 0 0"
-          }]
-        }, "ArcanePostProcessing", {
-         "Local": "2.38418579101562e-06 0 0",
-         "Cumulative": "7.51018524169922e-05 0 0",
-         "SubActions": ["PostProcessingStartInit", {
-           "Local": "2.62260437011719e-06 0 0",
-           "Cumulative": "2.62260437011719e-06 0 0"
-          }, "PostProcessingInit", {
-           "Local": "7.00950622558594e-05 0 0",
-           "Cumulative": "7.00950622558594e-05 0 0"
-          }]
-        }, "Mahyco", {
-         "Local": "4.05311584472656e-06 0 0",
-         "Cumulative": "0.00270938873291016 0 0",
-         "SubActions": ["HydroStartInit", {
-           "Local": "0.00263404846191406 0 0",
-           "Cumulative": "0.00263404846191406 0 0"
-          }, "PrepareFaceGroup", {
-           "Local": "6.34193420410156e-05 0 0",
-           "Cumulative": "6.34193420410156e-05 0 0"
-          }, "ComputeCellMass", {
-           "Local": "2.86102294921875e-06 0 0",
-           "Cumulative": "2.86102294921875e-06 0 0"
-          }, "ComputeNodeMass", {
-           "Local": "5.00679016113281e-06 0 0",
-           "Cumulative": "5.00679016113281e-06 0 0"
-          }]
-        }, "ArcaneCheckpoint", {
-         "Local": "1.9073486328125e-06 0 0",
-         "Cumulative": "1.54972076416016e-05 0 0",
-         "SubActions": ["ArcaneCheckpointInit", {
-           "Local": "1.21593475341797e-05 0 0",
-           "Cumulative": "1.21593475341797e-05 0 0"
-          }, "ArcaneCheckpointStartInit", {
-           "Local": "1.43051147460938e-06 0 0",
-           "Cumulative": "1.43051147460938e-06 0 0"
-          }]
-        }]
-      }]
-    }, "Loop", {
-     "Local": "0.00340509414672852 0 0",
-     "Cumulative": "0.463593721389771 0.00152111053466797 0.0969986915588379",
-     "SubActions": ["LoopEntryPoints", {
-       "Local": "0.0332179069519043 0 0",
-       "Cumulative": "0.460188627243042 0.00152111053466797 0.0969986915588379",
-       "SubActions": ["ArcaneMasterInternal", {
-         "Local": "0.00337934494018555 0 0",
-         "Cumulative": "0.104431629180908 0.0010828971862793 0",
-         "SubActions": ["ArcaneTimeLoopBegin", {
-           "Local": "0.0630896091461182 0.0010828971862793 0",
-           "Cumulative": "0.0630896091461182 0.0010828971862793 0"
-          }, "ArcaneTimeLoopEnd", {
-           "Local": "0.0379626750946045 0 0",
-           "Cumulative": "0.0379626750946045 0 0"
-          }]
-        }, "TimeHistoryMng", {
-         "Local": "0.00310063362121582 0 0",
-         "Cumulative": "0.00717067718505859 0 0",
-         "SubActions": ["ArcaneTimeHistoryBegin", {
-           "Local": "0.00200676918029785 0 0",
-           "Cumulative": "0.00200676918029785 0 0"
-          }, "ArcaneTimeHistoryEnd", {
-           "Local": "0.00206327438354492 0 0",
-           "Cumulative": "0.00206327438354492 0 0"
-          }]
-        }, "ArcanePostProcessing", {
-         "Local": "0.00277900695800781 0 0",
-         "Cumulative": "0.00562286376953125 0 0.0969986915588379",
-         "SubActions": ["PostProcessingExportDataStart", {
-           "Local": "0.00148963928222656 0 0",
-           "Cumulative": "0.00148963928222656 0 0"
-          }, "PostProcessingExportData", {
-           "Local": "0.00135421752929688 0 0.0969986915588379",
-           "Cumulative": "0.00135421752929688 0 0.0969986915588379"
-          }]
-        }, "Mahyco", {
-         "Local": "0.0144782066345215 0 0",
-         "Cumulative": "0.307597160339355 0.000438213348388672 0",
-         "SubActions": ["SaveValuesAtN", {
-           "Local": "0.0263223648071289 0 0",
-           "Cumulative": "0.0263223648071289 0 0"
-          }, "UpdateVelocity", {
-           "Local": "0.0261762142181396 0 0",
-           "Cumulative": "0.0261762142181396 0 0"
-          }, "ApplyBoundaryCondition", {
-           "Local": "0.0340561866760254 0 0",
-           "Cumulative": "0.0340561866760254 0 0"
-          }, "UpdatePosition", {
-           "Local": "0.0114963054656982 0 0",
-           "Cumulative": "0.0114963054656982 0 0"
-          }, "ComputeGeometricValues", {
-           "Local": "0.139584302902222 0 0",
-           "Cumulative": "0.139584302902222 0 0"
-          }, "UpdateDensity", {
-           "Local": "0.0130918025970459 0 0",
-           "Cumulative": "0.0130918025970459 0 0"
-          }, "ComputeArtificialViscosity", {
-           "Local": "0.00529623031616211 0 0",
-           "Cumulative": "0.00529623031616211 0 0"
-          }, "UpdateEnergyAndPressure", {
-           "Local": "0.0325303077697754 0 0",
-           "Cumulative": "0.0325303077697754 0 0"
-          }, "ComputeDeltaT", {
-           "Local": "0.00456523895263672 0.000438213348388672 0",
-           "Cumulative": "0.00456523895263672 0.000438213348388672 0"
-          }]
-        }, "ArcaneCheckpoint", {
-         "Local": "0.0014498233795166 0 0",
-         "Cumulative": "0.00214838981628418 0 0",
-         "SubActions": ["ArcaneCheckpointCheckAndWriteData", {
-           "Local": "0.000698566436767578 0 0",
-           "Cumulative": "0.000698566436767578 0 0"
-          }]
-        }]
-      }]
-    }, "Exit", {
-     "Local": "0.00715756416320801 0 0",
-     "Cumulative": "0.00724053382873535 0 0.00242352485656738",
-     "SubActions": ["ExitEntryPoints", {
-       "Local": "2.38418579101562e-05 0 0",
-       "Cumulative": "8.29696655273438e-05 0 0.00242352485656738",
-       "SubActions": ["ArcaneMasterInternal", {
-         "Local": "9.5367431640625e-07 0 0",
-         "Cumulative": "1.43051147460938e-06 0 0",
-         "SubActions": ["ArcaneMasterLoopExit", {
-           "Local": "4.76837158203125e-07 0 0",
-           "Cumulative": "4.76837158203125e-07 0 0"
-          }]
-        }, "ArcanePostProcessing", {
-         "Local": "9.5367431640625e-07 0 0",
-         "Cumulative": "3.52859497070312e-05 0 0.00242352485656738",
-         "SubActions": ["PostProcessingExit", {
-           "Local": "3.4332275390625e-05 0 0.00242352485656738",
-           "Cumulative": "3.4332275390625e-05 0 0.00242352485656738"
-          }]
-        }, "ArcaneCheckpoint", {
-         "Local": "9.5367431640625e-07 0 0",
-         "Cumulative": "2.14576721191406e-06 0 0",
-         "SubActions": ["ArcaneCheckpointExit", {
-           "Local": "1.19209289550781e-06 0 0",
-           "Cumulative": "1.19209289550781e-06 0 0"
-          }]
-        }, "ArcaneCeaVerifier", {
-         "Local": "1.19209289550781e-06 0 0",
-         "Cumulative": "2.02655792236328e-05 0 0",
-         "SubActions": ["VerifierOnExit", {
-           "Local": "1.9073486328125e-05 0 0",
-           "Cumulative": "1.9073486328125e-05 0 0"
-          }]
-        }]
-      }]
-    }]
+  "Version": 1,
+  "Current": {
+   "Main": {
+    "Local": "0.169694900512695 0 0",
+    "Cumulative": "0.969398975372314 0.0049281120300293 1.68335294723511",
+    "SubActions": ["Init", {
+      "Local": "0.12354564666748 2.26497650146484e-05 0",
+      "Cumulative": "0.154730081558228 2.26497650146484e-05 0",
+      "SubActions": ["AllocateMesh", {
+        "Local": "0.000615358352661133 0 0",
+        "Cumulative": "0.000615358352661133 0 0"
+       }, "BuildtEntryPoints", {
+        "Local": "4.14848327636719e-05 0 0",
+        "Cumulative": "0.000117301940917969 0 0",
+        "SubActions": ["Master", {
+          "Local": "5.96046447753906e-06 0 0",
+          "Cumulative": "1.28746032714844e-05 0 0",
+          "SubActions": ["MasterBuild", {
+            "Local": "6.91413879394531e-06 0 0",
+            "Cumulative": "6.91413879394531e-06 0 0"
+           }]
+         }, "Mahyco", {
+          "Local": "3.33786010742188e-06 0 0",
+          "Cumulative": "6.29425048828125e-05 0 0",
+          "SubActions": ["AccBuild", {
+            "Local": "5.96046447753906e-05 0 0",
+            "Cumulative": "5.96046447753906e-05 0 0"
+           }]
+         }]
+       }, "CompactItemsBegin", {
+        "Local": "0.00397491455078125 0 0",
+        "Cumulative": "0.00397491455078125 0 0"
+       }, "CompactUpdateInternalReferences", {
+        "Local": "1.31130218505859e-05 0 0",
+        "Cumulative": "1.31130218505859e-05 0 0"
+       }, "CompactItemFinish", {
+        "Local": "0.00287723541259766 0 0",
+        "Cumulative": "0.00287723541259766 0 0"
+       }, "CompactItemSortReferences", {
+        "Local": "1.26361846923828e-05 0 0",
+        "Cumulative": "1.26361846923828e-05 0 0"
+       }, "CompactConnectivityData", {
+        "Local": "2.74181365966797e-05 0 0",
+        "Cumulative": "2.74181365966797e-05 0 0"
+       }, "CompactVariables", {
+        "Local": "0.000839471817016602 0 0",
+        "Cumulative": "0.000839471817016602 0 0"
+       }, "InitEntryPoints", {
+        "Local": "6.81877136230469e-05 0 0",
+        "Cumulative": "0.0227069854736328 0 0",
+        "SubActions": ["ArcaneMasterInternal", {
+          "Local": "6.67572021484375e-06 0 0",
+          "Cumulative": "1.93119049072266e-05 0 0",
+          "SubActions": ["ArcaneMasterStartInit", {
+            "Local": "1.1444091796875e-05 0 0",
+            "Cumulative": "1.1444091796875e-05 0 0"
+           }, "ArcaneMasterInit", {
+            "Local": "1.19209289550781e-06 0 0",
+            "Cumulative": "1.19209289550781e-06 0 0"
+           }]
+         }, "TimeHistoryMng", {
+          "Local": "1.62124633789062e-05 0 0",
+          "Cumulative": "0.00458312034606934 0 0",
+          "SubActions": ["ArcaneTimeHistoryInit", {
+            "Local": "0.00212955474853516 0 0",
+            "Cumulative": "0.00212955474853516 0 0"
+           }, "ArcaneTimeHistoryStartInit", {
+            "Local": "0.00243163108825684 0 0",
+            "Cumulative": "0.00243163108825684 0 0"
+           }, "ArcaneTimeHistoryStartInitEnd", {
+            "Local": "5.7220458984375e-06 0 0",
+            "Cumulative": "5.7220458984375e-06 0 0"
+           }]
+         }, "ArcaneCeaVerifier", {
+          "Local": "3.814697265625e-06 0 0",
+          "Cumulative": "1.64508819580078e-05 0 0",
+          "SubActions": ["VerifierOnInit", {
+            "Local": "1.26361846923828e-05 0 0",
+            "Cumulative": "1.26361846923828e-05 0 0"
+           }]
+         }, "ArcanePostProcessing", {
+          "Local": "1.07288360595703e-05 0 0",
+          "Cumulative": "0.00158882141113281 0 0",
+          "SubActions": ["PostProcessingStartInit", {
+            "Local": "7.62939453125e-06 0 0",
+            "Cumulative": "7.62939453125e-06 0 0"
+           }, "PostProcessingInit", {
+            "Local": "0.00157046318054199 0 0",
+            "Cumulative": "0.00157046318054199 0 0"
+           }]
+         }, "Mahyco", {
+          "Local": "1.76429748535156e-05 0 0",
+          "Cumulative": "0.0164017677307129 0 0",
+          "SubActions": ["HydroStartInit", {
+            "Local": "0.0155189037322998 0 0",
+            "Cumulative": "0.0155189037322998 0 0"
+           }, "PrepareFaceGroup", {
+            "Local": "0.000101327896118164 0 0",
+            "Cumulative": "0.000101327896118164 0 0"
+           }, "ComputeCellMass", {
+            "Local": "1.07288360595703e-05 0 0",
+            "Cumulative": "1.07288360595703e-05 0 0"
+           }, "ComputeNodeMass", {
+            "Local": "0.000753164291381836 0 0",
+            "Cumulative": "0.000753164291381836 0 0"
+           }]
+         }, "ArcaneCheckpoint", {
+          "Local": "5.96046447753906e-06 0 0",
+          "Cumulative": "2.93254852294922e-05 0 0",
+          "SubActions": ["ArcaneCheckpointInit", {
+            "Local": "2.12192535400391e-05 0 0",
+            "Cumulative": "2.12192535400391e-05 0 0"
+           }, "ArcaneCheckpointStartInit", {
+            "Local": "2.14576721191406e-06 0 0",
+            "Cumulative": "2.14576721191406e-06 0 0"
+           }]
+         }]
+       }]
+     }, "Loop", {
+      "Local": "0.0068507194519043 0 0",
+      "Cumulative": "0.600564241409302 0.00490546226501465 1.64747714996338",
+      "SubActions": ["LoopEntryPoints", {
+        "Local": "0.0863261222839355 0 0",
+        "Cumulative": "0.593713521957397 0.00490546226501465 1.64747714996338",
+        "SubActions": ["ArcaneMasterInternal", {
+          "Local": "0.012575626373291 0 0",
+          "Cumulative": "0.164558887481689 0.00325989723205566 0",
+          "SubActions": ["ArcaneTimeLoopBegin", {
+            "Local": "0.0810623168945312 0.00325989723205566 0",
+            "Cumulative": "0.0810623168945312 0.00325989723205566 0"
+           }, "ArcaneTimeLoopEnd", {
+            "Local": "0.0709209442138672 0 0",
+            "Cumulative": "0.0709209442138672 0 0"
+           }]
+         }, "TimeHistoryMng", {
+          "Local": "0.0126495361328125 0 0",
+          "Cumulative": "0.0207006931304932 0 0",
+          "SubActions": ["ArcaneTimeHistoryBegin", {
+            "Local": "0.00387263298034668 0 0",
+            "Cumulative": "0.00387263298034668 0 0"
+           }, "ArcaneTimeHistoryEnd", {
+            "Local": "0.00417852401733398 0 0",
+            "Cumulative": "0.00417852401733398 0 0"
+           }]
+         }, "ArcanePostProcessing", {
+          "Local": "0.0124025344848633 0 0",
+          "Cumulative": "0.0196466445922852 0 1.64747714996338",
+          "SubActions": ["PostProcessingExportDataStart", {
+            "Local": "0.00281167030334473 0 0",
+            "Cumulative": "0.00281167030334473 0 0"
+           }, "PostProcessingExportData", {
+            "Local": "0.00443243980407715 0 1.64747714996338",
+            "Cumulative": "0.00443243980407715 0 1.64747714996338"
+           }]
+         }, "Mahyco", {
+          "Local": "0.0555195808410645 0 0",
+          "Cumulative": "0.294144868850708 0.00164556503295898 0",
+          "SubActions": ["SaveValuesAtN", {
+            "Local": "0.0273029804229736 0 0",
+            "Cumulative": "0.0273029804229736 0 0"
+           }, "UpdateVelocity", {
+            "Local": "0.0189549922943115 0 0",
+            "Cumulative": "0.0189549922943115 0 0"
+           }, "ApplyBoundaryCondition", {
+            "Local": "0.0105452537536621 0 0",
+            "Cumulative": "0.0105452537536621 0 0"
+           }, "UpdatePosition", {
+            "Local": "0.013322114944458 0 0",
+            "Cumulative": "0.013322114944458 0 0"
+           }, "ComputeGeometricValues", {
+            "Local": "0.100147724151611 0 0",
+            "Cumulative": "0.100147724151611 0 0"
+           }, "UpdateDensity", {
+            "Local": "0.0149142742156982 0 0",
+            "Cumulative": "0.0149142742156982 0 0"
+           }, "ComputeArtificialViscosity", {
+            "Local": "0.00660467147827148 0 0",
+            "Cumulative": "0.00660467147827148 0 0"
+           }, "UpdateEnergyAndPressure", {
+            "Local": "0.0369365215301514 0 0",
+            "Cumulative": "0.0369365215301514 0 0"
+           }, "ComputeDeltaT", {
+            "Local": "0.00989675521850586 0.00164556503295898 0",
+            "Cumulative": "0.00989675521850586 0.00164556503295898 0"
+           }]
+         }, "ArcaneCheckpoint", {
+          "Local": "0.00623130798339844 0 0",
+          "Cumulative": "0.00833630561828613 0 0",
+          "SubActions": ["ArcaneCheckpointCheckAndWriteData", {
+            "Local": "0.0021049976348877 0 0",
+            "Cumulative": "0.0021049976348877 0 0"
+           }]
+         }]
+       }]
+     }, "Exit", {
+      "Local": "0.0442814826965332 0 0",
+      "Cumulative": "0.0444097518920898 0 0.0358757972717285",
+      "SubActions": ["ExitEntryPoints", {
+        "Local": "3.93390655517578e-05 0 0",
+        "Cumulative": "0.000128269195556641 0 0.0358757972717285",
+        "SubActions": ["ArcaneMasterInternal", {
+          "Local": "3.57627868652344e-06 0 0",
+          "Cumulative": "4.76837158203125e-06 0 0",
+          "SubActions": ["ArcaneMasterLoopExit", {
+            "Local": "1.19209289550781e-06 0 0",
+            "Cumulative": "1.19209289550781e-06 0 0"
+           }]
+         }, "ArcanePostProcessing", {
+          "Local": "5.96046447753906e-06 0 0",
+          "Cumulative": "5.48362731933594e-05 0 0.0358757972717285",
+          "SubActions": ["PostProcessingExit", {
+            "Local": "4.88758087158203e-05 0 0.0358757972717285",
+            "Cumulative": "4.88758087158203e-05 0 0.0358757972717285"
+           }]
+         }, "ArcaneCheckpoint", {
+          "Local": "1.02519989013672e-05 0 0",
+          "Cumulative": "1.38282775878906e-05 0 0",
+          "SubActions": ["ArcaneCheckpointExit", {
+            "Local": "3.57627868652344e-06 0 0",
+            "Cumulative": "3.57627868652344e-06 0 0"
+           }]
+         }, "ArcaneCeaVerifier", {
+          "Local": "9.05990600585938e-06 0 0",
+          "Cumulative": "1.54972076416016e-05 0 0",
+          "SubActions": ["VerifierOnExit", {
+            "Local": "6.43730163574219e-06 0 0",
+            "Cumulative": "6.43730163574219e-06 0 0"
+           }]
+         }]
+       }]
+     }]
+   }
   }
  }
 }
@@ -3122,6 +3119,10 @@
   part-info-replication-rank = (Int32) 0
   sort = (Bool) 1
 
+[ArcaneMeshProperties_Mesh0.CartesianMesh]
+  PatchGroupNames = (String[]) (size=0)
+  Version = (Int32) 1
+
 [ArcaneMeshProperties_Mesh0.Cell]
   CellFacePreallocSize = (Int32) 4
   CellNodePreallocSize = (Int32) 4
@@ -3148,14 +3149,16 @@
   NodeCellPreallocSize = (Int32) 4
   NodeFacePreallocSize = (Int32) 4
 
+[TimeStats]
+
 
 *L-Internal 
 Memory statistics for variables:
- Number of created variables:              272
- Number of created variables reference:    4520
- Number of currently allocated variables:  269
+ Number of created variables:              270
+ Number of created variables reference:    4518
+ Number of currently allocated variables:  267
  Number of currently reference:            0
-Var: <ArcaneProperties> Kind=None Mem=3200
+Var: <ArcaneProperties> Kind=None Mem=3456
 Var: <Mesh0ChildMeshesName> Kind=None Mem=0
 Var: <Mesh0ItemFamiliesKind> Kind=None Mem=16
 Var: <Mesh0ItemFamiliesName> Kind=None Mem=96
@@ -3166,7 +3169,7 @@ Var: <ArcaneCheckpointCheckpointsTime> Kind=None Mem=0
 Var: <CellChildFamiliesName> Kind=None Mem=0
 Var: <CellChildMeshesName> Kind=None Mem=0
 Var: <CellFamilyGroupsName> Kind=None Mem=192
-Var: <CellFamilyItemsData> Kind=None Mem=20000
+Var: <CellFamilyItemsData> Kind=None Mem=12000
 Var: <CellFamilyItemsShared> Kind=None Mem=2000
 Var: <CellFamilyUniqueIds> Kind=None Mem=4000
 Var: <AdiabaticCst> Kind=Cell Mem=4000
@@ -3174,7 +3177,6 @@ Var: <CaracteristicLength> Kind=Cell Mem=4000
 Var: <CellCQS> Kind=Cell Mem=48000
 Var: <CellCQSN> Kind=Cell Mem=48000
 Var: <CellCoord> Kind=Cell Mem=12000
-Var: <CellFamilyNewOwner> Kind=Cell Mem=2000
 Var: <CellFamilyNewOwnerName> Kind=Cell Mem=2000
 Var: <CellMass> Kind=Cell Mem=4000
 Var: <CellVolume> Kind=Cell Mem=4000
@@ -3267,7 +3269,7 @@ Var: <ExportTimes> Kind=None Mem=328
 Var: <FaceChildFamiliesName> Kind=None Mem=0
 Var: <FaceChildMeshesName> Kind=None Mem=0
 Var: <FaceFamilyGroupsName> Kind=None Mem=288
-Var: <FaceFamilyItemsData> Kind=None Mem=26520
+Var: <FaceFamilyItemsData> Kind=None Mem=17680
 Var: <FaceFamilyItemsShared> Kind=None Mem=4420
 Var: <FaceFamilyUniqueIds> Kind=None Mem=8840
 Var: <DeltaxLagrange> Kind=Face Mem=8840
@@ -3279,7 +3281,7 @@ Var: <FaceNormalVelocity> Kind=Face Mem=8840
 Var: <GradPhiFace> Kind=Face Mem=97240
 Var: <IsDirFace> Kind=Face Mem=3315
 Var: <PhiFace> Kind=Face Mem=97240
-Var: <Face_SharedInfoList> Kind=None Mem=108
+Var: <Face_SharedInfoList> Kind=None Mem=36
 Var: <GROUP_CellAllCells> Kind=None Mem=2000
 Var: <GROUP_CellAllInnerDirection0> Kind=None Mem=1960
 Var: <GROUP_CellAllInnerDirection1> Kind=None Mem=1200
@@ -3351,7 +3353,7 @@ Var: <MatZG_ZG_mat_TauxDensity> Kind=None Mem=0
 Var: <NodeChildFamiliesName> Kind=None Mem=0
 Var: <NodeChildMeshesName> Kind=None Mem=0
 Var: <NodeFamilyGroupsName> Kind=None Mem=96
-Var: <NodeFamilyItemsData> Kind=None Mem=24240
+Var: <NodeFamilyItemsData> Kind=None Mem=4848
 Var: <NodeFamilyItemsShared> Kind=None Mem=2424
 Var: <NodeFamilyUniqueIds> Kind=None Mem=4848
 Var: <BackFluxMass> Kind=Node Mem=4848
@@ -3364,9 +3366,8 @@ Var: <NodeCoord> Kind=Node Mem=14544
 Var: <NodeCoord0> Kind=Node Mem=14544
 Var: <NodeFamilyNewOwnerName> Kind=Node Mem=2424
 Var: <NodeMass> Kind=Node Mem=4848
-Var: <NodeVolum> Kind=Node Mem=4848
 Var: <PhiDualLagrange> Kind=Node Mem=53328
-Var: <Node_SharedInfoList> Kind=None Mem=324
+Var: <Node_SharedInfoList> Kind=None Mem=36
 Var: <UDualLagrange> Kind=Node Mem=53328
 Var: <Velocity> Kind=Node Mem=14544
 Var: <VelocityN> Kind=Node Mem=14544
@@ -3387,252 +3388,250 @@ Memory repartition by module:
                                                     Memory (Mo)                   Memory (Ko)
                         Module   Nvar     Private      Shared       Total      %     per cell
 
-Var: <Mesh0ChildMeshesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Mesh0TiedInterfaceNodesIso> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Mesh0TiedInterfaceFaceGroups> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Mesh0ItemFamiliesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Mesh0ItemFamiliesKind> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Node_SharedInfoList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Mesh0TiedInterfaceItemsInfo> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Edge_SharedInfoList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Face_SharedInfoList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Cell_SharedInfoList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_NodeAllNodes> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeFamilyItemsShared> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeFamilyUniqueIds> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeFamilyItemsData> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeFamilyGroupsName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeFamilyNewOwnerName> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <NodeChildMeshesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeChildFamiliesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeEdgeNodeEdgeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeEdgeNodeEdgeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeEdgeNodeEdgeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeCellNodeCellNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeFaceNodeFaceNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeFaceNodeFaceIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeFaceNodeFaceList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeCellNodeCellIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityNodeCellNodeCellList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_EdgeAllEdges> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeFamilyItemsShared> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeFamilyItemsData> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeFamilyUniqueIds> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeFamilyGroupsName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeFamilyNewOwnerName> Kind=Edge Mem=0x7fffea508e80 private?=1
-Var: <EdgeChildMeshesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <EdgeChildFamiliesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeNodeEdgeNodeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeNodeEdgeNodeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeNodeEdgeNodeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceCellFaceCellNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceFaceFaceFaceNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeFaceEdgeFaceNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeFaceEdgeFaceIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeFaceEdgeFaceList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeCellEdgeCellNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeCellEdgeCellIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityEdgeCellEdgeCellList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllFaces> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceFamilyItemsShared> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceFamilyItemsData> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceFamilyUniqueIds> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceFamilyGroupsName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceFamilyNewOwnerName> Kind=Face Mem=0x7fffea508e80 private?=1
-Var: <FaceChildMeshesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <FaceChildFamiliesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellNodeCellNodeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceNodeFaceNodeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceNodeFaceNodeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceNodeFaceNodeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceFaceFaceFaceIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellEdgeCellEdgeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceEdgeFaceEdgeNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceEdgeFaceEdgeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceEdgeFaceEdgeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceFaceFaceFaceList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceCellFaceCellList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityFaceCellFaceCellIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellAllCells> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyItemsShared> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyUniqueIds> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyItemsData> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyGroupsName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyNewOwnerName> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <CellChildMeshesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellChildFamiliesName> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellNodeCellNodeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellNodeCellNodeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellFaceCellFaceNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellEdgeCellEdgeIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellEdgeCellEdgeList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellFaceCellFaceIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityCellFaceCellFaceList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHParentCellCellCellNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHParentCellCellCellIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHParentCellCellCellList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHChildCellCellCellNb> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHChildCellCellCellIndex> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <ConnectivityHChildCellCellCellList> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <CellFamilyNewOwner> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <ArcaneProperties> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Pressure> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <Density> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <DensityN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <StdMat_CellNbEnvironment> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <PressureN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <PseudoViscosityN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <PseudoViscosity> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <CellMass> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <MassFraction> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <InternalEnergyN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <InternalEnergy> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <FracVol> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <DpDe> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <CellVolumeN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <CellVolume> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <EulerVolume> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <TauxDensity> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <SoundSpeed> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <OldCellVolume> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <DeltaxLagrange> Kind=Face Mem=0x7fffea508e80 private?=1
-Var: <EstPure> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <EstMixte> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <AdiabaticCst> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <PhiFace> Kind=Face Mem=0x7fffea508e80 private?=1
-Var: <FrontFluxMass> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <GradPhiFace> Kind=Face Mem=0x7fffea508e80 private?=1
-Var: <GradPhi> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <DeltaPhiFaceAr> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <HCellLagrange> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <DeltaPhiFaceAv> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <DualPhiFlux> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <BackFluxMassEnv> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <BackFluxMass> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <FrontFluxMassEnv> Kind=Node Mem=0x7fffea508e80 private?=1
-                          None    123       0.761       0.004       0.765   48.5%        1.53
-Var: <TimeHistory_Values_0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistoryGlobalTime> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Values_1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Values_2> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_2> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_5> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_4> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Values_4> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Iterations_3> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Values_3> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <TimeHistory_Values_5> Kind=None Mem=0x7fffea508e80 private?=1
-                TimeHistoryMng     13       0.162       0.000       0.162   10.3%        0.32
-Var: <ArcaneCheckpointCheckpointsTime> Kind=None Mem=0x7fffea508e80 private?=1
+Var: <Mesh0ItemFamiliesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Mesh0ItemFamiliesKind> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Mesh0ChildMeshesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Node_SharedInfoList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Edge_SharedInfoList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Face_SharedInfoList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Cell_SharedInfoList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Mesh0TiedInterfaceItemsInfo> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeFamilyItemsShared> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Mesh0TiedInterfaceNodesIso> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Mesh0TiedInterfaceFaceGroups> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_NodeAllNodes> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeFamilyItemsData> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeFamilyUniqueIds> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeFamilyNewOwnerName> Kind=Node Mem=0x7ffc12072290 private?=1
+Var: <NodeFamilyGroupsName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeChildMeshesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeChildFamiliesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeEdgeNodeEdgeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeEdgeNodeEdgeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeEdgeNodeEdgeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeFaceNodeFaceNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeFaceNodeFaceIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeFaceNodeFaceList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeCellNodeCellNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeCellNodeCellIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityNodeCellNodeCellList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_EdgeAllEdges> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeFamilyItemsShared> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeFamilyItemsData> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeFamilyUniqueIds> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeFamilyNewOwnerName> Kind=Edge Mem=0x7ffc12072290 private?=1
+Var: <EdgeFamilyGroupsName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeChildMeshesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <EdgeChildFamiliesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeNodeEdgeNodeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeNodeEdgeNodeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeNodeEdgeNodeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeFaceEdgeFaceNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeFaceEdgeFaceIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeFaceEdgeFaceList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeCellEdgeCellNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeCellEdgeCellIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityEdgeCellEdgeCellList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllFaces> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceFamilyItemsShared> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceFamilyItemsData> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceFamilyUniqueIds> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceFamilyNewOwnerName> Kind=Face Mem=0x7ffc12072290 private?=1
+Var: <FaceFamilyGroupsName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceChildMeshesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <FaceChildFamiliesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceNodeFaceNodeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceNodeFaceNodeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceNodeFaceNodeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceEdgeFaceEdgeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceEdgeFaceEdgeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceEdgeFaceEdgeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceFaceFaceFaceNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceFaceFaceFaceIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceFaceFaceFaceList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHChildCellCellCellNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceCellFaceCellNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceCellFaceCellIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityFaceCellFaceCellList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellAllCells> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellFamilyItemsShared> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellFamilyItemsData> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellFamilyUniqueIds> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellFamilyNewOwnerName> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <CellFamilyGroupsName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellChildMeshesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CellChildFamiliesName> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellNodeCellNodeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellNodeCellNodeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellNodeCellNodeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellEdgeCellEdgeNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellEdgeCellEdgeIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellEdgeCellEdgeList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellFaceCellFaceNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellFaceCellFaceIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityCellFaceCellFaceList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHParentCellCellCellNb> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHParentCellCellCellIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHParentCellCellCellList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHChildCellCellCellIndex> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ConnectivityHChildCellCellCellList> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <ArcaneProperties> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <StdMat_CellNbEnvironment> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <DensityN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <Density> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <PressureN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <Pressure> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <PseudoViscosityN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <PseudoViscosity> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <MassFraction> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <InternalEnergy> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <CellMass> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <InternalEnergyN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <DpDe> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <FracVol> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <CellVolumeN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <CellVolume> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <EulerVolume> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <TauxDensity> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <SoundSpeed> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <EstMixte> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <EstPure> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <OldCellVolume> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <AdiabaticCst> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <PhiFace> Kind=Face Mem=0x7ffc12072290 private?=1
+Var: <DeltaxLagrange> Kind=Face Mem=0x7ffc12072290 private?=1
+Var: <GradPhi> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <GradPhiFace> Kind=Face Mem=0x7ffc12072290 private?=1
+Var: <DeltaPhiFaceAr> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <DualPhiFlux> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <DeltaPhiFaceAv> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <FrontFluxMass> Kind=Node Mem=0x7ffc12072290 private?=1
+Var: <BackFluxMassEnv> Kind=Node Mem=0x7ffc12072290 private?=1
+Var: <HCellLagrange> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <FrontFluxMassEnv> Kind=Node Mem=0x7ffc12072290 private?=1
+Var: <BackFluxMass> Kind=Node Mem=0x7ffc12072290 private?=1
+                          None    122       0.723       0.004       0.727   47.4%        1.45
+Var: <TimeHistory_Iterations_0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistoryGlobalTime> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Iterations_1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_2> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Iterations_2> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_3> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Iterations_3> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_4> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Iterations_4> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Values_5> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <TimeHistory_Iterations_5> Kind=None Mem=0x7ffc12072290 private?=1
+                TimeHistoryMng     13       0.162       0.000       0.162   10.5%        0.32
+Var: <ArcaneCheckpointCheckpointsTime> Kind=None Mem=0x7ffc12072290 private?=1
               ArcaneCheckpoint      1       0.000       0.000       0.000    0.0%        0.00
-Var: <ExportTimes> Kind=None Mem=0x7fffea508e80 private?=1
+Var: <ExportTimes> Kind=None Mem=0x7ffc12072290 private?=1
           ArcanePostProcessing      1       0.000       0.000       0.000    0.0%        0.00
-Var: <NodeCoord> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <GROUP_CellStdMat_ZG> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <Materiau> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <MatZG_ZG_mat_TauxDensity> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_SoundSpeed> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <DivU> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <Force> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <NodeVolum> Kind=Node Mem=0x7fffea508e80 private?=1
-Var: <VelocityN> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <Velocity> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <NodeMass> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <CaracteristicLength> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <MatZG_ZG_mat_Density> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <NodeCoord0> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <CellCoord> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <CellCQSN> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <FaceCoord> Kind=Face Mem=0x7fffea508e80 private?=0
-Var: <CellCQS> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <FaceNormal> Kind=Face Mem=0x7fffea508e80 private?=0
-Var: <FaceNormalVelocity> Kind=Face Mem=0x7fffea508e80 private?=0
-Var: <FaceLenghtLagrange> Kind=Face Mem=0x7fffea508e80 private?=0
-Var: <ULagrange> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <UDualLagrange> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <PhiLagrange> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <PhiDualLagrange> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <DualGradPhi> Kind=Node Mem=0x7fffea508e80 private?=0
-Var: <IsDirFace> Kind=Face Mem=0x7fffea508e80 private?=0
-Var: <OuterFaceNormal> Kind=Cell Mem=0x7fffea508e80 private?=0
-Var: <MatZD_ZD_mat_TauxDensity> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_AdiabaticCst> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_CellMass> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceYMIN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_AdiabaticCst> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <StdMat_CellNbMaterial_ZG> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceZMAX> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_Density> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_DensityN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_DpDe> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_DensityN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_DpDe> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_EstMixte> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_EstMixte> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_EstPure> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_EstPure> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_EulerVolume> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_EulerVolume> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_FracVol> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_FracVol> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_InternalEnergy> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceZMIN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_CellMass> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_CellVolume> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_CellVolumeN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_CellVolume> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_CellVolumeN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_InternalEnergy> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_InternalEnergyN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_InternalEnergyN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_MassFraction> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_MassFraction> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_Pressure> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_Pressure> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_PressureN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_PressureN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_PseudoViscosity> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_PseudoViscosity> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_PseudoViscosityN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZD_ZD_mat_PseudoViscosityN> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <MatZG_ZG_mat_SoundSpeed> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellAllInnerDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellStdMat_ZG_ZG_mat> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellAllOuterDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellAllInnerDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllFacesDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellAllOuterDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_NodeAllInnerDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllOuterDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_NodeAllOuterDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <StdMat_CellNbMaterial_ZD> Kind=Cell Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllInnerDirection0> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllOuterDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllFacesDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceAllInnerDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_NodeAllInnerDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_NodeAllOuterDirection1> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellStdMat_ZD_ZD_mat> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_CellStdMat_ZD> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceYMAX> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceXMAX> Kind=None Mem=0x7fffea508e80 private?=1
-Var: <GROUP_FaceXMIN> Kind=None Mem=0x7fffea508e80 private?=1
-                        Mahyco     90       0.152       0.494       0.647   41.0%        1.29
+Var: <GROUP_FaceYMIN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_AdiabaticCst> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <NodeCoord> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <MatZG_ZG_mat_FracVol> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <StdMat_CellNbMaterial_ZG> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_MassFraction> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_InternalEnergyN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <StdMat_CellNbMaterial_ZD> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_AdiabaticCst> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <Materiau> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <DivU> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <CellCQS> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <Force> Kind=Node Mem=0x7ffc12072290 private?=1
+Var: <VelocityN> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <Velocity> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <NodeMass> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <MatZG_ZG_mat_Density> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <CaracteristicLength> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <NodeCoord0> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <CellCoord> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <CellCQSN> Kind=Cell Mem=0x7ffc12072290 private?=1
+Var: <FaceCoord> Kind=Face Mem=0x7ffc12072290 private?=0
+Var: <FaceNormal> Kind=Face Mem=0x7ffc12072290 private?=0
+Var: <FaceNormalVelocity> Kind=Face Mem=0x7ffc12072290 private?=0
+Var: <ULagrange> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <FaceLenghtLagrange> Kind=Face Mem=0x7ffc12072290 private?=0
+Var: <UDualLagrange> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <PhiLagrange> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <PhiDualLagrange> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <DualGradPhi> Kind=Node Mem=0x7ffc12072290 private?=0
+Var: <IsDirFace> Kind=Face Mem=0x7ffc12072290 private?=0
+Var: <OuterFaceNormal> Kind=Cell Mem=0x7ffc12072290 private?=0
+Var: <MatZG_ZG_mat_CellMass> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceXMAX> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellStdMat_ZG> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_DensityN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_DpDe> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_DpDe> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_EstMixte> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_EstMixte> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_EulerVolume> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_CellMass> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_CellVolume> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_CellVolumeN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_CellVolume> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_CellVolumeN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_Density> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_DensityN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceZMIN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceXMIN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceZMAX> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_EstPure> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_EstPure> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_EulerVolume> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_FracVol> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_InternalEnergy> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_InternalEnergy> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_InternalEnergyN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_Pressure> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_Pressure> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_PressureN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_PressureN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_PseudoViscosity> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_PseudoViscosity> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_PseudoViscosityN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_PseudoViscosityN> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_SoundSpeed> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_SoundSpeed> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZG_ZG_mat_TauxDensity> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_TauxDensity> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllFacesDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellAllInnerDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellAllOuterDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllInnerDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllOuterDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_NodeAllInnerDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_NodeAllOuterDirection0> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <MatZD_ZD_mat_MassFraction> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellAllInnerDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllInnerDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellAllOuterDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_NodeAllInnerDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_NodeAllOuterDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellStdMat_ZD> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellStdMat_ZD_ZD_mat> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllOuterDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceAllFacesDirection1> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_CellStdMat_ZG_ZG_mat> Kind=None Mem=0x7ffc12072290 private?=1
+Var: <GROUP_FaceYMAX> Kind=None Mem=0x7ffc12072290 private?=1
+                        Mahyco     89       0.147       0.494       0.642   41.9%        1.28
 
-                         TOTAL    228                               1.575                3.15
-Variable Node N=15 Mémoire=273912
+                         TOTAL    226                               1.532                3.06
+Variable Node N=14 Mémoire=269064
 Variable Edge N=1 Mémoire=0
 Variable Face N=9 Mémoire=299455
-Variable Cell N=40 Mémoire=550000
+Variable Cell N=39 Mémoire=548000
 Variable DualNode N=0 Mémoire=0
 Variable Link N=0 Mémoire=0
 Variable DoF N=0 Mémoire=0
 Variable Particle N=0 Mémoire=0
 Variable Link N=0 Mémoire=0
-Variable Array N=163 Mémoire=452160
-Variable Total N=228 Mémoire=1575527
+Variable Array N=163 Mémoire=415824
+Variable Total N=226 Mémoire=1532343
 
 Biggest variables (D=Dump, E=Exchange R=Restore):
                                      Variable      Kind     Memory (Ko)  per cell (o)  D E R
@@ -3640,42 +3639,41 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                                       PhiFace      Face        97.240       194.4      X X X 
                                   GradPhiFace      Face        97.240       194.4      X X X 
                               OuterFaceNormal      Cell        72.000       144.0      X X X 
-                              PhiDualLagrange      Node        53.328       106.6      X X X 
                                   DualGradPhi      Node        53.328       106.6      X X X 
                                 UDualLagrange      Node        53.328       106.6      X X X 
-                                     CellCQSN      Cell        48.000        96.0      X X X 
+                              PhiDualLagrange      Node        53.328       106.6      X X X 
                                       CellCQS      Cell        48.000        96.0      X X X 
+                                     CellCQSN      Cell        48.000        96.0      X X X 
+                                    ULagrange      Cell        44.000        88.0      X X X 
                                DeltaPhiFaceAr      Cell        44.000        88.0      X X X 
+                               DeltaPhiFaceAv      Cell        44.000        88.0      X X X 
                                       GradPhi      Cell        44.000        88.0      X X X 
                                   PhiLagrange      Cell        44.000        88.0      X X X 
-                               DeltaPhiFaceAv      Cell        44.000        88.0      X X X 
-                                    ULagrange      Cell        44.000        88.0      X X X 
                                   DualPhiFlux      Cell        44.000        88.0      X X X 
+                                    FaceCoord      Face        26.520        53.0      X X X 
                            FaceLenghtLagrange      Face        26.520        53.0      X X X 
                                    FaceNormal      Face        26.520        53.0      X X X 
-                                    FaceCoord      Face        26.520        53.0      X X X 
-                          FaceFamilyItemsData      None        26.520        53.0      X   X 
-                          NodeFamilyItemsData      None        24.240        48.4      X   X 
-                          CellFamilyItemsData      None        20.000        40.0      X   X 
              ConnectivityFaceFaceFaceFaceList      None        17.696        35.3      X   X 
              ConnectivityFaceNodeFaceNodeList      None        17.696        35.3      X   X 
-                         TimeHistory_Values_0      None        16.239        32.4      X     
+                          FaceFamilyItemsData      None        17.680        35.3      X   X 
                         TimeHistoryGlobalTime      None        16.239        32.4      X   X 
+                         TimeHistory_Values_0      None        16.239        32.4      X     
                          TimeHistory_Values_5      None        16.232        32.4      X     
                          TimeHistory_Values_4      None        16.232        32.4      X     
                          TimeHistory_Values_3      None        16.232        32.4      X     
                          TimeHistory_Values_2      None        16.232        32.4      X     
                          TimeHistory_Values_1      None        16.232        32.4      X     
                                         Force      Node        14.544        29.0        X X 
-                                    NodeCoord      Node        14.544        29.0      X X X 
-                                   NodeCoord0      Node        14.544        29.0      X X X 
-                                     Velocity      Node        14.544        29.0      X X X 
                                     VelocityN      Node        14.544        29.0      X X X 
+                                     Velocity      Node        14.544        29.0      X X X 
+                                   NodeCoord0      Node        14.544        29.0      X X X 
+                                    NodeCoord      Node        14.544        29.0      X X X 
+                          CellFamilyItemsData      None        12.000        24.0      X   X 
                                     CellCoord      Cell        12.000        24.0      X X X 
              ConnectivityNodeFaceNodeFaceList      None         9.712        19.4      X   X 
              ConnectivityNodeCellNodeCellList      None         9.712        19.4      X   X 
-                              BackFluxMassEnv      Node         9.696        19.3      X X X 
                              FrontFluxMassEnv      Node         9.696        19.3      X X X 
+                              BackFluxMassEnv      Node         9.696        19.3      X X X 
              ConnectivityFaceCellFaceCellList      None         8.848        17.6      X   X 
                                DeltaxLagrange      Face         8.840        17.6      X X X 
                            FaceNormalVelocity      Face         8.840        17.6      X X X 
@@ -3686,23 +3684,23 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                      TimeHistory_Iterations_3      None         8.116        16.2      X     
                      TimeHistory_Iterations_2      None         8.116        16.2      X     
                      TimeHistory_Iterations_1      None         8.116        16.2      X     
-             ConnectivityCellFaceCellFaceList      None         8.016        16.0      X   X 
              ConnectivityCellNodeCellNodeList      None         8.016        16.0      X   X 
-                                    NodeVolum      Node         4.848         9.6        X X 
-                                     NodeMass      Node         4.848         9.6      X X X 
-                          NodeFamilyUniqueIds      None         4.848         9.6      X   X 
+             ConnectivityCellFaceCellFaceList      None         8.016        16.0      X   X 
                                 FrontFluxMass      Node         4.848         9.6      X X X 
+                          NodeFamilyItemsData      None         4.848         9.6      X   X 
+                          NodeFamilyUniqueIds      None         4.848         9.6      X   X 
                                  BackFluxMass      Node         4.848         9.6      X X X 
-               ConnectivityFaceCellFaceCellNb      None         4.420         8.8      X   X 
-                       FaceFamilyNewOwnerName      Face         4.420         8.8      X X X 
-            ConnectivityFaceCellFaceCellIndex      None         4.420         8.8      X   X 
-                        FaceFamilyItemsShared      None         4.420         8.8      X   X 
-            ConnectivityFaceNodeFaceNodeIndex      None         4.420         8.8      X   X 
-            ConnectivityFaceEdgeFaceEdgeIndex      None         4.420         8.8      X   X 
+                                     NodeMass      Node         4.848         9.6      X X X 
                ConnectivityFaceEdgeFaceEdgeNb      None         4.420         8.8      X   X 
+            ConnectivityFaceEdgeFaceEdgeIndex      None         4.420         8.8      X   X 
+            ConnectivityFaceNodeFaceNodeIndex      None         4.420         8.8      X   X 
             ConnectivityFaceFaceFaceFaceIndex      None         4.420         8.8      X   X 
                ConnectivityFaceNodeFaceNodeNb      None         4.420         8.8      X   X 
                ConnectivityFaceFaceFaceFaceNb      None         4.420         8.8      X   X 
+               ConnectivityFaceCellFaceCellNb      None         4.420         8.8      X   X 
+            ConnectivityFaceCellFaceCellIndex      None         4.420         8.8      X   X 
+                        FaceFamilyItemsShared      None         4.420         8.8      X   X 
+                       FaceFamilyNewOwnerName      Face         4.420         8.8      X X X 
                            GROUP_FaceAllFaces      None         4.420         8.8      X   X 
                                GROUP_FaceZMAX      None         4.420         8.8      X   X 
                                GROUP_FaceZMIN      None         4.420         8.8      X   X 
@@ -3722,47 +3720,46 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                                      DensityN      Cell         4.000         8.0      X X X 
                               InternalEnergyN      Cell         4.000         8.0      X X X 
                                    SoundSpeed      Cell         4.000         8.0      X X X 
+                                  TauxDensity      Cell         4.000         8.0        X X 
                              PseudoViscosityN      Cell         4.000         8.0      X X X 
                               PseudoViscosity      Cell         4.000         8.0      X X X 
                                     PressureN      Cell         4.000         8.0      X X X 
                                 OldCellVolume      Cell         4.000         8.0      X X X 
-                                  TauxDensity      Cell         4.000         8.0        X X 
                                      Materiau      Cell         4.000         8.0      X X X 
                                InternalEnergy      Cell         4.000         8.0      X X X 
                                  MassFraction      Cell         4.000         8.0      X X X 
+                             ArcaneProperties      None         3.456         6.9      X   X 
                                     IsDirFace      Face         3.315         6.6      X X X 
-                             ArcaneProperties      None         3.200         6.4      X   X 
+            ConnectivityNodeEdgeNodeEdgeIndex      None         2.424         4.8      X   X 
+               ConnectivityNodeEdgeNodeEdgeNb      None         2.424         4.8      X   X 
+            ConnectivityNodeFaceNodeFaceIndex      None         2.424         4.8      X   X 
+               ConnectivityNodeCellNodeCellNb      None         2.424         4.8      X   X 
                ConnectivityNodeFaceNodeFaceNb      None         2.424         4.8      X   X 
+                        NodeFamilyItemsShared      None         2.424         4.8      X   X 
                        NodeFamilyNewOwnerName      Node         2.424         4.8      X X X 
                            GROUP_NodeAllNodes      None         2.424         4.8      X   X 
-            ConnectivityNodeFaceNodeFaceIndex      None         2.424         4.8      X   X 
-               ConnectivityNodeEdgeNodeEdgeNb      None         2.424         4.8      X   X 
-            ConnectivityNodeEdgeNodeEdgeIndex      None         2.424         4.8      X   X 
-               ConnectivityNodeCellNodeCellNb      None         2.424         4.8      X   X 
             ConnectivityNodeCellNodeCellIndex      None         2.424         4.8      X   X 
-                        NodeFamilyItemsShared      None         2.424         4.8      X   X 
                  GROUP_FaceAllFacesDirection1      None         2.400         4.8      X   X 
                  GROUP_NodeAllInnerDirection0      None         2.376         4.7      X   X 
                  GROUP_FaceAllFacesDirection0      None         2.020         4.0      X   X 
-                                     EstMixte      Cell         2.000         4.0      X X X 
+          ConnectivityHChildCellCellCellIndex      None         2.000         4.0      X   X 
                      StdMat_CellNbMaterial_ZD      Cell         2.000         4.0      X X X 
+                                     EstMixte      Cell         2.000         4.0      X X X 
+                     StdMat_CellNbMaterial_ZG      Cell         2.000         4.0      X X X 
+                           GROUP_CellAllCells      None         2.000         4.0      X   X 
                      StdMat_CellNbEnvironment      Cell         2.000         4.0      X X X 
                         CellFamilyItemsShared      None         2.000         4.0      X   X 
                           GROUP_CellStdMat_ZG      None         2.000         4.0      X   X 
             ConnectivityCellNodeCellNodeIndex      None         2.000         4.0      X   X 
-                           GROUP_CellAllCells      None         2.000         4.0      X   X 
-               ConnectivityCellNodeCellNodeNb      None         2.000         4.0      X   X 
-                     StdMat_CellNbMaterial_ZG      Cell         2.000         4.0      X X X 
-          ConnectivityHChildCellCellCellIndex      None         2.000         4.0      X   X 
-               ConnectivityCellFaceCellFaceNb      None         2.000         4.0      X   X 
-            ConnectivityCellEdgeCellEdgeIndex      None         2.000         4.0      X   X 
-                           CellFamilyNewOwner      Cell         2.000         4.0        X X 
-                       CellFamilyNewOwnerName      Cell         2.000         4.0      X X X 
-             ConnectivityHChildCellCellCellNb      None         2.000         4.0      X   X 
-               ConnectivityCellEdgeCellEdgeNb      None         2.000         4.0      X   X 
                                       EstPure      Cell         2.000         4.0      X X X 
+             ConnectivityHChildCellCellCellNb      None         2.000         4.0      X   X 
          ConnectivityHParentCellCellCellIndex      None         2.000         4.0      X   X 
+               ConnectivityCellFaceCellFaceNb      None         2.000         4.0      X   X 
             ConnectivityHParentCellCellCellNb      None         2.000         4.0      X   X 
+                       CellFamilyNewOwnerName      Cell         2.000         4.0      X X X 
+            ConnectivityCellEdgeCellEdgeIndex      None         2.000         4.0      X   X 
+               ConnectivityCellNodeCellNodeNb      None         2.000         4.0      X   X 
+               ConnectivityCellEdgeCellEdgeNb      None         2.000         4.0      X   X 
             ConnectivityCellFaceCellFaceIndex      None         2.000         4.0      X   X 
                  GROUP_FaceAllInnerDirection0      None         1.980         3.9      X   X 
                  GROUP_CellAllInnerDirection0      None         1.960         3.9      X   X 
@@ -3770,33 +3767,34 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                  GROUP_FaceAllInnerDirection1      None         1.600         3.2      X   X 
                  GROUP_CellAllInnerDirection1      None         1.200         2.4      X   X 
                  GROUP_NodeAllOuterDirection1      None         0.808         1.6      X   X 
-                 GROUP_FaceAllOuterDirection1      None         0.800         1.6      X   X 
                  GROUP_CellAllOuterDirection1      None         0.800         1.6      X   X 
-                               GROUP_FaceYMAX      None         0.400         0.8      X   X 
+                 GROUP_FaceAllOuterDirection1      None         0.800         1.6      X   X 
                                GROUP_FaceYMIN      None         0.400         0.8      X   X 
+                               GROUP_FaceYMAX      None         0.400         0.8      X   X 
                                   ExportTimes      None         0.328         0.6      X   X 
-                          Node_SharedInfoList      None         0.324         0.6      X   X 
                          FaceFamilyGroupsName      None         0.288         0.5      X   X 
                          CellFamilyGroupsName      None         0.192         0.3      X   X 
-                          Face_SharedInfoList      None         0.108         0.2      X   X 
                          NodeFamilyGroupsName      None         0.096         0.1      X   X 
                         Mesh0ItemFamiliesName      None         0.096         0.1      X   X 
                  GROUP_NodeAllOuterDirection0      None         0.048         0.0      X   X 
-                 GROUP_FaceAllOuterDirection0      None         0.040         0.0      X   X 
                  GROUP_CellAllOuterDirection0      None         0.040         0.0      X   X 
+                 GROUP_FaceAllOuterDirection0      None         0.040         0.0      X   X 
+                          Node_SharedInfoList      None         0.036         0.0      X   X 
+                          Face_SharedInfoList      None         0.036         0.0      X   X 
                           Cell_SharedInfoList      None         0.036         0.0      X   X 
                                GROUP_FaceXMAX      None         0.020         0.0      X   X 
                                GROUP_FaceXMIN      None         0.020         0.0      X   X 
                         Mesh0ItemFamiliesKind      None         0.016         0.0      X   X 
-             ConnectivityEdgeNodeEdgeNodeList      None         0.004         0.0      X   X 
-             ConnectivityEdgeCellEdgeCellList      None         0.004         0.0      X   X 
+             ConnectivityFaceEdgeFaceEdgeList      None         0.004         0.0      X   X 
            ConnectivityHChildCellCellCellList      None         0.004         0.0      X   X 
           ConnectivityHParentCellCellCellList      None         0.004         0.0      X   X 
-             ConnectivityFaceEdgeFaceEdgeList      None         0.004         0.0      X   X 
              ConnectivityNodeEdgeNodeEdgeList      None         0.004         0.0      X   X 
              ConnectivityCellEdgeCellEdgeList      None         0.004         0.0      X   X 
              ConnectivityEdgeFaceEdgeFaceList      None         0.004         0.0      X   X 
-                      MatZG_ZG_mat_SoundSpeed      None         0.000         0.0      X   X 
+             ConnectivityEdgeCellEdgeCellList      None         0.004         0.0      X   X 
+             ConnectivityEdgeNodeEdgeNodeList      None         0.004         0.0      X   X 
+                     MatZG_ZG_mat_TauxDensity      None         0.000         0.0          X 
+                        MatZG_ZG_mat_EstMixte      None         0.000         0.0      X   X 
                          MatZG_ZG_mat_EstPure      None         0.000         0.0      X   X 
                      MatZG_ZG_mat_EulerVolume      None         0.000         0.0      X   X 
                          MatZG_ZG_mat_FracVol      None         0.000         0.0      X   X 
@@ -3807,16 +3805,16 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                        MatZG_ZG_mat_PressureN      None         0.000         0.0      X   X 
                  MatZG_ZG_mat_PseudoViscosity      None         0.000         0.0      X   X 
                 MatZG_ZG_mat_PseudoViscosityN      None         0.000         0.0      X   X 
-                          CellChildMeshesName      None         0.000         0.0      X   X 
-                     MatZG_ZG_mat_TauxDensity      None         0.000         0.0          X 
+                      MatZG_ZG_mat_SoundSpeed      None         0.000         0.0      X   X 
                         NodeChildFamiliesName      None         0.000         0.0      X   X 
                           NodeChildMeshesName      None         0.000         0.0      X   X 
-              ArcaneCheckpointCheckpointsTime      None         0.000         0.0      X   X 
-                        CellChildFamiliesName      None         0.000         0.0      X   X 
-                   Mesh0TiedInterfaceNodesIso      None         0.000         0.0      X   X 
-                  Mesh0TiedInterfaceItemsInfo      None         0.000         0.0      X   X 
-                 Mesh0TiedInterfaceFaceGroups      None         0.000         0.0      X   X 
                          Mesh0ChildMeshesName      None         0.000         0.0      X   X 
+                          CellChildMeshesName      None         0.000         0.0      X   X 
+                        CellChildFamiliesName      None         0.000         0.0      X   X 
+              ArcaneCheckpointCheckpointsTime      None         0.000         0.0      X   X 
+                 Mesh0TiedInterfaceFaceGroups      None         0.000         0.0      X   X 
+                  Mesh0TiedInterfaceItemsInfo      None         0.000         0.0      X   X 
+                   Mesh0TiedInterfaceNodesIso      None         0.000         0.0      X   X 
             ConnectivityEdgeNodeEdgeNodeIndex      None         0.000         0.0      X   X 
                       MatZD_ZD_mat_CellVolume      None         0.000         0.0      X   X 
                         MatZD_ZD_mat_CellMass      None         0.000         0.0      X   X 
@@ -3841,8 +3839,7 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                          EdgeFamilyGroupsName      None         0.000         0.0      X   X 
                           EdgeChildMeshesName      None         0.000         0.0      X   X 
                         EdgeChildFamiliesName      None         0.000         0.0      X   X 
-                       MatZD_ZD_mat_PressureN      None         0.000         0.0      X   X 
-                            MatZG_ZG_mat_DpDe      None         0.000         0.0      X   X 
+                        MatZD_ZD_mat_Pressure      None         0.000         0.0      X   X 
                         MatZG_ZG_mat_DensityN      None         0.000         0.0      X   X 
                          MatZG_ZG_mat_Density      None         0.000         0.0      X   X 
                      MatZG_ZG_mat_CellVolumeN      None         0.000         0.0      X   X 
@@ -3853,8 +3850,8 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                       MatZD_ZD_mat_SoundSpeed      None         0.000         0.0      X   X 
                 MatZD_ZD_mat_PseudoViscosityN      None         0.000         0.0      X   X 
                  MatZD_ZD_mat_PseudoViscosity      None         0.000         0.0      X   X 
-                        MatZG_ZG_mat_EstMixte      None         0.000         0.0      X   X 
-                        MatZD_ZD_mat_Pressure      None         0.000         0.0      X   X 
+                       MatZD_ZD_mat_PressureN      None         0.000         0.0      X   X 
+                            MatZG_ZG_mat_DpDe      None         0.000         0.0      X   X 
                     MatZD_ZD_mat_MassFraction      None         0.000         0.0      X   X 
                  MatZD_ZD_mat_InternalEnergyN      None         0.000         0.0      X   X 
                   MatZD_ZD_mat_InternalEnergy      None         0.000         0.0      X   X 
@@ -3866,75 +3863,78 @@ Biggest variables (D=Dump, E=Exchange R=Restore):
                         MatZD_ZD_mat_DensityN      None         0.000         0.0      X   X 
                          MatZD_ZD_mat_Density      None         0.000         0.0      X   X 
 
-*L-Internal -- Execution statistics (divide=1.0145e+06) (clock time):
+*L-Internal Execution statistics (current execution)
+-- Execution statistics (current execution) (divide=1.0145e+06, nb_loop=2029) (clock time):
                                      Action            Time       Time  
                                                      Total(s)  /cell(us)
 
- Main                                                  0.585      0.577     0 100.0 100.0 [ 82.7   0.2  16.9]
-  Init                                                 0.010      0.010     1   1.7   1.7 [ 99.9   0.0   0.0]
-   AllocateMesh                                        0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
-   BuildtEntryPoints                                   0.000      0.000     1   0.0   0.2 [100.0   0.0   0.0]
-    Master                                             0.000      0.000     1   0.0  15.2 [100.0   0.0   0.0]
-     MasterBuild                                       0.000      0.000     1   0.0  35.7 [100.0   0.0   0.0]
-   CompactItemsBegin                                   0.000      0.000     4   0.0   2.2 [100.0   0.0   0.0]
-   CompactUpdateInternalReferences                     0.000      0.000     4   0.0   0.6 [100.0   0.0   0.0]
-   CompactItemFinish                                   0.000      0.000     8   0.0   3.5 [100.0   0.0   0.0]
-   CompactItemSortReferences                           0.000      0.000     1   0.0   0.2 [100.0   0.0   0.0]
-   CompactConnectivityData                             0.000      0.000     1   0.0   0.2 [100.0   0.0   0.0]
-   CompactVariables                                    0.000      0.000     3   0.0   0.1 [100.0   0.0   0.0]
-   InitEntryPoints                                     0.002      0.002     1   0.5  28.6 [100.0   0.0   0.0]
-    ArcaneMasterInternal                               0.000      0.000     2   0.0   0.2 [100.0   0.0   0.0]
-     ArcaneMasterStartInit                             0.000      0.000     1   0.0  68.7 [100.0   0.0   0.0]
-     ArcaneMasterInit                                  0.000      0.000     1   0.0   6.2 [100.0   0.0   0.0]
-    TimeHistoryMng                                     0.000      0.000     3   0.0   4.0 [100.0   0.0   0.0]
-     ArcaneTimeHistoryInit                             0.000      0.000     1   0.0  68.3 [100.0   0.0   0.0]
-     ArcaneTimeHistoryStartInit                        0.000      0.000     1   0.0  27.1 [100.0   0.0   0.0]
-     ArcaneTimeHistoryStartInitEnd                     0.000      0.000     1   0.0   1.9 [100.0   0.0   0.0]
-    ArcaneCeaVerifier                                  0.000      0.000     1   0.0   0.1 [100.0   0.0   0.0]
-     VerifierOnInit                                    0.000      0.000     1   0.0  81.8 [100.0   0.0   0.0]
-    ArcanePostProcessing                               0.000      0.000     2   0.0   2.5 [100.0   0.0   0.0]
-     PostProcessingStartInit                           0.000      0.000     1   0.0   3.4 [100.0   0.0   0.0]
-     PostProcessingInit                                0.000      0.000     1   0.0  93.3 [100.0   0.0   0.0]
-    Mahyco                                             0.002      0.002     4   0.4  91.4 [100.0   0.0   0.0]
-     HydroStartInit                                    0.002      0.002     1   0.4  97.2 [100.0   0.0   0.0]
-     PrepareFaceGroup                                  0.000      0.000     1   0.0   2.3 [100.0   0.0   0.0]
-     ComputeCellMass                                   0.000      0.000     1   0.0   0.1 [100.0   0.0   0.0]
-     ComputeNodeMass                                   0.000      0.000     1   0.0   0.1 [100.0   0.0   0.0]
-    ArcaneCheckpoint                                   0.000      0.000     2   0.0   0.5 [100.0   0.0   0.0]
-     ArcaneCheckpointInit                              0.000      0.000     1   0.0  78.4 [100.0   0.0   0.0]
-     ArcaneCheckpointStartInit                         0.000      0.000     1   0.0   9.2 [100.0   0.0   0.0]
-  Loop                                                 0.562      0.554     1  95.9  95.9 [ 82.4   0.2  17.2]
-   LoopEntryPoints                                     0.558      0.550  2029  95.3  99.3 [ 82.3   0.2  17.3]
-    ArcaneMasterInternal                               0.105      0.104  4058  18.0  18.8 [ 98.9   1.0   0.0]
-     ArcaneTimeLoopBegin                               0.064      0.063  2029  10.9  60.8 [ 98.3   1.6   0.0]
-     ArcaneTimeLoopEnd                                 0.037      0.037  2029   6.4  35.9 [100.0   0.0   0.0]
-    TimeHistoryMng                                     0.007      0.007  4058   1.2   1.2 [100.0   0.0   0.0]
-     ArcaneTimeHistoryBegin                            0.002      0.001  2029   0.3  27.9 [100.0   0.0   0.0]
-     ArcaneTimeHistoryEnd                              0.002      0.002  2029   0.3  28.7 [100.0   0.0   0.0]
-    ArcanePostProcessing                               0.102      0.101  4058  17.5  18.3 [  5.4   0.0  94.5]
-     PostProcessingExportDataStart                     0.001      0.001  2029   0.2   1.4 [100.0   0.0   0.0]
-     PostProcessingExportData                          0.098      0.096  2029  16.7  95.8 [  1.3   0.0  98.6]
-    Mahyco                                             0.308      0.303 18261  52.5  55.1 [ 99.8   0.1   0.0]
-     SaveValuesAtN                                     0.026      0.025  2029   4.4   8.5 [100.0   0.0   0.0]
-     UpdateVelocity                                    0.026      0.025  2029   4.4   8.4 [100.0   0.0   0.0]
-     ApplyBoundaryCondition                            0.034      0.033  2029   5.8  11.0 [100.0   0.0   0.0]
-     UpdatePosition                                    0.011      0.011  2029   1.9   3.7 [100.0   0.0   0.0]
-     ComputeGeometricValues                            0.139      0.137  2029  23.8  45.3 [100.0   0.0   0.0]
-     UpdateDensity                                     0.013      0.012  2029   2.2   4.2 [100.0   0.0   0.0]
-     ComputeArtificialViscosity                        0.005      0.005  2029   0.9   1.7 [100.0   0.0   0.0]
-     UpdateEnergyAndPressure                           0.032      0.032  2029   5.5  10.5 [100.0   0.0   0.0]
-     ComputeDeltaT                                     0.005      0.004  2029   0.8   1.6 [ 91.2   8.7   0.0]
-    ArcaneCheckpoint                                   0.002      0.002  2029   0.3   0.3 [100.0   0.0   0.0]
-     ArcaneCheckpointCheckAndWriteData                 0.000      0.000  2029   0.1  32.5 [100.0   0.0   0.0]
-  Exit                                                 0.010      0.010     1   1.7   1.7 [ 76.7   0.0  23.2]
-   ExitEntryPoints                                     0.003      0.003     1   0.5  31.3 [ 25.7   0.0  74.2]
+ Main                                                  2.661      2.623     0 100.0 100.0 [ 36.5   0.1  63.2]
+  Init                                                 0.154      0.152     1   5.8   5.8 [ 99.9   0.0   0.0]
+   AllocateMesh                                        0.000      0.000     1   0.0   0.3 [100.0   0.0   0.0]
+   BuildtEntryPoints                                   0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+    Master                                             0.000      0.000     1   0.0  10.9 [100.0   0.0   0.0]
+     MasterBuild                                       0.000      0.000     1   0.0  53.7 [100.0   0.0   0.0]
+    Mahyco                                             0.000      0.000     1   0.0  53.6 [100.0   0.0   0.0]
+     AccBuild                                          0.000      0.000     1   0.0  94.6 [100.0   0.0   0.0]
+   CompactItemsBegin                                   0.003      0.003     4   0.1   2.5 [100.0   0.0   0.0]
+   CompactUpdateInternalReferences                     0.000      0.000     4   0.0   0.0 [100.0   0.0   0.0]
+   CompactItemFinish                                   0.002      0.002     8   0.1   1.8 [100.0   0.0   0.0]
+   CompactItemSortReferences                           0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+   CompactConnectivityData                             0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+   CompactVariables                                    0.000      0.000     3   0.0   0.5 [100.0   0.0   0.0]
+   InitEntryPoints                                     0.022      0.022     1   0.8  14.6 [100.0   0.0   0.0]
+    ArcaneMasterInternal                               0.000      0.000     2   0.0   0.0 [100.0   0.0   0.0]
+     ArcaneMasterStartInit                             0.000      0.000     1   0.0  59.2 [100.0   0.0   0.0]
+     ArcaneMasterInit                                  0.000      0.000     1   0.0   6.1 [100.0   0.0   0.0]
+    TimeHistoryMng                                     0.004      0.004     3   0.1  20.1 [100.0   0.0   0.0]
+     ArcaneTimeHistoryInit                             0.002      0.002     1   0.0  46.4 [100.0   0.0   0.0]
+     ArcaneTimeHistoryStartInit                        0.002      0.002     1   0.0  53.0 [100.0   0.0   0.0]
+     ArcaneTimeHistoryStartInitEnd                     0.000      0.000     1   0.0   0.1 [100.0   0.0   0.0]
+    ArcaneCeaVerifier                                  0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+     VerifierOnInit                                    0.000      0.000     1   0.0  76.8 [100.0   0.0   0.0]
+    ArcanePostProcessing                               0.001      0.001     2   0.0   6.9 [100.0   0.0   0.0]
+     PostProcessingStartInit                           0.000      0.000     1   0.0   0.4 [100.0   0.0   0.0]
+     PostProcessingInit                                0.001      0.001     1   0.0  98.8 [100.0   0.0   0.0]
+    Mahyco                                             0.016      0.016     4   0.6  72.2 [100.0   0.0   0.0]
+     HydroStartInit                                    0.015      0.015     1   0.5  94.6 [100.0   0.0   0.0]
+     PrepareFaceGroup                                  0.000      0.000     1   0.0   0.6 [100.0   0.0   0.0]
+     ComputeCellMass                                   0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+     ComputeNodeMass                                   0.000      0.000     1   0.0   4.5 [100.0   0.0   0.0]
+    ArcaneCheckpoint                                   0.000      0.000     2   0.0   0.1 [100.0   0.0   0.0]
+     ArcaneCheckpointInit                              0.000      0.000     1   0.0  72.3 [100.0   0.0   0.0]
+     ArcaneCheckpointStartInit                         0.000      0.000     1   0.0   7.3 [100.0   0.0   0.0]
+  Loop                                                 2.252      2.220     1  84.6  84.6 [ 26.6   0.2  73.1]
+   LoopEntryPoints                                     2.246      2.213  2029  84.3  99.6 [ 26.4   0.2  73.3]
+    ArcaneMasterInternal                               0.167      0.165  4058   6.3   7.4 [ 98.0   1.9   0.0]
+     ArcaneTimeLoopBegin                               0.084      0.083  2029   3.1  50.2 [ 96.1   3.8   0.0]
+     ArcaneTimeLoopEnd                                 0.070      0.069  2029   2.6  42.2 [100.0   0.0   0.0]
+    TimeHistoryMng                                     0.020      0.020  4058   0.7   0.9 [100.0   0.0   0.0]
+     ArcaneTimeHistoryBegin                            0.003      0.003  2029   0.1  18.7 [100.0   0.0   0.0]
+     ArcaneTimeHistoryEnd                              0.004      0.004  2029   0.1  20.1 [100.0   0.0   0.0]
+    ArcanePostProcessing                               1.667      1.643  4058  62.6  74.2 [  1.1   0.0  98.8]
+     PostProcessingExportDataStart                     0.002      0.002  2029   0.1   0.1 [100.0   0.0   0.0]
+     PostProcessingExportData                          1.651      1.628  2029  62.0  99.0 [  0.2   0.0  99.7]
+    Mahyco                                             0.295      0.291 18261  11.1  13.1 [ 99.4   0.5   0.0]
+     SaveValuesAtN                                     0.027      0.026  2029   1.0   9.2 [100.0   0.0   0.0]
+     UpdateVelocity                                    0.018      0.018  2029   0.7   6.4 [100.0   0.0   0.0]
+     ApplyBoundaryCondition                            0.010      0.010  2029   0.3   3.5 [100.0   0.0   0.0]
+     UpdatePosition                                    0.013      0.013  2029   0.5   4.5 [100.0   0.0   0.0]
+     ComputeGeometricValues                            0.100      0.098  2029   3.7  33.8 [100.0   0.0   0.0]
+     UpdateDensity                                     0.014      0.014  2029   0.5   5.0 [100.0   0.0   0.0]
+     ComputeArtificialViscosity                        0.006      0.006  2029   0.2   2.2 [100.0   0.0   0.0]
+     UpdateEnergyAndPressure                           0.036      0.036  2029   1.3  12.4 [100.0   0.0   0.0]
+     ComputeDeltaT                                     0.011      0.011  2029   0.4   3.9 [ 85.7  14.2   0.0]
+    ArcaneCheckpoint                                   0.008      0.008  2029   0.3   0.3 [100.0   0.0   0.0]
+     ArcaneCheckpointCheckAndWriteData                 0.002      0.002  2029   0.0  25.2 [100.0   0.0   0.0]
+  Exit                                                 0.084      0.083     1   3.1   3.1 [ 57.4   0.0  42.5]
+   ExitEntryPoints                                     0.040      0.039     1   1.5  47.5 [ 10.4   0.0  89.5]
     ArcaneMasterInternal                               0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
-     ArcaneMasterLoopExit                              0.000      0.000     1   0.0  33.3 [100.0   0.0   0.0]
-    ArcanePostProcessing                               0.002      0.002     1   0.4  75.3 [  1.4   0.0  98.5]
-     PostProcessingExit                                0.002      0.002     1   0.4  99.9 [  1.3   0.0  98.6]
+     ArcaneMasterLoopExit                              0.000      0.000     1   0.0  25.0 [100.0   0.0   0.0]
+    ArcanePostProcessing                               0.035      0.035     1   1.3  89.6 [  0.1   0.0  99.8]
+     PostProcessingExit                                0.035      0.035     1   1.3  99.9 [  0.1   0.0  99.8]
     ArcaneCheckpoint                                   0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
-     ArcaneCheckpointExit                              0.000      0.000     1   0.0  55.5 [100.0   0.0   0.0]
-    ArcaneCeaVerifier                                  0.000      0.000     1   0.0   0.6 [100.0   0.0   0.0]
-     VerifierOnExit                                    0.000      0.000     1   0.0  94.1 [100.0   0.0   0.0]
+     ArcaneCheckpointExit                              0.000      0.000     1   0.0  25.8 [100.0   0.0   0.0]
+    ArcaneCeaVerifier                                  0.000      0.000     1   0.0   0.0 [100.0   0.0   0.0]
+     VerifierOnExit                                    0.000      0.000     1   0.0  41.5 [100.0   0.0   0.0]
 
-*L-Internal [07/08/2021 16:12:57] Info output in 'coderesult.xml'
+*L-Internal [08/26/2021 13:22:34] Info output in 'coderesult.xml'
