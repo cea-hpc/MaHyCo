@@ -70,6 +70,50 @@ _computeNodeIndexInCells() {
 }
 
 /*---------------------------------------------------------------------------*/
+/* A appeler par hydroStartInit et par hydroContinueInit pour préparer les   */
+/* données pour les accélérateurs                                            */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_initMeshForAcc() {
+  debug() << "_initMeshForAcc";
+
+  m_connectivity_view.setMesh(this->mesh());
+
+  // Permet la lecture des cqs quand on boucle sur les noeuds
+  _computeNodeIndexInCells();
+}
+
+/*---------------------------------------------------------------------------*/
+/* Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au      */
+/* préalable par un appel à PrepareFaceGroup()                               */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_initBoundaryConditionsForAcc() {
+  debug() << "_initBoundaryConditionsForAcc";
+ 
+  // Remplit la structure contenant les informations sur les conditions aux limites
+  // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
+  // de manière concurrente aux données.
+  {
+    m_boundary_conditions.clear();
+    for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
+      String NomBC = options()->boundaryCondition[i]->surface;
+      FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
+      Real value = options()->boundaryCondition[i]->value();
+      TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
+
+      BoundaryCondition bcn;
+      bcn.nodes = face_group.nodeGroup();
+      // attention, cette vue sera à reconstruire si bcn.nodes est modifié
+      bcn.boundary_nodes = bcn.nodes.view(); 
+      bcn.value = value;
+      bcn.type = type;
+      m_boundary_conditions.add(bcn);
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::
@@ -77,7 +121,7 @@ hydroStartInit()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  m_connectivity_view.setMesh(this->mesh());
+  _initMeshForAcc();
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
    my_rank = m_parallel_mng->commRank();
@@ -110,10 +154,7 @@ hydroStartInit()
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
-
-  // Permet la lecture des cqs quand on boucle sur les noeuds
-  _computeNodeIndexInCells();
-  
+ 
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
   m_global_deltat = deltat_init;
@@ -126,6 +167,7 @@ hydroStartInit()
   
   info() << " Initialisation des groupes de faces";
   PrepareFaceGroup();
+  _initBoundaryConditionsForAcc();
   
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
@@ -207,27 +249,6 @@ hydroStartInit()
       volume *= inv_dim;
       out_cell_volume_g[cid] = volume;
     };
-  }
- 
-  // Remplit la structure contenant les informations sur les conditions aux limites
-  // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
-  // de manière concurrente aux données.
-  {
-    m_boundary_conditions.clear();
-    for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
-      String NomBC = options()->boundaryCondition[i]->surface;
-      FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
-      Real value = options()->boundaryCondition[i]->value();
-      TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
-
-      BoundaryCondition bcn;
-      bcn.nodes = face_group.nodeGroup();
-      // attention, cette vue sera à reconstruire si bcn.nodes est modifié
-      bcn.boundary_nodes = bcn.nodes.view(); 
-      bcn.value = value;
-      bcn.type = type;
-      m_boundary_conditions.add(bcn);
-    }
   }
 
   PROF_ACC_END;
@@ -328,6 +349,10 @@ hydroContinueInit()
     
     debug() << " Entree dans hydroContinueInit()";
     // en reprise 
+
+    _initMeshForAcc();
+    _initBoundaryConditionsForAcc();
+
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     m_dimension = mesh()->dimension(); 
     m_cartesian_mesh->computeDirections();

@@ -398,6 +398,17 @@ class MahycoModule
   void _computeNodeIndexInCells();
 
   /**
+   * A appeler par hydroStartInit et par hydroContinueInit pour préparer les
+   * données pour les accélérateurs
+   */
+  void _initMeshForAcc();
+
+  /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
+   *  préalable par un appel à PrepareFaceGroup()
+   */
+  void _initBoundaryConditionsForAcc();
+
+  /**
    * Fonctions diverses
    **/
   Real produit(Real A, Real B, Real C, Real D);
