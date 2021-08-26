@@ -31,7 +31,7 @@ set( TEST_NAMES "CAS_2D_Lag_BiSodCaseX"
 		"CAS_RiderVortexTimeReverse")
 
 foreach( TEST_NAME ${TEST_NAMES} )
-    add_test( NAME ${TEST_NAME}
-              COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:mahyco> "${TEST_DIR}/${TEST_NAME}" )
+    add_test( NAME ${TEST_NAME} 
+              COMMAND "${TEST_DIR}/launch_test.sh" $<TARGET_FILE:mahyco> "${TEST_DIR}/${TEST_NAME}" "seq" "mpiexec" "/tmp" )
     set_tests_properties( ${TEST_NAME} PROPERTIES ENVIRONMENT OMP_NUM_THREADS=1 )
 endforeach()

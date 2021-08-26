@@ -147,28 +147,50 @@ set( TEST_NAMES_PR
 		"CAS_RiderT45"
 		)
 		
+set( TEST_NAMES_CUDA_1
+		"CAS_BiSodCaseX"
+		"CAS_BiSodCaseY"
+		"CAS_BiSodCaseZ"
+		"CAS_Lag_BiSodCaseX"
+		"CAS_RiderRotation"
+		)
+
 set( PARA4 "para_4")
 set( PARA8 "para_8")
 set( SEQ "seq")
 set( SEQPR "seq_pr")
+set( CUDA1 "cuda_1")
+
+# Pour définir le launcher MPI
+set(MPI_LAUNCHER mpiexec CACHE STRING "Définit le launcher MPI" )
+
+# Pour définir la base du répertoire temporaire d'exécution des tests de non-regression
+set(BASETMPDIR_NONREG "/tmp" CACHE PATH "Définit la base du répertoire temporaire d'exécution des tests de non-regression" )
 
 # protection-reprise
 foreach( TEST_NAME ${TEST_NAMES_PR} )
- add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQPR})
+ add_test(NAME "${SEQPR}_${TEST_NAME}" COMMAND ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQPR} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # sur 4 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_4} )
- add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} )
+ add_test(NAME "${PARA4}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # sur 8 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_8} )
- add_test(NAME ${TEST_NAME} COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} )
+ add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # sequentiel
 foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME "${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${TEST_DIR}/../build/src/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ})
+ add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
+
+if(WANT_CUDA)
+# mono-processus 1 GPU
+foreach( TEST_NAME ${TEST_NAMES_CUDA_1} )
+ add_test(NAME "${CUDA1}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${CUDA1} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+endif()
 
