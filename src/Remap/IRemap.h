@@ -39,6 +39,8 @@ public:
   
 public:
     
+  virtual void initGpu() = 0;
+  
    /**
    * main du remap
    **/

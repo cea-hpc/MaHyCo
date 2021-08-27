@@ -52,6 +52,7 @@ if(WANT_CUDA)
       Remap/UtilesRemap.cc
       PROPERTIES LANGUAGE CUDA)
   target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(Remap PUBLIC arcane_accelerator_cuda_runtime)
 endif()
 
 # Pour la gestion du profiling sur accélérateur

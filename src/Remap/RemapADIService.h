@@ -34,6 +34,9 @@
 #include "arcane/cea/NodeDirectionMng.h"
 #include "arcane/cea/CartesianConnectivity.h"
 
+#include "AcceleratorUtils.h"
+
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 
@@ -58,6 +61,9 @@ public:
   Materials::IMeshMaterialMng* mm;
 
 public:
+  
+  virtual void initGpu();
+  
    /**
    * main du remap
    **/
@@ -82,13 +88,16 @@ public:
    **/
    virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
    
+   /**
+    * calcul des gradients aux faces
+    **/
+   virtual void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+   
 private:
     
+
  
-  /**
-   * calcul des gradients aux faces
-   **/
-   void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+
   /**
    * calcul des gradients aux faces ou flux aux faces 
    **/
@@ -212,6 +221,9 @@ private:
   
   
   Real m_arithmetic_thresold = 1.e-300;
+  
+  // Pour l'utilisation des accélérateurs
+  ax::Runner m_runner;
   
 };
 

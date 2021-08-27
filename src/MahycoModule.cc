@@ -34,6 +34,7 @@ accBuild()
   info() << "Using MaHyCo with accelerator";
   IApplication* app = subDomain()->application();
   initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+  options()->remap()->initGpu();
 
   PROF_ACC_END;
 }

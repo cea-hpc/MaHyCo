@@ -2,6 +2,18 @@
 #include "RemapADIService.h"
 #include "AcceleratorUtils.h"
 
+void RemapADIService::
+initGpu()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+  
+  info() << "Using RemapADIService with accelerator";
+  IApplication* app = subDomain()->application();
+  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+  
+  PROF_ACC_END;
+}
+
 Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
@@ -84,10 +96,23 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   m_h_cell_lagrange.fill(0.0);
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
-  ENUMERATE_FACE(iface, fdm.allFaces()) {
-    Face face = *iface; 
-    m_is_dir_face[face][idir] = true;
-  }
+  
+//   ENUMERATE_FACE(iface, fdm.allFaces()) {
+//     Face face = *iface; 
+//     m_is_dir_face[face][idir] = true;
+//   }
+  
+  auto queue = makeQueue(m_runner);
+  auto command = makeCommand(queue);
+  
+  auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
+  
+  command << RUNCOMMAND_ENUMERATE(Face,fid,fdm.allFaces()) {
+    
+    out_is_dir_face[fid][idir] = true;
+  };
+  
+  
   if (options()->ordreProjection > 1) {
     ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
@@ -485,6 +510,8 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
   }
   PROF_ACC_END;
 }
+
+
 /**
  *******************************************************************************
  * \file synchronizeUremap()
