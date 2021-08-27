@@ -1635,7 +1635,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
       Real vmax(0.);
       if (with_projection) {
         for( NodeLocalId nid : cnc.nodes(cid) ){
-          vmax = math::max(in_velocity[nid].abs(), vmax);
+          vmax = math::max(in_velocity[nid].normL2(), vmax);
         }
       }
       Real dx_sound = cell_dx / (sound_speed + vmax);
@@ -1773,39 +1773,6 @@ computeDeltaT()
   debug() << " too_much " << too_much;
   
   PROF_ACC_END;
-}
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
-void MahycoModule::
-_computeNodeIndexInCells()
-{
-  info() << "ComputeNodeIndexInCells";
-  // Un noeud est connecté au maximum à MAX_NODE_CELL mailles
-  // Calcul pour chaque noeud son index dans chacune des
-  // mailles à laquelle il est connecté.
-  NodeGroup nodes = allNodes();
-  Integer nb_node = nodes.size();
-  m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
-  m_node_index_in_cells.fill(-1);
-  auto node_cell_cty = m_connectivity_view.nodeCell();
-  auto cell_node_cty = m_connectivity_view.cellNode();
-  ENUMERATE_NODE(inode,nodes){
-    NodeLocalId node = *inode;
-    Int32 index = 0;
-    Int32 first_pos = node.localId() * MAX_NODE_CELL;
-    for( CellLocalId cell : node_cell_cty.cells(node) ){
-      Int16 node_index_in_cell = 0;
-      for( NodeLocalId cell_node : cell_node_cty.nodes(cell) ){
-        if (cell_node==node)
-          break;
-        ++node_index_in_cell;
-      }
-      m_node_index_in_cells[first_pos + index] = node_index_in_cell;
-      ++index;
-    }
-  }
 }
 
 

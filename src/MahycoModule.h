@@ -134,7 +134,8 @@ class MahycoModule
   // soit correcte lors de la capture avec CUDA (sinon on passe par this et
   // cela provoque une erreur mémoire)
   static const Integer MAX_NODE_CELL = 8;
-
+  static const Integer MAX_NODE_FACE = 4;
+  
   // les paramètres pour appliquer les conditions aux limites sur des noeuds de bord
   struct BoundaryCondition
   {
@@ -401,11 +402,6 @@ class MahycoModule
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
 
   /**
-   * Permet la lecture des cqs quand on boucle sur les noeuds
-   */
-  void _computeNodeIndexInCells();
-
-  /**
    * A appeler par hydroStartInit et par hydroContinueInit pour préparer les
    * données pour les accélérateurs
    */
@@ -456,18 +452,12 @@ class MahycoModule
   Integer my_rank;
   Integer m_dimension;
  
-  //! Indice de chaque noeud dans la maille
-  UniqueArray<Int16> m_node_index_in_cells;
-
   // Pour l'utilisation des accélérateurs
   ax::Runner m_runner;
 
   UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
-  static const Integer MAX_NODE_CELL = 8;
-  static const Integer MAX_NODE_FACE = 4;
- 
 };
 
 #endif
