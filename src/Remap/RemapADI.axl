@@ -31,7 +31,7 @@
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- CELL VOLUME EULER	 -->
   <variable field-name="euler_volume" name="EulerVolume" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
   <!-- 	VELOCITY -->
   <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
@@ -79,10 +79,10 @@
 	      dim="1" dump="true" need-sync="true" />
     <!-- MIXTE	 -->
     <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
     <!-- PURE	 -->
     <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="false" dump="true" need-sync="true" />
     <!-- 	PHI FACE 	 -->
     <variable field-name="phi_face" name="PhiFace" data-type="real" item-kind="face"
 	    dim="1" dump="true" need-sync="true" /> 

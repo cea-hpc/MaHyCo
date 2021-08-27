@@ -259,7 +259,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       } 
     }
   }
-  // recalcule de la masse mass_nodale
+  // recalcule de la masse mass_nodale et 
   m_node_mass.fill(0.);
   Real one_over_nbnode = dimension == 2 ? .25  : .125 ;
   ENUMERATE_CELL(icell, allCells()){    
@@ -267,6 +267,15 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
     for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
       m_node_mass[inode] += contrib_node_mass; 
+    }
+    // des volumes matieres
+    AllEnvCell all_env_cell = all_env_cell_converter[cell];
+    if (all_env_cell.nbEnvironment() !=1) {
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        EnvCell ev = *ienvcell;        
+        Cell cell = ev.globalCell();
+        m_cell_volume[ev] = m_fracvol[ev] * m_cell_volume[cell];
+      }
     }
   }
   m_node_mass.synchronize();
@@ -286,7 +295,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           delta_ec += 0.25 * ( ec_proj - ec_reconst);
         }
       }
-      //delta_ec = std::max(0., delta_ec);
+      delta_ec = std::max(0., delta_ec);
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell; 
         m_internal_energy[ev] += m_mass_fraction[ev] * delta_ec;
