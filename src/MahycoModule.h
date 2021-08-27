@@ -124,7 +124,7 @@ class MahycoModule
   /** Constructeur de la classe */
   MahycoModule(const ModuleBuildInfo& mbi);
   /** Destructeur de la classe */
-  ~MahycoModule() {}
+  ~MahycoModule();
   
   struct interval {
     double inf, sup;
@@ -407,6 +407,12 @@ class MahycoModule
    */
   void _initMeshForAcc();
 
+  /**
+   * A appeler après hydroStartInitEnvAndMat pour préparer
+   * traitement des environnements sur accélérateur
+   */
+  void _initEnvForAcc();
+
   /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
    *  préalable par un appel à PrepareFaceGroup()
    */
@@ -465,6 +471,8 @@ class MahycoModule
   UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
+  // Les queues asynchrones d'exéution
+  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
 };
 
 #endif

@@ -24,6 +24,13 @@ MahycoModule::
 {}
 
 /*---------------------------------------------------------------------------*/
+/* Destructeur */
+/*---------------------------------------------------------------------------*/
+MahycoModule::~MahycoModule() {
+  delete m_menv_queue;
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::
@@ -82,6 +89,17 @@ _initMeshForAcc() {
 
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
+}
+
+/*---------------------------------------------------------------------------*/
+/* A appeler après hydroStartInitEnvAndMat pour préparer                     */
+/* traitement des environnements sur accélérateur                            */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_initEnvForAcc() {
+  debug() << "_initEnvForAcc";
+
+  m_menv_queue = new MultiAsyncRunQueue(m_runner, mm->environments().size());
 }
 
 /*---------------------------------------------------------------------------*/
@@ -205,6 +223,7 @@ hydroStartInit()
 
   info() << " Initialisation des environnements";
   hydroStartInitEnvAndMat();
+  _initEnvForAcc();
  
   // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
   computeGeometricValues(); 
@@ -395,6 +414,7 @@ hydroContinueInit()
     // en reprise 
 
     _initMeshForAcc();
+    _initEnvForAcc();
     _initBoundaryConditionsForAcc();
 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
@@ -446,12 +466,12 @@ saveValuesAtN()
       m_internal_energy_n[ev] = m_internal_energy[ev];
     }
   }
-  auto queue = makeQueue(m_runner);
+  auto queue_cell = makeQueue(m_runner);
   // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
-  queue.setAsync(true); 
+  queue_cell.setAsync(true); 
 
   {
-    auto command = makeCommand(queue);
+    auto command = makeCommand(queue_cell);
 
     auto in_pseudo_viscosity = ax::viewIn(command,m_pseudo_viscosity.globalVariable());
     auto in_pressure         = ax::viewIn(command,m_pressure.globalVariable());
@@ -490,7 +510,8 @@ saveValuesAtN()
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
   if (copy_velocity || copy_node_coord) {
-    auto command = makeCommand(queue);
+    auto queue_node = makeQueue(m_runner); // queue synchrone, pendant ce temps exécution sur queue_cell 
+    auto command = makeCommand(queue_node);
 
     // if (!options()->sansLagrange) m_velocity_n.copy(m_velocity)
     auto in_velocity = ax::viewIn(command, m_velocity);
@@ -508,7 +529,7 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  queue.barrier();
+  queue_cell.barrier();
  
   PROF_ACC_END;
 }    
@@ -1186,9 +1207,6 @@ computeGeometricValues()
 
   // maille mixte
   // moyenne sur la maille
-  auto queue = makeQueue(m_runner);
-  queue.setAsync(true);
-
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
@@ -1201,7 +1219,7 @@ computeGeometricValues()
     Span<const Integer> global_cell_env(envView(m_global_cell, env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(queue);
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
 
     auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
 
@@ -1212,7 +1230,7 @@ computeGeometricValues()
     };
   }
 
-  queue.barrier();
+  m_menv_queue->waitAllQueues();
   PROF_ACC_END;
 }
 /**
