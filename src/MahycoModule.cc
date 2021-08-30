@@ -1266,24 +1266,12 @@ updateDensity()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-    ENUMERATE_ENVCELL(ienvcell,env){
-      EnvCell ev = *ienvcell;
-      Cell cell = ev.globalCell();
-       // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_cell_volume[ev];
-       Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
-       // nouvelle density
-       m_density[ev] = new_density;
-       // volume specifique de l'environnement au temps n+1/2
-       m_tau_density[ev] = 
-        0.5 * (1.0 / m_density_n[ev] + 1.0 / m_density[ev]);
-        
-    }
-  }
+
+  // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
+  auto queue_glob = makeQueue(m_runner);
+  queue_glob.setAsync(true);
   {
-    auto queue = makeQueue(m_runner);
-    auto command = makeCommand(queue);
+    auto command = makeCommand(queue_glob);
 
     Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
 
@@ -1309,6 +1297,56 @@ updateDensity()
         / iou_tau_density_g[cid];
     };
   }
+  // Pendant ce temps, calcul sur GPU sur la queue_glob
+#if 0
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    ENUMERATE_ENVCELL(ienvcell,env){
+      EnvCell ev = *ienvcell;
+      Cell cell = ev.globalCell();
+       // pinfo() << my_rank << " : " << cell.uniqueId() << " " << m_cell_volume[ev];
+       Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
+       // nouvelle density
+       m_density[ev] = new_density;
+       // volume specifique de l'environnement au temps n+1/2
+       m_tau_density[ev] = 
+        0.5 * (1.0 / m_density_n[ev] + 1.0 / m_density[ev]);
+        
+    }
+  }
+#else
+  // Les calculs des valeurs mixtes sur les environnements sont indépendants 
+  // les uns des autres mais ne dépendent pas non plus des valeurs globales/pures
+  // Rappel : m_menv_queue->queue(*) sont des queues asynchrones indépendantes
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    Span<const Real> cell_volume_env(envView(m_cell_volume, env));
+    Span<const Real> cell_mass_env(envView(m_cell_mass, env));
+    Span<const Real> density_n_env(envView(m_density_n, env));
+
+    Span<Real> density_env(envView(m_density, env));
+    Span<Real> tau_density_env(envView(m_tau_density, env));
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+
+      Real new_density = cell_mass_env[imix] / cell_volume_env[imix];
+      // nouvelle density
+      density_env[imix] = new_density;
+      // volume specifique de l'environnement au temps n+1/2
+      tau_density_env[imix] = 
+        0.5 * (1.0 / density_n_env[imix] + 1.0 / new_density);
+    }; // asynchrone par rapport au CPU et aux autres queues
+  }
+#endif
+  queue_glob.barrier();
+  m_menv_queue->waitAllQueues();
   
   m_density.synchronize();
   m_tau_density.synchronize();
