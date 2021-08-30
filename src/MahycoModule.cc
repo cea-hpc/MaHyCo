@@ -599,6 +599,7 @@ updateForceAndVelocity(Real dt,
     const VariableNodeReal3& v_velocity_in,
     VariableNodeReal3& v_velocity_out) 
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateForceAndVelocity()";
  
 #if 0 
@@ -663,6 +664,7 @@ updateForceAndVelocity(Real dt,
 #endif
 
   v_velocity_out.synchronize();
+  PROF_ACC_END;
 }
 
 /**
