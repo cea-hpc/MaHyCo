@@ -183,6 +183,9 @@ _initEnvForAcc() {
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
     out_adiabatic_cst_env[env->id()] = adiabatic_cst;
   }
+
+  // construit le tableau multi-env m_global_cell_id et le tableau global m_env_id
+  _computeMultiEnvGlobalCellId();
 }
 
 /**
@@ -328,6 +331,7 @@ _computeMultiEnvGlobalCellId() {
 
 void MahycoModule::
 _checkMultiEnvGlobalCellId() {
+#ifdef ARCANE_DEBUG
   debug() << "_checkMultiEnvGlobalCellId";
 
   // Vérification
@@ -346,5 +350,6 @@ _checkMultiEnvGlobalCellId() {
       }
     }
   }
+#endif
 }
 

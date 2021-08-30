@@ -288,7 +288,6 @@ hydroContinueInit()
     // en reprise 
 
     _initMeshForAcc();
-    _initEnvForAcc();
     _initBoundaryConditionsForAcc();
 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
@@ -300,6 +299,7 @@ hydroContinueInit()
     mm->recreateFromDump();
     m_nb_env = mm->environments().size();
     m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+    _initEnvForAcc();
     
     m_global_old_deltat = m_old_deltat;
     // mise a jour nombre iteration 
@@ -423,11 +423,13 @@ saveValuesAtN()
   }
 #endif
 
- bool copy_velocity = !options()->sansLagrange;
+  bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
+  auto queue_node = makeQueue(m_runner); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
+  queue_node.setAsync(true);
+
   if (copy_velocity || copy_node_coord) {
-    auto queue_node = makeQueue(m_runner); // queue synchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
     auto command = makeCommand(queue_node);
 
     // if (!options()->sansLagrange) m_velocity_n.copy(m_velocity)
@@ -446,8 +448,14 @@ saveValuesAtN()
     }; // asynchrone
   }
 
+  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
+  // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
+  _computeMultiEnvGlobalCellId();
+  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+
   queue_cell.barrier();
   m_menv_queue->waitAllQueues();
+  queue_node.barrier();
  
   PROF_ACC_END;
 }    
@@ -1209,8 +1217,6 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
-  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
-  _computeMultiEnvGlobalCellId();
   _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
 
   // maille mixte
