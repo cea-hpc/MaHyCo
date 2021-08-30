@@ -42,6 +42,7 @@ if(WANT_CUDA)
   enable_language(CUDA)
   find_package(CUDAToolkit REQUIRED)
   set_source_files_properties(MahycoModule.cc 
+      MahycoAnnexe.cc
       PrepareRemap.cc 
       Remap/DualPhaseRemap.cc
       Remap/RemapADIFinal.cc

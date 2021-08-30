@@ -48,132 +48,6 @@ accBuild()
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void MahycoModule::
-_computeNodeIndexInCells() {
-  debug() << "_computeNodeIndexInCells";
-  // Un noeud est connecté au maximum à MAX_NODE_CELL mailles
-  // Calcul pour chaque noeud son index dans chacune des
-  // mailles à laquelle il est connecté.
-  NodeGroup nodes = allNodes();
-  Integer nb_node = nodes.size();
-  m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
-  m_node_index_in_cells.fill(-1);
-  auto node_cell_cty = m_connectivity_view.nodeCell();
-  auto cell_node_cty = m_connectivity_view.cellNode();
-  ENUMERATE_NODE(inode,nodes){
-    NodeLocalId node = *inode;
-    Int32 index = 0; 
-    Int32 first_pos = node.localId() * MAX_NODE_CELL;
-    for( CellLocalId cell : node_cell_cty.cells(node) ){
-      Int16 node_index_in_cell = 0; 
-      for( NodeLocalId cell_node : cell_node_cty.nodes(cell) ){
-        if (cell_node==node)
-          break;
-        ++node_index_in_cell;
-      }    
-      m_node_index_in_cells[first_pos + index] = node_index_in_cell;
-      ++index;
-    }    
-  }
-}
-
-/*---------------------------------------------------------------------------*/
-/* A appeler par hydroStartInit et par hydroContinueInit pour préparer les   */
-/* données pour les accélérateurs                                            */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_initMeshForAcc() {
-  debug() << "_initMeshForAcc";
-
-  m_connectivity_view.setMesh(this->mesh());
-
-  // Permet la lecture des cqs quand on boucle sur les noeuds
-  _computeNodeIndexInCells();
-}
-
-/*---------------------------------------------------------------------------*/
-/* A appeler après hydroStartInitEnvAndMat pour préparer                     */
-/* traitement des environnements sur accélérateur                            */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_initEnvForAcc() {
-  debug() << "_initEnvForAcc";
-
-  m_menv_queue = new MultiAsyncRunQueue(m_runner, mm->environments().size());
-}
-
-/*---------------------------------------------------------------------------*/
-/* Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au      */
-/* préalable par un appel à PrepareFaceGroup()                               */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_initBoundaryConditionsForAcc() {
-  debug() << "_initBoundaryConditionsForAcc";
- 
-  // Remplit la structure contenant les informations sur les conditions aux limites
-  // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
-  // de manière concurrente aux données.
-  {
-    m_boundary_conditions.clear();
-    for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
-      String NomBC = options()->boundaryCondition[i]->surface;
-      FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
-      Real value = options()->boundaryCondition[i]->value();
-      TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
-
-      BoundaryCondition bcn;
-      bcn.nodes = face_group.nodeGroup();
-      // attention, cette vue sera à reconstruire si bcn.nodes est modifié
-      bcn.boundary_nodes = bcn.nodes.view(); 
-      bcn.value = value;
-      bcn.type = type;
-      m_boundary_conditions.add(bcn);
-    }
-  }
-}
-
-/*---------------------------------------------------------------------------*/
-/* Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte) */
-/* l'identifiant de la maille globale                                        */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_computeMultiEnvGlobalCellId() {
-  debug() << "_computeMultiEnvGlobalCellId";
-
-  // Calcul des cell_id globaux 
-  CellToAllEnvCellConverter all_env_cell_converter(mm);
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    Integer cell_id = cell.localId();
-    m_global_cell[cell] = cell_id;
-    AllEnvCell all_env_cell = all_env_cell_converter[cell];
-    if (all_env_cell.nbEnvironment() !=1) {
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;
-        m_global_cell[ev] = cell_id;
-      }
-    }
-  }
-
-  _checkMultiEnvGlobalCellId();
-}
-
-void MahycoModule::
-_checkMultiEnvGlobalCellId() {
-  debug() << "_checkMultiEnvGlobalCellId";
-
-  // Vérification
-  ENUMERATE_ENV(ienv, mm) {
-    IMeshEnvironment* env = *ienv;
-    ENUMERATE_ENVCELL(ienvcell,env){
-      EnvCell ev = *ienvcell;
-      ARCANE_ASSERT(ev.globalCell().localId()==m_global_cell[ev], ("lid differents"));
-    }
-  }
-}
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
 
 void MahycoModule::
 hydroStartInit()
@@ -542,6 +416,7 @@ computeArtificialViscosity()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeArtificialViscosity()";
+#if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
@@ -573,6 +448,93 @@ computeArtificialViscosity()
       }
     }
   }
+#else
+  // Traitement des mailles pures tout environnement compris
+  // Pour ce faire, on boucle sur tout le maillage en initialisant à 0
+  // Si la maille est pure, il faut récupérer l'env_id pour adiabatic_cst
+  // A la fin de la boucle, toutes les mailles pures sont calculées 
+  // et les emplacements des grandeurs globales pour les mailles mixtes sont à 0
+  
+  auto queue = makeQueue(m_runner);
+  queue.setAsync(true); // la queue est asynchrone par rapport à l'hôte, 
+  // cependant tous les kernels lancés sur cette queue s'exécutent séquentiellement les uns après les autres
+  // ici c'est primordial car le premier kernel va initialiser les grandeurs globales qui vont être mises 
+  // à jour environnement par environnement par les kernels suivants
+
+  {
+    auto command = makeCommand(queue);
+
+    auto in_env_id               = ax::viewIn(command, m_env_id);
+    auto in_div_u                = ax::viewIn(command, m_div_u);
+    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
+    auto in_tau_density          = ax::viewIn(command, m_tau_density.globalVariable());
+    auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
+
+    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+
+    command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      out_pseudo_viscosity[cid] = 0.;
+      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+      if (env_id>=0 && in_div_u[cid] < 0.0) {
+        CellLocalId ev_cid(cid); // exactement même valeur mais permet de distinguer ce qui relève du partiel et du global
+        Real adiabatic_cst = in_adiabatic_cst_env(env_id);
+        out_pseudo_viscosity[ev_cid] = 1. / in_tau_density[ev_cid]
+          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
+             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
+             * in_div_u[cid] * in_div_u[cid]);
+      }
+    };
+  }
+  
+  // Traitement des mailles mixtes
+  // Pour chaque env traité l'un après l'autre, on récupère les mailles mixtes
+  // Pour chaque maille mixte, on calcule pseudo_viscosity 
+  // et on accumule cette valeur *fracvol dans la grandeur globale
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(queue);
+
+    Real adiabatic_cst = m_adiabatic_cst_env(env->id());
+    auto in_div_u                = ax::viewIn(command, m_div_u);
+    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
+    auto in_tau_density          = ax::viewIn(command, m_tau_density.globalVariable());
+    auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
+
+    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+
+    // Des sortes de vues sur les valeurs impures pour l'environnement env
+    Span<const Real> fracvol_env(envView(m_fracvol, env));
+    Span<const Integer> global_cell_env(envView(m_global_cell, env));
+    Span<const Real> tau_density_env(envView(m_tau_density, env));
+    Span<Real> pseudo_viscosity_env(envView(m_pseudo_viscosity, env));
+
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(global_cell_env[imix]); // on récupère l'identifiant de la maille globale
+
+      // On calcule la valeur partielle sur la maille mixte
+      pseudo_viscosity_env[imix] = 0.;
+      if (in_div_u[cid] < 0.0) {
+        pseudo_viscosity_env[imix] = 1. / tau_density_env[imix]
+          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
+             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
+             * in_div_u[cid] * in_div_u[cid]);
+      }
+
+      // Contribution à la grandeur globale, 
+      // out_pseudo_viscosity[cid] a été initialisée lors de la boucle sur maille pure
+      out_pseudo_viscosity[cid] += pseudo_viscosity_env[imix] * fracvol_env[imix]; 
+    };
+  }
+  queue.barrier(); // attente de fin des exécutions sur GPU
+#endif
   PROF_ACC_END;
 }
 /**
