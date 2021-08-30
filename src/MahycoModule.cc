@@ -327,19 +327,12 @@ saveValuesAtN()
   m_pressure.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
+
+  // Exploitation de plusieurs queues asynchrones en concurrence
+  // queue_cell => recopie des valeurs pures et globales
+  // m_menv_queue => recopies des valeurs mixtes de tous les environnements
+  // queue_node => recopie des valeurs aux noeuds
   
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-    ENUMERATE_ENVCELL(ienvcell,env){
-      EnvCell ev = *ienvcell;
-      m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
-      m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
-      m_pressure_n[ev] = m_pressure[ev];
-      m_cell_volume_n[ev] = m_cell_volume[ev];
-      m_density_n[ev] = m_density[ev];
-      m_internal_energy_n[ev] = m_internal_energy[ev];
-    }
-  }
   auto queue_cell = makeQueue(m_runner);
   // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
   queue_cell.setAsync(true); 
@@ -373,18 +366,68 @@ saveValuesAtN()
       out_density_n[cid] = in_density[cid];
       out_internal_energy_n[cid] = in_internal_energy[cid];
 
-      // anciennement .copy(...)
-      for(Integer i=0 ; i<nb_node_in_cell ; ++i) {
-        out_cell_cqs_n[cid][i] = in_cell_cqs[cid][i];
-      }
+      out_cell_cqs_n[cid].copy(in_cell_cqs[cid]);
     }; // asynchrone
   }
 
-  bool copy_velocity = !options()->sansLagrange;
+  auto queue_cell_mix = makeQueue(m_runner);
+  queue_cell_mix.setAsync(true); 
+
+#if 0
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    ENUMERATE_ENVCELL(ienvcell,env){
+      EnvCell ev = *ienvcell;
+      m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
+      m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
+      m_pressure_n[ev] = m_pressure[ev];
+      m_cell_volume_n[ev] = m_cell_volume[ev];
+      m_density_n[ev] = m_density[ev];
+      m_internal_energy_n[ev] = m_internal_energy[ev];
+    }
+  }
+#else
+  // Les recopies par environnement dont indépendantes, on peut utiliser m_menv_queue
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    Span<const Real> pseudo_viscosity_env(envView(m_pseudo_viscosity, env));
+    Span<const Real> pressure_env        (envView(m_pressure, env));
+    Span<const Real> cell_volume_env     (envView(m_cell_volume, env));
+    Span<const Real> density_env         (envView(m_density, env));
+    Span<const Real> internal_energy_env (envView(m_internal_energy, env));
+
+    Span<Real> pseudo_viscosity_n_env(envView(m_pseudo_viscosity_n, env));
+
+    Span<Real> pseudo_viscosity_nmoins1_env(envView(m_pseudo_viscosity_nmoins1, env));
+    Span<Real> pressure_n_env         (envView(m_pressure_n, env));
+    Span<Real> cell_volume_n_env      (envView(m_cell_volume_n, env));
+    Span<Real> density_n_env          (envView(m_density_n, env));
+    Span<Real> internal_energy_n_env  (envView(m_internal_energy_n, env));
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+
+      pseudo_viscosity_nmoins1_env[imix] = pseudo_viscosity_n_env[imix];
+      pseudo_viscosity_n_env[imix] = pseudo_viscosity_env[imix];
+      pressure_n_env[imix] = pressure_env[imix];
+      cell_volume_n_env[imix] = cell_volume_env[imix];
+      density_n_env[imix] = density_env[imix];
+      internal_energy_n_env[imix] = internal_energy_env[imix];
+    }; // asynchrone par rapport au CPU
+  }
+#endif
+
+ bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
   if (copy_velocity || copy_node_coord) {
-    auto queue_node = makeQueue(m_runner); // queue synchrone, pendant ce temps exécution sur queue_cell 
+    auto queue_node = makeQueue(m_runner); // queue synchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
     auto command = makeCommand(queue_node);
 
     // if (!options()->sansLagrange) m_velocity_n.copy(m_velocity)
@@ -404,6 +447,7 @@ saveValuesAtN()
   }
 
   queue_cell.barrier();
+  m_menv_queue->waitAllQueues();
  
   PROF_ACC_END;
 }    
