@@ -370,9 +370,6 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  auto queue_cell_mix = makeQueue(m_runner);
-  queue_cell_mix.setAsync(true); 
-
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -1369,11 +1366,14 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
+  _checkMultiEnvGlobalCellId();
+
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
   else
     updateEnergyAndPressureforGP();  
-    
+   
+#if 0
   // maille mixte
   // moyenne sur la maille
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -1388,6 +1388,9 @@ updateEnergyAndPressure()
       }
     }
   }
+#else
+  // Moyennes reportées dans updateEnergyAndPressurebyNewton() et updateEnergyAndPressureforGP()
+#endif
   if (! options()->withProjection) {
     // Calcul de la Pression si on ne fait pas de projection 
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -1455,6 +1458,21 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
 	      m_pressure[ev] = p;
         }
       }
+      // maille mixte
+      // moyenne sur la maille
+      // Précedemment calculé dans updateEnergyAndPressure()
+      CellToAllEnvCellConverter all_env_cell_converter(mm);
+      ENUMERATE_CELL(icell, allCells()){
+        Cell cell = * icell;
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        if (all_env_cell.nbEnvironment() !=1) {
+          m_internal_energy[cell] = 0.;
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            EnvCell ev = *ienvcell;
+            m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+          }
+        }
+      }
     } else {
       ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
@@ -1513,8 +1531,52 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
 	      m_pressure[ev] = p;
         }
       }
+      // maille mixte
+      // moyenne sur la maille
+      // Précedemment calculé dans updateEnergyAndPressure()
+      CellToAllEnvCellConverter all_env_cell_converter(mm);
+      ENUMERATE_CELL(icell, allCells()){
+        Cell cell = * icell;
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        if (all_env_cell.nbEnvironment() !=1) {
+          m_internal_energy[cell] = 0.;
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            EnvCell ev = *ienvcell;
+            m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+          }
+        }
+      }
     }
   PROF_ACC_END;
+}
+
+/*
+ *******************************************************************************
+ */
+ARCCORE_HOST_DEVICE inline Real compute_eint(
+    bool pseudo_centree, Real adiabatic_cst,
+    Real pseudo_viscosity_n, Real pseudo_viscosity,
+    Real density_n, Real density, 
+    Real pressure, Real internal_energy_n) 
+{
+  Real pseudo(0.);
+  if (pseudo_centree &&
+      ((pseudo_viscosity_n + pseudo_viscosity) * (1.0 / density - 1.0 / density_n) < 0.))
+    pseudo = 0.5 * (pseudo_viscosity + pseudo_viscosity_n);
+  if (!pseudo_centree &&
+      (pseudo_viscosity * (1.0 / density - 1.0 / density_n) < 0.))
+    pseudo = pseudo_viscosity;
+
+  Real denom_accrois_nrj(1 + 0.5 * (adiabatic_cst - 1.0) *
+      density *
+      (1.0 / density -
+       1.0 / density_n));
+  Real numer_accrois_nrj(internal_energy_n -
+      (0.5 * pressure + pseudo) *
+      (1.0 / density - 1.0 / density_n));
+  Real internal_energy = numer_accrois_nrj / denom_accrois_nrj;
+
+  return internal_energy;
 }
 
 /*
@@ -1528,8 +1590,10 @@ updateEnergyAndPressureforGP()
   debug() << " Entree dans updateEnergyAndPressure()";
   bool csts = options()->schemaCsts();
   bool pseudo_centree = options()->pseudoCentree();
+  info() << "csts : " << csts << ", pseudo_centree : " << pseudo_centree;
   // Calcul de l'énergie interne
   if (!csts) {
+#if 0
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
       Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
@@ -1554,6 +1618,83 @@ updateEnergyAndPressureforGP()
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
       }
     }
+#else
+    // Traitements dépendants des mailles pures/globales 
+    // puis des mailles mixtes qui vont mettre à jour les valeurs globales
+
+    auto queue = makeQueue(m_runner);
+    // Traitement des mailles pures via les tableaux .globalVariable()
+    {
+      auto command = makeCommand(queue);
+
+      auto in_env_id               = ax::viewIn(command, m_env_id);
+      auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
+
+      auto in_pseudo_viscosity_n   = ax::viewIn(command, m_pseudo_viscosity_n.globalVariable()); 
+      auto in_pseudo_viscosity     = ax::viewIn(command, m_pseudo_viscosity.globalVariable());
+      auto in_density_n            = ax::viewIn(command, m_density_n.globalVariable()); 
+      auto in_density              = ax::viewIn(command, m_density.globalVariable()); 
+      auto in_pressure             = ax::viewIn(command, m_pressure.globalVariable()); 
+      auto in_internal_energy_n    = ax::viewIn(command, m_internal_energy_n.globalVariable());
+
+      auto out_internal_energy     = ax::viewOut(command, m_internal_energy.globalVariable());
+
+      command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+        out_internal_energy[cid] = 0.; // initialisation pour une future maj des mailles moyennes (globales)
+        Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+        if (env_id>=0) { // vrai ssi cid maille pure
+          Real adiabatic_cst = in_adiabatic_cst_env(env_id);
+          CellLocalId ev_cid(cid); // exactement même valeur mais met en évidence le caractère "environnement" de la maille pure
+          out_internal_energy[ev_cid] = compute_eint(pseudo_centree, adiabatic_cst,
+              in_pseudo_viscosity_n[ev_cid], in_pseudo_viscosity[ev_cid],
+              in_density_n[ev_cid], in_density[ev_cid], 
+              in_pressure[ev_cid], in_internal_energy_n[ev_cid]);
+        }
+      }; // non-bloquant
+    }
+
+    // Traitement des mailles mixtes via les envView(...)
+
+    ENUMERATE_ENV(ienv,mm){
+      IMeshEnvironment* env = *ienv;
+
+      // Les kernels sont lancés environnement par environnement les uns après les autres
+      auto command = makeCommand(queue);
+
+      Span<const Real> in_pseudo_viscosity_n(envView(m_pseudo_viscosity_n, env)); 
+      Span<const Real> in_pseudo_viscosity  (envView(m_pseudo_viscosity, env));
+      Span<const Real> in_density_n         (envView(m_density_n, env)); 
+      Span<const Real> in_density           (envView(m_density, env)); 
+      Span<const Real> in_pressure          (envView(m_pressure, env)); 
+      Span<const Real> in_internal_energy_n (envView(m_internal_energy_n, env));
+      Span<const Real> in_mass_fraction     (envView(m_mass_fraction, env));
+      Span<const Integer> in_global_cell    (envView(m_global_cell, env));
+
+      Span<Real> out_internal_energy        (envView(m_internal_energy, env));
+      auto inout_internal_energy_g = ax::viewInOut(command, m_internal_energy.globalVariable());
+
+      Real adiabatic_cst = m_adiabatic_cst_env(env->id());
+
+      // Nombre de mailles impures (mixtes) de l'environnement
+      Integer nb_imp = env->impureEnvItems().nbItem();
+
+      command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+        auto [imix] = iter(); // imix \in [0,nb_imp[
+        CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+
+        Real internal_energy = compute_eint(pseudo_centree, adiabatic_cst,
+            in_pseudo_viscosity_n[imix], in_pseudo_viscosity[imix],
+            in_density_n[imix], in_density[imix], 
+            in_pressure[imix], in_internal_energy_n[imix]);
+
+        out_internal_energy[imix] = internal_energy;
+
+        // Maj de la grandeur global (ie moyenne)
+        // inout_internal_energy_g[cid] a été initialisée à 0 par le kernel sur les grandeurs globales
+        inout_internal_energy_g[cid] += in_mass_fraction[imix] * internal_energy;
+      }; // bloquant
+    }
+#endif
   } else {
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
@@ -1589,6 +1730,22 @@ updateEnergyAndPressureforGP()
                                );
 
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
+      }
+    }
+
+    // maille mixte
+    // moyenne sur la maille
+    // Précedemment calculé dans updateEnergyAndPressure()
+    CellToAllEnvCellConverter all_env_cell_converter(mm);
+    ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;
+      AllEnvCell all_env_cell = all_env_cell_converter[cell];
+      if (all_env_cell.nbEnvironment() !=1) {
+        m_internal_energy[cell] = 0.;
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          EnvCell ev = *ienvcell;
+          m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+        }
       }
     }
   }
