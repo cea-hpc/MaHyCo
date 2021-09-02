@@ -1242,6 +1242,24 @@ computeGeometricValues()
   m_menv_queue->waitAllQueues();
   PROF_ACC_END;
 }
+
+/**
+ *******************************************************************************
+ * Fonction appelée à l'intérieur des kernels de updateDensity(), 
+ * permet de mutualiser les formules entre les mailles pures et mixtes
+ *******************************************************************************
+ */
+ARCCORE_HOST_DEVICE inline void compute_density_tau(Real density_n,
+    Real cell_mass, Real cell_volume,
+    Real& density, Real& tau_density)
+{
+  // nouvelle density
+  density = cell_mass / cell_volume;;
+  // volume specifique de l'environnement au temps n+1/2
+  tau_density = 
+    0.5 * (1.0 / density_n + 1.0 / density);
+}
+
 /**
  *******************************************************************************
  * \file updateDensity()
@@ -1280,12 +1298,15 @@ updateDensity()
     auto out_div_u = ax::viewOut(command, m_div_u);
 
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
-      Real new_density = in_cell_mass_g[cid] / in_cell_volume_g[cid];
-      // nouvelle density
+
+      Real new_density, tau_density;
+      compute_density_tau(in_density_n_g[cid], 
+          in_cell_mass_g[cid], in_cell_volume_g[cid], 
+          /*OUT*/new_density, /*OUT*/tau_density);
+
       iou_density_g[cid] = new_density;
-      // volume specifique moyen au temps n+1/2
-      iou_tau_density_g[cid] = 
-        0.5 * (1.0 / in_density_n_g[cid] + 1.0 / iou_density_g[cid]);
+      iou_tau_density_g[cid] = tau_density;
+
       // divergence de la vitesse mode A1
       out_div_u[cid] =
         inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
@@ -1331,12 +1352,10 @@ updateDensity()
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
       auto [imix] = iter(); // imix \in [0,nb_imp[
 
-      Real new_density = in_cell_mass[imix] / in_cell_volume[imix];
-      // nouvelle density
-      out_density[imix] = new_density;
-      // volume specifique de l'environnement au temps n+1/2
-      out_tau_density[imix] = 
-        0.5 * (1.0 / in_density_n[imix] + 1.0 / new_density);
+      compute_density_tau(in_density_n[imix], 
+          in_cell_mass[imix], in_cell_volume[imix], 
+          /*OUT*/out_density[imix], /*OUT*/out_tau_density[imix]);
+
     }; // asynchrone par rapport au CPU et aux autres queues
   }
 #endif
