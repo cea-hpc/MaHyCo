@@ -1910,7 +1910,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
     auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
     auto in_velocity             = ax::viewIn(command, m_velocity);
-    auto out_dx_sound(dt_cell_info.dxSoundSetter(command));
+    typename DtCellInfoType::VarCellSetter out_dx_sound(dt_cell_info.dxSoundSetter(command));
 
     auto cnc = m_connectivity_view.cellNode();
 
