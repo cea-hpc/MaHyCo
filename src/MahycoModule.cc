@@ -393,29 +393,29 @@ saveValuesAtN()
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
 
-    Span<const Real> pseudo_viscosity_env(envView(m_pseudo_viscosity, env));
-    Span<const Real> pressure_env        (envView(m_pressure, env));
-    Span<const Real> cell_volume_env     (envView(m_cell_volume, env));
-    Span<const Real> density_env         (envView(m_density, env));
-    Span<const Real> internal_energy_env (envView(m_internal_energy, env));
+    Span<const Real> in_pseudo_viscosity(envView(m_pseudo_viscosity, env));
+    Span<const Real> in_pressure        (envView(m_pressure, env));
+    Span<const Real> in_cell_volume     (envView(m_cell_volume, env));
+    Span<const Real> in_density         (envView(m_density, env));
+    Span<const Real> in_internal_energy (envView(m_internal_energy, env));
 
-    Span<Real> pseudo_viscosity_n_env(envView(m_pseudo_viscosity_n, env));
+    Span<Real> inout_pseudo_viscosity_n(envView(m_pseudo_viscosity_n, env));
 
-    Span<Real> pseudo_viscosity_nmoins1_env(envView(m_pseudo_viscosity_nmoins1, env));
-    Span<Real> pressure_n_env         (envView(m_pressure_n, env));
-    Span<Real> cell_volume_n_env      (envView(m_cell_volume_n, env));
-    Span<Real> density_n_env          (envView(m_density_n, env));
-    Span<Real> internal_energy_n_env  (envView(m_internal_energy_n, env));
+    Span<Real> out_pseudo_viscosity_nmoins1(envView(m_pseudo_viscosity_nmoins1, env));
+    Span<Real> out_pressure_n         (envView(m_pressure_n, env));
+    Span<Real> out_cell_volume_n      (envView(m_cell_volume_n, env));
+    Span<Real> out_density_n          (envView(m_density_n, env));
+    Span<Real> out_internal_energy_n  (envView(m_internal_energy_n, env));
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
       auto [imix] = iter(); // imix \in [0,nb_imp[
 
-      pseudo_viscosity_nmoins1_env[imix] = pseudo_viscosity_n_env[imix];
-      pseudo_viscosity_n_env[imix] = pseudo_viscosity_env[imix];
-      pressure_n_env[imix] = pressure_env[imix];
-      cell_volume_n_env[imix] = cell_volume_env[imix];
-      density_n_env[imix] = density_env[imix];
-      internal_energy_n_env[imix] = internal_energy_env[imix];
+      out_pseudo_viscosity_nmoins1[imix] = inout_pseudo_viscosity_n[imix];
+      inout_pseudo_viscosity_n[imix] = in_pseudo_viscosity[imix];
+      out_pressure_n[imix] = in_pressure[imix];
+      out_cell_volume_n[imix] = in_cell_volume[imix];
+      out_density_n[imix] = in_density[imix];
+      out_internal_energy_n[imix] = in_internal_energy[imix];
     }; // asynchrone par rapport au CPU
   }
 #endif
@@ -549,16 +549,14 @@ computeArtificialViscosity()
     auto in_div_u                = ax::viewIn(command, m_div_u);
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
     auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
-    auto in_tau_density          = ax::viewIn(command, m_tau_density.globalVariable());
-    auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
 
     auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
 
     // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<const Real> fracvol_env(envView(m_fracvol, env));
-    Span<const Integer> global_cell_env(envView(m_global_cell, env));
-    Span<const Real> tau_density_env(envView(m_tau_density, env));
-    Span<Real> pseudo_viscosity_env(envView(m_pseudo_viscosity, env));
+    Span<const Real>    in_fracvol(envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Real>    in_tau_density(envView(m_tau_density, env));
+    Span<Real> inout_pseudo_viscosity(envView(m_pseudo_viscosity, env));
 
 
     // Nombre de mailles impures (mixtes) de l'environnement
@@ -566,12 +564,12 @@ computeArtificialViscosity()
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
       auto [imix] = iter(); // imix \in [0,nb_imp[
-      CellLocalId cid(global_cell_env[imix]); // on récupère l'identifiant de la maille globale
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
       // On calcule la valeur partielle sur la maille mixte
-      pseudo_viscosity_env[imix] = 0.;
+      inout_pseudo_viscosity[imix] = 0.;
       if (in_div_u[cid] < 0.0) {
-        pseudo_viscosity_env[imix] = 1. / tau_density_env[imix]
+        inout_pseudo_viscosity[imix] = 1. / in_tau_density[imix]
           * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
              + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
              * in_div_u[cid] * in_div_u[cid]);
@@ -579,7 +577,7 @@ computeArtificialViscosity()
 
       // Contribution à la grandeur globale, 
       // out_pseudo_viscosity[cid] a été initialisée lors de la boucle sur maille pure
-      out_pseudo_viscosity[cid] += pseudo_viscosity_env[imix] * fracvol_env[imix]; 
+      out_pseudo_viscosity[cid] += inout_pseudo_viscosity[imix] * in_fracvol[imix]; 
     };
   }
   queue.barrier(); // attente de fin des exécutions sur GPU
@@ -1225,9 +1223,9 @@ computeGeometricValues()
     Integer nb_imp = env->impureEnvItems().nbItem();
 
     // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<Real> cell_volume_env(envView(m_cell_volume, env));
-    Span<const Real> fracvol_env(envView(m_fracvol, env));
-    Span<const Integer> global_cell_env(envView(m_global_cell, env));
+    Span<Real> out_cell_volume(envView(m_cell_volume, env));
+    Span<const Real> in_fracvol(envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
     auto command = makeCommand(m_menv_queue->queue(env->id()));
@@ -1236,8 +1234,8 @@ computeGeometricValues()
 
     command << RUNCOMMAND_LOOP1(iter,nb_imp) {
       auto [imix] = iter(); // imix \in [0,nb_imp[
-      CellLocalId cid(global_cell_env[imix]); // on récupère l'identifiant de la maille globale
-      cell_volume_env[imix] = fracvol_env[imix] * in_cell_volume_g[cid];
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
     };
   }
 
@@ -1323,22 +1321,22 @@ updateDensity()
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
 
-    Span<const Real> cell_volume_env(envView(m_cell_volume, env));
-    Span<const Real> cell_mass_env(envView(m_cell_mass, env));
-    Span<const Real> density_n_env(envView(m_density_n, env));
+    Span<const Real> in_cell_volume(envView(m_cell_volume, env));
+    Span<const Real> in_cell_mass(envView(m_cell_mass, env));
+    Span<const Real> in_density_n(envView(m_density_n, env));
 
-    Span<Real> density_env(envView(m_density, env));
-    Span<Real> tau_density_env(envView(m_tau_density, env));
+    Span<Real> out_density(envView(m_density, env));
+    Span<Real> out_tau_density(envView(m_tau_density, env));
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
       auto [imix] = iter(); // imix \in [0,nb_imp[
 
-      Real new_density = cell_mass_env[imix] / cell_volume_env[imix];
+      Real new_density = in_cell_mass[imix] / in_cell_volume[imix];
       // nouvelle density
-      density_env[imix] = new_density;
+      out_density[imix] = new_density;
       // volume specifique de l'environnement au temps n+1/2
-      tau_density_env[imix] = 
-        0.5 * (1.0 / density_n_env[imix] + 1.0 / new_density);
+      out_tau_density[imix] = 
+        0.5 * (1.0 / in_density_n[imix] + 1.0 / new_density);
     }; // asynchrone par rapport au CPU et aux autres queues
   }
 #endif
