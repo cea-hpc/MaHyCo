@@ -1590,7 +1590,6 @@ updateEnergyAndPressureforGP()
   debug() << " Entree dans updateEnergyAndPressure()";
   bool csts = options()->schemaCsts();
   bool pseudo_centree = options()->pseudoCentree();
-  info() << "csts : " << csts << ", pseudo_centree : " << pseudo_centree;
   // Calcul de l'énergie interne
   if (!csts) {
 #if 0
