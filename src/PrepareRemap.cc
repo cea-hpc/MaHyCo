@@ -244,9 +244,9 @@ void MahycoModule::computeVariablesForRemap()
   command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
     // variables duales
     // quantité de mouvement
-    out_u_dual_lagrange[nid][0] = in_node_mass[nid] * in_velocity[nid][0];
-    out_u_dual_lagrange[nid][1] = in_node_mass[nid] * in_velocity[nid][1];
-    out_u_dual_lagrange[nid][2] = in_node_mass[nid] * in_velocity[nid][2];
+    out_u_dual_lagrange[nid][0] = in_node_mass[nid] * in_velocity[nid].x;
+    out_u_dual_lagrange[nid][1] = in_node_mass[nid] * in_velocity[nid].y;
+    out_u_dual_lagrange[nid][2] = in_node_mass[nid] * in_velocity[nid].z;
     // masse nodale    
     out_u_dual_lagrange[nid][3] = in_node_mass[nid];
     // projection de l'energie cinétique
@@ -255,9 +255,9 @@ void MahycoModule::computeVariablesForRemap()
     
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
-    out_phi_dual_lagrange[nid][0] = in_velocity[nid][0];
-    out_phi_dual_lagrange[nid][1] = in_velocity[nid][1];
-    out_phi_dual_lagrange[nid][2] = in_velocity[nid][2];
+    out_phi_dual_lagrange[nid][0] = in_velocity[nid].x;
+    out_phi_dual_lagrange[nid][1] = in_velocity[nid].y;
+    out_phi_dual_lagrange[nid][2] = in_velocity[nid].z;
     // masse nodale
     out_phi_dual_lagrange[nid][3] = in_node_mass[nid];
     // Phi energie cinétique

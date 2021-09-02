@@ -24,6 +24,13 @@ MahycoModule::
 {}
 
 /*---------------------------------------------------------------------------*/
+/* Destructeur */
+/*---------------------------------------------------------------------------*/
+MahycoModule::~MahycoModule() {
+  delete m_menv_queue;
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::
@@ -37,81 +44,6 @@ accBuild()
   options()->remap()->initGpu();
 
   PROF_ACC_END;
-}
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_computeNodeIndexInCells() {
-  debug() << "_computeNodeIndexInCells";
-  // Un noeud est connecté au maximum à MAX_NODE_CELL mailles
-  // Calcul pour chaque noeud son index dans chacune des
-  // mailles à laquelle il est connecté.
-  NodeGroup nodes = allNodes();
-  Integer nb_node = nodes.size();
-  m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
-  m_node_index_in_cells.fill(-1);
-  auto node_cell_cty = m_connectivity_view.nodeCell();
-  auto cell_node_cty = m_connectivity_view.cellNode();
-  ENUMERATE_NODE(inode,nodes){
-    NodeLocalId node = *inode;
-    Int32 index = 0; 
-    Int32 first_pos = node.localId() * MAX_NODE_CELL;
-    for( CellLocalId cell : node_cell_cty.cells(node) ){
-      Int16 node_index_in_cell = 0; 
-      for( NodeLocalId cell_node : cell_node_cty.nodes(cell) ){
-        if (cell_node==node)
-          break;
-        ++node_index_in_cell;
-      }    
-      m_node_index_in_cells[first_pos + index] = node_index_in_cell;
-      ++index;
-    }    
-  }
-}
-
-/*---------------------------------------------------------------------------*/
-/* A appeler par hydroStartInit et par hydroContinueInit pour préparer les   */
-/* données pour les accélérateurs                                            */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_initMeshForAcc() {
-  debug() << "_initMeshForAcc";
-
-  m_connectivity_view.setMesh(this->mesh());
-
-  // Permet la lecture des cqs quand on boucle sur les noeuds
-  _computeNodeIndexInCells();
-}
-
-/*---------------------------------------------------------------------------*/
-/* Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au      */
-/* préalable par un appel à PrepareFaceGroup()                               */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_initBoundaryConditionsForAcc() {
-  debug() << "_initBoundaryConditionsForAcc";
- 
-  // Remplit la structure contenant les informations sur les conditions aux limites
-  // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
-  // de manière concurrente aux données.
-  {
-    m_boundary_conditions.clear();
-    for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
-      String NomBC = options()->boundaryCondition[i]->surface;
-      FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
-      Real value = options()->boundaryCondition[i]->value();
-      TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
-
-      BoundaryCondition bcn;
-      bcn.nodes = face_group.nodeGroup();
-      // attention, cette vue sera à reconstruire si bcn.nodes est modifié
-      bcn.boundary_nodes = bcn.nodes.view(); 
-      bcn.value = value;
-      bcn.type = type;
-      m_boundary_conditions.add(bcn);
-    }
-  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -165,6 +97,7 @@ hydroStartInit()
 
   info() << " Initialisation des environnements";
   hydroStartInitEnvAndMat();
+  _initEnvForAcc();
  
   // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
   computeGeometricValues(); 
@@ -366,6 +299,7 @@ hydroContinueInit()
     mm->recreateFromDump();
     m_nb_env = mm->environments().size();
     m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+    _initEnvForAcc();
     
     m_global_old_deltat = m_old_deltat;
     // mise a jour nombre iteration 
@@ -393,25 +327,18 @@ saveValuesAtN()
   m_pressure.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
+
+  // Exploitation de plusieurs queues asynchrones en concurrence
+  // queue_cell => recopie des valeurs pures et globales
+  // m_menv_queue => recopies des valeurs mixtes de tous les environnements
+  // queue_node => recopie des valeurs aux noeuds
   
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-    ENUMERATE_ENVCELL(ienvcell,env){
-      EnvCell ev = *ienvcell;
-      m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
-      m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
-      m_pressure_n[ev] = m_pressure[ev];
-      m_cell_volume_n[ev] = m_cell_volume[ev];
-      m_density_n[ev] = m_density[ev];
-      m_internal_energy_n[ev] = m_internal_energy[ev];
-    }
-  }
-  auto queue = makeQueue(m_runner);
+  auto queue_cell = makeQueue(m_runner);
   // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
-  queue.setAsync(true); 
+  queue_cell.setAsync(true); 
 
   {
-    auto command = makeCommand(queue);
+    auto command = makeCommand(queue_cell);
 
     auto in_pseudo_viscosity = ax::viewIn(command,m_pseudo_viscosity.globalVariable());
     auto in_pressure         = ax::viewIn(command,m_pressure.globalVariable());
@@ -439,18 +366,68 @@ saveValuesAtN()
       out_density_n[cid] = in_density[cid];
       out_internal_energy_n[cid] = in_internal_energy[cid];
 
-      // anciennement .copy(...)
-      for(Integer i=0 ; i<nb_node_in_cell ; ++i) {
-        out_cell_cqs_n[cid][i] = in_cell_cqs[cid][i];
-      }
+      out_cell_cqs_n[cid].copy(in_cell_cqs[cid]);
     }; // asynchrone
   }
+
+#if 0
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    ENUMERATE_ENVCELL(ienvcell,env){
+      EnvCell ev = *ienvcell;
+      m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
+      m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
+      m_pressure_n[ev] = m_pressure[ev];
+      m_cell_volume_n[ev] = m_cell_volume[ev];
+      m_density_n[ev] = m_density[ev];
+      m_internal_energy_n[ev] = m_internal_energy[ev];
+    }
+  }
+#else
+  // Les recopies par environnement dont indépendantes, on peut utiliser m_menv_queue
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    Span<const Real> in_pseudo_viscosity(envView(m_pseudo_viscosity, env));
+    Span<const Real> in_pressure        (envView(m_pressure, env));
+    Span<const Real> in_cell_volume     (envView(m_cell_volume, env));
+    Span<const Real> in_density         (envView(m_density, env));
+    Span<const Real> in_internal_energy (envView(m_internal_energy, env));
+
+    Span<Real> inout_pseudo_viscosity_n(envView(m_pseudo_viscosity_n, env));
+
+    Span<Real> out_pseudo_viscosity_nmoins1(envView(m_pseudo_viscosity_nmoins1, env));
+    Span<Real> out_pressure_n         (envView(m_pressure_n, env));
+    Span<Real> out_cell_volume_n      (envView(m_cell_volume_n, env));
+    Span<Real> out_density_n          (envView(m_density_n, env));
+    Span<Real> out_internal_energy_n  (envView(m_internal_energy_n, env));
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+
+      out_pseudo_viscosity_nmoins1[imix] = inout_pseudo_viscosity_n[imix];
+      inout_pseudo_viscosity_n[imix] = in_pseudo_viscosity[imix];
+      out_pressure_n[imix] = in_pressure[imix];
+      out_cell_volume_n[imix] = in_cell_volume[imix];
+      out_density_n[imix] = in_density[imix];
+      out_internal_energy_n[imix] = in_internal_energy[imix];
+    }; // asynchrone par rapport au CPU
+  }
+#endif
 
   bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
+  auto queue_node = makeQueue(m_runner); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
+  queue_node.setAsync(true);
+
   if (copy_velocity || copy_node_coord) {
-    auto command = makeCommand(queue);
+    auto command = makeCommand(queue_node);
 
     // if (!options()->sansLagrange) m_velocity_n.copy(m_velocity)
     auto in_velocity = ax::viewIn(command, m_velocity);
@@ -468,7 +445,14 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  queue.barrier();
+  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
+  // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
+  _computeMultiEnvGlobalCellId();
+  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+
+  queue_cell.barrier();
+  m_menv_queue->waitAllQueues();
+  queue_node.barrier();
  
   PROF_ACC_END;
 }    
@@ -481,6 +465,7 @@ computeArtificialViscosity()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeArtificialViscosity()";
+#if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
@@ -512,6 +497,91 @@ computeArtificialViscosity()
       }
     }
   }
+#else
+  // Traitement des mailles pures tout environnement compris
+  // Pour ce faire, on boucle sur tout le maillage en initialisant à 0
+  // Si la maille est pure, il faut récupérer l'env_id pour adiabatic_cst
+  // A la fin de la boucle, toutes les mailles pures sont calculées 
+  // et les emplacements des grandeurs globales pour les mailles mixtes sont à 0
+  
+  auto queue = makeQueue(m_runner);
+  queue.setAsync(true); // la queue est asynchrone par rapport à l'hôte, 
+  // cependant tous les kernels lancés sur cette queue s'exécutent séquentiellement les uns après les autres
+  // ici c'est primordial car le premier kernel va initialiser les grandeurs globales qui vont être mises 
+  // à jour environnement par environnement par les kernels suivants
+
+  {
+    auto command = makeCommand(queue);
+
+    auto in_env_id               = ax::viewIn(command, m_env_id);
+    auto in_div_u                = ax::viewIn(command, m_div_u);
+    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
+    auto in_tau_density          = ax::viewIn(command, m_tau_density.globalVariable());
+    auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
+
+    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+
+    command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      out_pseudo_viscosity[cid] = 0.;
+      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+      if (env_id>=0 && in_div_u[cid] < 0.0) {
+        CellLocalId ev_cid(cid); // exactement même valeur mais permet de distinguer ce qui relève du partiel et du global
+        Real adiabatic_cst = in_adiabatic_cst_env(env_id);
+        out_pseudo_viscosity[ev_cid] = 1. / in_tau_density[ev_cid]
+          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
+             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
+             * in_div_u[cid] * in_div_u[cid]);
+      }
+    };
+  }
+  
+  // Traitement des mailles mixtes
+  // Pour chaque env traité l'un après l'autre, on récupère les mailles mixtes
+  // Pour chaque maille mixte, on calcule pseudo_viscosity 
+  // et on accumule cette valeur *fracvol dans la grandeur globale
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(queue);
+
+    Real adiabatic_cst = m_adiabatic_cst_env(env->id());
+    auto in_div_u                = ax::viewIn(command, m_div_u);
+    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
+
+    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+
+    // Des sortes de vues sur les valeurs impures pour l'environnement env
+    Span<const Real>    in_fracvol(envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Real>    in_tau_density(envView(m_tau_density, env));
+    Span<Real> inout_pseudo_viscosity(envView(m_pseudo_viscosity, env));
+
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+
+      // On calcule la valeur partielle sur la maille mixte
+      inout_pseudo_viscosity[imix] = 0.;
+      if (in_div_u[cid] < 0.0) {
+        inout_pseudo_viscosity[imix] = 1. / in_tau_density[imix]
+          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
+             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
+             * in_div_u[cid] * in_div_u[cid]);
+      }
+
+      // Contribution à la grandeur globale, 
+      // out_pseudo_viscosity[cid] a été initialisée lors de la boucle sur maille pure
+      out_pseudo_viscosity[cid] += inout_pseudo_viscosity[imix] * in_fracvol[imix]; 
+    };
+  }
+  queue.barrier(); // attente de fin des exécutions sur GPU
+#endif
   PROF_ACC_END;
 }
 /**
@@ -532,6 +602,7 @@ updateForceAndVelocity(Real dt,
     const VariableNodeReal3& v_velocity_in,
     VariableNodeReal3& v_velocity_out) 
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans updateForceAndVelocity()";
  
 #if 0 
@@ -596,6 +667,7 @@ updateForceAndVelocity(Real dt,
 #endif
 
   v_velocity_out.synchronize();
+  PROF_ACC_END;
 }
 
 /**
@@ -1140,22 +1212,54 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
+  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+
   // maille mixte
   // moyenne sur la maille
-  CellToAllEnvCellConverter all_env_cell_converter(mm);
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    AllEnvCell all_env_cell = all_env_cell_converter[cell];
-    if (all_env_cell.nbEnvironment() !=1) {
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;        
-        Cell cell = ev.globalCell();
-        m_cell_volume[ev] = m_fracvol[ev] * m_cell_volume[cell];
-      }
-    }
+  ENUMERATE_ENV(ienv, mm) {
+    IMeshEnvironment* env = *ienv;
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    // Des sortes de vues sur les valeurs impures pour l'environnement env
+    Span<Real> out_cell_volume(envView(m_cell_volume, env));
+    Span<const Real> in_fracvol(envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+
+    // Les kernels sont lancés de manière asynchrone environnement par environnement
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
+
+    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
+
+    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
+    };
   }
+
+  m_menv_queue->waitAllQueues();
   PROF_ACC_END;
 }
+
+/**
+ *******************************************************************************
+ * Fonction appelée à l'intérieur des kernels de updateDensity(), 
+ * permet de mutualiser les formules entre les mailles pures et mixtes
+ *******************************************************************************
+ */
+ARCCORE_HOST_DEVICE inline void compute_density_tau(Real density_n,
+    Real cell_mass, Real cell_volume,
+    Real& density, Real& tau_density)
+{
+  // nouvelle density
+  density = cell_mass / cell_volume;;
+  // volume specifique de l'environnement au temps n+1/2
+  tau_density = 
+    0.5 * (1.0 / density_n + 1.0 / density);
+}
+
 /**
  *******************************************************************************
  * \file updateDensity()
@@ -1175,6 +1279,42 @@ updateDensity()
   if (options()->sansLagrange) return;
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
+
+  // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
+  auto queue_glob = makeQueue(m_runner);
+  queue_glob.setAsync(true);
+  {
+    auto command = makeCommand(queue_glob);
+
+    Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
+
+    auto in_cell_mass_g   = ax::viewIn(command, m_cell_mass.globalVariable());
+    auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
+    auto in_density_n_g   = ax::viewIn(command, m_density_n.globalVariable());
+
+    auto iou_density_g     = ax::viewInOut(command, m_density.globalVariable());
+    auto iou_tau_density_g = ax::viewInOut(command, m_tau_density.globalVariable());
+
+    auto out_div_u = ax::viewOut(command, m_div_u);
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+
+      Real new_density, tau_density;
+      compute_density_tau(in_density_n_g[cid], 
+          in_cell_mass_g[cid], in_cell_volume_g[cid], 
+          /*OUT*/new_density, /*OUT*/tau_density);
+
+      iou_density_g[cid] = new_density;
+      iou_tau_density_g[cid] = tau_density;
+
+      // divergence de la vitesse mode A1
+      out_div_u[cid] =
+        inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
+        / iou_tau_density_g[cid];
+    };
+  }
+  // Pendant ce temps, calcul sur GPU sur la queue_glob
+#if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
@@ -1190,34 +1330,37 @@ updateDensity()
         
     }
   }
-  {
-    auto queue = makeQueue(m_runner);
-    auto command = makeCommand(queue);
+#else
+  // Les calculs des valeurs mixtes sur les environnements sont indépendants 
+  // les uns des autres mais ne dépendent pas non plus des valeurs globales/pures
+  // Rappel : m_menv_queue->queue(*) sont des queues asynchrones indépendantes
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
 
-    Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
+    auto command = makeCommand(m_menv_queue->queue(env->id()));
 
-    auto in_cell_mass_g   = ax::viewIn(command, m_cell_mass.globalVariable());
-    auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
-    auto in_density_n_g   = ax::viewIn(command, m_density_n.globalVariable());
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
 
-    auto iou_density_g     = ax::viewInOut(command, m_density.globalVariable());
-    auto iou_tau_density_g = ax::viewInOut(command, m_tau_density.globalVariable());
+    Span<const Real> in_cell_volume(envView(m_cell_volume, env));
+    Span<const Real> in_cell_mass(envView(m_cell_mass, env));
+    Span<const Real> in_density_n(envView(m_density_n, env));
 
-    auto out_div_u = ax::viewOut(command, m_div_u);
+    Span<Real> out_density(envView(m_density, env));
+    Span<Real> out_tau_density(envView(m_tau_density, env));
 
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
-      Real new_density = in_cell_mass_g[cid] / in_cell_volume_g[cid];
-      // nouvelle density
-      iou_density_g[cid] = new_density;
-      // volume specifique moyen au temps n+1/2
-      iou_tau_density_g[cid] = 
-        0.5 * (1.0 / in_density_n_g[cid] + 1.0 / iou_density_g[cid]);
-      // divergence de la vitesse mode A1
-      out_div_u[cid] =
-        inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
-        / iou_tau_density_g[cid];
-    };
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+
+      compute_density_tau(in_density_n[imix], 
+          in_cell_mass[imix], in_cell_volume[imix], 
+          /*OUT*/out_density[imix], /*OUT*/out_tau_density[imix]);
+
+    }; // asynchrone par rapport au CPU et aux autres queues
   }
+#endif
+  queue_glob.barrier();
+  m_menv_queue->waitAllQueues();
   
   m_density.synchronize();
   m_tau_density.synchronize();
@@ -1240,11 +1383,14 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
+  _checkMultiEnvGlobalCellId();
+
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
   else
     updateEnergyAndPressureforGP();  
-    
+   
+#if 0
   // maille mixte
   // moyenne sur la maille
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -1259,6 +1405,9 @@ updateEnergyAndPressure()
       }
     }
   }
+#else
+  // Moyennes reportées dans updateEnergyAndPressurebyNewton() et updateEnergyAndPressureforGP()
+#endif
   if (! options()->withProjection) {
     // Calcul de la Pression si on ne fait pas de projection 
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -1326,6 +1475,21 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
 	      m_pressure[ev] = p;
         }
       }
+      // maille mixte
+      // moyenne sur la maille
+      // Précedemment calculé dans updateEnergyAndPressure()
+      CellToAllEnvCellConverter all_env_cell_converter(mm);
+      ENUMERATE_CELL(icell, allCells()){
+        Cell cell = * icell;
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        if (all_env_cell.nbEnvironment() !=1) {
+          m_internal_energy[cell] = 0.;
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            EnvCell ev = *ienvcell;
+            m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+          }
+        }
+      }
     } else {
       ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
@@ -1384,8 +1548,52 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
 	      m_pressure[ev] = p;
         }
       }
+      // maille mixte
+      // moyenne sur la maille
+      // Précedemment calculé dans updateEnergyAndPressure()
+      CellToAllEnvCellConverter all_env_cell_converter(mm);
+      ENUMERATE_CELL(icell, allCells()){
+        Cell cell = * icell;
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        if (all_env_cell.nbEnvironment() !=1) {
+          m_internal_energy[cell] = 0.;
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            EnvCell ev = *ienvcell;
+            m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+          }
+        }
+      }
     }
   PROF_ACC_END;
+}
+
+/*
+ *******************************************************************************
+ */
+ARCCORE_HOST_DEVICE inline Real compute_eint(
+    bool pseudo_centree, Real adiabatic_cst,
+    Real pseudo_viscosity_n, Real pseudo_viscosity,
+    Real density_n, Real density, 
+    Real pressure, Real internal_energy_n) 
+{
+  Real pseudo(0.);
+  if (pseudo_centree &&
+      ((pseudo_viscosity_n + pseudo_viscosity) * (1.0 / density - 1.0 / density_n) < 0.))
+    pseudo = 0.5 * (pseudo_viscosity + pseudo_viscosity_n);
+  if (!pseudo_centree &&
+      (pseudo_viscosity * (1.0 / density - 1.0 / density_n) < 0.))
+    pseudo = pseudo_viscosity;
+
+  Real denom_accrois_nrj(1 + 0.5 * (adiabatic_cst - 1.0) *
+      density *
+      (1.0 / density -
+       1.0 / density_n));
+  Real numer_accrois_nrj(internal_energy_n -
+      (0.5 * pressure + pseudo) *
+      (1.0 / density - 1.0 / density_n));
+  Real internal_energy = numer_accrois_nrj / denom_accrois_nrj;
+
+  return internal_energy;
 }
 
 /*
@@ -1401,6 +1609,7 @@ updateEnergyAndPressureforGP()
   bool pseudo_centree = options()->pseudoCentree();
   // Calcul de l'énergie interne
   if (!csts) {
+#if 0
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
       Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
@@ -1425,6 +1634,83 @@ updateEnergyAndPressureforGP()
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
       }
     }
+#else
+    // Traitements dépendants des mailles pures/globales 
+    // puis des mailles mixtes qui vont mettre à jour les valeurs globales
+
+    auto queue = makeQueue(m_runner);
+    // Traitement des mailles pures via les tableaux .globalVariable()
+    {
+      auto command = makeCommand(queue);
+
+      auto in_env_id               = ax::viewIn(command, m_env_id);
+      auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
+
+      auto in_pseudo_viscosity_n   = ax::viewIn(command, m_pseudo_viscosity_n.globalVariable()); 
+      auto in_pseudo_viscosity     = ax::viewIn(command, m_pseudo_viscosity.globalVariable());
+      auto in_density_n            = ax::viewIn(command, m_density_n.globalVariable()); 
+      auto in_density              = ax::viewIn(command, m_density.globalVariable()); 
+      auto in_pressure             = ax::viewIn(command, m_pressure.globalVariable()); 
+      auto in_internal_energy_n    = ax::viewIn(command, m_internal_energy_n.globalVariable());
+
+      auto out_internal_energy     = ax::viewOut(command, m_internal_energy.globalVariable());
+
+      command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+        out_internal_energy[cid] = 0.; // initialisation pour une future maj des mailles moyennes (globales)
+        Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+        if (env_id>=0) { // vrai ssi cid maille pure
+          Real adiabatic_cst = in_adiabatic_cst_env(env_id);
+          CellLocalId ev_cid(cid); // exactement même valeur mais met en évidence le caractère "environnement" de la maille pure
+          out_internal_energy[ev_cid] = compute_eint(pseudo_centree, adiabatic_cst,
+              in_pseudo_viscosity_n[ev_cid], in_pseudo_viscosity[ev_cid],
+              in_density_n[ev_cid], in_density[ev_cid], 
+              in_pressure[ev_cid], in_internal_energy_n[ev_cid]);
+        }
+      }; // non-bloquant
+    }
+
+    // Traitement des mailles mixtes via les envView(...)
+
+    ENUMERATE_ENV(ienv,mm){
+      IMeshEnvironment* env = *ienv;
+
+      // Les kernels sont lancés environnement par environnement les uns après les autres
+      auto command = makeCommand(queue);
+
+      Span<const Real> in_pseudo_viscosity_n(envView(m_pseudo_viscosity_n, env)); 
+      Span<const Real> in_pseudo_viscosity  (envView(m_pseudo_viscosity, env));
+      Span<const Real> in_density_n         (envView(m_density_n, env)); 
+      Span<const Real> in_density           (envView(m_density, env)); 
+      Span<const Real> in_pressure          (envView(m_pressure, env)); 
+      Span<const Real> in_internal_energy_n (envView(m_internal_energy_n, env));
+      Span<const Real> in_mass_fraction     (envView(m_mass_fraction, env));
+      Span<const Integer> in_global_cell    (envView(m_global_cell, env));
+
+      Span<Real> out_internal_energy        (envView(m_internal_energy, env));
+      auto inout_internal_energy_g = ax::viewInOut(command, m_internal_energy.globalVariable());
+
+      Real adiabatic_cst = m_adiabatic_cst_env(env->id());
+
+      // Nombre de mailles impures (mixtes) de l'environnement
+      Integer nb_imp = env->impureEnvItems().nbItem();
+
+      command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+        auto [imix] = iter(); // imix \in [0,nb_imp[
+        CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+
+        Real internal_energy = compute_eint(pseudo_centree, adiabatic_cst,
+            in_pseudo_viscosity_n[imix], in_pseudo_viscosity[imix],
+            in_density_n[imix], in_density[imix], 
+            in_pressure[imix], in_internal_energy_n[imix]);
+
+        out_internal_energy[imix] = internal_energy;
+
+        // Maj de la grandeur global (ie moyenne)
+        // inout_internal_energy_g[cid] a été initialisée à 0 par le kernel sur les grandeurs globales
+        inout_internal_energy_g[cid] += in_mass_fraction[imix] * internal_energy;
+      }; // bloquant
+    }
+#endif
   } else {
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
@@ -1460,6 +1746,22 @@ updateEnergyAndPressureforGP()
                                );
 
         m_internal_energy[ev] = numer_accrois_nrj / denom_accrois_nrj;
+      }
+    }
+
+    // maille mixte
+    // moyenne sur la maille
+    // Précedemment calculé dans updateEnergyAndPressure()
+    CellToAllEnvCellConverter all_env_cell_converter(mm);
+    ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;
+      AllEnvCell all_env_cell = all_env_cell_converter[cell];
+      if (all_env_cell.nbEnvironment() !=1) {
+        m_internal_energy[cell] = 0.;
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          EnvCell ev = *ienvcell;
+          m_internal_energy[cell] += m_mass_fraction[ev] * m_internal_energy[ev];
+        }
       }
     }
   }
@@ -1625,7 +1927,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
     auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
     auto in_velocity             = ax::viewIn(command, m_velocity);
-    auto out_dx_sound(dt_cell_info.dxSoundSetter(command));
+    typename DtCellInfoType::VarCellSetter out_dx_sound(dt_cell_info.dxSoundSetter(command));
 
     auto cnc = m_connectivity_view.cellNode();
 

@@ -124,7 +124,7 @@ class MahycoModule
   /** Constructeur de la classe */
   MahycoModule(const ModuleBuildInfo& mbi);
   /** Destructeur de la classe */
-  ~MahycoModule() {}
+  ~MahycoModule();
   
   struct interval {
     double inf, sup;
@@ -407,10 +407,23 @@ class MahycoModule
    */
   void _initMeshForAcc();
 
+  /**
+   * A appeler après hydroStartInitEnvAndMat pour préparer
+   * traitement des environnements sur accélérateur
+   */
+  void _initEnvForAcc();
+
   /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
    *  préalable par un appel à PrepareFaceGroup()
    */
   void _initBoundaryConditionsForAcc();
+
+  /**
+   * Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
+   * l'identifiant de la maille globale
+   */
+  void _computeMultiEnvGlobalCellId();
+  void _checkMultiEnvGlobalCellId();
 
   /**
    * Fonctions diverses
@@ -458,6 +471,11 @@ class MahycoModule
   UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
+  // Les queues asynchrones d'exéution
+  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
+
+  // Va contenir eosModel()->getAdiabaticCst(env), accessible à la fois sur CPU et GPU
+  NumArray<Real,1> m_adiabatic_cst_env;
 };
 
 #endif
