@@ -145,6 +145,16 @@ class MultiAsyncRunQueue {
   Integer m_nb_queue=0; //!< m_queues.size()
 };
 
+#ifdef ARCANE_HAS_CUDA
+/*---------------------------------------------------------------------------*/
+/* Pour indiquer que le contenu du tableau est accéder fréquemment           */
+/*---------------------------------------------------------------------------*/
+template<typename ViewType>
+void mem_adv_set_read_mostly(ViewType view, int device) {
+  cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,device);
+}
+#endif
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

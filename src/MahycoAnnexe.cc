@@ -34,6 +34,39 @@ _computeNodeIndexInCells() {
 }
 
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+_computeNodeIndexInFaces()
+{
+  info() << "ComputeNodeIndexInFaces";
+  // Un noeud est connecté au maximum à MAX_NODE_FACE facettes
+  // Calcul pour chaque noeud son index dans chacune des
+  // faces à laquelle il est connecté.
+  NodeGroup nodes = allNodes();
+  Integer nb_node = nodes.size();
+  m_node_index_in_faces.resize(MAX_NODE_FACE*nb_node);
+  m_node_index_in_faces.fill(-1);
+  auto node_face_cty = m_connectivity_view.nodeFace();
+  auto face_node_cty = m_connectivity_view.faceNode();
+  ENUMERATE_NODE(inode,nodes){
+    NodeLocalId node = *inode;
+    Int32 index = 0;
+    Int32 first_pos = node.localId() * MAX_NODE_FACE;
+    for( FaceLocalId face : node_face_cty.faces(node) ){
+      Int16 node_index_in_face = 0;
+      for( NodeLocalId face_node : face_node_cty.nodes(face) ){
+        if (face_node==node)
+          break;
+        ++node_index_in_face;
+      }
+      m_node_index_in_faces[first_pos + index] = node_index_in_face;
+      ++index;
+    }
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 /* A appeler par hydroStartInit et par hydroContinueInit pour préparer les   */
 /* données pour les accélérateurs                                            */
 /*---------------------------------------------------------------------------*/
@@ -45,6 +78,37 @@ _initMeshForAcc() {
 
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
+  _computeNodeIndexInFaces();
+
+#ifdef ARCANE_HAS_CUDA
+  // "Conseils" utilisation de la mémoire unifiée
+  int device = -1;
+  cudaGetDevice(&device);
+
+  mem_adv_set_read_mostly(m_node_index_in_cells.view(), device);
+  mem_adv_set_read_mostly(m_node_index_in_faces.view(), device);
+  
+  // CellLocalId
+  mem_adv_set_read_mostly(allCells().view().localIds(), device);
+  mem_adv_set_read_mostly(ownCells().view().localIds(), device);
+
+  // NodeLocalId
+  mem_adv_set_read_mostly(allNodes().view().localIds(), device);
+  mem_adv_set_read_mostly(ownNodes().view().localIds(), device);
+
+  // FaceLocalId
+  mem_adv_set_read_mostly(allFaces().view().localIds(), device);
+  mem_adv_set_read_mostly(ownFaces().view().localIds(), device);
+
+  for(Integer dir(0) ; dir < mesh()->dimension() ; ++dir) {
+    auto cell_dm = m_cartesian_mesh->cellDirection(dir);
+
+    // "Conseils" accés mémoire
+    mem_adv_set_read_mostly(cell_dm.innerCells().view().localIds(), device);
+    mem_adv_set_read_mostly(cell_dm.outerCells().view().localIds(), device);
+    mem_adv_set_read_mostly(cell_dm.allCells().view().localIds(), device);
+  }
+#endif
 }
 
 /*---------------------------------------------------------------------------*/
