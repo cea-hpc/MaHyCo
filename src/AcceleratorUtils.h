@@ -7,13 +7,14 @@
 #include "arcane/accelerator/Views.h"
 #include "arcane/accelerator/Accelerator.h"
 #include "arcane/accelerator/RunCommandLoop.h"
+#include "arcane/accelerator/RunCommandEnumerate.h"
 
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
 /*---------------------------------------------------------------------------*/
 
 namespace ax = Arcane::Accelerator;
-
+#if 0
 template<typename ItemType>
 class ItemRunCommand
 {
@@ -51,7 +52,7 @@ void operator<<(ItemRunCommand<ItemType>& nr,Lambda f)
 
 #define RUNCOMMAND_ENUMERATE(ItemNameType,iter_name,item_group)  \
   item_group << [=] ARCCORE_HOST_DEVICE (ItemNameType##LocalId iter_name)
-
+#endif
 /*---------------------------------------------------------------------------*/
 /* Pour le profiling sur accélérateur                                        */
 /*---------------------------------------------------------------------------*/
