@@ -250,6 +250,26 @@ _initEnvForAcc() {
 
   // construit le tableau multi-env m_global_cell_id et le tableau global m_env_id
   _computeMultiEnvGlobalCellId();
+
+  _prepareEnvForAcc();
+}
+
+/*---------------------------------------------------------------------------*/
+/* Préparer les données multi-envronnement pour l'accélérateur               */
+/* A appeler quand la carte des environnements change                        */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+_prepareEnvForAcc() {
+#ifdef ARCANE_HAS_CUDA
+  // "Conseils" utilisation de la mémoire unifiée
+  int device = -1;
+  cudaGetDevice(&device);
+
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    mem_adv_set_read_mostly(env->pureEnvItems().valueIndexes(), device);
+  }
+#endif
 }
 
 /**
@@ -364,6 +384,7 @@ _initBoundaryConditionsForAcc() {
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
 _computeMultiEnvGlobalCellId() {
+  PROF_ACC_BEGIN(__FUNCTION__);
   debug() << "_computeMultiEnvGlobalCellId";
 
   // Calcul des cell_id globaux 
@@ -391,6 +412,7 @@ _computeMultiEnvGlobalCellId() {
   }
 
   _checkMultiEnvGlobalCellId();
+  PROF_ACC_END;
 }
 
 void MahycoModule::

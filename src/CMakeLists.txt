@@ -51,9 +51,13 @@ if(WANT_CUDA)
       Remap/Remap-ordre-3.cc
       Remap/UtilesRemapALE.cc
       Remap/UtilesRemap.cc
+      eos/perfectgas/PerfectGasEOSService.cc
+      eos/stiffenedgas/StiffenedGasEOSService.cc
       PROPERTIES LANGUAGE CUDA)
   target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(Remap PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(PerfectGas PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(StiffenedGas PUBLIC arcane_accelerator_cuda_runtime)
 endif()
 
 # Pour la gestion du profiling sur accélérateur

@@ -22,6 +22,7 @@
 #include "arcane/materials/MeshMaterialIndirectModifier.h"
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
+#include "AcceleratorUtils.h"
 using namespace Arcane;
 using namespace Arcane::Materials;
 
@@ -40,6 +41,11 @@ public:
   virtual ~PerfectGasEOSService() {};
 
 public:
+  /** 
+   *  Initialisation pour utilisation d'un accélérateur
+   */
+  void initAcc() override;
+
   /** 
    *  Initialise l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et l'énergie interne. 
@@ -63,6 +69,10 @@ public:
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env);
+
+private:
+  // Pour l'utilisation des accélérateurs
+  ax::Runner m_runner;
 };
 
 #endif
