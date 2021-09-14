@@ -446,11 +446,13 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
-  // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-  _computeMultiEnvGlobalCellId();
-  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
-  _prepareEnvForAcc();
+  if ( options()->withProjection) {
+    // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
+    // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
+    _computeMultiEnvGlobalCellId();
+    _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+    _prepareEnvForAcc();
+  }
 
   queue_cell.barrier();
   m_menv_queue->waitAllQueues();
