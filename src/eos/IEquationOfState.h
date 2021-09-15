@@ -39,6 +39,11 @@ public:
   
 public:
   /** 
+   *  Initialisation pour utilisation d'un accélérateur
+   */
+  virtual void initAcc() = 0;
+
+  /** 
    *  Initialise l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et l'énergie interne. 
    */

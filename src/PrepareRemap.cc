@@ -312,11 +312,12 @@ void MahycoModule::remap() {
         }
     }
     if (!options()->sansLagrange) {
-        for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
+      for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
         IMeshEnvironment* ienv = mm->environments()[index_env];
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
       }
+      _computeMultiEnvGlobalCellId(); // la carte des mailles par env a evolué
       computePressionMoyenne();
    }
     PROF_ACC_END;

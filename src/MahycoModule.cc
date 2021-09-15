@@ -20,7 +20,8 @@ using namespace Arcane::Materials;
 MahycoModule::
   MahycoModule(const ModuleBuildInfo& mbi)
 : ArcaneMahycoObject(mbi), 
-  m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator())
+  m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator()),
+  m_node_index_in_faces(platform::getAcceleratorHostMemoryAllocator())
 {}
 
 /*---------------------------------------------------------------------------*/
@@ -42,6 +43,9 @@ accBuild()
   IApplication* app = subDomain()->application();
   initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
   options()->remap()->initGpu();
+  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+    options()->environment[i].eosModel()->initAcc();
+  }
 
   PROF_ACC_END;
 }
@@ -53,8 +57,6 @@ void MahycoModule::
 hydroStartInit()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
-
-  _initMeshForAcc();
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
    my_rank = m_parallel_mng->commRank();
@@ -84,13 +86,12 @@ hydroStartInit()
   m_dimension = mesh()->dimension(); 
   m_cartesian_mesh->computeDirections();
   
+  _initMeshForAcc();
+
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
 
-  _computeNodeIndexInCells();
-  _computeNodeIndexInFaces();
-  
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
   m_global_deltat = deltat_init;
@@ -287,13 +288,13 @@ hydroContinueInit()
     debug() << " Entree dans hydroContinueInit()";
     // en reprise 
 
-    _initMeshForAcc();
-    _initBoundaryConditionsForAcc();
-
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     m_dimension = mesh()->dimension(); 
     m_cartesian_mesh->computeDirections();
     
+    _initMeshForAcc();
+    _initBoundaryConditionsForAcc();
+
     mm = IMeshMaterialMng::getReference(defaultMesh());
   
     mm->recreateFromDump();
@@ -445,10 +446,13 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
-  // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-  _computeMultiEnvGlobalCellId();
-  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+  if ( options()->withProjection) {
+    // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
+    // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
+    _computeMultiEnvGlobalCellId();
+    _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+    _prepareEnvForAcc();
+  }
 
   queue_cell.barrier();
   m_menv_queue->waitAllQueues();
@@ -1784,6 +1788,7 @@ computePressionMoyenne()
   debug() << " Entree dans computePressionMoyenne() ";
   // maille mixte
   // moyenne sur la maille
+#if 0
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
@@ -1798,6 +1803,61 @@ computePressionMoyenne()
       }
     }
   }
+#else
+  _checkMultiEnvGlobalCellId();
+
+  // Pas très efficace mais on va lancer un kernel sur tout le maillage pour
+  // ne sélectionner que les mailles mixtes et initialiser les grandeus
+  // moyennes
+  // puis on va calculer les grandeurs partielles environnement par
+  // environnement et mettre à jour au fur et à mesure les grandeurs moy.
+
+  // Toutes les étapes doivent se faire les unes après les autres d'où une
+  // queue unique
+  auto queue = makeQueue(m_runner);
+  {
+    auto command = makeCommand(queue);
+
+    auto in_env_id       = ax::viewIn(command, m_env_id);
+    auto out_pressure    = ax::viewOut(command, m_pressure.globalVariable());
+    auto out_sound_speed = ax::viewOut(command, m_sound_speed.globalVariable());
+
+    command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+
+      if (env_id<0) { // vrai si maille mixte (nbEnv() == -env_id)
+        out_pressure[cid] = 0.;
+        out_sound_speed[cid] = 1.e-20;
+      }
+    };
+  }
+ 
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    // Les kernels sont lancés environnement par environnement les uns après les autres
+    auto command = makeCommand(queue);
+    
+    Span<const Integer> in_global_cell    (envView(m_global_cell, env));
+    Span<const Real>    in_fracvol        (envView(m_fracvol,     env)); 
+    Span<const Real>    in_pressure       (envView(m_pressure,    env)); 
+    Span<const Real>    in_sound_speed    (envView(m_sound_speed, env)); 
+
+    auto inout_pressure    = ax::viewInOut(command, m_pressure.globalVariable());
+    auto inout_sound_speed = ax::viewInOut(command, m_sound_speed.globalVariable());
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+
+      inout_pressure[cid] += in_fracvol[imix] * in_pressure[imix];
+      inout_sound_speed[cid] = math::max(in_sound_speed[imix], inout_sound_speed[cid]);
+    };
+  }
+#endif
   PROF_ACC_END;
 }     
 
@@ -2076,41 +2136,6 @@ computeDeltaT()
   
   PROF_ACC_END;
 }
-
-
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
-void MahycoModule::
-_computeNodeIndexInFaces()
-{
-  info() << "ComputeNodeIndexInFaces";
-  // Un noeud est connecté au maximum à MAX_NODE_FACE facettes
-  // Calcul pour chaque noeud son index dans chacune des
-  // faces à laquelle il est connecté.
-  NodeGroup nodes = allNodes();
-  Integer nb_node = nodes.size();
-  m_node_index_in_faces.resize(MAX_NODE_FACE*nb_node);
-  m_node_index_in_faces.fill(-1);
-  auto node_face_cty = m_connectivity_view.nodeFace();
-  auto face_node_cty = m_connectivity_view.faceNode();
-  ENUMERATE_NODE(inode,nodes){
-    NodeLocalId node = *inode;
-    Int32 index = 0;
-    Int32 first_pos = node.localId() * MAX_NODE_FACE;
-    for( FaceLocalId face : node_face_cty.faces(node) ){
-      Int16 node_index_in_face = 0;
-      for( NodeLocalId face_node : face_node_cty.nodes(face) ){
-        if (face_node==node)
-          break;
-        ++node_index_in_face;
-      }
-      m_node_index_in_faces[first_pos + index] = node_index_in_face;
-      ++index;
-    }
-  }
-}
-
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

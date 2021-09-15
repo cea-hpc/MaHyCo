@@ -424,6 +424,7 @@ class MahycoModule
    */
   void _computeMultiEnvGlobalCellId();
   void _checkMultiEnvGlobalCellId();
+  void _prepareEnvForAcc();
 
   /**
    * Fonctions diverses

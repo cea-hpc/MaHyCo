@@ -5,6 +5,17 @@ using namespace Arcane;
 using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
+/* Initialisation pour utilisation d'un accélérateur                         */
+/*---------------------------------------------------------------------------*/
+void StiffenedGasEOSService::initAcc() {
+#if 0
+  info() << "Using StiffenedGasEOSService with accelerator";
+  IApplication* app = subDomain()->application();
+  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+#endif
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
