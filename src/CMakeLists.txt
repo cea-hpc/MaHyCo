@@ -35,6 +35,15 @@ add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
+# Cartesian
+add_library(cartesian cartesian/CartesianConnectivity.cc
+                      cartesian/CartesianMesh.cc
+                      cartesian/CellDirectionMng.cc
+                      cartesian/FaceDirectionMng.cc
+                      cartesian/NodeDirectionMng.cc
+                      cartesian/CartesianItemSorter.cc)
+target_include_directories(cartesian PUBLIC .)
+target_link_libraries(cartesian PUBLIC arcane_core)
 
 # Pour la gestion des accélérateurs et des sources à compiler avec le
 # compilateur pour accélérateur
@@ -53,11 +62,18 @@ if(WANT_CUDA)
       Remap/UtilesRemap.cc
       eos/perfectgas/PerfectGasEOSService.cc
       eos/stiffenedgas/StiffenedGasEOSService.cc
+      cartesian/CartesianConnectivity.cc
+      cartesian/CartesianMesh.cc
+      cartesian/CellDirectionMng.cc
+      cartesian/FaceDirectionMng.cc
+      cartesian/NodeDirectionMng.cc
+      cartesian/CartesianItemSorter.cc
       PROPERTIES LANGUAGE CUDA)
   target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(Remap PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(PerfectGas PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(StiffenedGas PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(cartesian PUBLIC arcane_accelerator_cuda_runtime)
 endif()
 
 # Pour la gestion du profiling sur accélérateur
@@ -67,6 +83,7 @@ if (WANT_PROF_ACC)
   target_compile_definitions(PerfectGas PRIVATE PROF_ACC)
   target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
   target_compile_definitions(Remap PRIVATE PROF_ACC)
+  target_compile_definitions(cartesian PRIVATE PROF_ACC)
 endif()
 
 
