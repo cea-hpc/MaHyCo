@@ -35,6 +35,15 @@ add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
+# Cartesian
+add_library(cartesian cartesian/CartesianConnectivity.cc
+                      cartesian/CartesianMesh.cc
+                      cartesian/CellDirectionMng.cc
+                      cartesian/FaceDirectionMng.cc
+                      cartesian/NodeDirectionMng.cc
+                      cartesian/CartesianItemSorter.cc)
+target_include_directories(cartesian PUBLIC .)
+target_link_libraries(cartesian PUBLIC arcane_core)
 
 # Pour la gestion des accélérateurs et des sources à compiler avec le
 # compilateur pour accélérateur
@@ -53,11 +62,18 @@ if(WANT_CUDA)
       Remap/UtilesRemap.cc
       eos/perfectgas/PerfectGasEOSService.cc
       eos/stiffenedgas/StiffenedGasEOSService.cc
+      cartesian/CartesianConnectivity.cc
+      cartesian/CartesianMesh.cc
+      cartesian/CellDirectionMng.cc
+      cartesian/FaceDirectionMng.cc
+      cartesian/NodeDirectionMng.cc
+      cartesian/CartesianItemSorter.cc
       PROPERTIES LANGUAGE CUDA)
   target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(Remap PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(PerfectGas PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(StiffenedGas PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(cartesian PUBLIC arcane_accelerator_cuda_runtime)
 endif()
 
 # Pour la gestion du profiling sur accélérateur
@@ -67,10 +83,23 @@ if (WANT_PROF_ACC)
   target_compile_definitions(PerfectGas PRIVATE PROF_ACC)
   target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
   target_compile_definitions(Remap PRIVATE PROF_ACC)
+  target_compile_definitions(cartesian PRIVATE PROF_ACC)
 endif()
 
+# Pour utiliser l'implémentation Arcane du cartésien
+option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
+if (WANT_IMPL_CART_ARCANE)
+  target_compile_definitions(${EXAMPLE_NAME} PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(PerfectGas PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(StiffenedGas PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(Remap PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(cartesian PRIVATE IMPL_CART_ARCANE)
+  # TODO : IMPL_CART_ARCANE est un define de cartesian, pour les autres target
+  # ce define pourrait etre recupere en exprimant la dependance de la target avec
+  # cartesian
+endif()
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)

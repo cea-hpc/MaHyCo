@@ -1,6 +1,40 @@
 // -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "MahycoModule.h"
 
+#include "cartesian/CartesianItemSorter.h"
+#include "cartesian/FactCartDirectionMng.h"
+
+
+/*---------------------------------------------------------------------------*/
+/*!
+ * \brief Initialisation du maillage cartésien
+ */
+/*---------------------------------------------------------------------------*/
+CartesianInterface::ICartesianMesh* MahycoModule::
+_initCartMesh() {
+  CartesianInterface::ICartesianMesh* cartesian_mesh = nullptr;
+
+  PROF_ACC_BEGIN(__FUNCTION__);
+  Cartesian::CartesianMeshProperties cart_mesh_prop(mesh());
+  if (cart_mesh_prop.isPureCartesianMesh() && options()->getCartesianSortFaces()) {
+    info() << "Maillage cartésien détecté, tri cartésien des faces";
+    PROF_ACC_BEGIN("sortFaces");
+    Cartesian::CartesianItemSorter cart_sorter(mesh());
+    cart_sorter.sortFaces();
+    PROF_ACC_END;
+  } else {
+    info() << "Maillage non cartésien";
+  }
+
+  cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh(), true);
+  PROF_ACC_BEGIN("computeDirections");
+  cartesian_mesh->computeDirections();
+  PROF_ACC_END;
+
+  PROF_ACC_END;
+
+  return cartesian_mesh;
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

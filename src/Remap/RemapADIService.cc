@@ -27,7 +27,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     synchronizeDualUremap();
     
     Integer idir(-1);
-    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
     
     for( Integer i=0; i< mesh()->dimension(); ++i){
       

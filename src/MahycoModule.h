@@ -49,11 +49,11 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "arcane/cea/ICartesianMesh.h"
-#include "arcane/cea/CellDirectionMng.h"
-#include "arcane/cea/FaceDirectionMng.h"
-#include "arcane/cea/NodeDirectionMng.h"
-#include "arcane/cea/CartesianConnectivity.h"
+#include "cartesian/interface/ICartesianMesh.h"
+#include "cartesian/interface/CellDirectionMng.h"
+#include "cartesian/interface/FaceDirectionMng.h"
+#include "cartesian/interface/NodeDirectionMng.h"
+#include "cartesian/interface/CartesianConnectivity.h"
 // fin ajout au PIF
 
 // Ajout pour accélérateur
@@ -418,6 +418,10 @@ class MahycoModule
    */
   void _initBoundaryConditionsForAcc();
 
+  /** Construit le maillage cartésien et les managers par direction
+   */
+  CartesianInterface::ICartesianMesh* _initCartMesh();
+
   /**
    * Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
    * l'identifiant de la maille globale
@@ -459,7 +463,8 @@ class MahycoModule
 
   
   /* variables membre */
-  ICartesianMesh* m_cartesian_mesh;
+  // CartesianInterface:: = Arcane:: ou Cartesian::
+  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
   Integer m_nb_vars_to_project;
   Integer m_nb_env;
