@@ -10,7 +10,7 @@
 /*---------------------------------------------------------------------------*/
 
 #include "arcane/ArcaneTypes.h"
-#include "arcane/cea/CeaGlobal.h"
+#include "cartesian/CartesianGlobal.h"
 
 #include "arcane/Item.h"
 #include "arcane/ItemEnumerator.h"

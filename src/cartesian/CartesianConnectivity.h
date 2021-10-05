@@ -12,7 +12,7 @@
 #include "arcane/utils/TraceAccessor.h"
 #include "arcane/Item.h"
 #include "arcane/VariableTypedef.h"
-#include "arcane/cea/CeaGlobal.h"
+#include "cartesian/CartesianGlobal.h"
 
 #include "cartesian/CartesianGridT.h"
 #include "cartesian/CartConnectivityCellNode.h"

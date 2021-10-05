@@ -14,7 +14,7 @@
 #include "arcane/Item.h"
 #include "arcane/ItemEnumerator.h"
 
-#include "arcane/cea/CeaGlobal.h"
+#include "cartesian/CartesianGlobal.h"
 
 #include "cartesian/CartTypes.h"
 #include "cartesian/CartesianNumberingT.h"
