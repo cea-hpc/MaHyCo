@@ -86,8 +86,20 @@ if (WANT_PROF_ACC)
   target_compile_definitions(cartesian PRIVATE PROF_ACC)
 endif()
 
+# Pour utiliser l'implémentation Arcane du cartésien
+option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
+if (WANT_IMPL_CART_ARCANE)
+  target_compile_definitions(${EXAMPLE_NAME} PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(PerfectGas PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(StiffenedGas PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(Remap PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(cartesian PRIVATE IMPL_CART_ARCANE)
+  # TODO : IMPL_CART_ARCANE est un define de cartesian, pour les autres target
+  # ce define pourrait etre recupere en exprimant la dependance de la target avec
+  # cartesian
+endif()
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)

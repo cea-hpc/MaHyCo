@@ -82,9 +82,8 @@ hydroStartInit()
       subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
   
-  m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+  m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
-  m_cartesian_mesh->computeDirections();
   
   _initMeshForAcc();
 
@@ -288,9 +287,8 @@ hydroContinueInit()
     debug() << " Entree dans hydroContinueInit()";
     // en reprise 
 
-    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    m_cartesian_mesh = _initCartMesh();
     m_dimension = mesh()->dimension(); 
-    m_cartesian_mesh->computeDirections();
     
     _initMeshForAcc();
     _initBoundaryConditionsForAcc();

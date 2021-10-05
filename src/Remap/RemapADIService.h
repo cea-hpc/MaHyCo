@@ -28,11 +28,11 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "arcane/cea/ICartesianMesh.h"
-#include "arcane/cea/CellDirectionMng.h"
-#include "arcane/cea/FaceDirectionMng.h"
-#include "arcane/cea/NodeDirectionMng.h"
-#include "arcane/cea/CartesianConnectivity.h"
+#include "cartesian/interface/ICartesianMesh.h"
+#include "cartesian/interface/CellDirectionMng.h"
+#include "cartesian/interface/FaceDirectionMng.h"
+#include "cartesian/interface/NodeDirectionMng.h"
+#include "cartesian/interface/CartesianConnectivity.h"
 
 #include "AcceleratorUtils.h"
 
@@ -57,7 +57,7 @@ public:
   struct interval {
     double inf, sup;
   };
-  ICartesianMesh* m_cartesian_mesh;
+  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:

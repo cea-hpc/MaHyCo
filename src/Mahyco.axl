@@ -227,6 +227,13 @@
     <description>Service de projection </description>
   </service-instance>
 
+   <!-- - - - cartesian sort faces - - - - -->
+  <simple name="cartesian-sort-faces" type="bool" default="true">
+    <description>
+     Impose le tri cartésien des faces (valable que si le maillage est lui-même cartésien)
+    </description>
+  </simple>
+
    <!-- - - - schema csts - - - - -->
   <simple name="schema-csts" type="bool">
     <description>

@@ -23,7 +23,7 @@
 #include "arcane/materials/MeshMaterialIndirectModifier.h"
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
-#include "arcane/cea/ICartesianMesh.h"
+#include "cartesian/interface/ICartesianMesh.h"
 using namespace Arcane;
 using namespace Arcane::Materials;
 
