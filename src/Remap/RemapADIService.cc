@@ -1,6 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 #include "AcceleratorUtils.h"
+#include "cartesian/FactCartDirectionMng.h"
 
 void RemapADIService::
 initGpu()
@@ -93,6 +94,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
+#if 0
   m_h_cell_lagrange.fill(0.0);
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
@@ -127,10 +129,166 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
                                     / m_deltax_lagrange[iface];
       }
       // somme des distances entre le milieu de la maille et le milieu de la face
-      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).abs();
-      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
+      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).normL2();
+      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).normL2();     
     }
   }
+#else
+//  m_h_cell_lagrange.fill(0.0);
+  
+//  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+//  
+//   ENUMERATE_FACE(iface, fdm.allFaces()) {
+//     Face face = *iface; 
+//     m_is_dir_face[face][idir] = true;
+//   }
+  
+  Cartesian::FactCartDirectionMng fact_cart(mesh());
+
+  auto queue_dfac = makeQueue(m_runner);
+  queue_dfac.setAsync(true);
+  {
+    auto command = makeCommand(queue_dfac);
+
+    auto cart_fdm = fact_cart.faceDirection(idir);
+    auto f2cid_stm = cart_fdm.face2CellIdStencil();
+    auto face_group = cart_fdm.allFaces();
+
+    auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
+
+    command.addKernelName("is_dir_face") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+      out_is_dir_face[fid][idir] = true;
+    };
+  }
+  
+  if (options()->ordreProjection > 1) {
+
+    auto queue_gphi = makeQueue(m_runner);
+    queue_gphi.setAsync(true);
+    {
+      auto command_f = makeCommand(queue_gphi);
+
+      auto cart_fdm = fact_cart.faceDirection(idir);
+      auto f2cid_stm = cart_fdm.face2CellIdStencil();
+      auto face_group = cart_fdm.innerFaces();
+
+      auto in_face_normal  = ax::viewIn(command_f, m_face_normal);
+      auto in_cell_coord   = ax::viewIn(command_f, m_cell_coord);
+      auto in_phi_lagrange = ax::viewIn(command_f, m_phi_lagrange);
+
+      auto inout_deltax_lagrange = ax::viewInOut(command_f, m_deltax_lagrange);
+
+      auto out_grad_phi_face = ax::viewOut(command_f, m_grad_phi_face);
+
+      command_f.addKernelName("gphi") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+        // Acces mailles gauche/droite 
+        auto f2cid = f2cid_stm.face(fid, idx);
+        CellLocalId pcid(f2cid.previousCell());
+        CellLocalId ncid(f2cid.nextCell());
+
+        inout_deltax_lagrange[fid] = math::dot(
+            (in_cell_coord[ncid] -  in_cell_coord[pcid]), in_face_normal[fid]);
+
+        for (Integer ivar = 0 ; ivar <  nb_vars_to_project ; ++ivar) {
+          out_grad_phi_face[fid][ivar] = (in_phi_lagrange[ncid][ivar] - in_phi_lagrange[pcid][ivar]) 
+            / inout_deltax_lagrange[fid];
+        }
+      }; // Asynchrone par rapport à l'hôte et aux autres queues
+    }
+
+//#define HCELL_BY_FACES
+#define HCELL_BY_CELLS
+
+#if defined(HCELL_BY_FACES)
+    auto queue_hcell = makeQueue(m_runner);
+    {
+      auto command_p = makeCommand(queue_hcell);
+
+      auto cart_fdm = fact_cart.faceDirection(idir);
+      auto f2cid_stm = cart_fdm.face2CellIdStencil();
+      auto face_group = cart_fdm.innerFaces();
+
+      auto in_face_coord   = ax::viewIn(command_p, m_face_coord);
+      auto in_cell_coord   = ax::viewIn(command_p, m_cell_coord);
+      auto inout_h_cell_lagrange = ax::viewInOut(command_p, m_h_cell_lagrange);
+
+      // D'abord contribution dans toutes les mailles précédentes
+      command_p.addKernelName("hcell_prev") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+        // Acces maille gauche
+        auto f2cid = f2cid_stm.face(fid, idx);
+        CellLocalId pcid(f2cid.previousCell());
+
+        // somme des distances entre le milieu de la maille et le milieu de la face
+        inout_h_cell_lagrange[pcid] =  (in_face_coord[fid] - in_cell_coord[pcid]).normL2();
+      };
+
+      const Integer last_idx = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
+      // Puis, contrib dans toutes les mailles suivantes
+      command_p.addKernelName("hcell_next") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+        // Acces maille droite
+        auto f2cid = f2cid_stm.face(fid, idx);
+        CellLocalId ncid(f2cid.nextCell());
+
+        // somme des distances entre le milieu de la maille et le milieu de la face
+        Real hcell = (idx[idir]==last_idx ? 0. : inout_h_cell_lagrange[ncid]);
+        hcell +=  (in_face_coord[fid] - in_cell_coord[ncid]).normL2();
+        inout_h_cell_lagrange[ncid] = hcell;
+      };
+    }
+#elif defined(HCELL_BY_CELLS)
+    auto queue_hcell = makeQueue(m_runner);
+    {
+      auto command_c = makeCommand(queue_hcell);
+
+      auto cart_cdm = fact_cart.cellDirection(idir);
+      auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
+      auto cell_group = cart_cdm.allCells();
+
+      // Nb de mailles-1 dans la direction idir
+      const Integer ncell_m1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
+
+      auto in_face_coord   = ax::viewIn(command_c, m_face_coord);
+      auto in_cell_coord   = ax::viewIn(command_c, m_cell_coord);
+      auto out_h_cell_lagrange = ax::viewOut(command_c, m_h_cell_lagrange);
+
+      // Parcours de toutes les mailles en excluant les contribs des faces de bord
+      command_c.addKernelName("hcell") << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
+        auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
+        
+        // Acces faces gauche/droite qui existent forcement
+        auto c2fid = c2fid_stm.cellFace(cid, idx);
+        FaceLocalId pfid(c2fid.previousId());
+        FaceLocalId nfid(c2fid.nextId());
+
+        // somme des distances entre le milieu de la maille et les milieux des faces adjacentes dans idir
+        Real hcell = 0;
+        if (idx[idir]>0) // Si maille bord gauche, on exclut la contrib de la face sur le bord gauche
+          hcell +=  (in_face_coord[pfid] - in_cell_coord[cid]).normL2();
+        if (idx[idir]<ncell_m1) // Si maille bord droit, on exclut la contrib de la face sur le bord droit
+          hcell +=  (in_face_coord[nfid] - in_cell_coord[cid]).normL2();
+
+        // Plus besoin d'appeler m_h_cell_lagrange.fill(0.0). On boucle ici sur toutes les mailles
+        out_h_cell_lagrange[cid] = hcell;
+      };
+    }
+#else
+#error "HCELL_BY_FACES ou bien HCELL_BY_CELLS doit etre defini"
+#endif
+
+    queue_gphi.barrier();
+  } else {
+    m_h_cell_lagrange.fill(0.0);
+  }
+  queue_dfac.barrier(); // fin calcul m_is_dir_face
+#endif
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
   PROF_ACC_END;
