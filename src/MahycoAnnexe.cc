@@ -433,8 +433,10 @@ _computeMultiEnvGlobalCellId() {
         EnvCell ev = *ienvcell;
         m_global_cell[ev] = cell_id;
       }
-      // Maille mixte, contient l'opposé du nombre d'environnements
-      m_env_id[icell] = -all_env_cell.nbEnvironment();
+      // Maille mixte ou vide,
+      // Si mixte, contient l'opposé du nombre d'environnements+1
+      // Si vide, vaut -1
+      m_env_id[icell] = -all_env_cell.nbEnvironment()-1;
     } else {
       // Maille pure, cette boucle est de taille 1
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
@@ -466,7 +468,7 @@ _checkMultiEnvGlobalCellId() {
       if (all_env_cell.nbEnvironment()==1) {
         ARCANE_ASSERT(m_env_id[cell]==env_id, ("cell pure : environnement id incorrect dans m_env_id[cell]"));
       } else {
-        ARCANE_ASSERT(m_env_id[cell]==-all_env_cell.nbEnvironment(), ("cell mixte : m_env_id[cell] différent de -nbEnvironment()"));
+        ARCANE_ASSERT(m_env_id[cell]==(-all_env_cell.nbEnvironment()-1), ("cell mixte ou vide : m_env_id[cell] différent de -nbEnvironment()-1"));
       }
     }
   }
