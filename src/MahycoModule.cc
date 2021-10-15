@@ -1823,7 +1823,7 @@ computePressionMoyenne()
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
       Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
 
-      if (env_id<0) { // vrai si maille mixte (nbEnv() == -env_id)
+      if (env_id<0) { // vrai si maille mixte (nbEnv() == -env_id-1)
         out_pressure[cid] = 0.;
         out_sound_speed[cid] = 1.e-20;
       }

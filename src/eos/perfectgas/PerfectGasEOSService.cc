@@ -60,6 +60,15 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
         m_density[ev], m_internal_energy[ev],
         m_pressure[ev], m_sound_speed[ev], m_dpde[ev]);
   }
+#elif 0
+  Parallel::Foreach(env->envView(),[&](EnvItemVectorView view)
+  {
+    ENUMERATE_ENVCELL(ienvcell,view){
+      compute_pressure_sndspd_PG(adiabatic_cst,
+          m_density[ienvcell], m_internal_energy[ienvcell],
+          m_pressure[ienvcell], m_sound_speed[ienvcell], m_dpde[ienvcell]);
+    }
+  });
 #else
   // Mailles pures
   auto queue_pur = makeQueue(m_runner);
