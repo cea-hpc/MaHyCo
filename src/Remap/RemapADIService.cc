@@ -308,6 +308,23 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell()";
+
+  if (options()->ordreProjection > 1 && 
+      options()->projectionPenteBorneMixte == false &&
+      options()->projectionPenteBorne == 0 &&
+      options()->projectionLimiteurId < minmodG) 
+  {
+    // Spécialisation
+    switch (options()->projectionLimiteurId) {
+      case minmod  : computeGradPhiCell_PBorn0_LimC<MinMod>   (idir, nb_vars_to_project); break;
+      case superBee: computeGradPhiCell_PBorn0_LimC<SuperBee> (idir, nb_vars_to_project); break;
+      case vanLeer : computeGradPhiCell_PBorn0_LimC<VanLeer>  (idir, nb_vars_to_project); break;
+      default      : computeGradPhiCell_PBorn0_LimC<DefaultO1>(idir, nb_vars_to_project);
+    }
+    PROF_ACC_END;
+    return;
+  }
+
   Real deltat = m_global_deltat();
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
@@ -316,6 +333,15 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
   m_delta_phi_face_ar.fill(0.0);
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
+#if 0
+    info() << "options()->ordreProjection > 1";
+    info() << "options()->projectionPenteBorneMixte : " << options()->projectionPenteBorneMixte;
+    info() << "options()->projectionLimiteurId : " << options()->projectionLimiteurId;
+    info() << "options()->getProjectionLimiteurPureId() : " << options()->getProjectionLimiteurPureId();
+    info() << "options()->projectionPenteBorne : " << options()->projectionPenteBorne;
+    info() << "options()->threshold : " << options()->threshold;
+    info() << "options()->projectionPenteBorneDebarFix : " << options()->projectionPenteBorneDebarFix;
+#endif
     ENUMERATE_CELL(icell,allCells()) {
       Cell cell = * icell;
       Cell backcell = cell; // pour les mailles de bord
@@ -413,6 +439,97 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
   }
   PROF_ACC_END;
 }
+
+/**
+ *******************************************************************************
+ * \file computeGradPhiCell_PBorn0_LimC()
+ * \brief Spécialisation de computeGradPhiCell
+ *        pour options()->projectionPenteBorne[Mixte] == false
+ *        et options()->projectionLimiteurId < minmodG (limiteur classique)
+ * \param
+ * \return m_grad_phi_face, m_delta_phi_face_ar, m_delta_phi_face_av
+ *******************************************************************************
+ */
+template<typename LimType>
+void RemapADIService::
+computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
+  PROF_ACC_BEGIN(__FUNCTION__);
+  debug() << " Entree dans computeGradPhiCell_PBorn0_LimC()";
+
+  Cartesian::FactCartDirectionMng fact_cart(mesh());
+
+  auto queue = makeQueue(m_runner);
+  {
+    auto command = makeCommand(queue);
+    
+    auto cart_cdm = fact_cart.cellDirection(idir);
+#if 0
+    auto c2cid_stm = cart_cdm.cell2CellIdStencil();
+#endif
+    auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
+    auto cell_group = cart_cdm.allCells();
+
+    auto in_grad_phi_face = ax::viewIn(command, m_grad_phi_face);
+    auto out_grad_phi = ax::viewOut(command, m_grad_phi);
+
+    auto out_delta_phi_face_av = ax::viewOut(command, m_delta_phi_face_av);
+    auto out_delta_phi_face_ar = ax::viewOut(command, m_delta_phi_face_ar);
+
+    command << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
+      auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
+
+      // Acces faces gauche/droite qui existent forcement
+      auto c2fid = c2fid_stm.cellFace(cid, idx);
+      FaceLocalId backFid(c2fid.previousId()); // back face
+      FaceLocalId frontFid(c2fid.nextId()); // front face
+
+#if 0
+      // Acces mailles gauche/droite
+      auto c2cid = c2cid_stm.cell(cid, idx);
+      CellLocalId backCid(c2cid.previous()); // back cell
+      CellLocalId frontCid(c2cid.next()); // front cell
+
+      // Si maille voisine n'existe pas (bord), alors on prend maille centrale
+      if (ItemId::null(backCid))
+        backCid = cid;
+      if (ItemId::null(frontCid))
+        frontCid = cid;
+#endif
+
+      // calcul de m_grad_phi[cell]
+      // Spécialisation de computeAndLimitGradPhi 
+      // pour options()->projectionLimiteurId < minmodG (limiteur classique)
+      // info() << " Passage gradient limite Classique ";
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+        Real grad_phi_cell = 0.;
+        Real grad_phi_face_back = in_grad_phi_face[backFid][ivar];
+        Real grad_phi_face_front = in_grad_phi_face[frontFid][ivar];
+        if (grad_phi_face_back != 0.) 
+          grad_phi_cell += 0.5 * (
+              LimType::fluxLimiter(
+                grad_phi_face_front /
+                grad_phi_face_back) 
+              * grad_phi_face_back);
+        if (grad_phi_face_front !=0.) 
+          grad_phi_cell += 0.5 * (
+              LimType::fluxLimiter(
+                grad_phi_face_back /
+                grad_phi_face_front) 
+              * grad_phi_face_front);
+        out_grad_phi[cid][ivar] = grad_phi_cell;
+      }
+
+      // Init sur GPU de m_delta_phi_face_av et m_delta_phi_face_ar
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+        out_delta_phi_face_av[cid][ivar] = 0.;
+        out_delta_phi_face_ar[cid][ivar] = 0.;
+      }
+    };
+  }
+
+  PROF_ACC_END;
+}
+
 /**
 *****************************************************************************
  * \file computeUpwindFaceQuantitiesForProjection()

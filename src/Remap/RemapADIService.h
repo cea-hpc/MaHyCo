@@ -93,6 +93,13 @@ public:
     **/
    virtual void computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env);
    
+   /**
+    * Spécialisation de computeGradPhiCell
+    * Est publique car fait appel à l'accélérateur
+    **/
+   template<typename LimType>
+   void computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project);
+
 private:
     
 
@@ -225,6 +232,39 @@ private:
   // Pour l'utilisation des accélérateurs
   ax::Runner m_runner;
   
+};
+
+/**
+ *******************************************************************************
+ * \brief Implémentation des limiteurs
+ *******************************************************************************
+ */
+class MinMod {
+ public:
+  static ARCCORE_HOST_DEVICE Real fluxLimiter(Real r) {
+    return std::max(0.0, std::min(1.0, r));
+  }
+};
+
+class SuperBee {
+ public:
+  static ARCCORE_HOST_DEVICE Real fluxLimiter(Real r) {
+    return std::max(0.0, std::max(std::min(2.0 * r, 1.0), std::min(r, 2.0)));
+  }
+};
+
+class VanLeer {
+ public:
+  static ARCCORE_HOST_DEVICE Real fluxLimiter(Real r) {
+    return (r <= 0.0 ? 0.0 : 2.0 * r / (1.0 + r));
+  }
+};
+
+class DefaultO1 {
+ public:
+  static ARCCORE_HOST_DEVICE Real fluxLimiter(Real r) {
+    return 0.0;  // ordre 1
+  }
 };
 
 #endif
