@@ -236,7 +236,6 @@ private:
   
   // Pour l'utilisation des accélérateurs
   IAccEnv* m_acc_env=nullptr;
-  
 };
 
 /**

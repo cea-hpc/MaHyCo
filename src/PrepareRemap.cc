@@ -317,7 +317,6 @@ void MahycoModule::remap() {
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
       }
-      m_acc_env->updateMultiEnv(mm); // la carte des mailles par env a evolué
       computePressionMoyenne();
    }
     PROF_ACC_END;

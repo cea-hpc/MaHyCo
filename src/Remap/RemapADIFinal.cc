@@ -62,17 +62,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     
     if (!cells_to_add.empty()) {
-      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
+      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
+        << " ITERATION " << globalIteration();
       env_cells.addItems(cells_to_add);
     }
     if (!cells_to_remove.empty()){
-      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
+        << " ITERATION " << globalIteration();
       env_cells.removeItems(cells_to_remove);
     }
     
   }
   // finalisation avant remplissage des variables
   mm->forceRecompute();
+
+  // Ici, la carte des environnements a changé
+  m_acc_env->updateMultiEnv(mm);
+
   UniqueArray<Real> vol_nplus1(nb_env);
   UniqueArray<Real> density_env_nplus1(nb_env);
   UniqueArray<Real> internal_energy_env_nplus1(nb_env);
@@ -248,8 +254,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     } 
   }   
 
+  auto queue_v = m_acc_env->newQueue();
   if (withDualProjection) {
-  // variables aux noeuds
+    // variables aux noeuds
+#if 0
     ENUMERATE_NODE(inode, allNodes()){
       Real mass_nodale_proj = m_u_dual_lagrange[inode][3];
       if (mass_nodale_proj != 0.) {
@@ -258,8 +266,24 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         m_velocity[inode].z = m_u_dual_lagrange[inode][2] / mass_nodale_proj;
       } 
     }
+#else
+    auto command_v = makeCommand(queue_v);
+
+    auto in_u_dual_lagrange = ax::viewIn(command_v, m_u_dual_lagrange);
+    auto out_velocity       = ax::viewOut(command_v, m_velocity);
+
+    command_v.addKernelName("vel") << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+      Real mass_nodale_proj = in_u_dual_lagrange[nid][3];
+      if (mass_nodale_proj != 0.) {
+        out_velocity[nid].setX(in_u_dual_lagrange[nid][0] / mass_nodale_proj);
+        out_velocity[nid].setY(in_u_dual_lagrange[nid][1] / mass_nodale_proj);
+        out_velocity[nid].setZ(in_u_dual_lagrange[nid][2] / mass_nodale_proj);
+      }
+    };
+#endif
   }
   // recalcule de la masse mass_nodale et 
+#if 0
   m_node_mass.fill(0.);
   Real one_over_nbnode = dimension == 2 ? .25  : .125 ;
   ENUMERATE_CELL(icell, allCells()){    
@@ -279,6 +303,60 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
   }
   m_node_mass.synchronize();
+#else
+  // On peut calculer simultanément m_node_mass sur les noeuds 
+  // et m_cell_volume sur les mailles mixtes
+  auto queue_nm = m_acc_env->newQueue();
+  queue_nm.setAsync(true);
+  {
+    auto command_nm = makeCommand(queue_nm);
+
+    auto in_cell_mass  = ax::viewIn(command_nm, m_cell_mass.globalVariable());
+    auto out_node_mass = ax::viewOut(command_nm, m_node_mass);
+
+    auto nc_cty = m_acc_env->connectivityView().nodeCell();
+    
+    Real one_over_nbnode = dimension == 2 ? .25  : .125 ;
+
+    // On a inversé la boucle Cell<->Node pour être parallèle
+    command_nm.addKernelName("nodem") << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
+      Real contrib_cell_mass=0.;
+      for( CellLocalId cid : nc_cty.cells(nid) ){
+        contrib_cell_mass += in_cell_mass[cid];
+      }
+      out_node_mass[nid] = one_over_nbnode * contrib_cell_mass;
+    }; // asynchrone et non bloquant vis-à-vis du CPU et des autres queues
+  }
+
+  // Mise à jour des m_cell_volume sur les mailles mixtes
+  auto menv_queue = m_acc_env->multiEnvQueue();
+  ENUMERATE_ENV(ienv, mm) {
+    IMeshEnvironment* env = *ienv;
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    // Des sortes de vues sur les valeurs impures pour l'environnement env
+    Span<Real> out_cell_volume(envView(m_cell_volume, env));
+    Span<const Real> in_fracvol(envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+
+    // Les kernels sont lancés de manière asynchrone environnement par environnement
+    auto command = makeCommand(menv_queue->queue(env->id()));
+
+    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
+
+    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
+    };
+  }
+
+  queue_nm.barrier();
+  m_node_mass.synchronize();
+  menv_queue->waitAllQueues();
+#endif
  
   // conservation energie totale lors du remap
   if (hasConservationEnergieTotale()) {
