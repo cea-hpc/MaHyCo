@@ -34,7 +34,8 @@
 #include "cartesian/interface/NodeDirectionMng.h"
 #include "cartesian/interface/CartesianConnectivity.h"
 
-#include "AcceleratorUtils.h"
+#include "accenv/IAccEnv.h"
+#include "accenv/AcceleratorUtils.h"
 
 
 using namespace Arcane;
@@ -48,8 +49,7 @@ class RemapADIService
 {
 public:
   /** Constructeur de la classe */
-  RemapADIService(const ServiceBuildInfo & sbi)
-    : ArcaneRemapADIObject(sbi) {}
+  RemapADIService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
   virtual ~RemapADIService() {};
@@ -62,8 +62,7 @@ public:
 
 public:
   
-  virtual void initGpu();
-  
+ 
    /**
    * main du remap
    **/
@@ -236,7 +235,7 @@ private:
   Real m_arithmetic_thresold = 1.e-300;
   
   // Pour l'utilisation des accélérateurs
-  ax::Runner m_runner;
+  IAccEnv* m_acc_env=nullptr;
   
 };
 

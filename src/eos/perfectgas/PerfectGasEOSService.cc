@@ -1,17 +1,17 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "PerfectGasEOSService.h"
 #include "arcane/VariableView.h"
+#include "arcane/ServiceBuilder.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
-/* Initialisation pour utilisation d'un accélérateur                         */
+/* Constructeur de la classe                                                 */
 /*---------------------------------------------------------------------------*/
-void PerfectGasEOSService::initAcc() {
-  info() << "Using PerfectGasEOSService with accelerator";
-  IApplication* app = subDomain()->application();
-  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
+PerfectGasEOSService::PerfectGasEOSService(const ServiceBuildInfo & sbi)
+  : ArcanePerfectGasEOSObject(sbi) {
+  m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -71,7 +71,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   });
 #else
   // Mailles pures
-  auto queue_pur = makeQueue(m_runner);
+  auto queue_pur = makeQueue(m_acc_env->runner());
   queue_pur.setAsync(true);
   {
     auto command = makeCommand(queue_pur);
@@ -107,7 +107,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   }
 
   // Mailles mixtes
-  auto queue_mix = makeQueue(m_runner);
+  auto queue_mix = makeQueue(m_acc_env->runner());
   queue_mix.setAsync(true);
   {
     auto command = makeCommand(queue_mix);

@@ -9,6 +9,8 @@
 #include "arcane/accelerator/RunCommandLoop.h"
 #include "arcane/accelerator/RunCommandEnumerate.h"
 
+#include "arcane/materials/IMeshEnvironment.h"
+
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
 /*---------------------------------------------------------------------------*/

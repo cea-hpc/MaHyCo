@@ -9,7 +9,7 @@
 #include <arcane/mesh/GhostLayerMng.h>
 #include <arcane/utils/StringBuilder.h>
 
-#include <arcane/AcceleratorRuntimeInitialisationInfo.h>
+#include <arcane/ServiceBuilder.h>
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -39,13 +39,8 @@ accBuild()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  info() << "Using MaHyCo with accelerator";
-  IApplication* app = subDomain()->application();
-  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
-  options()->remap()->initGpu();
-  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-    options()->environment[i].eosModel()->initAcc();
-  }
+  m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
+  m_acc_env->initAcc();
 
   PROF_ACC_END;
 }
@@ -159,7 +154,7 @@ hydroStartInit()
   // deplacé de hydrocontinueInit
   // calcul des volumes via les cqs, differents deu calcul dans computeGeometricValues ?
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     auto command = makeCommand(queue);
 
     auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -206,7 +201,7 @@ computeCellMass()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeCellMass()";
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     auto command = makeCommand(queue);
 
     auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
@@ -243,7 +238,7 @@ computeNodeMass()
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     auto command = makeCommand(queue);
 
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
@@ -332,7 +327,7 @@ saveValuesAtN()
   // m_menv_queue => recopies des valeurs mixtes de tous les environnements
   // queue_node => recopie des valeurs aux noeuds
   
-  auto queue_cell = makeQueue(m_runner);
+  auto queue_cell = makeQueue(m_acc_env->runner());
   // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
   queue_cell.setAsync(true); 
 
@@ -422,7 +417,7 @@ saveValuesAtN()
   bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
-  auto queue_node = makeQueue(m_runner); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
+  auto queue_node = makeQueue(m_acc_env->runner()); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
   queue_node.setAsync(true);
 
   if (copy_velocity || copy_node_coord) {
@@ -506,7 +501,7 @@ computeArtificialViscosity()
   // A la fin de la boucle, toutes les mailles pures sont calculées 
   // et les emplacements des grandeurs globales pour les mailles mixtes sont à 0
   
-  auto queue = makeQueue(m_runner);
+  auto queue = makeQueue(m_acc_env->runner());
   queue.setAsync(true); // la queue est asynchrone par rapport à l'hôte, 
   // cependant tous les kernels lancés sur cette queue s'exécutent séquentiellement les uns après les autres
   // ici c'est primordial car le premier kernel va initialiser les grandeurs globales qui vont être mises 
@@ -634,7 +629,7 @@ updateForceAndVelocity(Real dt,
   }
 #else
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     auto command = makeCommand(queue);
 
     auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
@@ -896,7 +891,7 @@ updatePosition()
     m_cell_coord[cell] = one_over_nbnode * somme;
   }
 #else
-  auto queue = makeQueue(m_runner);
+  auto queue = makeQueue(m_acc_env->runner());
   if (!options()->sansLagrange)
   {
     auto command = makeCommand(queue);
@@ -980,7 +975,7 @@ applyBoundaryCondition()
     }
   }
 #else
-  auto queue = makeQueue(m_runner);
+  auto queue = makeQueue(m_acc_env->runner());
 
   // Pour cette méthode, comme les conditions aux limites sont sur des groupes
   // indépendants (ou alors avec la même valeur si c'est sur les mêmes noeuds),
@@ -1068,7 +1063,7 @@ computeGeometricValues()
   m_node_coord.synchronize();
   if ( m_dimension == 3) {
     {
-      auto queue = makeQueue(m_runner);
+      auto queue = makeQueue(m_acc_env->runner());
       auto command = makeCommand(queue);
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -1175,7 +1170,7 @@ computeGeometricValues()
     // Calcul des volumes aux mailles puis longueur caractéristique
     // Attention, m_node_volume n'est plus calculé car n'est pas utilisé
     {
-      auto queue = makeQueue(m_runner);
+      auto queue = makeQueue(m_acc_env->runner());
       auto command = makeCommand(queue);
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -1283,7 +1278,7 @@ updateDensity()
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
 
   // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
-  auto queue_glob = makeQueue(m_runner);
+  auto queue_glob = makeQueue(m_acc_env->runner());
   queue_glob.setAsync(true);
   {
     auto command = makeCommand(queue_glob);
@@ -1640,7 +1635,7 @@ updateEnergyAndPressureforGP()
     // Traitements dépendants des mailles pures/globales 
     // puis des mailles mixtes qui vont mettre à jour les valeurs globales
 
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     // Traitement des mailles pures via les tableaux .globalVariable()
     {
       auto command = makeCommand(queue);
@@ -1812,7 +1807,7 @@ computePressionMoyenne()
 
   // Toutes les étapes doivent se faire les unes après les autres d'où une
   // queue unique
-  auto queue = makeQueue(m_runner);
+  auto queue = makeQueue(m_acc_env->runner());
   {
     auto command = makeCommand(queue);
 
@@ -1976,7 +1971,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
   // Calcul du pas de temps pour le respect du critère de CFL
   Real minimum_aux;
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = makeQueue(m_acc_env->runner());
     auto command = makeCommand(queue);
     ax::ReducerMin<Real> minimum_aux_reducer(command);
 

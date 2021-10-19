@@ -1,6 +1,6 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
-#include "AcceleratorUtils.h"
+#include "accenv/AcceleratorUtils.h"
 
 /**
  *******************************************************************************

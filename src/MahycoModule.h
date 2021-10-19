@@ -57,8 +57,9 @@
 // fin ajout au PIF
 
 // Ajout pour accélérateur
+#include "accenv/IAccEnv.h"
 #include "arcane/UnstructuredMeshConnectivity.h"
-#include "AcceleratorUtils.h"
+#include "accenv/AcceleratorUtils.h"
 //
 
 #include "Mahyco_axl.h"
@@ -472,7 +473,7 @@ class MahycoModule
   Integer m_dimension;
  
   // Pour l'utilisation des accélérateurs
-  ax::Runner m_runner;
+  IAccEnv* m_acc_env=nullptr;
 
   UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;

@@ -42,11 +42,6 @@ class StiffenedGasEOSService
   
  public:
   /** 
-   *  Initialisation pour utilisation d'un accélérateur
-   */
-  void initAcc() override;
-
-  /** 
    *  Initialise l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et l'énergie interne. 
    */

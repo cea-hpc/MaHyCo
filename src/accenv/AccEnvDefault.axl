@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="AccEnvDefault" version="1.0" type="subdomain" singleton="true">
+
+	<description>Environnement à partager pour les accélérateurs</description>
+  <interface name="IAccEnv" />
+
+	<options/>
+</service>
