@@ -100,6 +100,12 @@ public:
    template<typename LimType>
    void computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project);
 
+   /**
+    * Spécialisation de computeUpwindFaceQuantitiesForProjection
+    * Est publique car fait appel à l'accélérateur
+    **/
+   void computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars_to_project);
+
 private:
     
 

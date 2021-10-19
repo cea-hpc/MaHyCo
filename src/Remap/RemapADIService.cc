@@ -544,6 +544,20 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
 void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   PROF_ACC_BEGIN(__FUNCTION__);
+
+#if 0
+  info() << "options()->ordreProjection : " << options()->ordreProjection;
+  info() << "options()->projectionPenteBorne : " << options()->projectionPenteBorne;
+#endif
+  if (options()->ordreProjection <= 2 &&
+      options()->projectionPenteBorne == 0)
+  {
+    // Spécialisation
+    computeUpwindFaceQuantitiesForProjection_PBorn0_O2(idir, nb_vars_to_project);
+    PROF_ACC_END;
+    return;
+  }
+  
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
@@ -644,6 +658,81 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
   m_phi_face.synchronize();      
   PROF_ACC_END;
 }
+/**
+ *******************************************************************************
+ * \file computeUpwindFaceQuantitiesForProjection_PBorn0_O2()
+ * \brief Spécialisation de computeUpwindFaceQuantitiesForProjection
+ *        pour options()->ordreProjection <= 2
+ *        et options()->projectionPenteBorne == 0
+ * \param
+ * \return m_phi_face
+ *******************************************************************************
+ */
+void RemapADIService::
+computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars_to_project)
+{
+  debug() << " Entree dans computeUpwindFaceQuantitiesForProjection_PBorn0_O2()";
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  Cartesian::FactCartDirectionMng fact_cart(mesh());
+
+  auto queue = makeQueue(m_runner);
+  // Init 0, pour simplifier sur toutes les faces
+  {
+    auto command = makeCommand(queue);
+
+    auto out_phi_face = ax::viewOut(command, m_phi_face);
+
+    command << RUNCOMMAND_ENUMERATE(Face, fid, allFaces()) {
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)
+        out_phi_face[fid][ivar] = 0.;
+    };
+  }
+  // Puis on calcule m_grad_phi que que les faces intérieures dans la direction idir
+  {
+    auto command = makeCommand(queue);
+
+    auto cart_fdm = fact_cart.faceDirection(idir);
+    auto f2cid_stm = cart_fdm.face2CellIdStencil();
+    auto face_group = cart_fdm.innerFaces();
+
+    auto in_deltax_lagrange      = ax::viewIn(command, m_deltax_lagrange);
+    auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
+    auto in_phi_lagrange         = ax::viewIn(command, m_phi_lagrange);
+    auto in_face_coord           = ax::viewIn(command, m_face_coord);
+    auto in_face_normal          = ax::viewIn(command, m_face_normal);
+    auto in_cell_coord           = ax::viewIn(command, m_cell_coord);
+    auto in_grad_phi             = ax::viewIn(command, m_grad_phi);
+
+    auto out_phi_face = ax::viewOut(command, m_phi_face);
+    
+    command << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+      // Acces mailles gauche/droite
+      auto f2cid = f2cid_stm.face(fid, idx);
+      CellLocalId bCid(f2cid.previousCell());
+      CellLocalId fCid(f2cid.nextCell());
+
+      // Maille upwind
+      CellLocalId upwCid = 
+        (in_face_normal_velocity[fid] * in_deltax_lagrange[fid] > 0.0 ? bCid : fCid);
+
+      // Independemment de ivar, on calcule dot((x_f - x_cb), face_normal)
+      Real dot_xf = math::dot((in_face_coord[fid] - in_cell_coord[upwCid]),
+          in_face_normal[fid]);
+
+      // phi_cb + (dot((x_f - x_cb), face_normal) * grad_phi_cb)   
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)
+        out_phi_face[fid][ivar] = in_phi_lagrange[upwCid][ivar]
+          + dot_xf * in_grad_phi[upwCid][ivar];
+    };
+  }
+
+  m_phi_face.synchronize();      
+  PROF_ACC_END;
+}
+
 /**
  *******************************************************************************
  * \file computeUremap()
