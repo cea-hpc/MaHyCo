@@ -15,6 +15,16 @@ initAcc()
 }
 
 /*---------------------------------------------------------------------------*/
+/* Pour préparer des données relatives au maillage                           */
+/*---------------------------------------------------------------------------*/
+
+void AccEnvDefaultService::
+initMesh(IMesh* mesh)
+{
+  m_connectivity_view.setMesh(mesh);
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_ACCENVDEFAULT(AccEnvDefault, AccEnvDefaultService);

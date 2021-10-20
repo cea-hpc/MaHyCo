@@ -58,7 +58,6 @@
 
 // Ajout pour accélérateur
 #include "accenv/IAccEnv.h"
-#include "arcane/UnstructuredMeshConnectivity.h"
 #include "accenv/AcceleratorUtils.h"
 //
 
@@ -475,7 +474,6 @@ class MahycoModule
   // Pour l'utilisation des accélérateurs
   IAccEnv* m_acc_env=nullptr;
 
-  UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
   // Les queues asynchrones d'exéution

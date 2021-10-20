@@ -30,7 +30,7 @@ computeFaceQuantitesForRemap()
 //     m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
 //     }
     
-    auto fnc = m_connectivity_view.faceNode();
+    auto fnc = m_acc_env->connectivityView().faceNode();
     
     auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
@@ -90,7 +90,7 @@ computeFaceQuantitesForRemap()
 //       m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
 //     }
     
-    auto fnc = m_connectivity_view.faceNode();
+    auto fnc = m_acc_env->connectivityView().faceNode();
     
     auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);

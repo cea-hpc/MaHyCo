@@ -80,6 +80,7 @@ hydroStartInit()
   m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
   
+  m_acc_env->initMesh(mesh());
   _initMeshForAcc();
 
   // Dimensionne les variables tableaux
@@ -161,7 +162,7 @@ hydroStartInit()
     auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
     auto out_cell_volume_g  = ax::viewOut(command,m_cell_volume.globalVariable()); 
 
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     // NOTE : on ne peut pas utiliser un membre sur accélérateur (ex : m_dimension), 
     // cela revient à utiliser this->m_dimension avec this pointeur illicite
@@ -242,7 +243,7 @@ computeNodeMass()
     auto command = makeCommand(queue);
 
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
-    auto nc_cty = m_connectivity_view.nodeCell();
+    auto nc_cty = m_acc_env->connectivityView().nodeCell();
 
     auto in_cell_mass_g = ax::viewIn(command,m_cell_mass.globalVariable());
     auto out_node_mass = ax::viewOut(command, m_node_mass);
@@ -285,6 +286,7 @@ hydroContinueInit()
     m_cartesian_mesh = _initCartMesh();
     m_dimension = mesh()->dimension(); 
     
+    m_acc_env->initMesh(mesh());
     _initMeshForAcc();
     _initBoundaryConditionsForAcc();
 
@@ -639,7 +641,7 @@ updateForceAndVelocity(Real dt,
     auto out_force           = ax::viewOut(command, m_force);
 
     auto node_index_in_cells = m_node_index_in_cells.constSpan();
-    auto nc_cty = m_connectivity_view.nodeCell();
+    auto nc_cty = m_acc_env->connectivityView().nodeCell();
 
     auto in_mass      = ax::viewIn(command, m_node_mass);
     auto in_velocity  = ax::viewIn(command, v_velocity_in);
@@ -919,7 +921,7 @@ updatePosition()
 
     auto in_node_coord  = ax::viewIn(command,m_node_coord);
     auto out_cell_coord = ax::viewOut(command,m_cell_coord);
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
       Real3 somme = {0. , 0. , 0.};
@@ -1069,7 +1071,7 @@ computeGeometricValues()
       auto in_node_coord = ax::viewIn(command,m_node_coord);
       auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
 
-      auto cnc = m_connectivity_view.cellNode();
+      auto cnc = m_acc_env->connectivityView().cellNode();
 
       command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
         // Recopie les coordonnées locales (pour le cache)
@@ -1178,7 +1180,7 @@ computeGeometricValues()
       auto out_cell_volume_g        = ax::viewOut(command,m_cell_volume.globalVariable()); 
       auto out_caracteristic_length = ax::viewOut(command,m_caracteristic_length);
       
-      auto cnc = m_connectivity_view.cellNode();
+      auto cnc = m_acc_env->connectivityView().cellNode();
 
       // NOTE : on ne peut pas utiliser un membre sur accélérateur (ex : m_dimension), 
       // cela revient à utiliser this->m_dimension avec this pointeur illicite
@@ -1982,7 +1984,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
     auto in_velocity             = ax::viewIn(command, m_velocity);
     typename DtCellInfoType::VarCellSetter out_dx_sound(dt_cell_info.dxSoundSetter(command));
 
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
       Real cell_dx = in_caracteristic_length[cid];

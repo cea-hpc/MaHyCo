@@ -20,8 +20,13 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   ax::Runner& runner() override { return m_runner; }
   ax::RunQueue newQueue() override { return makeQueue(m_runner); }
 
+  UnstructuredMeshConnectivityView& connectivityView() override { return m_connectivity_view; }
+  const UnstructuredMeshConnectivityView& connectivityView() const override { return m_connectivity_view; }
+  void initMesh(IMesh* mesh) override;
+
  protected:
   ax::Runner m_runner;
+  UnstructuredMeshConnectivityView m_connectivity_view;
 };
 
 #endif

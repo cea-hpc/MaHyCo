@@ -48,8 +48,8 @@ _computeNodeIndexInCells() {
   Integer nb_node = nodes.size();
   m_node_index_in_cells.resize(MAX_NODE_CELL*nb_node);
   m_node_index_in_cells.fill(-1);
-  auto node_cell_cty = m_connectivity_view.nodeCell();
-  auto cell_node_cty = m_connectivity_view.cellNode();
+  auto node_cell_cty = m_acc_env->connectivityView().nodeCell();
+  auto cell_node_cty = m_acc_env->connectivityView().cellNode();
   ENUMERATE_NODE(inode,nodes){
     NodeLocalId node = *inode;
     Int32 index = 0; 
@@ -81,8 +81,8 @@ _computeNodeIndexInFaces()
   Integer nb_node = nodes.size();
   m_node_index_in_faces.resize(MAX_NODE_FACE*nb_node);
   m_node_index_in_faces.fill(-1);
-  auto node_face_cty = m_connectivity_view.nodeFace();
-  auto face_node_cty = m_connectivity_view.faceNode();
+  auto node_face_cty = m_acc_env->connectivityView().nodeFace();
+  auto face_node_cty = m_acc_env->connectivityView().faceNode();
   ENUMERATE_NODE(inode,nodes){
     NodeLocalId node = *inode;
     Int32 index = 0;
@@ -107,8 +107,6 @@ _computeNodeIndexInFaces()
 void MahycoModule::
 _initMeshForAcc() {
   debug() << "_initMeshForAcc";
-
-  m_connectivity_view.setMesh(this->mesh());
 
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
