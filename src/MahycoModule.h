@@ -130,12 +130,6 @@ class MahycoModule
     double inf, sup;
   };
 
-  // Note: il faut mettre ce champs statique si on veut que sa valeur
-  // soit correcte lors de la capture avec CUDA (sinon on passe par this et
-  // cela provoque une erreur mémoire)
-  static const Integer MAX_NODE_CELL = 8;
-  static const Integer MAX_NODE_FACE = 4;
-  
   // les paramètres pour appliquer les conditions aux limites sur des noeuds de bord
   struct BoundaryCondition
   {
@@ -383,15 +377,7 @@ class MahycoModule
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
   
  private:
-  
-  void _computeNodeIndexInCells();
-  void _computeNodeIndexInFaces();
-
-     //! Indice de chaque noeud dans la maille
-  UniqueArray<Int16> m_node_index_in_cells;
-  UniqueArray<Int16> m_node_index_in_faces;
-
-  
+ 
   /**
    * Calcule les résultantes aux noeuds d'une maille hexaédrique.
    * La méthode utilisée est celle du découpage en quatre triangles.
@@ -400,12 +386,6 @@ class MahycoModule
   ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
-
-  /**
-   * A appeler par hydroStartInit et par hydroContinueInit pour préparer les
-   * données pour les accélérateurs
-   */
-  void _initMeshForAcc();
 
   /**
    * A appeler après hydroStartInitEnvAndMat pour préparer

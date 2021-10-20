@@ -19,9 +19,7 @@ using namespace Arcane::Materials;
 /*---------------------------------------------------------------------------*/
 MahycoModule::
   MahycoModule(const ModuleBuildInfo& mbi)
-: ArcaneMahycoObject(mbi), 
-  m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator()),
-  m_node_index_in_faces(platform::getAcceleratorHostMemoryAllocator())
+: ArcaneMahycoObject(mbi) 
 {}
 
 /*---------------------------------------------------------------------------*/
@@ -80,8 +78,7 @@ hydroStartInit()
   m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
   
-  m_acc_env->initMesh(mesh());
-  _initMeshForAcc();
+  m_acc_env->initMesh(m_cartesian_mesh);
 
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
@@ -286,8 +283,7 @@ hydroContinueInit()
     m_cartesian_mesh = _initCartMesh();
     m_dimension = mesh()->dimension(); 
     
-    m_acc_env->initMesh(mesh());
-    _initMeshForAcc();
+    m_acc_env->initMesh(m_cartesian_mesh);
     _initBoundaryConditionsForAcc();
 
     mm = IMeshMaterialMng::getReference(defaultMesh());
@@ -640,7 +636,9 @@ updateForceAndVelocity(Real dt,
     // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
     auto out_force           = ax::viewOut(command, m_force);
 
-    auto node_index_in_cells = m_node_index_in_cells.constSpan();
+    auto node_index_in_cells = m_acc_env->nodeIndexInCells();
+    const Integer max_node_cell = m_acc_env->maxNodeCell();
+
     auto nc_cty = m_acc_env->connectivityView().nodeCell();
 
     auto in_mass      = ax::viewIn(command, m_node_mass);
@@ -648,7 +646,7 @@ updateForceAndVelocity(Real dt,
     auto out_velocity = ax::viewOut(command, v_velocity_out);
     
     command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
-      Int32 first_pos = nid.localId() * MAX_NODE_CELL;
+      Int32 first_pos = nid.localId() * max_node_cell;
       Integer index = 0;
       Real3 node_force = Real3::zero();
       for( CellLocalId cid : nc_cty.cells(nid) ){

@@ -110,7 +110,7 @@ class MultiAsyncRunQueue {
   Integer m_nb_queue=0; //!< m_queues.size()
 };
 
-#ifdef ARCANE_HAS_CUDA
+#ifdef ARCANE_COMPILING_CUDA
 /*---------------------------------------------------------------------------*/
 /* Pour indiquer que le contenu du tableau est accéder fréquemment           */
 /*---------------------------------------------------------------------------*/
