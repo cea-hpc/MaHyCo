@@ -99,7 +99,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
 //     m_is_dir_face[face][idir] = true;
 //   }
   
-  auto queue = makeQueue(m_acc_env->runner());
+  auto queue = m_acc_env->newQueue();
   auto command = makeCommand(queue);
   
   auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
@@ -140,7 +140,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
-  auto queue_dfac = makeQueue(m_acc_env->runner());
+  auto queue_dfac = m_acc_env->newQueue();
   queue_dfac.setAsync(true);
   {
     auto command = makeCommand(queue_dfac);
@@ -160,7 +160,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   
   if (options()->ordreProjection > 1) {
 
-    auto queue_gphi = makeQueue(m_acc_env->runner());
+    auto queue_gphi = m_acc_env->newQueue();
     queue_gphi.setAsync(true);
     {
       auto command_f = makeCommand(queue_gphi);
@@ -199,7 +199,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
 #define HCELL_BY_CELLS
 
 #if defined(HCELL_BY_FACES)
-    auto queue_hcell = makeQueue(m_acc_env->runner());
+    auto queue_hcell = m_acc_env->newQueue();
     {
       auto command_p = makeCommand(queue_hcell);
 
@@ -239,7 +239,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
       };
     }
 #elif defined(HCELL_BY_CELLS)
-    auto queue_hcell = makeQueue(m_acc_env->runner());
+    auto queue_hcell = m_acc_env->newQueue();
     {
       auto command_c = makeCommand(queue_hcell);
 
@@ -453,7 +453,7 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
 
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
-  auto queue = makeQueue(m_acc_env->runner());
+  auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
     
@@ -671,7 +671,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
-  auto queue = makeQueue(m_acc_env->runner());
+  auto queue = m_acc_env->newQueue();
   // Init 0, pour simplifier sur toutes les faces
   {
     auto command = makeCommand(queue);

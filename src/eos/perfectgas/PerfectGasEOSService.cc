@@ -71,7 +71,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   });
 #else
   // Mailles pures
-  auto queue_pur = makeQueue(m_acc_env->runner());
+  auto queue_pur = m_acc_env->newQueue();
   queue_pur.setAsync(true);
   {
     auto command = makeCommand(queue_pur);
@@ -107,7 +107,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   }
 
   // Mailles mixtes
-  auto queue_mix = makeQueue(m_acc_env->runner());
+  auto queue_mix = m_acc_env->newQueue();
   queue_mix.setAsync(true);
   {
     auto command = makeCommand(queue_mix);

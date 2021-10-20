@@ -18,6 +18,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   void initAcc() override;
 
   ax::Runner& runner() override { return m_runner; }
+  ax::RunQueue newQueue() override { return makeQueue(m_runner); }
 
  protected:
   ax::Runner m_runner;

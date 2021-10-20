@@ -32,7 +32,7 @@ computeFaceQuantitesForRemap()
     
     auto fnc = m_connectivity_view.faceNode();
     
-    auto queue = makeQueue(m_acc_env->runner());
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
     
     auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -92,7 +92,7 @@ computeFaceQuantitesForRemap()
     
     auto fnc = m_connectivity_view.faceNode();
     
-    auto queue = makeQueue(m_acc_env->runner());
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
     
     auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -232,7 +232,7 @@ void MahycoModule::computeVariablesForRemap()
 //      m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
 //   }
   
-  auto queue = makeQueue(m_acc_env->runner());
+  auto queue = m_acc_env->newQueue();
   auto command = makeCommand(queue);
   
   auto in_node_mass = ax::viewIn(command,m_node_mass);
