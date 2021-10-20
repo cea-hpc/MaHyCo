@@ -442,8 +442,8 @@ saveValuesAtN()
   if ( options()->withProjection) {
     // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
     // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-    _computeMultiEnvGlobalCellId();
-    _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+    m_acc_env->computeMultiEnvGlobalCellId(mm);
+    m_acc_env->checkMultiEnvGlobalCellId(mm); // Vérifie que m_global_cell est correct
     _prepareEnvForAcc();
   }
 
@@ -1211,7 +1211,7 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
-  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+  m_acc_env->checkMultiEnvGlobalCellId(mm); // Vérifie que m_global_cell est correct
 
   // maille mixte
   // moyenne sur la maille
@@ -1385,7 +1385,7 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
-  _checkMultiEnvGlobalCellId();
+  m_acc_env->checkMultiEnvGlobalCellId(mm);
 
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
@@ -1802,7 +1802,7 @@ computePressionMoyenne()
     }
   }
 #else
-  _checkMultiEnvGlobalCellId();
+  m_acc_env->checkMultiEnvGlobalCellId(mm);
 
   // Pas très efficace mais on va lancer un kernel sur tout le maillage pour
   // ne sélectionner que les mailles mixtes et initialiser les grandeus

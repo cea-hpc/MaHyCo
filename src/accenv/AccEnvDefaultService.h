@@ -2,6 +2,7 @@
 #define ACC_ENV_DEFAULT_SERVICE_H
 
 #include "accenv/IAccEnv.h"
+#include "arcane/materials/MeshMaterialVariableRef.h"
 #include "accenv/AccEnvDefault_axl.h"
 
 using namespace Arcane;
@@ -32,6 +33,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   void initMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
   MultiAsyncRunQueue* multiEnvQueue() override { return m_menv_queue; }
+
+  void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
+  void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
 
  protected:
 

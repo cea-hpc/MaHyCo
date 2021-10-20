@@ -402,12 +402,6 @@ class MahycoModule
    */
   CartesianInterface::ICartesianMesh* _initCartMesh();
 
-  /**
-   * Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
-   * l'identifiant de la maille globale
-   */
-  void _computeMultiEnvGlobalCellId();
-  void _checkMultiEnvGlobalCellId();
   void _prepareEnvForAcc();
 
   /**
