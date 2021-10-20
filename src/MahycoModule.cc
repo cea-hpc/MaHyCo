@@ -442,9 +442,7 @@ saveValuesAtN()
   if ( options()->withProjection) {
     // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
     // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-    m_acc_env->computeMultiEnvGlobalCellId(mm);
-    m_acc_env->checkMultiEnvGlobalCellId(mm); // Vérifie que m_global_cell est correct
-    _prepareEnvForAcc();
+    m_acc_env->updateMultiEnv(mm);
   }
 
   queue_cell.barrier();

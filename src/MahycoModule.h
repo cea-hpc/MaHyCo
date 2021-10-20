@@ -402,8 +402,6 @@ class MahycoModule
    */
   CartesianInterface::ICartesianMesh* _initCartMesh();
 
-  void _prepareEnvForAcc();
-
   /**
    * Fonctions diverses
    **/

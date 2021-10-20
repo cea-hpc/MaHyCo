@@ -36,6 +36,7 @@ class IAccEnv {
 
   virtual void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
   virtual void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
+  virtual void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
 };
 
 #endif

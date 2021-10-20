@@ -36,6 +36,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
   void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
+  void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
 
  protected:
 

@@ -170,26 +170,6 @@ _initEnvForAcc() {
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
     out_adiabatic_cst_env[env->id()] = adiabatic_cst;
   }
-
-  _prepareEnvForAcc();
-}
-
-/*---------------------------------------------------------------------------*/
-/* Préparer les données multi-envronnement pour l'accélérateur               */
-/* A appeler quand la carte des environnements change                        */
-/*---------------------------------------------------------------------------*/
-void MahycoModule::
-_prepareEnvForAcc() {
-#ifdef ARCANE_HAS_CUDA
-  // "Conseils" utilisation de la mémoire unifiée
-  int device = -1;
-  cudaGetDevice(&device);
-
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-    mem_adv_set_read_mostly(env->pureEnvItems().valueIndexes(), device);
-  }
-#endif
 }
 
 /**

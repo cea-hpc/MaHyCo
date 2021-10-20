@@ -5,6 +5,9 @@
 #include "cartesian/interface/NodeDirectionMng.h"
 
 #include "arcane/materials/CellToAllEnvCellConverter.h"
+#include "arcane/materials/IMeshEnvironment.h"
+#include "arcane/materials/ComponentPartItemVectorView.h"
+
 #include <arcane/AcceleratorRuntimeInitialisationInfo.h>
 
 using namespace Arcane;
@@ -211,6 +214,31 @@ checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
 }
 
 /*---------------------------------------------------------------------------*/
+/* Préparer les données multi-envronnement pour l'accélérateur               */
+/* A appeler quand la carte des environnements change                        */
+/*---------------------------------------------------------------------------*/
+void AccEnvDefaultService::
+updateMultiEnv(IMeshMaterialMng* mesh_material_mng) {
+  debug() << "updateMultiEnv";
+
+  // Il faut recalculer m_global_cell et m_env_id car la
+  // disposition des environnements a changé sur le maillage
+  computeMultiEnvGlobalCellId(mesh_material_mng);
+
+#ifdef ARCANE_COMPILING_CUDA
+  debug() << "updateMultiEnv, mem advise";
+  // "Conseils" utilisation de la mémoire unifiée
+  int device = -1;
+  cudaGetDevice(&device);
+
+  ENUMERATE_ENV(ienv,mesh_material_mng){
+    IMeshEnvironment* env = *ienv;
+    mem_adv_set_read_mostly(env->pureEnvItems().valueIndexes(), device);
+  }
+#endif
+}
+
+/*---------------------------------------------------------------------------*/
 /* Préparer traitement des environnements sur accélérateur                   */
 /*---------------------------------------------------------------------------*/
 void AccEnvDefaultService::
@@ -218,9 +246,7 @@ initMultiEnv(IMeshMaterialMng* mesh_material_mng) {
 
   m_menv_queue = new MultiAsyncRunQueue(m_runner, mesh_material_mng->environments().size());
 
-  // construit le tableau multi-env m_global_cell_id et le tableau global m_env_id
-  computeMultiEnvGlobalCellId(mesh_material_mng);
-
+  updateMultiEnv(mesh_material_mng);
 }
 
 /*---------------------------------------------------------------------------*/
