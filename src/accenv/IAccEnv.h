@@ -4,6 +4,7 @@
 #include <arcane/ItemTypes.h>
 #include "accenv/AcceleratorUtils.h"
 #include "arcane/UnstructuredMeshConnectivity.h"
+#include "arcane/materials/IMeshMaterialMng.h"
 #include "cartesian/interface/ICartesianMesh.h"
 
 using namespace Arcane;
@@ -29,6 +30,9 @@ class IAccEnv {
 
   virtual Integer maxNodeCell() const = 0;
   virtual Integer maxNodeFace() const = 0;
+
+  virtual void initMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
+  virtual MultiAsyncRunQueue* multiEnvQueue() = 0;
 };
 
 #endif

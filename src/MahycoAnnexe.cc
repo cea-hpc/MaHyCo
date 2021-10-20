@@ -161,8 +161,6 @@ void MahycoModule::
 _initEnvForAcc() {
   debug() << "_initEnvForAcc";
 
-  m_menv_queue = new MultiAsyncRunQueue(m_acc_env->runner(), mm->environments().size());
-
   // On récupère sur CPU les adiabatic_cst de chaque environnement
   // On utilise un NumArray pour qu'il soit utilisable aussi sur GPU
   m_adiabatic_cst_env.resize(mm->environments().size());

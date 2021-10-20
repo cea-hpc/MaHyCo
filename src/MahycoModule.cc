@@ -26,7 +26,6 @@ MahycoModule::
 /* Destructeur */
 /*---------------------------------------------------------------------------*/
 MahycoModule::~MahycoModule() {
-  delete m_menv_queue;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -90,6 +89,7 @@ hydroStartInit()
 
   info() << " Initialisation des environnements";
   hydroStartInitEnvAndMat();
+  m_acc_env->initMultiEnv(mm);
   _initEnvForAcc();
  
   // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
@@ -291,6 +291,7 @@ hydroContinueInit()
     mm->recreateFromDump();
     m_nb_env = mm->environments().size();
     m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+    m_acc_env->initMultiEnv(mm);
     _initEnvForAcc();
     
     m_global_old_deltat = m_old_deltat;
@@ -322,7 +323,7 @@ saveValuesAtN()
 
   // Exploitation de plusieurs queues asynchrones en concurrence
   // queue_cell => recopie des valeurs pures et globales
-  // m_menv_queue => recopies des valeurs mixtes de tous les environnements
+  // menv_queue => recopies des valeurs mixtes de tous les environnements
   // queue_node => recopie des valeurs aux noeuds
   
   auto queue_cell = m_acc_env->newQueue();
@@ -362,6 +363,7 @@ saveValuesAtN()
     }; // asynchrone
   }
 
+  auto menv_queue = m_acc_env->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -376,11 +378,11 @@ saveValuesAtN()
     }
   }
 #else
-  // Les recopies par environnement dont indépendantes, on peut utiliser m_menv_queue
+  // Les recopies par environnement dont indépendantes, on peut utiliser menv_queue
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
 
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
@@ -415,7 +417,7 @@ saveValuesAtN()
   bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
-  auto queue_node = m_acc_env->newQueue(); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
+  auto queue_node = m_acc_env->newQueue(); // queue asynchrone, pendant ce temps exécution sur queue_cell et menv_queue[*]
   queue_node.setAsync(true);
 
   if (copy_velocity || copy_node_coord) {
@@ -446,7 +448,7 @@ saveValuesAtN()
   }
 
   queue_cell.barrier();
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   queue_node.barrier();
  
   PROF_ACC_END;
@@ -1213,6 +1215,7 @@ computeGeometricValues()
 
   // maille mixte
   // moyenne sur la maille
+  auto menv_queue = m_acc_env->multiEnvQueue();
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
@@ -1225,7 +1228,7 @@ computeGeometricValues()
     Span<const Integer> in_global_cell(envView(m_global_cell, env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
 
@@ -1236,7 +1239,7 @@ computeGeometricValues()
     };
   }
 
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   PROF_ACC_END;
 }
 
@@ -1311,6 +1314,8 @@ updateDensity()
     };
   }
   // Pendant ce temps, calcul sur GPU sur la queue_glob
+
+  auto menv_queue = m_acc_env->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -1330,11 +1335,11 @@ updateDensity()
 #else
   // Les calculs des valeurs mixtes sur les environnements sont indépendants 
   // les uns des autres mais ne dépendent pas non plus des valeurs globales/pures
-  // Rappel : m_menv_queue->queue(*) sont des queues asynchrones indépendantes
+  // Rappel : menv_queue->queue(*) sont des queues asynchrones indépendantes
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
 
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
@@ -1357,7 +1362,7 @@ updateDensity()
   }
 #endif
   queue_glob.barrier();
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   
   m_density.synchronize();
   m_tau_density.synchronize();

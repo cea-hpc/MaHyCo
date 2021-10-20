@@ -20,6 +20,12 @@ AccEnvDefaultService::AccEnvDefaultService(const ServiceBuildInfo & sbi) :
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+AccEnvDefaultService::~AccEnvDefaultService() {
+  delete m_menv_queue;
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
 void AccEnvDefaultService::
 initAcc()
@@ -138,6 +144,16 @@ initMesh(ICartesianMesh* cartesian_mesh)
     mem_adv_set_read_mostly(cell_dm.allCells().view().localIds(), device);
   }
 #endif
+}
+
+/*---------------------------------------------------------------------------*/
+/* Préparer traitement des environnements sur accélérateur                   */
+/*---------------------------------------------------------------------------*/
+void AccEnvDefaultService::
+initMultiEnv(IMeshMaterialMng* mesh_material_mng) {
+
+  m_menv_queue = new MultiAsyncRunQueue(m_runner, mesh_material_mng->environments().size());
+
 }
 
 /*---------------------------------------------------------------------------*/

@@ -11,7 +11,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
  public:
   AccEnvDefaultService(const ServiceBuildInfo & sbi);
 
-  virtual ~AccEnvDefaultService() {}
+  virtual ~AccEnvDefaultService();
 
  public:
   void initAcc() override;
@@ -30,6 +30,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   Integer maxNodeCell() const override { return 8; }
   Integer maxNodeFace() const override { return 4; }
 
+  void initMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
+  MultiAsyncRunQueue* multiEnvQueue() override { return m_menv_queue; }
+
  protected:
 
   void _computeNodeIndexInCells();
@@ -41,6 +44,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   UniqueArray<Int16> m_node_index_in_cells;
   UniqueArray<Int16> m_node_index_in_faces;
+
+  // Les queues asynchrones d'exéution
+  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
 };
 
 #endif

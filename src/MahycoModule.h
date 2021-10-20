@@ -456,9 +456,6 @@ class MahycoModule
 
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
-  // Les queues asynchrones d'exéution
-  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
-
   // Va contenir eosModel()->getAdiabaticCst(env), accessible à la fois sur CPU et GPU
   NumArray<Real,1> m_adiabatic_cst_env;
 };
