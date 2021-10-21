@@ -739,140 +739,140 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
  * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
-void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
-    
-    debug() << " Entree dans computeUremap()";
-    PROF_ACC_BEGIN(__FUNCTION__);
-    if (options()->projectionPenteBorne == 0)
-    {
-      // Spécialisation
-      computeUremap_PBorn0(idir, nb_vars_to_project, nb_env);
-      PROF_ACC_END;
-      return;
-    }
-    
-    
-    Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
-                   1.0 * idir * (2 -idir), 
-                   -0.5 * idir * (1 - idir)};  
-    int nbmat = nb_env;
-    Real deltat = m_global_deltat();
-    Real flux;    
-    ENUMERATE_CELL(icell,allCells()) {
-      Cell cell = * icell;
-      RealUniqueArray flux_face(nb_vars_to_project);
-      flux_face.fill(0.);
-      ENUMERATE_FACE(iface, cell.faces()){
-        const Face& face = *iface;
-        Integer i = iface.index(); 
-        if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
-          Real face_normal_velocity(m_face_normal_velocity[face]);
-          Real face_length(m_face_length_lagrange[face][idir]);
-          Real3 outer_face_normal(m_outer_face_normal[cell][i]);
-          Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
-          if (options()->projectionPenteBorne == 0) {
-            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-                flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
-                flux_face[ivar] += flux;
-            }
-          } else { 
-            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-                flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
-                flux_face[ivar] += flux;
-            }
+void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  
+{
+  debug() << " Entree dans computeUremap()";
+  PROF_ACC_BEGIN(__FUNCTION__);
+  if (options()->projectionPenteBorne == 0)
+  {
+    // Spécialisation
+    computeUremap_PBorn0(idir, nb_vars_to_project, nb_env);
+    PROF_ACC_END;
+    return;
+  }
+  
+  
+  Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
+                 1.0 * idir * (2 -idir), 
+                 -0.5 * idir * (1 - idir)};  
+  int nbmat = nb_env;
+  Real deltat = m_global_deltat();
+  Real flux;    
+  ENUMERATE_CELL(icell,allCells()) {
+    Cell cell = * icell;
+    RealUniqueArray flux_face(nb_vars_to_project);
+    flux_face.fill(0.);
+    ENUMERATE_FACE(iface, cell.faces()){
+      const Face& face = *iface;
+      Integer i = iface.index(); 
+      if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
+        Real face_normal_velocity(m_face_normal_velocity[face]);
+        Real face_length(m_face_length_lagrange[face][idir]);
+        Real3 outer_face_normal(m_outer_face_normal[cell][i]);
+        Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
+        if (options()->projectionPenteBorne == 0) {
+          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+              flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
+              flux_face[ivar] += flux;
+          }
+        } else { 
+          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+              flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
+              flux_face[ivar] += flux;
           }
         }
       }
- 
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
-        // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
-        m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
-        m_u_lagrange[cell][ivar] -= flux_face[ivar];
-      }
-      // diagnostics et controle
-      for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] < 0.) {
-          if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
-            info() << " cell " << cell.localId()
-                    << " proj 1 --masse tres faiblement negative   "
-                    << " soit " << m_u_lagrange[cell][nbmat + imat]
-                    << " et volume " << m_u_lagrange[cell][imat];
-          m_u_lagrange[cell][nbmat + imat] = 0.;
-        }
-        if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
-          if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
-            info() << " cell " << cell.localId()
-                    << " --energie tres faiblement negative "
-                    << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
-          m_u_lagrange[cell][2 * nbmat + imat] = 0.;
-        }
-      }
-      // Calcul du volume de la maille apres 
-      double somme_volume = 0.;
-      for (int imat = 0; imat < nbmat; imat++) {
-        somme_volume += m_u_lagrange[cell][imat];
-      }
-      if (options()->projectionPenteBorne == 1) {
-        // option ou on ne regarde pas la variation de rho, V et e
-        // phi = (f1, f2, rho1*f1, rho2*f2, Vx, Vy, e1, e2
-        // ce qui permet d'ecrire le flux telque
-        // Flux = (dv1 = f1dv, dv2=f2*dv, dm1=rho1*df1, dm2=rho2*df2, d(mVx) =
-        // Vx*(dm1+dm2), d(mVy) = Vy*(dm1+dm2), d(m1e1) = e1*dm1,  d(m2e2) =
-        // e2*dm2 dans computeFluxPP
-        // Phi volume
-        double somme_masse = 0.;
-        for (int imat = 0; imat < nbmat; imat++) {
-          m_phi_lagrange[cell][imat] = m_u_lagrange[cell][imat] / somme_volume;
-        // Phi masse
-        if (m_u_lagrange[cell][imat] != 0.)
-          m_phi_lagrange[cell][nbmat + imat] =
-                m_u_lagrange[cell][nbmat + imat] / m_u_lagrange[cell][imat];
-        else
-          m_phi_lagrange[cell][nbmat + imat] = 0.;
-        somme_masse += m_u_lagrange[cell][nbmat + imat];
-        }
-        if (somme_masse!=0) {
-          // Phi Vitesse
-          m_phi_lagrange[cell][3 * nbmat] =
-                m_u_lagrange[cell][3 * nbmat] / somme_masse;
-          m_phi_lagrange[cell][3 * nbmat + 1] =
-                m_u_lagrange[cell][3 * nbmat + 1] / somme_masse;
-        }
-        // Phi energie
-        for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] != 0.)
-            m_phi_lagrange[cell][2 * nbmat + imat] =
-                m_u_lagrange[cell][2 * nbmat + imat] /
-                m_u_lagrange[cell][nbmat + imat];
-        else
-            m_phi_lagrange[cell][2 * nbmat + imat] = 0.;
-        }
-        // Phi energie cinétique
-        if (options()->conservationEnergieTotale == 1)
-          m_phi_lagrange[cell][3 * nbmat + 2] =
-            m_u_lagrange[cell][3 * nbmat + 2] / somme_masse;
+    }
 
-    } else {
-        // somme_volume doit etre égale à m_cell_volume[cell]
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
-        m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
+    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
+      // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
+      m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
+      m_u_lagrange[cell][ivar] -= flux_face[ivar];
+    }
+    // diagnostics et controle
+    for (int imat = 0; imat < nbmat; imat++) {
+      if (m_u_lagrange[cell][nbmat + imat] < 0.) {
+        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
+          info() << " cell " << cell.localId()
+                  << " proj 1 --masse tres faiblement negative   "
+                  << " soit " << m_u_lagrange[cell][nbmat + imat]
+                  << " et volume " << m_u_lagrange[cell][imat];
+        m_u_lagrange[cell][nbmat + imat] = 0.;
+      }
+      if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
+        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
+          info() << " cell " << cell.localId()
+                  << " --energie tres faiblement negative "
+                  << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
+        m_u_lagrange[cell][2 * nbmat + imat] = 0.;
       }
     }
-    // Mises à jour de l'indicateur mailles mixtes   
-    Integer imatcell(0);
-    Integer imatpure(-1);  
-    for (int imat = 0; imat < nbmat; imat++)
-      if (m_phi_lagrange[cell][imat] > 0.) {
-        imatcell++;
-        imatpure = imat;
-      }  
-    if (imatcell > 1) {
-      m_est_mixte[cell] = 1;
-      m_est_pure[cell] = -1;
-    } else {
-      m_est_mixte[cell] = 0;
-      m_est_pure[cell] = imatpure;
+    // Calcul du volume de la maille apres 
+    double somme_volume = 0.;
+    for (int imat = 0; imat < nbmat; imat++) {
+      somme_volume += m_u_lagrange[cell][imat];
     }
+    if (options()->projectionPenteBorne == 1) {
+      // option ou on ne regarde pas la variation de rho, V et e
+      // phi = (f1, f2, rho1*f1, rho2*f2, Vx, Vy, e1, e2
+      // ce qui permet d'ecrire le flux telque
+      // Flux = (dv1 = f1dv, dv2=f2*dv, dm1=rho1*df1, dm2=rho2*df2, d(mVx) =
+      // Vx*(dm1+dm2), d(mVy) = Vy*(dm1+dm2), d(m1e1) = e1*dm1,  d(m2e2) =
+      // e2*dm2 dans computeFluxPP
+      // Phi volume
+      double somme_masse = 0.;
+      for (int imat = 0; imat < nbmat; imat++) {
+        m_phi_lagrange[cell][imat] = m_u_lagrange[cell][imat] / somme_volume;
+      // Phi masse
+      if (m_u_lagrange[cell][imat] != 0.)
+        m_phi_lagrange[cell][nbmat + imat] =
+              m_u_lagrange[cell][nbmat + imat] / m_u_lagrange[cell][imat];
+      else
+        m_phi_lagrange[cell][nbmat + imat] = 0.;
+      somme_masse += m_u_lagrange[cell][nbmat + imat];
+      }
+      if (somme_masse!=0) {
+        // Phi Vitesse
+        m_phi_lagrange[cell][3 * nbmat] =
+              m_u_lagrange[cell][3 * nbmat] / somme_masse;
+        m_phi_lagrange[cell][3 * nbmat + 1] =
+              m_u_lagrange[cell][3 * nbmat + 1] / somme_masse;
+      }
+      // Phi energie
+      for (int imat = 0; imat < nbmat; imat++) {
+      if (m_u_lagrange[cell][nbmat + imat] != 0.)
+          m_phi_lagrange[cell][2 * nbmat + imat] =
+              m_u_lagrange[cell][2 * nbmat + imat] /
+              m_u_lagrange[cell][nbmat + imat];
+      else
+          m_phi_lagrange[cell][2 * nbmat + imat] = 0.;
+      }
+      // Phi energie cinétique
+      if (options()->conservationEnergieTotale == 1)
+        m_phi_lagrange[cell][3 * nbmat + 2] =
+          m_u_lagrange[cell][3 * nbmat + 2] / somme_masse;
+
+  } else {
+      // somme_volume doit etre égale à m_cell_volume[cell]
+    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+      m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
+    }
+  }
+  // Mises à jour de l'indicateur mailles mixtes   
+  Integer imatcell(0);
+  Integer imatpure(-1);  
+  for (int imat = 0; imat < nbmat; imat++)
+    if (m_phi_lagrange[cell][imat] > 0.) {
+      imatcell++;
+      imatpure = imat;
+    }  
+  if (imatcell > 1) {
+    m_est_mixte[cell] = 1;
+    m_est_pure[cell] = -1;
+  } else {
+    m_est_mixte[cell] = 0;
+    m_est_pure[cell] = imatpure;
+  }
   }
   PROF_ACC_END;
 }
@@ -890,81 +890,86 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
   
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeUremap_PBorn0()";
+  
   Real threshold = options()->threshold;
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 *   idir   * (2 -idir), 
                   -0.5 *   idir   * (1 - idir)};  
-    int nbmat = nb_env;
-    Real deltat = m_global_deltat();
-    Real flux;    
-    ENUMERATE_CELL(icell,allCells()) {
-      Cell cell = * icell;
-      RealUniqueArray flux_face(nb_vars_to_project);
-      flux_face.fill(0.);
-      ENUMERATE_FACE(iface, cell.faces()){
-        const Face& face = *iface;
-        Integer i = iface.index(); 
-        if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
-          Real face_normal_velocity(m_face_normal_velocity[face]);
-          Real face_length(m_face_length_lagrange[face][idir]);
-          Real3 outer_face_normal(m_outer_face_normal[cell][i]);
-          Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
-          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-            flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
-            flux_face[ivar] += flux;
-          }
+  int nbmat = nb_env;
+  Real deltat = m_global_deltat();
+  Real flux;    
+  ENUMERATE_CELL(icell,allCells()) {
+    Cell cell = * icell;
+    RealUniqueArray flux_face(nb_vars_to_project);
+    flux_face.fill(0.);
+    ENUMERATE_FACE(iface, cell.faces()){
+      const Face& face = *iface;
+      Integer i = iface.index(); 
+      if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
+        Real face_normal_velocity(m_face_normal_velocity[face]);
+        Real face_length(m_face_length_lagrange[face][idir]);
+        Real3 outer_face_normal(m_outer_face_normal[cell][i]);
+        Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
+        for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
+          flux_face[ivar] += flux;
         }
       }
-      
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
-        // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
-        m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
-        m_u_lagrange[cell][ivar] -= flux_face[ivar];
-      }
-      // diagnostics et controle
-      for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] < 0.) {
-          if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
-            info() << " cell " << cell.localId()
-            << " proj 1 --masse tres faiblement negative   "
-            << " soit " << m_u_lagrange[cell][nbmat + imat]
-            << " et volume " << m_u_lagrange[cell][imat];
-          m_u_lagrange[cell][nbmat + imat] = 0.;
-        }
-        if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
-          if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
-            info() << " cell " << cell.localId()
-            << " --energie tres faiblement negative "
-            << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
-          m_u_lagrange[cell][2 * nbmat + imat] = 0.;
-        }
-      }
-      // Calcul du volume de la maille apres 
-      double somme_volume = 0.;
-      for (int imat = 0; imat < nbmat; imat++) {
-        somme_volume += m_u_lagrange[cell][imat];
-      }
-      // somme_volume doit etre égale à m_cell_volume[cell]
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
-        m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
-      }
-      // Mises à jour de l'indicateur mailles mixtes   
-      Integer imatcell(0);
-      Integer imatpure(-1);  
-      for (int imat = 0; imat < nbmat; imat++)
-        if (m_phi_lagrange[cell][imat] > 0.) {
-          imatcell++;
-          imatpure = imat;
-        }  
-        if (imatcell > 1) {
-          m_est_mixte[cell] = 1;
-          m_est_pure[cell] = -1;
-        } else {
-          m_est_mixte[cell] = 0;
-          m_est_pure[cell] = imatpure;
-        }
     }
-    PROF_ACC_END;
+    
+    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
+      // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
+      m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
+      m_u_lagrange[cell][ivar] -= flux_face[ivar];
+    }
+    
+    // diagnostics et controle
+    for (int imat = 0; imat < nbmat; imat++) {
+      if (m_u_lagrange[cell][nbmat + imat] < 0.) {
+        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
+          info() << " cell " << cell.localId()
+          << " proj 1 --masse tres faiblement negative   "
+          << " soit " << m_u_lagrange[cell][nbmat + imat]
+          << " et volume " << m_u_lagrange[cell][imat];
+        m_u_lagrange[cell][nbmat + imat] = 0.;
+      }
+      if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
+        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
+          info() << " cell " << cell.localId()
+          << " --energie tres faiblement negative "
+          << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
+        m_u_lagrange[cell][2 * nbmat + imat] = 0.;
+      }
+    }
+    
+    // Calcul du volume de la maille apres 
+    double somme_volume = 0.;
+    for (int imat = 0; imat < nbmat; imat++) {
+      somme_volume += m_u_lagrange[cell][imat];
+    }
+    
+    // somme_volume doit etre égale à m_cell_volume[cell]
+    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+      m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
+    }
+    
+    // Mises à jour de l'indicateur mailles mixtes   
+    Integer imatcell(0);
+    Integer imatpure(-1);  
+    for (int imat = 0; imat < nbmat; imat++)
+      if (m_phi_lagrange[cell][imat] > 0.) {
+        imatcell++;
+        imatpure = imat;
+      }  
+      if (imatcell > 1) {
+        m_est_mixte[cell] = 1;
+        m_est_pure[cell] = -1;
+      } else {
+        m_est_mixte[cell] = 0;
+        m_est_pure[cell] = imatpure;
+      }
+  }
+  PROF_ACC_END;
 }
 
 
@@ -982,6 +987,7 @@ void RemapADIService::synchronizeUremap()  {
     m_est_mixte.synchronize();
     m_est_pure.synchronize();
     m_dual_phi_flux.synchronize();
-}/*---------------------------------------------------------------------------*/
+}
+/*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
 /*---------------------------------------------------------------------------*/
