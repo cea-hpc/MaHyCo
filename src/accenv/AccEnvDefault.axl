@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="AccEnvDefault" version="1.0" type="subdomain" singleton="true">
+
+	<description>Environnement à partager pour les accélérateurs</description>
+  <interface name="IAccEnv" />
+
+  <variables>
+  <!-- GLOBAL CELL	 -->
+  <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
+	    dim="0" material="true" dump="false" need-sync="false" />
+  <!-- ENV ID -->
+  <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
+	    dim="0" dump="false" need-sync="false" />
+  </variables>
+    
+	<options/>
+</service>

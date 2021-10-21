@@ -1,18 +1,6 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapALEService.h"
 
-void RemapALEService::
-initGpu()
-{
-  PROF_ACC_BEGIN(__FUNCTION__);
-  
-  info() << "Using RemapADIService with accelerator";
-  IApplication* app = subDomain()->application();
-  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
-  
-  PROF_ACC_END;
-}
-
 Integer RemapALEService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapALEService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapALEService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}

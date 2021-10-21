@@ -45,6 +45,11 @@ add_library(cartesian cartesian/CartesianConnectivity.cc
 target_include_directories(cartesian PUBLIC .)
 target_link_libraries(cartesian PUBLIC arcane_core)
 
+# Services communs pour les accélérateurs
+add_library(accenv accenv/AccEnvDefaultService.cc)
+target_include_directories(accenv PUBLIC .)
+target_link_libraries(accenv PUBLIC arcane_core)
+
 # Pour la gestion des accélérateurs et des sources à compiler avec le
 # compilateur pour accélérateur
 if(WANT_CUDA)
@@ -68,12 +73,14 @@ if(WANT_CUDA)
       cartesian/FaceDirectionMng.cc
       cartesian/NodeDirectionMng.cc
       cartesian/CartesianItemSorter.cc
+      accenv/AccEnvDefaultService.cc
       PROPERTIES LANGUAGE CUDA)
   target_link_libraries(Mahyco PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(Remap PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(PerfectGas PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(StiffenedGas PUBLIC arcane_accelerator_cuda_runtime)
   target_link_libraries(cartesian PUBLIC arcane_accelerator_cuda_runtime)
+  target_link_libraries(accenv PUBLIC arcane_accelerator_cuda_runtime)
 endif()
 
 # Pour la gestion du profiling sur accélérateur
@@ -84,6 +91,7 @@ if (WANT_PROF_ACC)
   target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
   target_compile_definitions(Remap PRIVATE PROF_ACC)
   target_compile_definitions(cartesian PRIVATE PROF_ACC)
+  target_compile_definitions(accenv PRIVATE PROF_ACC)
 endif()
 
 # Pour utiliser l'implémentation Arcane du cartésien
@@ -94,12 +102,13 @@ if (WANT_IMPL_CART_ARCANE)
   target_compile_definitions(StiffenedGas PRIVATE IMPL_CART_ARCANE)
   target_compile_definitions(Remap PRIVATE IMPL_CART_ARCANE)
   target_compile_definitions(cartesian PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(accenv PRIVATE IMPL_CART_ARCANE)
   # TODO : IMPL_CART_ARCANE est un define de cartesian, pour les autres target
   # ce define pourrait etre recupere en exprimant la dependance de la target avec
   # cartesian
 endif()
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian accenv)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -111,6 +120,8 @@ arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
+
+arcane_target_add_axl(accenv accenv/AccEnvDefault)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)

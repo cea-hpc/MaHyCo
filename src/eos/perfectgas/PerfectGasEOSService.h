@@ -22,7 +22,8 @@
 #include "arcane/materials/MeshMaterialIndirectModifier.h"
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
-#include "AcceleratorUtils.h"
+#include "accenv/AcceleratorUtils.h"
+#include "accenv/IAccEnv.h"
 using namespace Arcane;
 using namespace Arcane::Materials;
 
@@ -34,18 +35,12 @@ class PerfectGasEOSService
 {
 public:
   /** Constructeur de la classe */
-  PerfectGasEOSService(const ServiceBuildInfo & sbi)
-    : ArcanePerfectGasEOSObject(sbi) {}
+  PerfectGasEOSService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
   virtual ~PerfectGasEOSService() {};
 
 public:
-  /** 
-   *  Initialisation pour utilisation d'un accélérateur
-   */
-  void initAcc() override;
-
   /** 
    *  Initialise l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et l'énergie interne. 
@@ -72,7 +67,7 @@ public:
 
 private:
   // Pour l'utilisation des accélérateurs
-  ax::Runner m_runner;
+  IAccEnv* m_acc_env=nullptr;
 };
 
 #endif

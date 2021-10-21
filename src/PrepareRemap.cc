@@ -30,9 +30,9 @@ computeFaceQuantitesForRemap()
 //     m_face_length_lagrange[face][2]  = 0.5 * math::abs(produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x));
 //     }
     
-    auto fnc = m_connectivity_view.faceNode();
+    auto fnc = m_acc_env->connectivityView().faceNode();
     
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
     
     auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -90,9 +90,9 @@ computeFaceQuantitesForRemap()
 //       m_face_normal_velocity[face] = math::dot((one_over_nbnode * vitesse_moy), m_face_normal[face]);  
 //     }
     
-    auto fnc = m_connectivity_view.faceNode();
+    auto fnc = m_acc_env->connectivityView().faceNode();
     
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
     
     auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -232,7 +232,7 @@ void MahycoModule::computeVariablesForRemap()
 //      m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
 //   }
   
-  auto queue = makeQueue(m_runner);
+  auto queue = m_acc_env->newQueue();
   auto command = makeCommand(queue);
   
   auto in_node_mass = ax::viewIn(command,m_node_mass);
@@ -317,7 +317,7 @@ void MahycoModule::remap() {
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
       }
-      _computeMultiEnvGlobalCellId(); // la carte des mailles par env a evolué
+      m_acc_env->updateMultiEnv(mm); // la carte des mailles par env a evolué
       computePressionMoyenne();
    }
     PROF_ACC_END;

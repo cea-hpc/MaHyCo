@@ -57,8 +57,8 @@
 // fin ajout au PIF
 
 // Ajout pour accélérateur
-#include "arcane/UnstructuredMeshConnectivity.h"
-#include "AcceleratorUtils.h"
+#include "accenv/IAccEnv.h"
+#include "accenv/AcceleratorUtils.h"
 //
 
 #include "Mahyco_axl.h"
@@ -130,12 +130,6 @@ class MahycoModule
     double inf, sup;
   };
 
-  // Note: il faut mettre ce champs statique si on veut que sa valeur
-  // soit correcte lors de la capture avec CUDA (sinon on passe par this et
-  // cela provoque une erreur mémoire)
-  static const Integer MAX_NODE_CELL = 8;
-  static const Integer MAX_NODE_FACE = 4;
-  
   // les paramètres pour appliquer les conditions aux limites sur des noeuds de bord
   struct BoundaryCondition
   {
@@ -383,15 +377,7 @@ class MahycoModule
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
   
  private:
-  
-  void _computeNodeIndexInCells();
-  void _computeNodeIndexInFaces();
-
-     //! Indice de chaque noeud dans la maille
-  UniqueArray<Int16> m_node_index_in_cells;
-  UniqueArray<Int16> m_node_index_in_faces;
-
-  
+ 
   /**
    * Calcule les résultantes aux noeuds d'une maille hexaédrique.
    * La méthode utilisée est celle du découpage en quatre triangles.
@@ -400,12 +386,6 @@ class MahycoModule
   ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
-
-  /**
-   * A appeler par hydroStartInit et par hydroContinueInit pour préparer les
-   * données pour les accélérateurs
-   */
-  void _initMeshForAcc();
 
   /**
    * A appeler après hydroStartInitEnvAndMat pour préparer
@@ -421,14 +401,6 @@ class MahycoModule
   /** Construit le maillage cartésien et les managers par direction
    */
   CartesianInterface::ICartesianMesh* _initCartMesh();
-
-  /**
-   * Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
-   * l'identifiant de la maille globale
-   */
-  void _computeMultiEnvGlobalCellId();
-  void _checkMultiEnvGlobalCellId();
-  void _prepareEnvForAcc();
 
   /**
    * Fonctions diverses
@@ -472,13 +444,9 @@ class MahycoModule
   Integer m_dimension;
  
   // Pour l'utilisation des accélérateurs
-  ax::Runner m_runner;
+  IAccEnv* m_acc_env=nullptr;
 
-  UnstructuredMeshConnectivityView m_connectivity_view;
   UniqueArray<BoundaryCondition> m_boundary_conditions;
-
-  // Les queues asynchrones d'exéution
-  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
 
   // Va contenir eosModel()->getAdiabaticCst(env), accessible à la fois sur CPU et GPU
   NumArray<Real,1> m_adiabatic_cst_env;

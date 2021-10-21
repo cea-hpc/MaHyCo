@@ -9,7 +9,7 @@
 #include <arcane/mesh/GhostLayerMng.h>
 #include <arcane/utils/StringBuilder.h>
 
-#include <arcane/AcceleratorRuntimeInitialisationInfo.h>
+#include <arcane/ServiceBuilder.h>
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -19,16 +19,13 @@ using namespace Arcane::Materials;
 /*---------------------------------------------------------------------------*/
 MahycoModule::
   MahycoModule(const ModuleBuildInfo& mbi)
-: ArcaneMahycoObject(mbi), 
-  m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator()),
-  m_node_index_in_faces(platform::getAcceleratorHostMemoryAllocator())
+: ArcaneMahycoObject(mbi) 
 {}
 
 /*---------------------------------------------------------------------------*/
 /* Destructeur */
 /*---------------------------------------------------------------------------*/
 MahycoModule::~MahycoModule() {
-  delete m_menv_queue;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -39,13 +36,8 @@ accBuild()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  info() << "Using MaHyCo with accelerator";
-  IApplication* app = subDomain()->application();
-  initializeRunner(m_runner,traceMng(),app->acceleratorRuntimeInitialisationInfo());
-  options()->remap()->initGpu();
-  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-    options()->environment[i].eosModel()->initAcc();
-  }
+  m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
+  m_acc_env->initAcc();
 
   PROF_ACC_END;
 }
@@ -85,7 +77,7 @@ hydroStartInit()
   m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
   
-  _initMeshForAcc();
+  m_acc_env->initMesh(m_cartesian_mesh);
 
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
@@ -97,6 +89,7 @@ hydroStartInit()
 
   info() << " Initialisation des environnements";
   hydroStartInitEnvAndMat();
+  m_acc_env->initMultiEnv(mm);
   _initEnvForAcc();
  
   // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
@@ -159,14 +152,14 @@ hydroStartInit()
   // deplacé de hydrocontinueInit
   // calcul des volumes via les cqs, differents deu calcul dans computeGeometricValues ?
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
 
     auto in_node_coord = ax::viewIn(command,m_node_coord);
     auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
     auto out_cell_volume_g  = ax::viewOut(command,m_cell_volume.globalVariable()); 
 
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     // NOTE : on ne peut pas utiliser un membre sur accélérateur (ex : m_dimension), 
     // cela revient à utiliser this->m_dimension avec this pointeur illicite
@@ -206,7 +199,7 @@ computeCellMass()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeCellMass()";
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
 
     auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
@@ -243,11 +236,11 @@ computeNodeMass()
   debug() << " Entree dans computeNodeMass()";
    // Initialisation ou reinitialisation de la masse nodale
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
 
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
-    auto nc_cty = m_connectivity_view.nodeCell();
+    auto nc_cty = m_acc_env->connectivityView().nodeCell();
 
     auto in_cell_mass_g = ax::viewIn(command,m_cell_mass.globalVariable());
     auto out_node_mass = ax::viewOut(command, m_node_mass);
@@ -290,7 +283,7 @@ hydroContinueInit()
     m_cartesian_mesh = _initCartMesh();
     m_dimension = mesh()->dimension(); 
     
-    _initMeshForAcc();
+    m_acc_env->initMesh(m_cartesian_mesh);
     _initBoundaryConditionsForAcc();
 
     mm = IMeshMaterialMng::getReference(defaultMesh());
@@ -298,6 +291,7 @@ hydroContinueInit()
     mm->recreateFromDump();
     m_nb_env = mm->environments().size();
     m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+    m_acc_env->initMultiEnv(mm);
     _initEnvForAcc();
     
     m_global_old_deltat = m_old_deltat;
@@ -329,10 +323,10 @@ saveValuesAtN()
 
   // Exploitation de plusieurs queues asynchrones en concurrence
   // queue_cell => recopie des valeurs pures et globales
-  // m_menv_queue => recopies des valeurs mixtes de tous les environnements
+  // menv_queue => recopies des valeurs mixtes de tous les environnements
   // queue_node => recopie des valeurs aux noeuds
   
-  auto queue_cell = makeQueue(m_runner);
+  auto queue_cell = m_acc_env->newQueue();
   // on va recopier de façon asynchrone et concurrente les grandeurs aux mailles et aux noeuds
   queue_cell.setAsync(true); 
 
@@ -369,6 +363,7 @@ saveValuesAtN()
     }; // asynchrone
   }
 
+  auto menv_queue = m_acc_env->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -383,11 +378,11 @@ saveValuesAtN()
     }
   }
 #else
-  // Les recopies par environnement dont indépendantes, on peut utiliser m_menv_queue
+  // Les recopies par environnement dont indépendantes, on peut utiliser menv_queue
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
 
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
@@ -422,7 +417,7 @@ saveValuesAtN()
   bool copy_velocity = !options()->sansLagrange;
   bool copy_node_coord = options()->withProjection && options()->remap()->isEuler();
 
-  auto queue_node = makeQueue(m_runner); // queue asynchrone, pendant ce temps exécution sur queue_cell et m_menv_queue[*]
+  auto queue_node = m_acc_env->newQueue(); // queue asynchrone, pendant ce temps exécution sur queue_cell et menv_queue[*]
   queue_node.setAsync(true);
 
   if (copy_velocity || copy_node_coord) {
@@ -447,13 +442,11 @@ saveValuesAtN()
   if ( options()->withProjection) {
     // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
     // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-    _computeMultiEnvGlobalCellId();
-    _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
-    _prepareEnvForAcc();
+    m_acc_env->updateMultiEnv(mm);
   }
 
   queue_cell.barrier();
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   queue_node.barrier();
  
   PROF_ACC_END;
@@ -506,7 +499,7 @@ computeArtificialViscosity()
   // A la fin de la boucle, toutes les mailles pures sont calculées 
   // et les emplacements des grandeurs globales pour les mailles mixtes sont à 0
   
-  auto queue = makeQueue(m_runner);
+  auto queue = m_acc_env->newQueue();
   queue.setAsync(true); // la queue est asynchrone par rapport à l'hôte, 
   // cependant tous les kernels lancés sur cette queue s'exécutent séquentiellement les uns après les autres
   // ici c'est primordial car le premier kernel va initialiser les grandeurs globales qui vont être mises 
@@ -634,7 +627,7 @@ updateForceAndVelocity(Real dt,
   }
 #else
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
 
     auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
@@ -643,15 +636,17 @@ updateForceAndVelocity(Real dt,
     // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
     auto out_force           = ax::viewOut(command, m_force);
 
-    auto node_index_in_cells = m_node_index_in_cells.constSpan();
-    auto nc_cty = m_connectivity_view.nodeCell();
+    auto node_index_in_cells = m_acc_env->nodeIndexInCells();
+    const Integer max_node_cell = m_acc_env->maxNodeCell();
+
+    auto nc_cty = m_acc_env->connectivityView().nodeCell();
 
     auto in_mass      = ax::viewIn(command, m_node_mass);
     auto in_velocity  = ax::viewIn(command, v_velocity_in);
     auto out_velocity = ax::viewOut(command, v_velocity_out);
     
     command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
-      Int32 first_pos = nid.localId() * MAX_NODE_CELL;
+      Int32 first_pos = nid.localId() * max_node_cell;
       Integer index = 0;
       Real3 node_force = Real3::zero();
       for( CellLocalId cid : nc_cty.cells(nid) ){
@@ -896,7 +891,7 @@ updatePosition()
     m_cell_coord[cell] = one_over_nbnode * somme;
   }
 #else
-  auto queue = makeQueue(m_runner);
+  auto queue = m_acc_env->newQueue();
   if (!options()->sansLagrange)
   {
     auto command = makeCommand(queue);
@@ -924,7 +919,7 @@ updatePosition()
 
     auto in_node_coord  = ax::viewIn(command,m_node_coord);
     auto out_cell_coord = ax::viewOut(command,m_cell_coord);
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
       Real3 somme = {0. , 0. , 0.};
@@ -980,7 +975,7 @@ applyBoundaryCondition()
     }
   }
 #else
-  auto queue = makeQueue(m_runner);
+  auto queue = m_acc_env->newQueue();
 
   // Pour cette méthode, comme les conditions aux limites sont sur des groupes
   // indépendants (ou alors avec la même valeur si c'est sur les mêmes noeuds),
@@ -1068,13 +1063,13 @@ computeGeometricValues()
   m_node_coord.synchronize();
   if ( m_dimension == 3) {
     {
-      auto queue = makeQueue(m_runner);
+      auto queue = m_acc_env->newQueue();
       auto command = makeCommand(queue);
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
       auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
 
-      auto cnc = m_connectivity_view.cellNode();
+      auto cnc = m_acc_env->connectivityView().cellNode();
 
       command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
         // Recopie les coordonnées locales (pour le cache)
@@ -1175,7 +1170,7 @@ computeGeometricValues()
     // Calcul des volumes aux mailles puis longueur caractéristique
     // Attention, m_node_volume n'est plus calculé car n'est pas utilisé
     {
-      auto queue = makeQueue(m_runner);
+      auto queue = m_acc_env->newQueue();
       auto command = makeCommand(queue);
 
       auto in_node_coord = ax::viewIn(command,m_node_coord);
@@ -1183,7 +1178,7 @@ computeGeometricValues()
       auto out_cell_volume_g        = ax::viewOut(command,m_cell_volume.globalVariable()); 
       auto out_caracteristic_length = ax::viewOut(command,m_caracteristic_length);
       
-      auto cnc = m_connectivity_view.cellNode();
+      auto cnc = m_acc_env->connectivityView().cellNode();
 
       // NOTE : on ne peut pas utiliser un membre sur accélérateur (ex : m_dimension), 
       // cela revient à utiliser this->m_dimension avec this pointeur illicite
@@ -1214,10 +1209,11 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
-  _checkMultiEnvGlobalCellId(); // Vérifie que m_global_cell est correct
+  m_acc_env->checkMultiEnvGlobalCellId(mm); // Vérifie que m_global_cell est correct
 
   // maille mixte
   // moyenne sur la maille
+  auto menv_queue = m_acc_env->multiEnvQueue();
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
@@ -1230,7 +1226,7 @@ computeGeometricValues()
     Span<const Integer> in_global_cell(envView(m_global_cell, env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
 
@@ -1241,7 +1237,7 @@ computeGeometricValues()
     };
   }
 
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   PROF_ACC_END;
 }
 
@@ -1283,7 +1279,7 @@ updateDensity()
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
 
   // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
-  auto queue_glob = makeQueue(m_runner);
+  auto queue_glob = m_acc_env->newQueue();
   queue_glob.setAsync(true);
   {
     auto command = makeCommand(queue_glob);
@@ -1316,6 +1312,8 @@ updateDensity()
     };
   }
   // Pendant ce temps, calcul sur GPU sur la queue_glob
+
+  auto menv_queue = m_acc_env->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -1335,11 +1333,11 @@ updateDensity()
 #else
   // Les calculs des valeurs mixtes sur les environnements sont indépendants 
   // les uns des autres mais ne dépendent pas non plus des valeurs globales/pures
-  // Rappel : m_menv_queue->queue(*) sont des queues asynchrones indépendantes
+  // Rappel : menv_queue->queue(*) sont des queues asynchrones indépendantes
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
 
-    auto command = makeCommand(m_menv_queue->queue(env->id()));
+    auto command = makeCommand(menv_queue->queue(env->id()));
 
     // Nombre de mailles impures (mixtes) de l'environnement
     Integer nb_imp = env->impureEnvItems().nbItem();
@@ -1362,7 +1360,7 @@ updateDensity()
   }
 #endif
   queue_glob.barrier();
-  m_menv_queue->waitAllQueues();
+  menv_queue->waitAllQueues();
   
   m_density.synchronize();
   m_tau_density.synchronize();
@@ -1385,7 +1383,7 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
-  _checkMultiEnvGlobalCellId();
+  m_acc_env->checkMultiEnvGlobalCellId(mm);
 
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
@@ -1640,7 +1638,7 @@ updateEnergyAndPressureforGP()
     // Traitements dépendants des mailles pures/globales 
     // puis des mailles mixtes qui vont mettre à jour les valeurs globales
 
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     // Traitement des mailles pures via les tableaux .globalVariable()
     {
       auto command = makeCommand(queue);
@@ -1802,7 +1800,7 @@ computePressionMoyenne()
     }
   }
 #else
-  _checkMultiEnvGlobalCellId();
+  m_acc_env->checkMultiEnvGlobalCellId(mm);
 
   // Pas très efficace mais on va lancer un kernel sur tout le maillage pour
   // ne sélectionner que les mailles mixtes et initialiser les grandeus
@@ -1812,7 +1810,7 @@ computePressionMoyenne()
 
   // Toutes les étapes doivent se faire les unes après les autres d'où une
   // queue unique
-  auto queue = makeQueue(m_runner);
+  auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
 
@@ -1976,7 +1974,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
   // Calcul du pas de temps pour le respect du critère de CFL
   Real minimum_aux;
   {
-    auto queue = makeQueue(m_runner);
+    auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
     ax::ReducerMin<Real> minimum_aux_reducer(command);
 
@@ -1987,7 +1985,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
     auto in_velocity             = ax::viewIn(command, m_velocity);
     typename DtCellInfoType::VarCellSetter out_dx_sound(dt_cell_info.dxSoundSetter(command));
 
-    auto cnc = m_connectivity_view.cellNode();
+    auto cnc = m_acc_env->connectivityView().cellNode();
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
       Real cell_dx = in_caracteristic_length[cid];
