@@ -897,32 +897,53 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
                   -0.5 *   idir   * (1 - idir)};  
   int nbmat = nb_env;
   Real deltat = m_global_deltat();
-  Real flux;    
+  Real flux;     
+          
+  for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+  
+    auto queue = m_acc_env->newQueue();
+    auto command = makeCommand(queue);
+    auto cfc = m_acc_env->connectivityView().cellFace();
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
+      
+      Real flux_face = 0.;
+      
+      for( FaceLocalId fid : cfc.faces(cid) ) {
+      }
+    }; 
+    
+    ENUMERATE_CELL(icell,allCells()) {
+      Cell cell = * icell;
+      Real flux_face = 0.;
+         
+      ENUMERATE_FACE(iface, cell.faces()) {
+        const Face& face = *iface;
+        Integer i = iface.index();
+         
+       // On remplace le produit scalaire par un accès direct aux composantes de m_face_normal[face]
+       // En effet, les valeurs de m_face_normal sont déjà alignés sur ex, ey, ou ez 
+       // Quesion : peut-on avoir un maillage cartésien non alignés sur les axes ex, ey ou ez ? 
+       // Si oui, le produit scalaire sera différent de +1 ou -1
+       // Remarque : meme chose pour m_outer_face_normal
+         
+        Real m_face_normal_face_idir = m_face_normal[face][idir];
+        if (std::fabs(m_face_normal_face_idir) >= 1.0E-10) {
+          Real face_normal_velocity(m_face_normal_velocity[face]);
+          Real face_length(m_face_length_lagrange[face][idir]);
+          Real3 outer_face_normal(m_outer_face_normal[cell][i]);
+          Real outer_face_normal_dir = outer_face_normal[idir];
+          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
+          flux_face += flux;
+        } 
+      }
+      m_dual_phi_flux[cell][ivar] = 0.5* flux_face; 
+      m_u_lagrange[cell][ivar] -= flux_face;
+    }
+  }
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = * icell;
-    RealUniqueArray flux_face(nb_vars_to_project);
-    flux_face.fill(0.);
-    ENUMERATE_FACE(iface, cell.faces()){
-      const Face& face = *iface;
-      Integer i = iface.index(); 
-      if (std::fabs(math::dot(m_face_normal[face], dirproj)) >= 1.0E-10) {
-        Real face_normal_velocity(m_face_normal_velocity[face]);
-        Real face_length(m_face_length_lagrange[face][idir]);
-        Real3 outer_face_normal(m_outer_face_normal[cell][i]);
-        Real outer_face_normal_dir = math::dot(outer_face_normal, dirproj);
-        for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
-          flux_face[ivar] += flux;
-        }
-      }
-    }
-    
-    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
-      // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
-      m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
-      m_u_lagrange[cell][ivar] -= flux_face[ivar];
-    }
-    
     // diagnostics et controle
     for (int imat = 0; imat < nbmat; imat++) {
       if (m_u_lagrange[cell][nbmat + imat] < 0.) {
