@@ -29,9 +29,11 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   Span<const Int16> nodeIndexInCells() const { return m_node_index_in_cells.constSpan(); }
   Span<const Int16> nodeIndexInFaces() const { return m_node_index_in_faces.constSpan(); }
+  Span<const Int16> faceIndexInCells() const { return m_face_index_in_cells.constSpan(); }
 
   Integer maxNodeCell() const override { return 8; }
   Integer maxNodeFace() const override { return 4; }
+  Integer maxFaceCell() const override { return 6; }
 
   void initMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
   MultiAsyncRunQueue* multiEnvQueue() override { return m_menv_queue; }
@@ -46,6 +48,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   void _computeNodeIndexInCells();
   void _computeNodeIndexInFaces();
+  void _computeFaceIndexInCells();
 
  protected:
   ax::Runner m_runner;
@@ -54,6 +57,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   UniqueArray<Int16> m_node_index_in_cells;
   UniqueArray<Int16> m_node_index_in_faces;
+  UniqueArray<Int16> m_face_index_in_cells;
 
   //! Description/accès aux mailles multi-env
   MultiEnvCellStorage* m_menv_cell=nullptr;

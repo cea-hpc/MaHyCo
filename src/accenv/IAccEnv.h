@@ -30,9 +30,11 @@ class IAccEnv {
 
   virtual Span<const Int16> nodeIndexInCells() const = 0;
   virtual Span<const Int16> nodeIndexInFaces() const = 0;
+  virtual Span<const Int16> faceIndexInCells() const = 0;
 
   virtual Integer maxNodeCell() const = 0;
   virtual Integer maxNodeFace() const = 0;
+  virtual Integer maxFaceCell() const = 0;
 
   virtual void initMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
   virtual MultiAsyncRunQueue* multiEnvQueue() = 0;
