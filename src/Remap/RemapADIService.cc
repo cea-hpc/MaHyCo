@@ -919,7 +919,7 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     auto in_outer_face_normal    = ax::viewIn(command, m_outer_face_normal   );
     auto in_phi_face             = ax::viewIn(command, m_phi_face            );
     
-    auto out_dual_phi_flux = ax::viewInOut(command, m_dual_phi_flux );
+    auto out_dual_phi_flux = ax::viewOut(command, m_dual_phi_flux );
     auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
 
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
