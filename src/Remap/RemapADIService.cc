@@ -326,6 +326,13 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
                    -0.5 * idir * (1 - idir)};  
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
+  
+  /*
+   *  Discussion avec JPP 28/10/2021 : 
+   *  correction pour ordre 1 : il faut initialiser à 0 m_grad_phi
+   */
+  m_grad_phi.fill(0.0);
+  
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
 #if 0
@@ -897,49 +904,72 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
                   -0.5 *   idir   * (1 - idir)};  
   int nbmat = nb_env;
   Real deltat = m_global_deltat();
-  Real flux;     
           
   for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
   
     auto queue = m_acc_env->newQueue();
     auto command = makeCommand(queue);
+    
     auto cfc = m_acc_env->connectivityView().cellFace();
+    auto face_index_in_cells = m_acc_env->faceIndexInCells();
+    
+    auto in_face_normal          = ax::viewIn(command, m_face_normal         );
+    auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
+    auto in_face_length_lagrange = ax::viewIn(command, m_face_length_lagrange);
+    auto in_outer_face_normal    = ax::viewIn(command, m_outer_face_normal   );
+    auto in_phi_face             = ax::viewIn(command, m_phi_face            );
+    
+    auto out_dual_phi_flux = ax::viewInOut(command, m_dual_phi_flux );
+    auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
 
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
       
+      Real flux = 0.;
       Real flux_face = 0.;
       
       for( FaceLocalId fid : cfc.faces(cid) ) {
+        Integer i = face_index_in_cells[fid];
+        Real in_face_normal_face_idir = in_face_normal[fid][idir];
+        if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
+          Real face_normal_velocity(in_face_normal_velocity[fid]);
+          Real face_length(in_face_length_lagrange[fid][idir]);
+          Real3 outer_face_normal(in_outer_face_normal[cid][i]);
+          Real outer_face_normal_dir = outer_face_normal[idir];
+          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
+          flux_face += flux;
+        }
       }
+      out_dual_phi_flux[cid][ivar] = 0.5* flux_face; 
+      out_u_lagrange   [cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
     }; 
     
-    ENUMERATE_CELL(icell,allCells()) {
-      Cell cell = * icell;
-      Real flux_face = 0.;
-         
-      ENUMERATE_FACE(iface, cell.faces()) {
-        const Face& face = *iface;
-        Integer i = iface.index();
-         
-       // On remplace le produit scalaire par un accès direct aux composantes de m_face_normal[face]
-       // En effet, les valeurs de m_face_normal sont déjà alignés sur ex, ey, ou ez 
-       // Quesion : peut-on avoir un maillage cartésien non alignés sur les axes ex, ey ou ez ? 
-       // Si oui, le produit scalaire sera différent de +1 ou -1
-       // Remarque : meme chose pour m_outer_face_normal
-         
-        Real m_face_normal_face_idir = m_face_normal[face][idir];
-        if (std::fabs(m_face_normal_face_idir) >= 1.0E-10) {
-          Real face_normal_velocity(m_face_normal_velocity[face]);
-          Real face_length(m_face_length_lagrange[face][idir]);
-          Real3 outer_face_normal(m_outer_face_normal[cell][i]);
-          Real outer_face_normal_dir = outer_face_normal[idir];
-          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
-          flux_face += flux;
-        } 
-      }
-      m_dual_phi_flux[cell][ivar] = 0.5* flux_face; 
-      m_u_lagrange[cell][ivar] -= flux_face;
-    }
+//     ENUMERATE_CELL(icell,allCells()) {
+//       Cell cell = * icell;
+//       Real flux_face = 0.;
+//          
+//       ENUMERATE_FACE(iface, cell.faces()) {
+//         const Face& face = *iface;
+//         Integer i = iface.index();
+//          
+//        // On remplace le produit scalaire par un accès direct aux composantes de m_face_normal[face]
+//        // En effet, les valeurs de m_face_normal sont déjà alignés sur ex, ey, ou ez 
+//        // Question : peut-on avoir un maillage cartésien non alignés sur les axes ex, ey ou ez ? 
+//        // Si oui, le produit scalaire sera différent de +1 ou -1
+//        // Remarque : meme chose pour m_outer_face_normal
+//          
+//         Real m_face_normal_face_idir = m_face_normal[face][idir];
+//         if (std::fabs(m_face_normal_face_idir) >= 1.0E-10) {
+//           Real face_normal_velocity(m_face_normal_velocity[face]);
+//           Real face_length(m_face_length_lagrange[face][idir]);
+//           Real3 outer_face_normal(m_outer_face_normal[cell][i]);
+//           Real outer_face_normal_dir = outer_face_normal[idir];
+//           flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
+//           flux_face += flux;
+//         } 
+//       }
+//       m_dual_phi_flux[cell][ivar] = 0.5* flux_face; 
+//       m_u_lagrange[cell][ivar] -= flux_face;
+//     }
   }
   
   ENUMERATE_CELL(icell,allCells()) {

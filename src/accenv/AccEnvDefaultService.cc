@@ -157,11 +157,13 @@ initMesh(ICartesianMesh* cartesian_mesh)
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
   _computeNodeIndexInFaces();
+  _computeFaceIndexInCells();
 
   // "Conseils" utilisation de la mémoire unifiée
 
   m_acc_mem_adv->setReadMostly(m_node_index_in_cells.view());
   m_acc_mem_adv->setReadMostly(m_node_index_in_faces.view());
+  m_acc_mem_adv->setReadMostly(m_face_index_in_cells.view());
   
   // CellLocalId
   m_acc_mem_adv->setReadMostly(allCells().view().localIds());
