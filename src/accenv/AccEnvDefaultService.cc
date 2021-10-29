@@ -113,7 +113,7 @@ _computeNodeIndexInFaces()
 void AccEnvDefaultService::
 _computeFaceIndexInCells() {
   debug() << "_computeFaceIndexInCells";
-  // Un noeud est connecté au maximum à max_node_cell mailles
+  // Une face est connectée au maximum à max_face_cell mailles
   // Calcul pour chaque noeud son index dans chacune des
   // mailles à laquelle il est connecté.
   FaceGroup faces = allFaces();

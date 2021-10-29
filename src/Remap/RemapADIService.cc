@@ -911,7 +911,6 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     auto command = makeCommand(queue);
     
     auto cfc = m_acc_env->connectivityView().cellFace();
-    auto face_index_in_cells = m_acc_env->faceIndexInCells();
     
     auto in_face_normal          = ax::viewIn(command, m_face_normal         );
     auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
@@ -921,23 +920,30 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     
     auto out_dual_phi_flux = ax::viewOut(command, m_dual_phi_flux );
     auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
-
+    
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
       
       Real flux = 0.;
       Real flux_face = 0.;
       
+      // On a besoin de la variable index car m_outer_face_normal a été rempli suivant 
+      // le parcours ENUMERATE_CELL(cell,allCells()) -> ENUMERATE_FACE(face,cell.faces())
+      // m_outer_face_normal[cell][face.index()] = ...
+      // Sur GPU, on a gardé le meme pattern cell -> cell.faces(), ainsi pour accéder à 
+      // m_outer_face_normal[cell][face.index()], il suffit d'un int que l'on incrémente
+      // au fur et à mesure du parcours faces(cell). (pas besoin de face_index_in_cells finalement)
+      Integer index = 0;
       for( FaceLocalId fid : cfc.faces(cid) ) {
-        Integer i = face_index_in_cells[fid];
         Real in_face_normal_face_idir = in_face_normal[fid][idir];
         if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
           Real face_normal_velocity(in_face_normal_velocity[fid]);
           Real face_length(in_face_length_lagrange[fid][idir]);
-          Real3 outer_face_normal(in_outer_face_normal[cid][i]);
+          Real3 outer_face_normal(in_outer_face_normal[cid][index]);
           Real outer_face_normal_dir = outer_face_normal[idir];
           flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
           flux_face += flux;
         }
+        ++index;
       }
       out_dual_phi_flux[cid][ivar] = 0.5* flux_face; 
       out_u_lagrange   [cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
@@ -946,6 +952,7 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
 //     ENUMERATE_CELL(icell,allCells()) {
 //       Cell cell = * icell;
 //       Real flux_face = 0.;
+//       Real flux = 0.;
 //          
 //       ENUMERATE_FACE(iface, cell.faces()) {
 //         const Face& face = *iface;
