@@ -899,15 +899,13 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
   debug() << " Entree dans computeUremap_PBorn0()";
   
   Real threshold = options()->threshold;
-  Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
-                   1.0 *   idir   * (2 -idir), 
-                  -0.5 *   idir   * (1 - idir)};  
   int nbmat = nb_env;
   Real deltat = m_global_deltat();
           
   for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
   
     auto queue = m_acc_env->newQueue();
+    queue.setAsync(true);
     auto command = makeCommand(queue);
     
     auto cfc = m_acc_env->connectivityView().cellFace();
