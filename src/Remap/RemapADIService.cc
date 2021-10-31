@@ -977,54 +977,105 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
 //     }
   }
   
-  ENUMERATE_CELL(icell,allCells()) {
-    Cell cell = * icell;
-    // diagnostics et controle
-    for (int imat = 0; imat < nbmat; imat++) {
-      if (m_u_lagrange[cell][nbmat + imat] < 0.) {
-        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
-          info() << " cell " << cell.localId()
-          << " proj 1 --masse tres faiblement negative   "
-          << " soit " << m_u_lagrange[cell][nbmat + imat]
-          << " et volume " << m_u_lagrange[cell][imat];
-        m_u_lagrange[cell][nbmat + imat] = 0.;
-      }
-      if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
-        if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
-          info() << " cell " << cell.localId()
-          << " --energie tres faiblement negative "
-          << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
-        m_u_lagrange[cell][2 * nbmat + imat] = 0.;
-      }
-    }
+  // On fait les diagnostics et controles 
+  {
+    auto queue = m_acc_env->newQueue();
+    auto command = makeCommand(queue);
     
-    // Calcul du volume de la maille apres 
-    double somme_volume = 0.;
-    for (int imat = 0; imat < nbmat; imat++) {
-      somme_volume += m_u_lagrange[cell][imat];
-    }
+    auto out_est_mixte = ax::viewOut(command, m_est_mixte);
+    auto out_est_pure  = ax::viewOut(command, m_est_pure);
     
-    // somme_volume doit etre égale à m_cell_volume[cell]
-    for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
-      m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
-    }
+    auto inout_u_lagrange   = ax::viewInOut(command, m_u_lagrange);
+    auto inout_phi_lagrange = ax::viewInOut(command, m_phi_lagrange);
     
-    // Mises à jour de l'indicateur mailles mixtes   
-    Integer imatcell(0);
-    Integer imatpure(-1);  
-    for (int imat = 0; imat < nbmat; imat++)
-      if (m_phi_lagrange[cell][imat] > 0.) {
-        imatcell++;
-        imatpure = imat;
-      }  
-      if (imatcell > 1) {
-        m_est_mixte[cell] = 1;
-        m_est_pure[cell] = -1;
-      } else {
-        m_est_mixte[cell] = 0;
-        m_est_pure[cell] = imatpure;
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
+      for (int imat = 0; imat < nbmat; imat++) {
+        if (inout_u_lagrange[cid][nbmat + imat] < 0.) {
+          inout_u_lagrange[cid][nbmat + imat] = 0.;
+        }
+        if (inout_u_lagrange[cid][2*nbmat + imat] < 0.) {
+          inout_u_lagrange[cid][2*nbmat + imat] = 0.;
+        }
       }
+      
+      // Calcul du volume de la maille apres 
+      double somme_volume = 0.;
+      for (int imat = 0; imat < nbmat; imat++) {
+        somme_volume += inout_u_lagrange[cid][imat];
+      }
+      
+      // somme_volume doit etre égale à m_cell_volume[cell]
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+        inout_phi_lagrange[cid][ivar] = inout_u_lagrange[cid][ivar] / somme_volume;
+      }
+      
+      // Mises à jour de l'indicateur mailles mixtes   
+      Integer imatcell(0);
+      Integer imatpure(-1);  
+      for (int imat = 0; imat < nbmat; imat++) {
+        if (inout_phi_lagrange[cid][imat] > 0.) {
+          imatcell++;
+          imatpure = imat;
+        }  
+        if (imatcell > 1) {
+          out_est_mixte[cid] = 1;
+          out_est_pure[cid] = -1;
+        } else {
+          out_est_mixte[cid] = 0;
+          out_est_pure[cid] = imatpure;
+        }
+      }
+    };
   }
+    
+//   ENUMERATE_CELL(icell,allCells()) {
+//     Cell cell = * icell;
+//     // diagnostics et controle
+//     for (int imat = 0; imat < nbmat; imat++) {
+//       if (m_u_lagrange[cell][nbmat + imat] < 0.) {
+//         if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
+//           info() << " cell " << cell.localId()
+//           << " proj 1 --masse tres faiblement negative   "
+//           << " soit " << m_u_lagrange[cell][nbmat + imat]
+//           << " et volume " << m_u_lagrange[cell][imat];
+//         m_u_lagrange[cell][nbmat + imat] = 0.;
+//       }
+//       if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
+//         if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * threshold)
+//           info() << " cell " << cell.localId()
+//           << " --energie tres faiblement negative "
+//           << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
+//         m_u_lagrange[cell][2 * nbmat + imat] = 0.;
+//       }
+//     }
+//     
+//     // Calcul du volume de la maille apres 
+//     double somme_volume = 0.;
+//     for (int imat = 0; imat < nbmat; imat++) {
+//       somme_volume += m_u_lagrange[cell][imat];
+//     }
+//     
+//     // somme_volume doit etre égale à m_cell_volume[cell]
+//     for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+//       m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / somme_volume;
+//     }
+//     
+//     // Mises à jour de l'indicateur mailles mixtes   
+//     Integer imatcell(0);
+//     Integer imatpure(-1);  
+//     for (int imat = 0; imat < nbmat; imat++)
+//       if (m_phi_lagrange[cell][imat] > 0.) {
+//         imatcell++;
+//         imatpure = imat;
+//       }  
+//       if (imatcell > 1) {
+//         m_est_mixte[cell] = 1;
+//         m_est_pure[cell] = -1;
+//       } else {
+//         m_est_mixte[cell] = 0;
+//         m_est_pure[cell] = imatpure;
+//       }
+//   }
   PROF_ACC_END;
 }
 
