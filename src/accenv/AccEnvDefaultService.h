@@ -40,6 +40,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
   void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
 
+  MultiEnvCellStorage* multiEnvCellStorage() override { return m_menv_cell; }
+
  protected:
 
   void _computeNodeIndexInCells();
@@ -52,6 +54,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   UniqueArray<Int16> m_node_index_in_cells;
   UniqueArray<Int16> m_node_index_in_faces;
+
+  //! Description/accès aux mailles multi-env
+  MultiEnvCellStorage* m_menv_cell=nullptr;
 
   // Les queues asynchrones d'exéution
   MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone

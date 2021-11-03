@@ -26,6 +26,7 @@ AccEnvDefaultService::AccEnvDefaultService(const ServiceBuildInfo & sbi) :
 /*---------------------------------------------------------------------------*/
 AccEnvDefaultService::~AccEnvDefaultService() {
   delete m_acc_mem_adv;
+  delete m_menv_cell;
   delete m_menv_queue;
 }
 
@@ -186,6 +187,8 @@ computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
     }
   }
 
+  m_menv_cell->buildStorage(m_global_cell);
+
   checkMultiEnvGlobalCellId(mesh_material_mng);
   PROF_ACC_END;
 }
@@ -211,6 +214,8 @@ checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
       }
     }
   }
+
+  m_menv_cell->checkStorage(m_global_cell);
 #endif
 }
 
@@ -240,6 +245,8 @@ void AccEnvDefaultService::
 initMultiEnv(IMeshMaterialMng* mesh_material_mng) {
 
   m_menv_queue = new MultiAsyncRunQueue(m_runner, mesh_material_mng->environments().size());
+
+  m_menv_cell = new MultiEnvCellStorage(mesh_material_mng, m_acc_mem_adv);
 
   updateMultiEnv(mesh_material_mng);
 }
