@@ -25,6 +25,7 @@ AccEnvDefaultService::AccEnvDefaultService(const ServiceBuildInfo & sbi) :
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 AccEnvDefaultService::~AccEnvDefaultService() {
+  delete m_acc_mem_adv;
   delete m_menv_queue;
 }
 
@@ -114,40 +115,40 @@ initMesh(ICartesianMesh* cartesian_mesh)
 {
   IMesh* mesh = cartesian_mesh->mesh();
 
+  if (!m_acc_mem_adv) {
+    m_acc_mem_adv = new AccMemAdviser(options()->getAccMemAdvise());
+  }
+
   m_connectivity_view.setMesh(mesh);
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
   _computeNodeIndexInFaces();
 
-#ifdef ARCANE_COMPILING_CUDA
   // "Conseils" utilisation de la mémoire unifiée
-  int device = -1;
-  cudaGetDevice(&device);
 
-  mem_adv_set_read_mostly(m_node_index_in_cells.view(), device);
-  mem_adv_set_read_mostly(m_node_index_in_faces.view(), device);
+  m_acc_mem_adv->setReadMostly(m_node_index_in_cells.view());
+  m_acc_mem_adv->setReadMostly(m_node_index_in_faces.view());
   
   // CellLocalId
-  mem_adv_set_read_mostly(allCells().view().localIds(), device);
-  mem_adv_set_read_mostly(ownCells().view().localIds(), device);
+  m_acc_mem_adv->setReadMostly(allCells().view().localIds());
+  m_acc_mem_adv->setReadMostly(ownCells().view().localIds());
 
   // NodeLocalId
-  mem_adv_set_read_mostly(allNodes().view().localIds(), device);
-  mem_adv_set_read_mostly(ownNodes().view().localIds(), device);
+  m_acc_mem_adv->setReadMostly(allNodes().view().localIds());
+  m_acc_mem_adv->setReadMostly(ownNodes().view().localIds());
 
   // FaceLocalId
-  mem_adv_set_read_mostly(allFaces().view().localIds(), device);
-  mem_adv_set_read_mostly(ownFaces().view().localIds(), device);
+  m_acc_mem_adv->setReadMostly(allFaces().view().localIds());
+  m_acc_mem_adv->setReadMostly(ownFaces().view().localIds());
 
   for(Integer dir(0) ; dir < mesh->dimension() ; ++dir) {
     auto cell_dm = cartesian_mesh->cellDirection(dir);
 
     // "Conseils" accés mémoire
-    mem_adv_set_read_mostly(cell_dm.innerCells().view().localIds(), device);
-    mem_adv_set_read_mostly(cell_dm.outerCells().view().localIds(), device);
-    mem_adv_set_read_mostly(cell_dm.allCells().view().localIds(), device);
+    m_acc_mem_adv->setReadMostly(cell_dm.innerCells().view().localIds());
+    m_acc_mem_adv->setReadMostly(cell_dm.outerCells().view().localIds());
+    m_acc_mem_adv->setReadMostly(cell_dm.allCells().view().localIds());
   }
-#endif
 }
 
 /*---------------------------------------------------------------------------*/
@@ -225,17 +226,11 @@ updateMultiEnv(IMeshMaterialMng* mesh_material_mng) {
   // disposition des environnements a changé sur le maillage
   computeMultiEnvGlobalCellId(mesh_material_mng);
 
-#ifdef ARCANE_COMPILING_CUDA
-  debug() << "updateMultiEnv, mem advise";
   // "Conseils" utilisation de la mémoire unifiée
-  int device = -1;
-  cudaGetDevice(&device);
-
   ENUMERATE_ENV(ienv,mesh_material_mng){
     IMeshEnvironment* env = *ienv;
-    mem_adv_set_read_mostly(env->pureEnvItems().valueIndexes(), device);
+    m_acc_mem_adv->setReadMostly(env->pureEnvItems().valueIndexes());
   }
-#endif
 }
 
 /*---------------------------------------------------------------------------*/

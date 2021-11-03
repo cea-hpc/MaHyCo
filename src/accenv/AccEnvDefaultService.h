@@ -20,6 +20,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   ax::Runner& runner() override { return m_runner; }
   ax::RunQueue newQueue() override { return makeQueue(m_runner); }
 
+  AccMemAdviser* accMemAdv() override { return m_acc_mem_adv; }
+
   UnstructuredMeshConnectivityView& connectivityView() override { return m_connectivity_view; }
   const UnstructuredMeshConnectivityView& connectivityView() const override { return m_connectivity_view; }
   
@@ -45,6 +47,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
  protected:
   ax::Runner m_runner;
+  AccMemAdviser* m_acc_mem_adv=nullptr;
   UnstructuredMeshConnectivityView m_connectivity_view;
 
   UniqueArray<Int16> m_node_index_in_cells;

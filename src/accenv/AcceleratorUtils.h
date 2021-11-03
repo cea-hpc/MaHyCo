@@ -110,17 +110,35 @@ class MultiAsyncRunQueue {
   Integer m_nb_queue=0; //!< m_queues.size()
 };
 
+/*---------------------------------------------------------------------------*/
+/* "Conseiller" mémoire, permet de caractériser des accès mémoire            */
+/*---------------------------------------------------------------------------*/
+class AccMemAdviser {
+ public:
+  AccMemAdviser(bool enable=true) : 
+    m_enable(enable) {
 #ifdef ARCANE_COMPILING_CUDA
-/*---------------------------------------------------------------------------*/
-/* Pour indiquer que le contenu du tableau est accéder fréquemment           */
-/*---------------------------------------------------------------------------*/
-template<typename ViewType>
-void mem_adv_set_read_mostly(ViewType view, int device) {
-  if (view.size()) {
-    cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,device);
-  }
-}
+    if (m_enable) {
+      cudaGetDevice(&m_device);
+    }
 #endif
+  }
+  ~AccMemAdviser() {}
+
+  bool enable() const { return m_enable; }
+
+  template<typename ViewType>
+  void setReadMostly(ViewType view) {
+#ifdef ARCANE_COMPILING_CUDA
+    if (m_enable && view.size()) {
+      cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,m_device);
+    }
+#endif
+  }
+ private:
+  bool m_enable=true;
+  int m_device=-1;
+};
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

@@ -13,5 +13,8 @@
 	    dim="0" dump="false" need-sync="false" />
   </variables>
     
-	<options/>
+    <options>
+  <!-- - - - - - acc-mem-advise - - - - -->
+  <simple name="acc-mem-advise" type="bool" default="true"><description>Active/désactive tous les conseils mémoire (ie tous les appels à cudaMemAdvise).</description></simple>
+	</options>
 </service>

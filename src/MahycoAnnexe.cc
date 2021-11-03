@@ -170,6 +170,8 @@ _initEnvForAcc() {
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
     out_adiabatic_cst_env[env->id()] = adiabatic_cst;
   }
+
+  m_acc_env->accMemAdv()->setReadMostly(out_adiabatic_cst_env);
 }
 
 /**

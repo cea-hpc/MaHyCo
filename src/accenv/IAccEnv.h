@@ -20,6 +20,8 @@ class IAccEnv {
   virtual ax::Runner& runner() = 0;
   virtual ax::RunQueue newQueue() = 0;
 
+  virtual AccMemAdviser* accMemAdv() = 0;
+
   virtual UnstructuredMeshConnectivityView& connectivityView() = 0;
   virtual const UnstructuredMeshConnectivityView& connectivityView() const = 0;
 
