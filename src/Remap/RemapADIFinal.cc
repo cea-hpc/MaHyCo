@@ -79,6 +79,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   // Ici, la carte des environnements a changé
   m_acc_env->updateMultiEnv(mm);
 
+#if 0
   UniqueArray<Real> vol_nplus1(nb_env);
   UniqueArray<Real> density_env_nplus1(nb_env);
   UniqueArray<Real> internal_energy_env_nplus1(nb_env);
@@ -183,6 +184,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     Real energie_nplus1 = 0.;
     Real pseudo_nplus1 = 0.;
+    // Boucle A
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
       Integer index_env = ev.environmentId();  
@@ -198,6 +200,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     m_density[cell] = density_nplus1;
     // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
     // recalcul de la masse
+    // Boucle B
     m_cell_mass[cell] = m_euler_volume[cell] * density_nplus1;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
@@ -252,7 +255,248 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         exit(1);
       }
     } 
-  }   
+  }
+#else
+  auto queue = m_acc_env->newQueue();
+  {
+    auto command = makeCommand(queue);
+
+    const Real threshold = options()->threshold;
+
+    auto in_euler_volume = ax::viewIn(command, m_euler_volume);
+    auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
+    
+    auto out_cell_volume_g      = ax::viewOut(command, m_cell_volume.globalVariable());
+    auto out_density_g          = ax::viewOut(command, m_density.globalVariable());
+    auto out_pseudo_viscosity_g = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+    auto out_internal_energy_g  = ax::viewOut(command, m_internal_energy.globalVariable());
+    auto out_est_pure           = ax::viewOut(command, m_est_pure);
+
+    auto inout_est_mixte     = ax::viewInOut(command, m_est_mixte);
+    auto inout_cell_mass_g   = ax::viewInOut(command, m_cell_mass.globalVariable());
+
+    // Variables multi-environnement
+    MultiEnvVar<Real> menv_fracvol(m_fracvol, mm);
+    auto inout_menv_fracvol(menv_fracvol.span());
+
+    MultiEnvVar<Real> menv_mass_fraction(m_mass_fraction, mm);
+    auto inout_menv_mass_fraction(menv_mass_fraction.span());
+
+    MultiEnvVar<Real> menv_cell_mass(m_cell_mass, mm);
+    auto inout_menv_cell_mass(menv_cell_mass.span());
+
+    MultiEnvVar<Real> menv_pseudo_viscosity(m_pseudo_viscosity, mm);
+    auto inout_menv_pseudo_viscosity(menv_pseudo_viscosity.span());
+
+    MultiEnvVar<Real> menv_density(m_density, mm);
+    auto inout_menv_density(menv_density.span());
+
+    MultiEnvVar<Real> menv_internal_energy(m_internal_energy, mm);
+    auto inout_menv_internal_energy(menv_internal_energy.span());
+
+    // Pour décrire l'accés multi-env sur GPU
+    auto in_menv_cell(m_acc_env->multiEnvCellStorage()->viewIn(command));
+
+    command.addKernelName("moy") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
+    {
+      Real vol = in_euler_volume[cid];  // volume euler   
+      out_cell_volume_g[cid] = vol; // retour à la grille euler
+      Real volt = 0.;
+      Real masset = 0.;
+
+      // info() << " cell " << cell.localId() << " calcul des masses et volumes totales " 
+      //        << m_u_lagrange[cell][0] << " et " << m_u_lagrange[cell][1];
+      for (Integer index_env=0; index_env < nb_env; index_env++) { 
+        Real vol_nplus1 = in_u_lagrange[cid][index_env];
+        // somme des volumes
+        volt += vol_nplus1;
+        // somme des masses
+        masset += in_u_lagrange[cid][nb_env + index_env];
+      }
+      /*
+         info() << " cell " << cell.localId() << " fin des masses et volumes " << volt;*/
+      double volt_normalise = 0.;   
+      Real unsurvolt = 1./ volt;
+      // normalisation des volumes + somme 
+      for (Integer index_env=0; index_env < nb_env ; index_env++) { 
+        // vol_nplus1[index_env] *= vol / volt;
+        Real vol_nplus1_norm = in_u_lagrange[cid][index_env] * vol * unsurvolt;
+        volt_normalise += vol_nplus1_norm;
+      }
+      // info() << " cell " << cell.localId() << " fin des masses et volumes normalisées ";
+      double somme_frac = 0.;
+      Real unsurvol = 1. / vol;
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+        Integer index_env = in_menv_cell.envId(cid,ienv);
+
+        // Simplification : 
+        // in_u_lagrange[cid][index_env] *vol*unsurvolt*unsurvol == in_u_lagrange[cid][index_env] *unsurvolt
+        Real fvol = in_u_lagrange[cid][index_env] * unsurvolt;
+        if (fvol < threshold)
+          fvol = 0.;
+        inout_menv_fracvol.setValue(evi, fvol);
+        somme_frac += fvol;
+      }
+      // apres normamisation
+      Integer matcell(0);
+      Integer imatpure(-1);  
+      Real unsursomme_frac = 1. / somme_frac;
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+        Integer index_env = in_menv_cell.envId(cid,ienv);
+
+        Real fvol = inout_menv_fracvol[evi] * unsursomme_frac;
+        if (fvol > 0.) {
+          matcell++;
+          imatpure = index_env;
+        }
+        inout_menv_fracvol.setValue(evi, fvol);
+      }
+      if (matcell > 1) {
+        inout_est_mixte[cid] = 1;
+        out_est_pure[cid] = -1;
+      } else {
+        inout_est_mixte[cid] = 0;
+        out_est_pure[cid] = imatpure;
+      }
+
+      // on ne recalcule par les mailles à masses nulles - cas advection
+      // on enleve les petits fractions de volume aussi sur la fraction
+      // massique et on normalise
+      Real fmasset = 0.;
+      if (masset != 0.) {
+        Real unsurmasset = 1./  masset;
+        for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+          auto evi = in_menv_cell.envCell(cid,ienv);
+          Integer index_env = in_menv_cell.envId(cid,ienv);
+
+          // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
+          Real mass_frac = in_u_lagrange[cid][nb_env + index_env] * unsurmasset;
+          if (inout_menv_fracvol[evi] < threshold) {
+            mass_frac = 0.;
+          }
+          fmasset += mass_frac;
+          inout_menv_mass_fraction.setValue(evi, mass_frac);
+        }
+        if (fmasset!= 0.) {
+          Real unsurfmasset = 1. / fmasset;
+          for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+            auto evi = in_menv_cell.envCell(cid,ienv);
+
+            // m_mass_fraction[ev] /= fmasset;
+            Real mass_frac = inout_menv_mass_fraction[evi] * unsurfmasset;
+            inout_menv_mass_fraction.setValue(evi, mass_frac);
+          }
+        }
+      }
+      Real density_nplus1 = 0.;
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+        Integer index_env = in_menv_cell.envId(cid,ienv);
+
+        Real density_env_nplus1 = 0.;
+        Real fvol = inout_menv_fracvol[evi];
+        if (fvol > threshold) {
+          Real vol_nplus1_norm = in_u_lagrange[cid][index_env] * vol * unsurvolt;
+          density_env_nplus1 = in_u_lagrange[cid][nb_env + index_env] 
+            / vol_nplus1_norm;
+        }
+        // recuperation de la densite, se trouvait avant dans boucle B
+        inout_menv_density.setValue(evi, density_env_nplus1);
+
+        density_nplus1 += fvol * density_env_nplus1;
+        // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
+      }
+      // Ici, on fusionne 2 boucles pour ne pas utiliser un tableau internal_energy_env_nplus1[*]
+      //
+      // mise à jour des valeurs moyennes aux allCells
+      // densite
+      if (inout_est_mixte[cid])
+        out_density_g[cid] = density_nplus1; 
+      // density_nplus1 est la valeur moyenne,
+      // ne pas affecter dans le cas d'une maille pure sinon on n'aurait pas la valeur partielle
+
+      // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
+      // recalcul de la masse
+      // Rem : on n'a plus besoin de m_cell_mass.fill(0.0)
+      inout_cell_mass_g[cid] = in_euler_volume[cid] * density_nplus1;
+
+      Real energie_nplus1 = 0.;
+      Real pseudo_nplus1 = 0.;
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+        Integer index_env = in_menv_cell.envId(cid,ienv);
+
+        Real fvol      = inout_menv_fracvol[evi];
+        Real mass_frac = inout_menv_mass_fraction[evi];
+
+        // coeur boucle A
+        Real internal_energy_env_nplus1 = 0.;
+        if (fvol > threshold && in_u_lagrange[cid][nb_env + index_env] != 0.) {
+          internal_energy_env_nplus1 =
+            in_u_lagrange[cid][2 * nb_env + index_env] / in_u_lagrange[cid][nb_env + index_env];
+        }
+        // recuperation de l'energie, se trouvait avant dans boucle B
+        inout_menv_internal_energy.setValue(evi, internal_energy_env_nplus1);
+        // conservation energie totale
+        // delta_ec : energie specifique
+        // m_internal_energy_env[ev] += delta_ec;
+        // energie interne totale, se trouvait avant dans boucle B
+        energie_nplus1 += mass_frac * internal_energy_env_nplus1;
+
+        // coeur boucle B
+        inout_menv_cell_mass.setValue(evi, mass_frac * inout_cell_mass_g[cid]);
+        // recuperation de la pseudo projetee
+        // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
+        Real pseudo_visco = in_u_lagrange[cid][3 * nb_env + 4] * unsurvol;
+        inout_menv_pseudo_viscosity.setValue(evi, pseudo_visco);
+        pseudo_nplus1 += fvol * pseudo_visco;
+      }
+      // energie interne
+      out_internal_energy_g[cid] = energie_nplus1;
+      // pseudoviscosité
+      out_pseudo_viscosity_g[cid] = pseudo_nplus1;
+
+      // Boucle de "blindage" pas totalement portée
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+
+        if (inout_menv_density[evi] < 0. || inout_menv_internal_energy[evi] < 0.) {
+          // Comment gérer des messages d'erreur ou d'avertissement ?
+          /*
+          pinfo() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
+            << index_env;
+          pinfo() << " energie interne env " << m_internal_energy[ev] 
+            << " cell " << m_internal_energy[cell] ;
+          pinfo() << " densite env " << m_density[ev] 
+            << " cell " << m_density[cell] ;
+          pinfo() << " fraction vol env " << m_fracvol[ev];
+          pinfo() << " fraction massique env " <<  m_mass_fraction[ev];
+          */
+          inout_menv_internal_energy.setValue(evi, 0.);
+          inout_menv_density.setValue(evi, 0.);
+          inout_menv_fracvol.setValue(evi, 0.);
+          inout_menv_mass_fraction.setValue(evi, 0.);
+        }
+        // NAN sur GPU ? comment gérer l'arrêt du calcul ?
+        /*
+        if (m_density[ev] != m_density[ev] || m_internal_energy[ev] != m_internal_energy[ev]) {
+          pinfo() << " cell NAN " << cell.localId() << " --energy ou masse NAN "
+            << index_env;
+          pinfo() << " energie interne env " << m_internal_energy[ev] 
+            << " cell " << m_internal_energy[cell] ;
+          pinfo() << " densite env " << m_density[ev] 
+            << " cell " << m_density[cell] ;
+          pinfo() << " fraction vol env " << m_fracvol[ev];
+          pinfo() << " fraction massique env " <<  m_mass_fraction[ev];
+          exit(1);
+        }
+        */
+      }
+    };
+  }
+#endif
 
   auto queue_v = m_acc_env->newQueue();
   if (withDualProjection) {
