@@ -105,18 +105,21 @@ class MultiEnvCellViewIn {
   MultiEnvCellViewIn(ax::RunCommand& command, Integer max_nb_env,
       const VariableCellInteger& v_nb_env,
       const UniqueArray<Int16>& v_l_env_arrays_idx,
-      const VariableCellArrayInteger& v_l_env_values_idx) :
+      const VariableCellArrayInteger& v_l_env_values_idx,
+      const VariableCellInteger& v_env_id) :
     m_max_nb_env (max_nb_env),
     m_nb_env_in (ax::viewIn(command,v_nb_env)),
     m_l_env_arrays_idx_in (v_l_env_arrays_idx.constSpan()),
-    m_l_env_values_idx_in (ax::viewIn(command,v_l_env_values_idx))
+    m_l_env_values_idx_in (ax::viewIn(command,v_l_env_values_idx)),
+    m_env_id_in (ax::viewIn(command,v_env_id))
   {}
 
   ARCCORE_HOST_DEVICE MultiEnvCellViewIn(const MultiEnvCellViewIn& rhs) : 
     m_max_nb_env (rhs.m_max_nb_env),
     m_nb_env_in (rhs.m_nb_env_in),
     m_l_env_arrays_idx_in (rhs.m_l_env_arrays_idx_in),
-    m_l_env_values_idx_in (rhs.m_l_env_values_idx_in)
+    m_l_env_values_idx_in (rhs.m_l_env_values_idx_in),
+    m_env_id_in (rhs.m_env_id_in)
   {}
 
   ARCCORE_HOST_DEVICE Integer nbEnv(CellLocalId cid) const {
@@ -129,11 +132,18 @@ class MultiEnvCellViewIn {
         m_l_env_values_idx_in[cid][ienv]);
   }
 
+  ARCCORE_HOST_DEVICE Integer envId(CellLocalId cid, Integer ienv) const {
+    return (m_env_id_in[cid]>=0 ? 
+        m_env_id_in[cid] : 
+        m_l_env_arrays_idx_in[cid.localId()*m_max_nb_env+ienv]-1);
+  }
+
  protected:
   Integer m_max_nb_env;
   ax::VariableCellInt32InView m_nb_env_in;
   Span<const Int16> m_l_env_arrays_idx_in;
   ax::ItemVariableArrayInViewT<Cell,Int32> m_l_env_values_idx_in;
+  ax::VariableCellInt32InView m_env_id_in;
 };
 
 /*---------------------------------------------------------------------------*/
@@ -146,10 +156,8 @@ class MultiEnvCellStorage {
     m_max_nb_env (mm->environments().size()),
     m_nb_env(VariableBuildInfo(mm->mesh(), "NbEnv" , IVariable::PNoDump| IVariable::PNoNeedSync)),
     m_l_env_arrays_idx(platform::getAcceleratorHostMemoryAllocator()),
-    m_l_env_values_idx(VariableBuildInfo(mm->mesh(), "LEnvValuesIdx" , IVariable::PNoDump| IVariable::PNoNeedSync))
-#ifdef ARCANE_DEBUG
-    , m_env_id(VariableBuildInfo(mm->mesh(), "EnvId" , IVariable::PNoDump| IVariable::PNoNeedSync))
-#endif
+    m_l_env_values_idx(VariableBuildInfo(mm->mesh(), "LEnvValuesIdx" , IVariable::PNoDump| IVariable::PNoNeedSync)),
+    m_env_id(VariableBuildInfo(mm->mesh(), "EnvId" , IVariable::PNoDump| IVariable::PNoNeedSync))
   {
     m_l_env_arrays_idx.resize(m_max_nb_env*mm->mesh()->allCells().size());
     acc_mem_adv->setReadMostly(m_l_env_arrays_idx.view());
@@ -241,7 +249,7 @@ class MultiEnvCellStorage {
 
   //! Vue sur le stockage pour utilisation en lecture sur GPU
   MultiEnvCellViewIn viewIn(ax::RunCommand& command) {
-    return MultiEnvCellViewIn(command, m_max_nb_env, m_nb_env, m_l_env_arrays_idx, m_l_env_values_idx);
+    return MultiEnvCellViewIn(command, m_max_nb_env, m_nb_env, m_l_env_arrays_idx, m_l_env_values_idx, m_env_id);
   }
 
  protected:
@@ -250,9 +258,7 @@ class MultiEnvCellStorage {
   VariableCellInteger m_nb_env;  //! Nb d'env par maille
   UniqueArray<Int16> m_l_env_arrays_idx; //! liste des indexes des env par maille
   VariableCellArrayInteger m_l_env_values_idx;
-#ifdef ARCANE_DEBUG
   VariableCellInteger m_env_id;
-#endif
 };
 
 #endif
