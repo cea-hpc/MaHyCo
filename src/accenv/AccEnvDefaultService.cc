@@ -161,31 +161,37 @@ computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << "computeMultiEnvGlobalCellId";
 
+  ParallelLoopOptions options;
+  options.setPartitioner(ParallelLoopOptions::Partitioner::Auto);
+
   // Calcul des cell_id globaux 
-  CellToAllEnvCellConverter all_env_cell_converter(mesh_material_mng);
-  ENUMERATE_CELL(icell, allCells()){
-    Cell cell = * icell;
-    Integer cell_id = cell.localId();
-    m_global_cell[cell] = cell_id;
-    AllEnvCell all_env_cell = all_env_cell_converter[cell];
-    if (all_env_cell.nbEnvironment() !=1) {
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;
-        m_global_cell[ev] = cell_id;
-      }
-      // Maille mixte ou vide,
-      // Si mixte, contient l'opposé du nombre d'environnements+1
-      // Si vide, vaut -1
-      m_env_id[icell] = -all_env_cell.nbEnvironment()-1;
-    } else {
-      // Maille pure, cette boucle est de taille 1
-      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        EnvCell ev = *ienvcell;
-        // Cette affectation n'aura lieu qu'une fois
-        m_env_id[icell] = ev.environmentId();
+  arcaneParallelForeach(allCells(), options, [&](CellVectorView cells) {
+    CellToAllEnvCellConverter all_env_cell_converter(mesh_material_mng);
+    ENUMERATE_CELL(icell, cells)
+    {
+      Cell cell = * icell;
+      Integer cell_id = cell.localId();
+      m_global_cell[cell] = cell_id;
+      AllEnvCell all_env_cell = all_env_cell_converter[cell];
+      if (all_env_cell.nbEnvironment() !=1) {
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          EnvCell ev = *ienvcell;
+          m_global_cell[ev] = cell_id;
+        }
+        // Maille mixte ou vide,
+        // Si mixte, contient l'opposé du nombre d'environnements+1
+        // Si vide, vaut -1
+        m_env_id[icell] = -all_env_cell.nbEnvironment()-1;
+      } else {
+        // Maille pure, cette boucle est de taille 1
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          EnvCell ev = *ienvcell;
+          // Cette affectation n'aura lieu qu'une fois
+          m_env_id[icell] = ev.environmentId();
+        }
       }
     }
-  }
+  });
 
   m_menv_cell->buildStorage(m_runner, m_global_cell);
 
