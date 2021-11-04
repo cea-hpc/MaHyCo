@@ -22,6 +22,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   debug() << " Entree dans remapVariables";
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
+  PROF_ACC_BEGIN("cellStatus");
+#if 0
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
   Int32UniqueArray cells_to_remove;
@@ -73,8 +75,106 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     
   }
+#else
+  // Par environnement, on détermine si une maille :
+  //  - doit être ajouté à l'env : +1
+  //  - doit être retiré de l'env : -1
+  //  - ne change pas de status
+  const Real threshold = options()->threshold;
+  ConstArrayView<IMeshEnvironment*> envs = mm->environments();
+  auto queue_arm = m_acc_env->newQueue();
+
+  for (Integer index_env=0; index_env < nb_env ; index_env++) 
+  { 
+    auto command = makeCommand(queue_arm);
+    
+    auto in_euler_volume = ax::viewIn(command, m_euler_volume);
+    auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
+
+    auto out_cell_status = ax::viewOut(command, m_cell_status); // var tempo
+ 
+    // Pour décrire l'accés multi-env sur GPU
+    auto in_menv_cell(m_acc_env->multiEnvCellStorage()->viewIn(command));
+
+    command.addKernelName("add_rm") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
+    {
+      Real fvol = in_u_lagrange[cid][index_env] / in_euler_volume[cid];
+
+      // Recherche de l'appartenance de la maille à l'env index_env
+      bool cell_in_env = false;
+      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
+        auto evi = in_menv_cell.envCell(cid,ienv);
+        Integer index_env_loc = in_menv_cell.envId(cid,ienv);
+        if (index_env_loc == index_env)
+          cell_in_env = true;
+      }
+
+      Integer cell_status = 0; // par défaut, le status de la maille ne change pas
+      if (fvol < threshold && cell_in_env) {
+        cell_status = -1; // maille à retirer de l'env
+      } else if (fvol > threshold && !cell_in_env) {
+        // verification que le volume normaliseé fournit une fraction de volume au-dessus du threshold             
+        Real volt(0.);
+        for (Integer index_env_loc=0; index_env_loc < nb_env; index_env_loc++) { 
+          // somme des volumes
+          volt += in_u_lagrange[cid][index_env_loc];
+        }
+        // Simplification :
+        // (m_u_lagrange[icell][index_env]* m_euler_volume[icell] /volt)/m_euler_volume[icell]
+        //  == m_u_lagrange[icell][index_env]/volt
+        Real fvol_ev_apres_normalisation = in_u_lagrange[cid][index_env] / volt;
+        if (fvol_ev_apres_normalisation > threshold
+            && in_u_lagrange[cid][nb_env + index_env] != 0.) {
+          cell_status = +1; // maille à ajouter à l'env
+        }
+      }
+      out_cell_status[cid] = cell_status;
+    };
+
+    // On revient sur CPU pour lire m_cell_status et créer les listes de mailles à ajouter/supprimer
+    // Pb : l'ajout est sérialisé
+    IMeshEnvironment* env = envs[index_env];
+    CellGroup env_cells = env->cells();
+
+    Int32UniqueArray cells_to_add;
+    Int32UniqueArray cells_to_remove;
+
+    ENUMERATE_CELL(icell, allCells()){
+      Integer cell_status = m_cell_status[icell];
+      if (cell_status < 0) 
+      {
+        cells_to_remove.add(icell.localId());
+        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+      } 
+      else if (cell_status > 0) 
+      {
+        cells_to_add.add(icell.localId());
+        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
+          << " ajoutée dans l'env apres normalisation" << env->name();
+        debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
+        /* debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell]; */
+        debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
+      }
+    }
+    
+    if (!cells_to_add.empty()) {
+      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
+        << " ITERATION " << globalIteration();
+      env_cells.addItems(cells_to_add);
+    }
+    if (!cells_to_remove.empty()){
+      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
+        << " ITERATION " << globalIteration();
+      env_cells.removeItems(cells_to_remove);
+    }
+  }
+#endif
+  PROF_ACC_END;
+
+  PROF_ACC_BEGIN("forceRecompute");
   // finalisation avant remplissage des variables
   mm->forceRecompute();
+  PROF_ACC_END;
 
   // Ici, la carte des environnements a changé
   m_acc_env->updateMultiEnv(mm);
