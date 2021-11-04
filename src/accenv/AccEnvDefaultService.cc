@@ -187,7 +187,7 @@ computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
     }
   }
 
-  m_menv_cell->buildStorage(m_global_cell);
+  m_menv_cell->buildStorage(m_runner, m_global_cell);
 
   checkMultiEnvGlobalCellId(mesh_material_mng);
   PROF_ACC_END;

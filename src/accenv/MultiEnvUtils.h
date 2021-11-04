@@ -8,7 +8,6 @@
 #include "arcane/accelerator/Views.h"
 #include <arcane/IMesh.h>
 #include <arcane/VariableBuildInfo.h>
-#include <arcane/VariableView.h>
 
 #include <arcane/materials/ComponentPartItemVectorView.h>
 #include "arcane/materials/IMeshEnvironment.h"
@@ -165,64 +164,92 @@ class MultiEnvCellStorage {
   }
 
   //! Remplissage
-  void buildStorage(Materials::MaterialVariableCellInteger& v_global_cell) {
-    ENUMERATE_CELL(icell, m_mesh_material_mng->mesh()->allCells()){
-      // Init du nb d'env par maille qui va être calculé à la boucle suivante
-      m_nb_env[icell] = 0;
+  void buildStorage(ax::Runner& runner, Materials::MaterialVariableCellInteger& v_global_cell) {
+    PROF_ACC_BEGIN(__FUNCTION__);
+
+    auto queue = makeQueue(runner);
+    {
+      auto command = makeCommand(queue);
+
+      auto inout_nb_env = ax::viewInOut(command, m_nb_env);
+
+      command << RUNCOMMAND_ENUMERATE(Cell, cid, m_mesh_material_mng->mesh()->allCells()){
+        // Init du nb d'env par maille qui va être calculé à la boucle suivante
+        inout_nb_env[cid] = 0;
+      };
     }
 
-    auto in_nb_env  = Arcane::viewIn(m_nb_env);
-    auto out_nb_env = Arcane::viewOut(m_nb_env);
-    auto out_l_env_pos = Arcane::viewOut(m_l_env_values_idx);
-
+    Integer max_nb_env = m_max_nb_env; // on ne peut pas utiliser un attribut dans le kernel
     ENUMERATE_ENV(ienv, m_mesh_material_mng) {
       IMeshEnvironment* env = *ienv;
       Integer env_id = env->id();
 
       // Mailles mixtes
-      Span<const Integer> in_global_cell(envView(v_global_cell, env));
+      {
+        auto command = makeCommand(queue);
 
-      Integer nb_imp = env->impureEnvItems().nbItem();
-      for(Integer imix = 0 ; imix < nb_imp ; ++imix) {
-        CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+        auto inout_nb_env = ax::viewInOut(command, m_nb_env);
+        auto out_l_env_values_idx = ax::viewOut(command, m_l_env_values_idx);
+        auto out_l_env_arrays_idx = m_l_env_arrays_idx.span();
 
-        auto index_cell = in_nb_env[cid];
+        Span<const Integer> in_global_cell(envView(v_global_cell, env));
 
-        // On relève le numéro de l'environnement 
-        // et l'indice de la maille dans la liste de mailles mixtes env
-        m_l_env_arrays_idx[cid*m_max_nb_env+index_cell] = env_id+1; // décalage +1 car 0 est pris pour global
-        out_l_env_pos[cid][index_cell] = imix;
+        Integer nb_imp = env->impureEnvItems().nbItem();
+        command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+          auto [imix] = iter(); // imix \in [0,nb_imp[
+          CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
-        out_nb_env[cid] = index_cell+1; // ++ n'est pas supporté
+          Integer index_cell = inout_nb_env[cid];
+
+          // On relève le numéro de l'environnement 
+          // et l'indice de la maille dans la liste de mailles mixtes env
+          out_l_env_arrays_idx[cid*max_nb_env+index_cell] = env_id+1; // décalage +1 car 0 est pris pour global
+          out_l_env_values_idx[cid][index_cell] = imix;
+
+          inout_nb_env[cid] = index_cell+1; // ++ n'est pas supporté
+        };
       }
 
       // Mailles pures
-      // Pour les mailles pures, valueIndexes() est la liste des ids locaux des mailles
-      Span<const Int32> in_cell_id(env->pureEnvItems().valueIndexes());
+      {
+        auto command = makeCommand(queue);
 
-      // Nombre de mailles pures de l'environnement
-      Integer nb_pur = env->pureEnvItems().nbItem();
+        const auto& pure_env_items = env->pureEnvItems();
+        // Pour les mailles pures, valueIndexes() est la liste des ids locaux des mailles
+        Span<const Int32> in_cell_id(pure_env_items.valueIndexes());
 
-      for(Integer ipur = 0 ; ipur < nb_pur ; ++ipur) {
-        CellLocalId cid(in_cell_id[ipur]); // accés indirect à la valeur de la maille
+        auto inout_nb_env = ax::viewInOut(command, m_nb_env);
+        auto out_l_env_values_idx = ax::viewOut(command, m_l_env_values_idx);
+        auto out_l_env_arrays_idx = m_l_env_arrays_idx.span();
 
-        auto index_cell = in_nb_env[cid];
-        ARCANE_ASSERT(index_cell==0, ("Maille pure mais index_cell!=0"));
+        // Nombre de mailles pures de l'environnement
+        Integer nb_pur = pure_env_items.nbItem();
 
-        m_l_env_arrays_idx[cid*m_max_nb_env+index_cell] = 0; // 0 référence le tableau global
-        out_l_env_pos[cid][index_cell] = cid.localId();
+        command << RUNCOMMAND_LOOP1(iter, nb_pur) {
+          auto [ipur] = iter(); // ipur \in [0,nb_pur[
+          CellLocalId cid(in_cell_id[ipur]); // accés indirect à la valeur de la maille
 
-        // Equivalent à affecter 1
-        out_nb_env[cid] = index_cell+1; // ++ n'est pas supporté
+          Integer index_cell = inout_nb_env[cid];
+#ifndef ARCCORE_DEVICE_CODE
+          ARCANE_ASSERT(index_cell==0, ("Maille pure mais index_cell!=0"));
+#endif
+          out_l_env_arrays_idx[cid*max_nb_env+index_cell] = 0; // 0 référence le tableau global
+          out_l_env_values_idx[cid][index_cell] = cid.localId();
+
+          // Equivalent à affecter 1
+          inout_nb_env[cid] = index_cell+1; // ++ n'est pas supporté
+        };
       }
     }
 
     checkStorage(v_global_cell);
+    PROF_ACC_END;
   }
 
   //! Verification
   void checkStorage(Materials::MaterialVariableCellInteger& v_global_cell) {
 #ifdef ARCANE_DEBUG
+    PROF_ACC_BEGIN(__FUNCTION__);
     // m_env_id doit être calculé
     MultiEnvVar<Integer> menv_global_cell(v_global_cell, m_mesh_material_mng);
     auto in_menv_global_cell(menv_global_cell.span());
@@ -244,6 +271,7 @@ class MultiEnvCellStorage {
         ARCANE_ASSERT(cid_bis==cid, ("cid_bis!=cid"));
       }
     }
+    PROF_ACC_END;
 #endif
   }
 
