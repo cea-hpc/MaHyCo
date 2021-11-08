@@ -439,12 +439,6 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  if ( options()->withProjection) {
-    // Coûte cher, ne devrait être fait que quand la carte des environnements évolue
-    // Se fait sur l'hôte pendant que les recopies opèrent sur l'accélérateur
-    m_acc_env->updateMultiEnv(mm);
-  }
-
   queue_cell.barrier();
   menv_queue->waitAllQueues();
   queue_node.barrier();

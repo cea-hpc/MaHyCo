@@ -118,6 +118,15 @@
 	    dim="0" dump="true" need-sync="true" /> 
     <variable field-name="front_flux_mass" name="FrontFluxMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" /> 
+    <!-- GLOBAL CELL	 -->
+    <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
+        dim="0" material="true" dump="false" need-sync="false" />
+    <!-- ENV ID -->
+    <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
+        dim="0" dump="false" need-sync="false" />
+    <!-- CELL STATUS -->
+    <variable field-name="cell_status" name="CellStatus" data-type="integer" item-kind="cell"
+        dim="0" dump="false" need-sync="false" />
 </variables>
 
 <options>

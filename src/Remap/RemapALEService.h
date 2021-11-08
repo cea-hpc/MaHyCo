@@ -34,6 +34,7 @@
 #include "cartesian/interface/NodeDirectionMng.h"
 #include "cartesian/interface/CartesianConnectivity.h"
 
+#include "accenv/IAccEnv.h"
 #include "accenv/AcceleratorUtils.h"
 
 
@@ -48,8 +49,7 @@ class RemapALEService
 {
 public:
   /** Constructeur de la classe */
-  RemapALEService(const ServiceBuildInfo & sbi)
-    : ArcaneRemapALEObject(sbi) {}
+  RemapALEService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
   virtual ~RemapALEService() {};
@@ -97,7 +97,8 @@ private:
   
   Real m_arithmetic_thresold = 1.e-300;
   
-  
+  // Pour l'utilisation des accélérateurs
+  IAccEnv* m_acc_env=nullptr;
 };
 
 #endif

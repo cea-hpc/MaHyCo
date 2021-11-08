@@ -20,6 +20,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   ax::Runner& runner() override { return m_runner; }
   ax::RunQueue newQueue() override { return makeQueue(m_runner); }
 
+  AccMemAdviser* accMemAdv() override { return m_acc_mem_adv; }
+
   UnstructuredMeshConnectivityView& connectivityView() override { return m_connectivity_view; }
   const UnstructuredMeshConnectivityView& connectivityView() const override { return m_connectivity_view; }
   
@@ -38,6 +40,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
   void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
 
+  MultiEnvCellStorage* multiEnvCellStorage() override { return m_menv_cell; }
+
  protected:
 
   void _computeNodeIndexInCells();
@@ -45,10 +49,14 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
  protected:
   ax::Runner m_runner;
+  AccMemAdviser* m_acc_mem_adv=nullptr;
   UnstructuredMeshConnectivityView m_connectivity_view;
 
   UniqueArray<Int16> m_node_index_in_cells;
   UniqueArray<Int16> m_node_index_in_faces;
+
+  //! Description/accès aux mailles multi-env
+  MultiEnvCellStorage* m_menv_cell=nullptr;
 
   // Les queues asynchrones d'exéution
   MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone

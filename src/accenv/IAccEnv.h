@@ -3,6 +3,7 @@
 
 #include <arcane/ItemTypes.h>
 #include "accenv/AcceleratorUtils.h"
+#include "accenv/MultiEnvUtils.h"
 #include "arcane/UnstructuredMeshConnectivity.h"
 #include "arcane/materials/IMeshMaterialMng.h"
 #include "cartesian/interface/ICartesianMesh.h"
@@ -19,6 +20,8 @@ class IAccEnv {
 
   virtual ax::Runner& runner() = 0;
   virtual ax::RunQueue newQueue() = 0;
+
+  virtual AccMemAdviser* accMemAdv() = 0;
 
   virtual UnstructuredMeshConnectivityView& connectivityView() = 0;
   virtual const UnstructuredMeshConnectivityView& connectivityView() const = 0;
@@ -37,6 +40,8 @@ class IAccEnv {
   virtual void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
   virtual void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
   virtual void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
+
+  virtual MultiEnvCellStorage* multiEnvCellStorage() = 0;
 };
 
 #endif

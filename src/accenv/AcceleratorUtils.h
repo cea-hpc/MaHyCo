@@ -9,12 +9,11 @@
 #include "arcane/accelerator/RunCommandLoop.h"
 #include "arcane/accelerator/RunCommandEnumerate.h"
 
-#include "arcane/materials/IMeshEnvironment.h"
-
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
 /*---------------------------------------------------------------------------*/
 
+using namespace Arcane;
 namespace ax = Arcane::Accelerator;
 
 /*---------------------------------------------------------------------------*/
@@ -50,18 +49,6 @@ namespace ax = Arcane::Accelerator;
 #endif
 
 #endif
-
-/*---------------------------------------------------------------------------*/
-/* Pour créer une vue sur les valeurs d'un environnement                     */
-/*---------------------------------------------------------------------------*/
-using namespace Arcane;
-using namespace Arcane::Materials;
-
-template<typename value_type>
-ArrayView<value_type> envView(CellMaterialVariableScalarRef<value_type>& var_menv, IMeshEnvironment* env) {
-  // Pour rappel, [0] fait référence à .globalVariable() d'où le +1
-  return var_menv._internalValue()[env->id()+1];
-}
 
 /*---------------------------------------------------------------------------*/
 /* Pour gérer un nombre dynamique de RunQueue asynchrones                    */
@@ -110,17 +97,35 @@ class MultiAsyncRunQueue {
   Integer m_nb_queue=0; //!< m_queues.size()
 };
 
+/*---------------------------------------------------------------------------*/
+/* "Conseiller" mémoire, permet de caractériser des accès mémoire            */
+/*---------------------------------------------------------------------------*/
+class AccMemAdviser {
+ public:
+  AccMemAdviser(bool enable=true) : 
+    m_enable(enable) {
 #ifdef ARCANE_COMPILING_CUDA
-/*---------------------------------------------------------------------------*/
-/* Pour indiquer que le contenu du tableau est accéder fréquemment           */
-/*---------------------------------------------------------------------------*/
-template<typename ViewType>
-void mem_adv_set_read_mostly(ViewType view, int device) {
-  if (view.size()) {
-    cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,device);
-  }
-}
+    if (m_enable) {
+      cudaGetDevice(&m_device);
+    }
 #endif
+  }
+  ~AccMemAdviser() {}
+
+  bool enable() const { return m_enable; }
+
+  template<typename ViewType>
+  void setReadMostly(ViewType view) {
+#ifdef ARCANE_COMPILING_CUDA
+    if (m_enable && view.size()) {
+      cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,m_device);
+    }
+#endif
+  }
+ private:
+  bool m_enable=true;
+  int m_device=-1;
+};
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
