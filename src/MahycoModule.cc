@@ -212,7 +212,7 @@ computeCellMass()
   }
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
-    ENUMERATE_ENVCELL(ienvcell,env){
+    ENUMERATE_ENVCELL(ienvcell,env) {
       EnvCell ev = *ienvcell;
       Cell cell = ev.globalCell();
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
@@ -1246,7 +1246,7 @@ ARCCORE_HOST_DEVICE inline void compute_density_tau(Real density_n,
     Real& density, Real& tau_density)
 {
   // nouvelle density
-  density = cell_mass / cell_volume;;
+  density = cell_mass / cell_volume;
   // volume specifique de l'environnement au temps n+1/2
   tau_density = 
     0.5 * (1.0 / density_n + 1.0 / density);
