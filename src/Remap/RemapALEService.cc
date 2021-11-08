@@ -1,6 +1,13 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapALEService.h"
+#include <arcane/ServiceBuilder.h>
 
+/** Constructeur de la classe */
+RemapALEService::RemapALEService(const ServiceBuildInfo & sbi)
+  : ArcaneRemapALEObject(sbi) {
+  m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
+}
+ 
 Integer RemapALEService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapALEService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapALEService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
@@ -113,6 +120,8 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
      } 
      // finalisation avant remplissage des variables
      mm->forceRecompute();
+     // Ici, la carte des environnements a changé
+     m_acc_env->updateMultiEnv(mm);
      
      m_fracvol.fill(0.0);
      
