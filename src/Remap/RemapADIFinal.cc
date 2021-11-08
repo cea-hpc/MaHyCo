@@ -23,6 +23,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   PROF_ACC_BEGIN("cellStatus");
+
+  bool to_add_rm_cells = false;
 #if 0
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
@@ -67,15 +69,24 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
         << " ITERATION " << globalIteration();
       env_cells.addItems(cells_to_add);
+      to_add_rm_cells = true;
     }
     if (!cells_to_remove.empty()){
       pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
         << " ITERATION " << globalIteration();
       env_cells.removeItems(cells_to_remove);
+      to_add_rm_cells = true;
     }
     
   }
 #else
+  ParallelLoopOptions mtopt;
+  mtopt.setPartitioner(ParallelLoopOptions::Partitioner::Static);
+
+  Integer max_nb_task = TaskFactory::nbAllowedThread();
+  UniqueArray< Int32UniqueArray > cid_to_add_per_task(max_nb_task);
+  UniqueArray< Int32UniqueArray > cid_to_rm_per_task(max_nb_task);
+
   // Par environnement, on détermine si une maille :
   //  - doit être ajouté à l'env : +1
   //  - doit être retiré de l'env : -1
@@ -132,52 +143,87 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     };
 
     // On revient sur CPU pour lire m_cell_status et créer les listes de mailles à ajouter/supprimer
-    // Pb : l'ajout est sérialisé
+    // On multithread le traitement
     IMeshEnvironment* env = envs[index_env];
-    CellGroup env_cells = env->cells();
 
-    Int32UniqueArray cells_to_add;
-    Int32UniqueArray cells_to_remove;
-
-    ENUMERATE_CELL(icell, allCells()){
-      Integer cell_status = m_cell_status[icell];
-      if (cell_status < 0) 
-      {
-        cells_to_remove.add(icell.localId());
-        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
-      } 
-      else if (cell_status > 0) 
-      {
-        cells_to_add.add(icell.localId());
-        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
-          << " ajoutée dans l'env apres normalisation" << env->name();
-        debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
-        /* debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell]; */
-        debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
+    arcaneParallelForeach(allCells(), mtopt, [&](CellVectorView cells) {
+      // Chaque tache met à jour ses listes spécifiques
+      Integer task_id = TaskFactory::currentTaskIndex();
+      Int32UniqueArray& cid_to_add    = cid_to_add_per_task[task_id];
+      Int32UniqueArray& cid_to_remove = cid_to_rm_per_task [task_id];
+  
+      ENUMERATE_CELL(icell, cells){
+        Integer cell_status = m_cell_status[icell];
+        if (cell_status < 0) 
+        {
+          cid_to_remove.add(icell.localId());
+          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+        } 
+        else if (cell_status > 0) 
+        {
+          cid_to_add.add(icell.localId());
+          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
+            << " ajoutée dans l'env apres normalisation" << env->name();
+          debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
+          /* debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell]; */
+          debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
+        }
       }
+    });
+
+    // En séquentiel, on va ajouter les listes de toutes les taches
+    // On précalcule les tailles pour réduire le nb d'alloc dynamiques
+    Integer ncells_to_add=0, ncells_to_rm=0; 
+    for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
+      ncells_to_add += cid_to_add_per_task[itask].size();
+      ncells_to_rm  += cid_to_rm_per_task [itask].size();
     }
-    
-    if (!cells_to_add.empty()) {
-      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
-        << " ITERATION " << globalIteration();
+    if (ncells_to_add) {
+      Int32UniqueArray cells_to_add;
+      cells_to_add.reserve(ncells_to_add); // but : ne faire qu'une allocation
+      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
+        cells_to_add.addRange(cid_to_add_per_task[itask]);
+        cid_to_add_per_task[itask].clear(); // Nettoyage pour le prochain environnement
+      }
+      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
+      std::sort(cells_to_add.data(), cells_to_add.data()+cells_to_add.size());
+
+      // On ajoute réellement les items à l'environnement
+      CellGroup env_cells = env->cells();
+      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
       env_cells.addItems(cells_to_add);
+      to_add_rm_cells = true;
     }
-    if (!cells_to_remove.empty()){
-      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
-        << " ITERATION " << globalIteration();
+    if (ncells_to_rm) {
+      Int32UniqueArray cells_to_remove;
+      cells_to_remove.reserve(ncells_to_rm); // but : ne faire qu'une allocation
+      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
+        cells_to_remove.addRange(cid_to_rm_per_task[itask]);
+        cid_to_rm_per_task[itask].clear(); // Nettoyage pour le prochain environnement
+      }
+      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
+      std::sort(cells_to_remove.data(), cells_to_remove.data()+cells_to_remove.size());
+
+      // On retire réellement les items de l'environnement
+      CellGroup env_cells = env->cells();
+      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
       env_cells.removeItems(cells_to_remove);
+      to_add_rm_cells = true;
     }
   }
 #endif
   PROF_ACC_END;
 
-  PROF_ACC_BEGIN("forceRecompute");
-  // finalisation avant remplissage des variables
-  mm->forceRecompute();
-  PROF_ACC_END;
+  if (to_add_rm_cells) 
+  {
+    PROF_ACC_BEGIN("forceRecompute");
+    // finalisation avant remplissage des variables
+    mm->forceRecompute();
+    PROF_ACC_END;
 
-  // Ici, la carte des environnements a changé
-  m_acc_env->updateMultiEnv(mm);
+    // Ici, la carte des environnements a changé
+    m_acc_env->updateMultiEnv(mm);
+  }
 
 #if 0
   UniqueArray<Real> vol_nplus1(nb_env);
