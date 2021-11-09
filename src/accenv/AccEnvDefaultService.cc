@@ -18,7 +18,8 @@ using namespace Arcane;
 AccEnvDefaultService::AccEnvDefaultService(const ServiceBuildInfo & sbi) : 
   ArcaneAccEnvDefaultObject(sbi), 
   m_node_index_in_cells(platform::getAcceleratorHostMemoryAllocator()),
-  m_node_index_in_faces(platform::getAcceleratorHostMemoryAllocator())
+  m_node_index_in_faces(platform::getAcceleratorHostMemoryAllocator()),
+  m_face_index_in_cells(platform::getAcceleratorHostMemoryAllocator())
 {
 }
 
@@ -108,6 +109,38 @@ _computeNodeIndexInFaces()
 }
 
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+void AccEnvDefaultService::
+_computeFaceIndexInCells() {
+  debug() << "_computeFaceIndexInCells";
+  // Une face est connectée au maximum à max_face_cell mailles
+  // Calcul pour chaque noeud son index dans chacune des
+  // mailles à laquelle il est connecté.
+  FaceGroup faces = allFaces();
+  Integer nb_face = faces.size();
+  const Integer max_face_cell = this->maxFaceCell();
+  m_face_index_in_cells.resize(max_face_cell*nb_face);
+  m_face_index_in_cells.fill(-1);
+  auto face_cell_cty = this->connectivityView().faceCell();
+  auto cell_face_cty = this->connectivityView().cellFace();
+  ENUMERATE_FACE(ifac,faces){
+    FaceLocalId face = *ifac;
+    Int32 index = 0; 
+    Int32 first_pos = face.localId() * max_face_cell;
+    for( CellLocalId cell : face_cell_cty.cells(face) ){
+      Int16 face_index_in_cell = 0; 
+      for( FaceLocalId cell_face : cell_face_cty.faces(cell) ){
+        if (cell_face==face)
+          break;
+        ++face_index_in_cell;
+      }    
+      m_face_index_in_cells[first_pos + index] = face_index_in_cell;
+      ++index;
+    }    
+  }
+}
+
+/*---------------------------------------------------------------------------*/
 /* Pour préparer des données relatives au maillage                           */
 /*---------------------------------------------------------------------------*/
 
@@ -124,11 +157,13 @@ initMesh(ICartesianMesh* cartesian_mesh)
   // Permet la lecture des cqs quand on boucle sur les noeuds
   _computeNodeIndexInCells();
   _computeNodeIndexInFaces();
+  _computeFaceIndexInCells();
 
   // "Conseils" utilisation de la mémoire unifiée
 
   m_acc_mem_adv->setReadMostly(m_node_index_in_cells.view());
   m_acc_mem_adv->setReadMostly(m_node_index_in_faces.view());
+  m_acc_mem_adv->setReadMostly(m_face_index_in_cells.view());
   
   // CellLocalId
   m_acc_mem_adv->setReadMostly(allCells().view().localIds());

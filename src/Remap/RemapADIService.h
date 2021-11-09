@@ -104,6 +104,12 @@ public:
     * Est publique car fait appel à l'accélérateur
     **/
    void computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars_to_project);
+   
+   /**
+    * Spécialisation de computeUremap dans le cas penteborne=0
+    * Est publique car fait appel à l'accélérateur
+    **/
+   void computeUremap_PBorn0(Integer idir, Integer nb_vars_to_project, Integer nb_env);
 
 private:
     

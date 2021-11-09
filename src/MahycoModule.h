@@ -368,6 +368,13 @@ class MahycoModule
    */
 
   virtual void computeVariablesForRemap();
+  
+  /**
+   * Spécialisation de computeVariablesForRemap dans le cas penteborne=0
+   * Est publique car fait appel à l'accélérateur
+   **/
+  void computeVariablesForRemap_PBorn0();
+  
   /**
    * point d'entree pour la phase de projection
    **/
