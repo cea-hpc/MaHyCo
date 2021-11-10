@@ -27,7 +27,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
   m_dual_grad_phi.fill(0.0);
+  
   if (options()->ordreProjection > 1) {
+#if 0
      ENUMERATE_NODE(inode, ndm.innerNodes()) {
       Node node = *inode;
       DirNode dir_node(ndm[inode]);
@@ -40,8 +42,87 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
 
       computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
     }
+#else
+     ENUMERATE_NODE(inode, ndm.innerNodes()) {
+      Node node = *inode;
+      DirNode dir_node(ndm[inode]);
+      Node backnode = dir_node.previous();
+      DirNode dir_backnode(ndm[backnode]);
+      Node backbacknode = dir_backnode.previous();
+      Node frontnode = dir_node.next();
+      DirNode dir_frontnode(ndm[frontnode]);
+      Node frontfrontnode = dir_frontnode.next();
+      
+      Real3 grad_front(0. , 0. , 0.);
+      Real3 grad_back(0. , 0. , 0.);
+      int limiter = options()->projectionLimiteurId;
+      
+      // gradient vitesse X selon la direction idir
+      grad_front[0] = (m_phi_dual_lagrange[frontnode][0] - m_phi_dual_lagrange[node][0]) /
+      (m_node_coord[frontnode][idir] - m_node_coord[node][idir]);
+      
+      grad_back[0] = (m_phi_dual_lagrange[node][0] - m_phi_dual_lagrange[backnode][0]) /
+      (m_node_coord[node][idir] - m_node_coord[backnode][idir]);
+      
+      // gradient vitesse Y selon la direction idir
+      grad_front[1] = (m_phi_dual_lagrange[frontnode][1] - m_phi_dual_lagrange[node][1]) /
+      (m_node_coord[frontnode][idir] - m_node_coord[node][idir]);
+      
+      grad_back[1] = (m_phi_dual_lagrange[node][1] - m_phi_dual_lagrange[backnode][1]) /
+      (m_node_coord[node][idir] - m_node_coord[backnode][idir]);
+      
+      // gradient vitesse Z selon la direction idir
+      grad_front[2] = (m_phi_dual_lagrange[frontnode][2] - m_phi_dual_lagrange[node][2]) /
+      (m_node_coord[frontnode][idir] - m_node_coord[node][idir]);
+      
+      grad_back[2] = (m_phi_dual_lagrange[node][2] - m_phi_dual_lagrange[backnode][2]) /
+      (m_node_coord[node][idir] - m_node_coord[backnode][idir]);
+      
+      // largeurs des mailles duales
+      Real hmoins, h0, hplus;
+      h0 = 0.5 * (m_node_coord[frontnode][idir]- m_node_coord[backnode][idir]);
+      if (backbacknode.localId() == -1) {
+        hmoins = 0.;
+        hplus = 0.5 * (m_node_coord[frontfrontnode][idir]- m_node_coord[node][idir]);
+      } else if (frontfrontnode.localId() == -1) {
+        hplus = 0.;
+        hmoins = 0.5 * (m_node_coord[node][idir] - m_node_coord[backbacknode][idir]);
+      } else {
+        hmoins = 0.5 * (m_node_coord[node][idir] - m_node_coord[backbacknode][idir]);
+        hplus = 0.5 * (m_node_coord[frontfrontnode][idir]- m_node_coord[node][idir]);
+      }
+
+      if (limiter < minmodG) {
+        // info() << " Passage gradient limite Classique ";
+        for (Integer ivar = 0; ivar < 3; ivar++) {
+          m_dual_grad_phi[node][ivar] = 0.;
+          if (grad_back[ivar] != 0. ) 
+            m_dual_grad_phi[node][ivar] += 0.5 *
+            fluxLimiter(limiter, 
+                        grad_front[ivar] / grad_back[ivar]) 
+            * grad_back[ivar];
+          if (grad_front[ivar] !=0.)
+            m_dual_grad_phi[node][ivar] += 0.5 *
+            fluxLimiter(limiter, 
+                        grad_back[ivar] / grad_front[ivar]) 
+            * grad_front[ivar];
+        }
+      } else {
+        // info() << " Passage gradient limite Genéralisé ";
+        for (Integer ivar = 0; ivar < 3; ivar++) {
+          m_dual_grad_phi[node][ivar] =
+          fluxLimiterG(limiter, grad_front[ivar], 
+                       grad_back[ivar], 
+                       m_phi_dual_lagrange[inode][ivar],
+                       m_phi_dual_lagrange[frontnode][ivar], m_phi_dual_lagrange[backnode][ivar],
+                       h0, hplus, hmoins);
+        }
+      }
+    }
+#endif
     m_dual_grad_phi.synchronize();
   }
+  
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   //m_back_flux_mass_env.fill(0.);
