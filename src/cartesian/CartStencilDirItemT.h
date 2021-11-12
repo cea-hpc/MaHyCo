@@ -158,6 +158,20 @@ class CartStencilDirItemT
   ARCCORE_HOST_DEVICE ItemIdType nextId() const {
     return this->operator()(+1);
   }
+  
+  /*
+   *  C'est pas beau, je n'arrive pas à utiliser l'opérateur (ilayer) ...
+   */ 
+  
+  //! Local id de l'item précédent et adjacent à itemId()
+  ARCCORE_HOST_DEVICE ItemIdType prev_previousId() const {
+    return this->operator()(-2);
+  }
+  
+  //! Local id de l'item suivant et adjacent à itemId()
+  ARCCORE_HOST_DEVICE ItemIdType next_nextId() const {
+    return this->operator()(+2);
+  }
 };
 
 /*---------------------------------------------------------------------------*/
