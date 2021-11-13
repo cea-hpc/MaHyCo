@@ -117,6 +117,11 @@ public:
     **/
    template<typename LimType>
    void computeDualGradPhi_LimC(Integer idir);
+   
+   /**
+    * fonction pour la phase de projection duales, déplacée de la partie private car fait appel à l'accélérateur
+    **/
+   void computeDualUremap(Integer idir, Integer nb_env);
 
 private:
     
@@ -134,10 +139,7 @@ private:
    **/
    void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
 
-  /**
-   * fonction pour la phase de projection duales
-   **/
-   void computeDualUremap(Integer idir, Integer nb_env);
+
   /**
    * synchronisation des valeurs aux noeuds 
    **/
