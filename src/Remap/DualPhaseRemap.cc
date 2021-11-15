@@ -31,6 +31,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
                    -0.5 * idir * (1 - idir)};  
   m_dual_grad_phi.fill(0.0);
   
+  auto queue = m_acc_env->newQueue();
+  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  
   if (options()->ordreProjection > 1) {
     
     if (options()->projectionLimiteurId < minmodG) {
@@ -61,37 +64,18 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_dual_grad_phi.synchronize();
   }
   
-  //m_back_flux_mass_env.fill(0.);
-//   ENUMERATE_NODE(inode, allNodes()){
-//     for (Integer index_env=0; index_env < nb_env; index_env++) {
-//       m_back_flux_mass_env[inode][index_env] =0.;
-//       m_front_flux_mass_env[inode][index_env] = 0.;
-//     }
-//     m_back_flux_mass[inode] = 0.;
-//     m_front_flux_mass[inode] = 0.;
-//   }
-  
-  auto queue = m_acc_env->newQueue();
-  {
-    auto command = makeCommand(queue);
-    
-    auto out_back_flux_mass      = ax::viewOut(command,m_back_flux_mass     );
-    auto out_front_flux_mass     = ax::viewOut(command,m_front_flux_mass    );
-    auto out_back_flux_mass_env  = ax::viewOut(command,m_back_flux_mass_env );
-    auto out_front_flux_mass_env = ax::viewOut(command,m_front_flux_mass_env);
-    
-    command << RUNCOMMAND_ENUMERATE (Node, nid, allNodes()) {
-      for (Integer index_env=0; index_env < nb_env; index_env++) {
-        out_back_flux_mass_env[nid][index_env] =0.;
-        out_front_flux_mass_env[nid][index_env] = 0.;
-      }
-      out_back_flux_mass[nid] = 0.;
-      out_front_flux_mass[nid] = 0.;
-    };
+#if 0
+  ENUMERATE_NODE(inode, allNodes()){
+    for (Integer index_env=0; index_env < nb_env; index_env++) {
+      m_back_flux_mass_env[inode][index_env] =0.;
+      m_front_flux_mass_env[inode][index_env] = 0.;
+    }
+    m_back_flux_mass[inode] = 0.;
+    m_front_flux_mass[inode] = 0.;
   }
   
-  
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  
   ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface;       
     DirFace dir_face = fdm[face];
@@ -142,14 +126,102 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     }
   }
   
+#else 
+
+  {
+    auto command = makeCommand(queue);
+    
+    auto out_back_flux_mass      = ax::viewOut(command,m_back_flux_mass     );
+    auto out_front_flux_mass     = ax::viewOut(command,m_front_flux_mass    );
+    auto out_back_flux_mass_env  = ax::viewOut(command,m_back_flux_mass_env );
+    auto out_front_flux_mass_env = ax::viewOut(command,m_front_flux_mass_env);
+    
+    command << RUNCOMMAND_ENUMERATE (Node, nid, allNodes()) {
+      for (Integer index_env=0; index_env < nb_env; index_env++) {
+        out_back_flux_mass_env[nid][index_env] =0.;
+        out_front_flux_mass_env[nid][index_env] = 0.;
+      }
+      out_back_flux_mass[nid] = 0.;
+      out_front_flux_mass[nid] = 0.;
+    };
+  }
+    
+  auto cfc = m_acc_env->connectivityView().cellFace();
+  auto fnc = m_acc_env->connectivityView().faceNode();
+  
+  {
+    auto command_f = makeCommand(queue);
+    
+    auto cart_fdm = fact_cart.faceDirection(idir);
+    auto f2cid_stm = cart_fdm.face2CellIdStencil();
+    auto face_group = cart_fdm.allFaces();
+    
+    auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
+    auto in_outer_face_normal  = ax::viewIn(command_f, m_outer_face_normal);
+    
+    auto out_back_flux_mass_env  = ax::viewOut(command_f, m_back_flux_mass_env );
+    auto out_back_flux_mass      = ax::viewOut(command_f, m_back_flux_mass     );
+    auto out_front_flux_mass_env = ax::viewOut(command_f, m_front_flux_mass_env);
+    auto out_front_flux_mass     = ax::viewOut(command_f, m_front_flux_mass    );
+    
+    command_f << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      
+      // Acces mailles gauche/droite 
+      auto f2cid = f2cid_stm.face(fid, idx);
+      CellLocalId backCid(f2cid.previousCell());
+      CellLocalId frontCid(f2cid.nextCell());
+      
+      // Si face au bord gauche, on ne prend pas en compte la backCell
+      if (!ItemId::null(backCid)) {
+        Int16 index_face_backCid = 0;
+        for( FaceLocalId backCid_fid : cfc.faces(backCid) ){
+          if (backCid_fid = fid) {
+            break;
+          }
+          index_face_backCid++;
+        }
+        Real3 outer_face_normalb(in_outer_face_normal[backCid][index_face_backCid]);
+        Real outer_face_normal_dirb = outer_face_normalb[idir];
+
+        for( NodeLocalId nid : fnc.nodes(fid) ) {
+          for (Integer index_env=0; index_env < nb_env; index_env++) { 
+            out_back_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
+            out_back_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
+          }
+        }
+      }
+      
+      // Si face au bord droit, on ne prend pas en compte la frontCell
+      if (!ItemId::null(frontCid)) {
+        Int16 index_face_frontCid = 0;
+        for( FaceLocalId frontCid_fid : cfc.faces(frontCid) ){
+          if (frontCid_fid = fid) {
+            break;
+          }
+          index_face_frontCid++;
+        }
+        Real3 outer_face_normalf(in_outer_face_normal[frontCid][index_face_frontCid]);
+        Real outer_face_normal_dirf = outer_face_normalf[idir];
+        
+        for( NodeLocalId nid : fnc.nodes(fid) ) {
+          for (Integer index_env=0; index_env < nb_env; index_env++) { 
+            out_back_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+            out_back_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+          }
+        }
+      }
+      
+    };
+  }
+#endif
+
   // doit etre inutile si on augmente le nombre de mailles fantomes
   m_back_flux_mass_env.synchronize(); 
   m_front_flux_mass_env.synchronize();
   m_back_flux_mass.synchronize(); 
   m_front_flux_mass.synchronize();
     
-  
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
   
   {
     Integer order2 = options()->ordreProjection - 1;
