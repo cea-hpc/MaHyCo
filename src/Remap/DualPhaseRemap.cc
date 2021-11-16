@@ -176,7 +176,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       if (!ItemId::null(backCid)) {
         Int16 index_face_backCid = 0;
         for( FaceLocalId backCid_fid : cfc.faces(backCid) ){
-          if (backCid_fid = fid) {
+          if (backCid_fid == fid) {
             break;
           }
           index_face_backCid++;
@@ -196,7 +196,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       if (!ItemId::null(frontCid)) {
         Int16 index_face_frontCid = 0;
         for( FaceLocalId frontCid_fid : cfc.faces(frontCid) ){
-          if (frontCid_fid = fid) {
+          if (frontCid_fid == fid) {
             break;
           }
           index_face_frontCid++;
@@ -206,14 +206,15 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         
         for( NodeLocalId nid : fnc.nodes(fid) ) {
           for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            out_back_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
-            out_back_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+            out_front_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+            out_front_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
           }
         }
       }
       
     };
   }
+
 #endif
 
   // doit etre inutile si on augmente le nombre de mailles fantomes
