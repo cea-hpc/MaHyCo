@@ -21,6 +21,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
       
+      pinfo() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
       // calcul des gradients des quantites à projeter aux cellules
@@ -84,8 +85,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
     Face face = *iface; 
     m_is_dir_face[face][idir] = true;
   }
-  if (options()->ordreProjection > 1) {
-    ENUMERATE_FACE(iface, fdm.innerFaces()) {
+  ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
       DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
@@ -100,7 +100,6 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
       // somme des distances entre le milieu de la maille et le milieu de la face
       m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).abs();
       m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
-    }
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
@@ -125,6 +124,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
                    -0.5 * idir * (1 - idir)};  
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
+  m_grad_phi.fill(0.0);
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
     ENUMERATE_CELL(icell,allCells()) {
@@ -241,6 +241,7 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
   CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
+  Integer order2 = options()->ordreProjection - 1;
   ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
       DirFace dir_face = fdm[face];
@@ -258,12 +259,12 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
               // phi_cb + (dot((x_f - x_cb), face_normal) * grad_phi_cb)   
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)                                          
               m_phi_face[face][ivar] = m_phi_lagrange[cellb][ivar]
-                    + math::dot((m_face_coord[face] - m_cell_coord[cellb]), 
+                    + order2 * math::dot((m_face_coord[face] - m_cell_coord[cellb]), 
                     m_face_normal[face]) * m_grad_phi[cellb][ivar];                                
           } else { 
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)   
               m_phi_face[face][ivar] = m_phi_lagrange[cellf][ivar] 
-                    + math::dot((m_face_coord[face] - m_cell_coord[cellf]), 
+                    + order2 * math::dot((m_face_coord[face] - m_cell_coord[cellf]), 
                     m_face_normal[face]) * m_grad_phi[cellf][ivar];
           }
         } else {         
@@ -354,7 +355,8 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
                    -0.5 * idir * (1 - idir)};  
     int nbmat = nb_env;
     Real deltat = m_global_deltat();
-    Real flux;    
+    Real flux;
+    m_dual_phi_flux.fill(0.);
     ENUMERATE_CELL(icell,allCells()) {
       Cell cell = * icell;
       RealUniqueArray flux_face(nb_vars_to_project);
@@ -371,12 +373,14 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
+                m_dual_phi_flux[cell][ivar] += 0.5 * flux * outer_face_normal[idir] ;
             }
             
           } else { 
             for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
                 flux = outer_face_normal_dir * face_length * m_phi_face[face][ivar];
                 flux_face[ivar] += flux;
+                m_dual_phi_flux[cell][ivar] += 0.5 * flux * outer_face_normal[idir];
             }
             
          }
@@ -385,7 +389,7 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
  
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
         // flux dual comme demi somme des flux des deux faces contributives dans la direction idir
-        m_dual_phi_flux[cell][ivar] = 0.5* flux_face[ivar]; 
+       // m_dual_phi_flux[cell][ivar] = 0.5 * flux_face[ivar]; 
         m_u_lagrange[cell][ivar] -= flux_face[ivar];
       }
       // diagnostics et controle

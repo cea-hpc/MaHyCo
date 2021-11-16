@@ -51,6 +51,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_back_flux_mass[inode] = 0.;
     m_front_flux_mass[inode] = 0.;
   }
+  
+  // 2 cellules dans une direction pour les noeuds --> 0.5  en 2D
+  // 4 cellules dans une direction pour les noeuds --> 0.25  en 3D
+  Real OneOverNbcell = ( mesh()->dimension() == 2 ? .5  : .25) ;
   ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface;       
     DirFace dir_face = fdm[face];
@@ -64,15 +68,14 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
      Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
      ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
         // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
         // mais pas encore multiplié par la normale sortante des faces de la cellule 
         // donc fait ici
         m_back_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
         // pour le flux total
-        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        m_back_flux_mass[inode]  +=  OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
         }
      }
     }
@@ -85,15 +88,14 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       Real outer_face_normal_dirf = math::dot(outer_face_normalf, dirproj);
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
         // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
         // mais pas encore multiplié par la normale sortante des faces de la cellule 
         // donc fait ici
         m_front_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env] ; // (* outer_face_normal_dirf;
         // pour le flux total
-        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        m_front_flux_mass[inode] += OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env] ; //* outer_face_normal_dirf;
         }
       }
     }
