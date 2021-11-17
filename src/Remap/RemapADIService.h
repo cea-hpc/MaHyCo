@@ -110,11 +110,21 @@ public:
     * Est publique car fait appel à l'accélérateur
     **/
    void computeUremap_PBorn0(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+   
+   /**
+    * Spécialisation par les limiteurs classiques de computeDualGradPhi
+    * Est publique car fait appel à l'accélérateur
+    **/
+   template<typename LimType>
+   void computeDualGradPhi_LimC(Integer idir);
+   
+   /**
+    * fonction pour la phase de projection duales, déplacée de la partie private car fait appel à l'accélérateur
+    **/
+   void computeDualUremap(Integer idir, Integer nb_env);
 
 private:
     
-
- 
 
   /**
    * calcul des gradients aux faces ou flux aux faces 
@@ -129,10 +139,7 @@ private:
    **/
    void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
 
-  /**
-   * fonction pour la phase de projection duales
-   **/
-   void computeDualUremap(Integer idir, Integer nb_env);
+
   /**
    * synchronisation des valeurs aux noeuds 
    **/
@@ -154,7 +161,7 @@ private:
    void computeDualGradPhi(Node inode, Node frontfrontnode, Node frontnode, 
                                    Node backnode, Node backbacknode, Integer idir);
 
-    /**
+   /**
    * Fonction limiteur de gradient (maille regulier)
    **/
     Real fluxLimiter(Integer projectionLimiterId, double r);

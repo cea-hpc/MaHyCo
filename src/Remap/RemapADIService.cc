@@ -76,6 +76,8 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_dual_phi_flux.resize(nb_vars_to_project);
   m_front_flux_mass_env.resize(nb_env);
   m_back_flux_mass_env.resize(nb_env);
+  m_back_flux_contrib_env.resize(nb_env);
+  m_front_flux_contrib_env.resize(nb_env);
 }
 /**
  *******************************************************************************
@@ -507,17 +509,9 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
         Real grad_phi_face_back = in_grad_phi_face[backFid][ivar];
         Real grad_phi_face_front = in_grad_phi_face[frontFid][ivar];
         if (grad_phi_face_back != 0.) 
-          grad_phi_cell += 0.5 * (
-              LimType::fluxLimiter(
-                grad_phi_face_front /
-                grad_phi_face_back) 
-              * grad_phi_face_back);
+          grad_phi_cell += 0.5 * (LimType::fluxLimiter(grad_phi_face_front /grad_phi_face_back) * grad_phi_face_back);
         if (grad_phi_face_front !=0.) 
-          grad_phi_cell += 0.5 * (
-              LimType::fluxLimiter(
-                grad_phi_face_back /
-                grad_phi_face_front) 
-              * grad_phi_face_front);
+          grad_phi_cell += 0.5 * (LimType::fluxLimiter(grad_phi_face_back / grad_phi_face_front) * grad_phi_face_front);
         out_grad_phi[cid][ivar] = grad_phi_cell;
       }
 
