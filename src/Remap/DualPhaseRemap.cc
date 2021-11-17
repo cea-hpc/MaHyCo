@@ -127,27 +127,8 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   }
   
 #else 
-
-  {
-    auto command = makeCommand(queue);
-    
-    auto out_back_flux_mass      = ax::viewOut(command,m_back_flux_mass     );
-    auto out_front_flux_mass     = ax::viewOut(command,m_front_flux_mass    );
-    auto out_back_flux_mass_env  = ax::viewOut(command,m_back_flux_mass_env );
-    auto out_front_flux_mass_env = ax::viewOut(command,m_front_flux_mass_env);
-    
-    command << RUNCOMMAND_ENUMERATE (Node, nid, allNodes()) {
-      for (Integer index_env=0; index_env < nb_env; index_env++) {
-        out_back_flux_mass_env[nid][index_env] =0.;
-        out_front_flux_mass_env[nid][index_env] = 0.;
-      }
-      out_back_flux_mass[nid] = 0.;
-      out_front_flux_mass[nid] = 0.;
-    };
-  }
-    
+   
   auto cfc = m_acc_env->connectivityView().cellFace();
-  auto fnc = m_acc_env->connectivityView().faceNode();
   
   {
     auto command_f = makeCommand(queue);
@@ -159,12 +140,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
     auto in_outer_face_normal  = ax::viewIn(command_f, m_outer_face_normal);
     
-    auto out_back_flux_mass_env  = ax::viewOut(command_f, m_back_flux_mass_env );
-    auto out_back_flux_mass      = ax::viewOut(command_f, m_back_flux_mass     );
-    auto out_front_flux_mass_env = ax::viewOut(command_f, m_front_flux_mass_env);
-    auto out_front_flux_mass     = ax::viewOut(command_f, m_front_flux_mass    );
+    auto out_back_flux_contrib_env   = ax::viewOut(command_f, m_back_flux_contrib_env );
+    auto out_front_flux_contrib_env  = ax::viewOut(command_f, m_front_flux_contrib_env );
     
-    command_f << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+    command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
       auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
       
       // Acces mailles gauche/droite 
@@ -184,11 +163,8 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real3 outer_face_normalb(in_outer_face_normal[backCid][index_face_backCid]);
         Real outer_face_normal_dirb = outer_face_normalb[idir];
 
-        for( NodeLocalId nid : fnc.nodes(fid) ) {
-          for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            out_back_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
-            out_back_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
-          }
+        for (Integer index_env=0; index_env < nb_env; index_env++) {
+          out_back_flux_contrib_env[backCid][index_env] = 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
         }
       }
       
@@ -204,17 +180,165 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real3 outer_face_normalf(in_outer_face_normal[frontCid][index_face_frontCid]);
         Real outer_face_normal_dirf = outer_face_normalf[idir];
         
-        for( NodeLocalId nid : fnc.nodes(fid) ) {
-          for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            out_front_flux_mass_env[nid][index_env] += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
-            out_front_flux_mass    [nid]            += 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
-          }
+        for (Integer index_env=0; index_env < nb_env; index_env++) {
+          out_front_flux_contrib_env[frontCid][index_env] = 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
         }
       }
       
     };
   }
+  if (mesh()->dimension() == 2)
+  {
+    auto command = makeCommand(queue);
+    
+    auto in_back_flux_contrib_env   = ax::viewIn(command, m_back_flux_contrib_env );
+    auto in_front_flux_contrib_env  = ax::viewIn(command, m_front_flux_contrib_env );
+ 
+    auto inout_back_flux_mass      = ax::viewInOut(command,m_back_flux_mass     );
+    auto inout_front_flux_mass     = ax::viewInOut(command,m_front_flux_mass    );
+    auto inout_back_flux_mass_env  = ax::viewInOut(command,m_back_flux_mass_env );
+    auto inout_front_flux_mass_env = ax::viewInOut(command,m_front_flux_mass_env);
+    
+    auto cart_cell_dm = fact_cart.cellDirection(idir);
+    auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
 
+    auto node_dm = fact_cart.nodeDirection(idir);
+    auto n2nid_stm = node_dm.node2NodeIdStencil();
+    auto node_group = node_dm.allNodes();
+
+    // Direction transverse en 2D
+    Integer dir1 = (idir+1)%2;
+    Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
+    Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
+
+    command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+      auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
+
+      for (Integer index_env=0; index_env < nb_env; index_env++) {
+        inout_back_flux_mass_env[nid][index_env] =0.;
+        inout_front_flux_mass_env[nid][index_env] = 0.;
+      }
+      inout_back_flux_mass[nid] = 0.;
+      inout_front_flux_mass[nid] = 0.;
+
+      // 2 Mailles "back" dans la direction en 2D
+      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
+        IdxType cellb_idx=idx;
+        cellb_idx[idir]-=1; // back
+        cellb_idx[dir1]+=sht1;
+
+        // La maille existe-t-elle ?
+        if ((cellb_idx[0]>=0 && cellb_idx[0]<ncells0) &&
+            (cellb_idx[1]>=0 && cellb_idx[1]<ncells1)) {
+          CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
+
+          for (Integer index_env=0; index_env < nb_env; index_env++) { 
+            inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
+            inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
+          }
+        }
+      }
+
+      // 2 Mailles "front" dans la direction en 2D
+      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
+        IdxType cellf_idx=idx;
+        // cellf_idx[idir]+=0; // front
+        cellf_idx[dir1]+=sht1;
+
+        // La maille existe-t-elle ?
+        if ((cellf_idx[0]>=0 && cellf_idx[0]<ncells0) &&
+            (cellf_idx[1]>=0 && cellf_idx[1]<ncells1)) {
+          CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
+
+          for (Integer index_env=0; index_env < nb_env; index_env++) { 
+            inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
+            inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
+          }
+        }
+      }
+    };
+  }
+  else if (mesh()->dimension() == 3)
+  {
+    auto command = makeCommand(queue);
+    
+    auto in_back_flux_contrib_env   = ax::viewIn(command, m_back_flux_contrib_env );
+    auto in_front_flux_contrib_env  = ax::viewIn(command, m_front_flux_contrib_env );
+ 
+    auto inout_back_flux_mass      = ax::viewInOut(command,m_back_flux_mass     );
+    auto inout_front_flux_mass     = ax::viewInOut(command,m_front_flux_mass    );
+    auto inout_back_flux_mass_env  = ax::viewInOut(command,m_back_flux_mass_env );
+    auto inout_front_flux_mass_env = ax::viewInOut(command,m_front_flux_mass_env);
+    
+    auto cart_cell_dm = fact_cart.cellDirection(idir);
+    auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
+
+    auto node_dm = fact_cart.nodeDirection(idir);
+    auto n2nid_stm = node_dm.node2NodeIdStencil();
+    auto node_group = node_dm.allNodes();
+
+    // Directions transverses en 3D
+    Integer dir1 = (idir+1)%3;
+    Integer dir2 = (idir+2)%3;
+    Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
+    Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
+    Integer ncells2 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(2);
+
+    command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+      auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
+
+      for (Integer index_env=0; index_env < nb_env; index_env++) {
+        inout_back_flux_mass_env[nid][index_env] =0.;
+        inout_front_flux_mass_env[nid][index_env] = 0.;
+      }
+      inout_back_flux_mass[nid] = 0.;
+      inout_front_flux_mass[nid] = 0.;
+
+      // 4 Mailles "back" dans la direction en 3D
+      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
+        for(Integer sht2=-1 ; sht2<=0 ; ++sht2) {
+          IdxType cellb_idx=idx;
+          cellb_idx[idir]-=1; // back
+          cellb_idx[dir1]+=sht1;
+          cellb_idx[dir2]+=sht2;
+
+          // La maille existe-t-elle ?
+          if ((cellb_idx[0]>=0 && cellb_idx[0]<ncells0) &&
+              (cellb_idx[1]>=0 && cellb_idx[1]<ncells1) &&
+              (cellb_idx[2]>=0 && cellb_idx[2]<ncells2)) {
+            CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
+
+            for (Integer index_env=0; index_env < nb_env; index_env++) { 
+              inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
+              inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
+            }
+          }
+        }
+      }
+
+      // 4 Mailles "front" dans la direction en 3D
+      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
+        for(Integer sht2=-1 ; sht2<=0 ; ++sht2) {
+          IdxType cellf_idx=idx;
+          // cellf_idx[idir]+=0; // front
+          cellf_idx[dir1]+=sht1;
+          cellf_idx[dir2]+=sht2;
+
+          // La maille existe-t-elle ?
+          if ((cellf_idx[0]>=0 && cellf_idx[0]<ncells0) &&
+              (cellf_idx[1]>=0 && cellf_idx[1]<ncells1) &&
+              (cellf_idx[2]>=0 && cellf_idx[2]<ncells2)) {
+            CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
+
+            for (Integer index_env=0; index_env < nb_env; index_env++) { 
+              inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
+              inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
+            }
+          }
+        }
+      }
+    };
+  }
 #endif
 
   // doit etre inutile si on augmente le nombre de mailles fantomes

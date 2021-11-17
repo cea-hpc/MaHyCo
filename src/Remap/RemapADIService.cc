@@ -76,6 +76,8 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
   m_dual_phi_flux.resize(nb_vars_to_project);
   m_front_flux_mass_env.resize(nb_env);
   m_back_flux_mass_env.resize(nb_env);
+  m_back_flux_contrib_env.resize(nb_env);
+  m_front_flux_contrib_env.resize(nb_env);
 }
 /**
  *******************************************************************************
