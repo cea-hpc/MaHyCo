@@ -463,13 +463,14 @@ void MahycoModule::remap() {
     
     // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees
     // pour les nouveaux envirronements crees dans les mailles mixtes par la projection
+#if 0
     m_pseudo_viscosity_n.fill(0.0);
     m_internal_energy_n.fill(0.0);
     m_cell_volume_n.fill(0.0);
     m_pressure_n.fill(0.0);
     m_density_n.fill(0.0);
     m_tau_density.fill(0.0);
-    
+
     m_materiau.fill(0.0);
     for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
         IMeshEnvironment* ienv = mm->environments()[index_env];
@@ -480,6 +481,75 @@ void MahycoModule::remap() {
           m_materiau[cell] += index_env*m_fracvol[ev];
         }
     }
+#else
+  auto queue = m_acc_env->newQueue();
+  {
+    auto command = makeCommand(queue);
+    
+    auto in_env_id              = ax::viewIn(command, m_env_id);
+    auto in_fracvol_g           = ax::viewIn(command,m_fracvol.globalVariable());
+
+    auto out_materiau           = ax::viewOut(command,m_materiau);
+    auto out_pseudo_viscosity_n = ax::viewOut(command,m_pseudo_viscosity_n.globalVariable());
+    auto out_pressure_n         = ax::viewOut(command,m_pressure_n.globalVariable());
+    auto out_cell_volume_n      = ax::viewOut(command,m_cell_volume_n.globalVariable());
+    auto out_density_n          = ax::viewOut(command,m_density_n.globalVariable());
+    auto out_internal_energy_n  = ax::viewOut(command,m_internal_energy_n.globalVariable());
+    auto out_tau_density        = ax::viewOut(command,m_tau_density.globalVariable());
+
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+      out_pseudo_viscosity_n[cid] = 0.;
+      out_pressure_n        [cid] = 0.;
+      out_cell_volume_n     [cid] = 0.;
+      out_density_n         [cid] = 0.;
+      out_internal_energy_n [cid] = 0.;
+      out_tau_density       [cid] = 0.;
+
+      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
+      out_materiau[cid] = 0; // init pour la moyenne sur les mailles mixtes
+      if (env_id>=0) {
+        out_materiau[cid] = env_id*in_fracvol_g[cid]; // in_fracvol_g[cid] == 1 normalement
+      }
+    }; 
+  }
+
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+
+    auto command = makeCommand(queue);
+    Integer env_id = env->id();
+
+    // Nombre de mailles impures (mixtes) de l'environnement
+    Integer nb_imp = env->impureEnvItems().nbItem();
+
+    Span<const Real>    in_fracvol    (envView(m_fracvol, env));
+    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+
+    Span<Real> out_pseudo_viscosity_n (envView(m_pseudo_viscosity_n, env));
+    Span<Real> out_pressure_n         (envView(m_pressure_n, env));
+    Span<Real> out_cell_volume_n      (envView(m_cell_volume_n, env));
+    Span<Real> out_density_n          (envView(m_density_n, env));
+    Span<Real> out_internal_energy_n  (envView(m_internal_energy_n, env));
+    Span<Real> out_tau_density        (envView(m_tau_density, env));
+
+    auto out_materiau           = ax::viewOut(command,m_materiau);
+
+    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
+      auto [imix] = iter(); // imix \in [0,nb_imp[
+
+      out_pseudo_viscosity_n[imix] = 0.;
+      out_pressure_n        [imix] = 0.;
+      out_cell_volume_n     [imix] = 0.;
+      out_density_n         [imix] = 0.;
+      out_internal_energy_n [imix] = 0.;
+      out_tau_density       [imix] = 0.;
+
+      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
+      out_materiau[cid] += env_id*in_fracvol[imix];
+    }; 
+  }
+#endif
+   
     if (!options()->sansLagrange) {
       for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
         IMeshEnvironment* ienv = mm->environments()[index_env];
