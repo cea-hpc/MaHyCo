@@ -160,11 +160,7 @@ void MahycoModule::computeVariablesForRemap()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeVariablesForRemap()";
-  Integer nb_total_env = mm->environments().size();
-  Integer index_env;
-  
-  m_u_lagrange.fill(0.);
-  
+ 
   if (options()->remap()->hasProjectionPenteBorne() == 0)
   {
     // Spécialisation
@@ -173,6 +169,11 @@ void MahycoModule::computeVariablesForRemap()
     return;
   }
 
+  Integer nb_total_env = mm->environments().size();
+  Integer index_env;
+  
+  m_u_lagrange.fill(0.);
+ 
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
@@ -308,6 +309,9 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
     auto out_u_lagrange = ax::viewOut(command, m_u_lagrange);
     
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
+      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+        out_u_lagrange[cid][ivar] = 0;
+      }
       Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
       if (env_id>=0) { // vrai ssi cid maille pure
         // volumes matériels (partiels)

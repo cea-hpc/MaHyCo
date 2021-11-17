@@ -24,12 +24,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
-  NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
   
   Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
-  m_dual_grad_phi.fill(0.0);
   
   auto queue = m_acc_env->newQueue();
   Cartesian::FactCartDirectionMng fact_cart(mesh());
@@ -48,6 +46,8 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       }
     }
     else { // (options()->projectionLimiteurId > minmodG) PAS SUR GPU
+      m_dual_grad_phi.fill(0.0);
+      NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
         DirNode dir_node(ndm[inode]);
