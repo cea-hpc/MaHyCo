@@ -74,6 +74,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_front_flux_mass[inode] = 0.;
   }
   
+  // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
+  // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
+  Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 )
+  
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   
   ENUMERATE_FACE(iface, fdm.allFaces()) {
@@ -90,15 +94,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
      Real outer_face_normal_dirb = outer_face_normalb[idir];
      ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
+        // dans le cas classique comme 1 sur nb_cell de la somme des flux à la cellule dans la direction donnée,
         m_back_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        oneovernbcell * m_dual_phi_flux[cellb][nb_env+index_env];
         // pour le flux total
-        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        m_back_flux_mass[inode]  +=  oneovernbcell * m_dual_phi_flux[cellb][nb_env+index_env];
         }
      }
     }
@@ -112,15 +113,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       Real outer_face_normal_dirf = outer_face_normalf[idir];
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
+        // dans le cas classique comme comme 1 sur nb_cell de la somme des flux à la cellule dans la direction donnée,
         m_front_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        oneovernbcell * m_dual_phi_flux[cellf][nb_env+index_env];
         // pour le flux total
-        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        m_front_flux_mass[inode] += oneovernbcell * m_dual_phi_flux[cellf][nb_env+index_env];
         }
       }
     }
@@ -143,6 +141,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto out_back_flux_contrib_env   = ax::viewOut(command_f, m_back_flux_contrib_env );
     auto out_front_flux_contrib_env  = ax::viewOut(command_f, m_front_flux_contrib_env );
     
+    // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
+    // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
+    Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 )
+    
     command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
       auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
       
@@ -164,7 +166,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real outer_face_normal_dirb = outer_face_normalb[idir];
 
         for (Integer index_env=0; index_env < nb_env; index_env++) {
-          out_back_flux_contrib_env[backCid][index_env] = 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
+          out_back_flux_contrib_env[backCid][index_env] = oneovernbcell * in_dual_phi_flux[backCid][nb_env+index_env];
         }
       }
       
@@ -181,10 +183,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real outer_face_normal_dirf = outer_face_normalf[idir];
         
         for (Integer index_env=0; index_env < nb_env; index_env++) {
-          out_front_flux_contrib_env[frontCid][index_env] = 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+          out_front_flux_contrib_env[frontCid][index_env] = oneovernbcell * in_dual_phi_flux[frontCid][nb_env+index_env];
         }
       }
-      
     };
   }
   if (mesh()->dimension() == 2)
