@@ -76,7 +76,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   
   // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
   // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
-  Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 )
+  Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   
@@ -127,7 +127,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
 #else 
    
   auto cfc = m_acc_env->connectivityView().cellFace();
-  
   {
     auto command_f = makeCommand(queue);
     
@@ -143,7 +142,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
     // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
-    Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 )
+    Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
     
     command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
       auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
@@ -188,6 +187,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       }
     };
   }
+  
   if (mesh()->dimension() == 2)
   {
     auto command = makeCommand(queue);
@@ -340,6 +340,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       }
     };
   }
+  
 #endif
 
   // doit etre inutile si on augmente le nombre de mailles fantomes

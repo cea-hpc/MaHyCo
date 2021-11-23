@@ -123,13 +123,14 @@ public:
     **/
    void computeDualUremap(Integer idir, Integer nb_env);
 
-private:
-    
-
-  /**
-   * calcul des gradients aux faces ou flux aux faces 
-   **/
+   /**
+    * calcul des gradients aux faces ou flux aux faces 
+    **/
    void computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+   
+   
+private:
+
   /**
    * calcul des flux aux faces des cellules 
    **/
