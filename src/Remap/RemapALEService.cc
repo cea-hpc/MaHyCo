@@ -16,15 +16,15 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     mm = IMeshMaterialMng::getReference(mesh());
   
     if (! options()->getIsEulerScheme()) {
-      info() << "Creation liste des noeuds à relaxer";
+      debug() << "Creation liste des noeuds à relaxer";
       ComputeNodeGroupToRelax();
-      info() << "Deplacement des noeuds : lissage";
+      debug() << "Deplacement des noeuds : lissage";
       computeLissage();
     } else { 
       // sauvegarde de l'ancien maillage 
       m_node_coord_l.copy(m_node_coord);
       
-      pinfo() << " Le lissage consiste à revenir sur le maillage euler";
+      debug() << " Le lissage consiste à revenir sur le maillage euler";
       // Pour avoir de l'euler 
       m_node_coord.copy(m_node_coord_0);
       //
@@ -37,10 +37,10 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     }
     NodeGroup Nodes_to_relax = mesh()->nodeFamily()->findGroup("NodeToRelax");
     
-    pinfo() << " Calcul des volumes anciens et nouveau et des volumes partiels";
+    debug() << " Calcul des volumes anciens et nouveau et des volumes partiels";
     // Calcul des volumes anciens et nouveau et des volumes partiels
     computeVolumes();
-    pinfo() << " Calcul des flux";
+    debug() << " Calcul des flux";
     // Calcul des flux de volumes 
     computeFlux();
     
@@ -51,7 +51,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       m_fracvol_l[cell] = m_fracvol[cell];  // sauvegarde de la fraction volumique issu du lagrange
       m_density_l[cell] = m_density[cell];
       // m_internal_energy_l[cell] = m_internal_energy[cell];
-      // pinfo()  << " AV projection envir " << cell.localId() << " " << m_density_l[cell] << " et " <<  m_fracvol_l[cell];
+      // debug()  << " AV projection envir " << cell.localId() << " " << m_density_l[cell] << " et " <<  m_fracvol_l[cell];
       AllEnvCell all_env_cell = all_env_cell_converter[cell];
       if (all_env_cell.nbEnvironment() !=1) {          
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
@@ -100,7 +100,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
      /************************************************************/
      for (Integer index_env=0; index_env < nb_env ; index_env++) { 
         IMeshEnvironment* env = mm->environments()[index_env];
-        // pinfo() << " Projection du volume pour l'environement " << env->name() << " nombre de cell " << env->cells().size();
+        // debug() << " Projection du volume pour l'environement " << env->name() << " nombre de cell " << env->cells().size();
 
         computeApproPhi(index_env, m_cell_volume_partial_l, m_cell_delta_volume);
         m_appro_phi.synchronize();
@@ -147,11 +147,11 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     // 
     
     m_appro_phi.fill(0.0);
-    pinfo() << " Projection de la masse par envirronement " ;
+    debug() << " Projection de la masse par envirronement " ;
     /************************************************************/
     for (Integer index_env=0; index_env < nb_env ; index_env++) { 
       IMeshEnvironment* env = mm->environments()[index_env];
-      pinfo() << " Projection de la masse pour l'envirronement " << env->name();
+      debug() << " Projection de la masse pour l'envirronement " << env->name();
     
       
       computeApproPhi(nb_env+index_env, m_cell_volume_partial_l, m_cell_delta_volume);
@@ -171,12 +171,12 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         EnvCell ev = *ienvcell;
         Cell cell = ev.globalCell();
         m_density[ev] = m_phi[cell][nb_env+index_env] / m_fracvol[ev];
-        // pinfo() << env->name() << " projection densité " << cell.localId() << " " << m_density[ev] 
+        // debug() << env->name() << " projection densité " << cell.localId() << " " << m_density[ev] 
         // << " et " <<  m_fracvol[ev] << " appro phi " << m_appro_density[cell];
       }
       
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de l'energie pour l'envirronement " << env->name();
+      debug() << " Projection de l'energie pour l'envirronement " << env->name();
       
       computeApproPhi(2*nb_env+index_env, m_cell_volume_partial_l, m_cell_delta_volume);
       m_appro_phi.synchronize();
@@ -246,7 +246,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     if (withDualProjection) {
       if (nb_env >1) { 
         m_appro_phi.fill(0.0);
-        pinfo() << " Calcul de l'approximation de la densité aux faces m_appro_density " 
+        debug() << " Calcul de l'approximation de la densité aux faces m_appro_density " 
                 << " pour la projection de la quantité de mouvement" ;
         // on refait la projection de la densité totale pour calculer appro_phi 
         /************************************************************/
@@ -276,7 +276,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
       }
       
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de la vitesse en X";
+      debug() << " Projection de la vitesse en X";
       /************************************************************/
       // Projection de la vitesse X aux mailles
  
@@ -302,7 +302,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         m_velocity[node].x /= m_node_mass[node];
       }  
       m_appro_phi.fill(0.0);
-      pinfo() << " Projection de la vitesse en Y";
+      debug() << " Projection de la vitesse en Y";
       /************************************************************/
       // Projection de la vitesse Y aux mailles
  
@@ -328,12 +328,12 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
         Node node= *inode;
         m_velocity[node].y /= m_node_mass[node];
       }    
-      pinfo() << " Fin de la Projection";
+      debug() << " Fin de la Projection";
       
       // récuperation du delta d'nergie cinétique en energie interne
       if (hasConservationEnergieTotale()) {
         /************************************************************/ 
-        pinfo() << " Projection de l'energie cinétique";
+        debug() << " Projection de l'energie cinétique";
  
         computeApproPhi(3*nb_env+3, m_cell_volume_partial_l, m_cell_delta_volume);
         m_appro_phi.synchronize();

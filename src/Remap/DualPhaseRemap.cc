@@ -51,7 +51,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_back_flux_mass[inode] = 0.;
     m_front_flux_mass[inode] = 0.;
   }
-  
   // 2 cellules dans une direction pour les noeuds --> 0.5  en 2D
   // 4 cellules dans une direction pour les noeuds --> 0.25  en 3D
   Real OneOverNbcell = ( mesh()->dimension() == 2 ? .5  : .25) ;
@@ -61,41 +60,29 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     Integer indexfacecellb(-1), indexfacecellf(-1);
     Cell cellb = dir_face.previousCell();
     if (cellb.localId() != -1) {
-     ENUMERATE_FACE(jface, cellb.faces()) { 
-      if (jface.localId() == iface.localId()) indexfacecellb = jface.index(); 
-     }
-     Real3 outer_face_normalb(m_outer_face_normal[cellb][indexfacecellb]);
-     Real outer_face_normal_dirb = math::dot(outer_face_normalb, dirproj);
-     ENUMERATE_NODE(inode, face.nodes()) {
-        for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
-        m_back_flux_mass_env[inode][index_env] += 
-        OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
-        // pour le flux total
-        m_back_flux_mass[inode]  +=  OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env] ; // * outer_face_normal_dirb;
-        }
-     }
-    }
-    Cell cellf = dir_face.nextCell();
-    if (cellf.localId() != -1) {
-      ENUMERATE_FACE(jface, cellf.faces()) { 
-       if (jface.localId() == iface.localId()) indexfacecellf = jface.index(); 
-      }
-      Real3 outer_face_normalf(m_outer_face_normal[cellf][indexfacecellf]);
-      Real outer_face_normal_dirf = math::dot(outer_face_normalf, dirproj);
       ENUMERATE_NODE(inode, face.nodes()) {
+        Node node = *inode;
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
-        m_front_flux_mass_env[inode][index_env] += 
-        OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env] ; // (* outer_face_normal_dirf;
-        // pour le flux total
-        m_front_flux_mass[inode] += OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env] ; //* outer_face_normal_dirf;
+          // recuperation du flux dual de masse calcule par le pente borne ou 
+          // dans le cas classique comme la somme des  flux à la cellule dans la direction donnée
+          m_back_flux_mass_env[inode][index_env] +=   
+          OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env];
+          // pour le flux total
+          m_back_flux_mass[inode]  +=  OneOverNbcell * m_dual_phi_flux[cellb][nb_env+index_env];
+         }
+      }
+    } 
+    Cell cellf = dir_face.nextCell();    
+    if (cellf.localId() != -1) {
+      ENUMERATE_NODE(inode, face.nodes()) {
+        Node node = *inode;
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          // recuperation du flux dual de masse calcule par le pente borne ou 
+          // dans le cas classique comme la somme des  flux à la cellule dans la direction donnée
+          m_front_flux_mass_env[inode][index_env] += 
+          OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env]; 
+          // pour le flux total
+          m_front_flux_mass[inode] += OneOverNbcell * m_dual_phi_flux[cellf][nb_env+index_env]; 
         }
       }
     }
