@@ -488,7 +488,24 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       // energie cinetique
       inout_u_dual_lagrange[nid][4] += in_back_flux_mass[nid] * BackupwindEcin - 
       in_front_flux_mass[nid] * FrontupwindEcin;
-      
+    };
+  }
+  
+  {
+    auto command = makeCommand(queue);
+    
+    Real thresold = m_arithmetic_thresold;
+    
+    auto cart_ndm = fact_cart.nodeDirection(idir);
+    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    
+    auto node_group = cart_ndm.innerNodes();
+    
+    auto inout_u_dual_lagrange   = ax::viewInOut(command, m_u_dual_lagrange  );
+    auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
+    
+    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
       // filtre des valeurs abherentes
       if (abs(inout_u_dual_lagrange[nid][0]) < thresold) inout_u_dual_lagrange[nid][0]=0.;
       if (abs(inout_u_dual_lagrange[nid][1]) < thresold) inout_u_dual_lagrange[nid][1]=0.;
@@ -512,13 +529,14 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   Real BackupwindEcin;
   Integer order2 = options()->ordreProjection - 1;
   
+  
   ENUMERATE_NODE(inode, ndm.innerNodes()) {
     Node node = *inode;
     DirNode dir_node(ndm[inode]);
     // info() << " Passage avec le noeud " << node.localId();
     Node backnode = dir_node.previous();
     Node frontnode = dir_node.next();
- 
+    
     // flux de masse
     m_u_dual_lagrange[inode][3] += m_back_flux_mass[inode] - m_front_flux_mass[inode];
 
@@ -630,6 +648,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     // energie cinetique
     m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
         m_front_flux_mass[inode] * FrontupwindEcin;
+  }
+  
+  ENUMERATE_NODE(inode, ndm.innerNodes()) {
+    Node node = *inode;
         
     // filtre des valeurs abherentes
     if (abs(m_u_dual_lagrange[node][0]) < m_arithmetic_thresold) m_u_dual_lagrange[node][0]=0.;
@@ -645,7 +667,11 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     // Phi energie
     m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
   }
+  
+  
+
 #endif
+
   PROF_ACC_END;
 }
 /*
