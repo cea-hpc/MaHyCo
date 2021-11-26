@@ -348,7 +348,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   m_back_flux_mass.synchronize(); 
   m_front_flux_mass.synchronize();
     
-#if 0
+#if 1
   {
     Integer order2 = options()->ordreProjection - 1;
     Real thresold = m_arithmetic_thresold;
