@@ -1112,6 +1112,7 @@ computeGeometricValues()
  
   if (options()->longueurCaracteristique() == "faces-opposees")
   {
+#if 0
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;    
       // Calcule le volume de la maille
@@ -1157,6 +1158,65 @@ computeGeometricValues()
         m_caracteristic_length[icell] = dx_numerator / dx_denominator;
       }
     } 
+#else
+    {
+      auto queue = m_acc_env->newQueue();
+      auto command = makeCommand(queue);
+
+      auto in_node_coord = ax::viewIn(command,m_node_coord);
+      auto in_cell_cqs   = ax::viewIn(command,m_cell_cqs);
+      auto out_cell_volume_g        = ax::viewOut(command,m_cell_volume.globalVariable()); 
+      auto out_caracteristic_length = ax::viewOut(command,m_caracteristic_length);
+      
+      auto cnc = m_acc_env->connectivityView().cellNode();
+
+      // NOTE : on ne peut pas utiliser un membre sur accélérateur (ex : m_dimension), 
+      // cela revient à utiliser this->m_dimension avec this pointeur illicite
+      Real inv_dim = 1./m_dimension;
+
+      command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+
+        // Calcule le volume de la maille
+        Span<const Real3> cell_cqs = in_cell_cqs[cid];
+        Real volume = 0;
+        
+	// Recopie les coordonnées locales (pour le cache)
+        Real3 coord[8];
+
+        Int64 index=0;
+        for( NodeLocalId nid : cnc.nodes(cid) ){
+          volume += math::dot(in_node_coord[nid],  cell_cqs[index]);
+          coord[index]=in_node_coord[nid];
+          ++index;
+        }
+        volume *= inv_dim;
+        out_cell_volume_g[cid] = volume;
+
+        // Calcule la longueur caractéristique de la maille.
+        {
+          // Calcul les coordonnées des centres des faces
+          Real3 face_coord[6];
+          face_coord[0] = 0.25 * (coord[0] + coord[3] + coord[2] + coord[1]);
+          face_coord[1] = 0.25 * (coord[0] + coord[4] + coord[7] + coord[3]);
+          face_coord[2] = 0.25 * (coord[0] + coord[1] + coord[5] + coord[4]);
+          face_coord[3] = 0.25 * (coord[4] + coord[5] + coord[6] + coord[7]);
+          face_coord[4] = 0.25 * (coord[1] + coord[2] + coord[6] + coord[5]);
+          face_coord[5] = 0.25 * (coord[2] + coord[3] + coord[7] + coord[6]);
+
+          Real3 median1 = face_coord[0] - face_coord[3];
+          Real3 median2 = face_coord[2] - face_coord[5];
+          Real3 median3 = face_coord[1] - face_coord[4];
+          Real d1 = median1.normL2();
+          Real d2 = median2.normL2();
+          Real d3 = median3.normL2();
+
+          Real dx_numerator = d1 * d2 * d3;
+          Real dx_denominator = d1 * d2 + d1 * d3 + d2 * d3;
+          out_caracteristic_length[cid] = dx_numerator / dx_denominator;
+        }
+      };
+    }
+#endif
   }
   else if (options()->longueurCaracteristique() == "racine-cubique-volume")
   {

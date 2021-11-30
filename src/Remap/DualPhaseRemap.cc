@@ -74,6 +74,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_front_flux_mass[inode] = 0.;
   }
   
+  // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
+  // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
+  Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
+  
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   
   ENUMERATE_FACE(iface, fdm.allFaces()) {
@@ -90,15 +94,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
      Real outer_face_normal_dirb = outer_face_normalb[idir];
      ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
+        // dans le cas classique comme 1 sur nb_cell de la somme des flux à la cellule dans la direction donnée,
         m_back_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        oneovernbcell * m_dual_phi_flux[cellb][nb_env+index_env];
         // pour le flux total
-        m_back_flux_mass[inode]  +=  0.5 * m_dual_phi_flux[cellb][nb_env+index_env] * outer_face_normal_dirb;
+        m_back_flux_mass[inode]  +=  oneovernbcell * m_dual_phi_flux[cellb][nb_env+index_env];
         }
      }
     }
@@ -112,15 +113,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       Real outer_face_normal_dirf = outer_face_normalf[idir];
       ENUMERATE_NODE(inode, face.nodes()) {
         for (Integer index_env=0; index_env < nb_env; index_env++) { 
-        // 2 cellules dans une direction pour les noeuds --> 0.5  
         // recuperation du flux dual de masse calcule par le pente borne ou 
-        // dans le cas classique comme la demi-somme des deux flux à la cellule dans la direction donnée,
-        // mais pas encore multiplié par la normale sortante des faces de la cellule 
-        // donc fait ici
+        // dans le cas classique comme comme 1 sur nb_cell de la somme des flux à la cellule dans la direction donnée,
         m_front_flux_mass_env[inode][index_env] += 
-        0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        oneovernbcell * m_dual_phi_flux[cellf][nb_env+index_env];
         // pour le flux total
-        m_front_flux_mass[inode] += 0.5 * m_dual_phi_flux[cellf][nb_env+index_env] * outer_face_normal_dirf;
+        m_front_flux_mass[inode] += oneovernbcell * m_dual_phi_flux[cellf][nb_env+index_env];
         }
       }
     }
@@ -129,7 +127,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
 #else 
    
   auto cfc = m_acc_env->connectivityView().cellFace();
-  
   {
     auto command_f = makeCommand(queue);
     
@@ -142,6 +139,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     auto out_back_flux_contrib_env   = ax::viewOut(command_f, m_back_flux_contrib_env );
     auto out_front_flux_contrib_env  = ax::viewOut(command_f, m_front_flux_contrib_env );
+    
+    // 2 cellules dans une direction pour les noeuds ==> 0.5 en 2D
+    // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
+    Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
     
     command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
       auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
@@ -164,7 +165,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real outer_face_normal_dirb = outer_face_normalb[idir];
 
         for (Integer index_env=0; index_env < nb_env; index_env++) {
-          out_back_flux_contrib_env[backCid][index_env] = 0.5 * in_dual_phi_flux[backCid][nb_env+index_env] * outer_face_normal_dirb;
+          out_back_flux_contrib_env[backCid][index_env] = oneovernbcell * in_dual_phi_flux[backCid][nb_env+index_env];
         }
       }
       
@@ -181,12 +182,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         Real outer_face_normal_dirf = outer_face_normalf[idir];
         
         for (Integer index_env=0; index_env < nb_env; index_env++) {
-          out_front_flux_contrib_env[frontCid][index_env] = 0.5 * in_dual_phi_flux[frontCid][nb_env+index_env] * outer_face_normal_dirf;
+          out_front_flux_contrib_env[frontCid][index_env] = oneovernbcell * in_dual_phi_flux[frontCid][nb_env+index_env];
         }
       }
-      
     };
   }
+  
   if (mesh()->dimension() == 2)
   {
     auto command = makeCommand(queue);
@@ -347,7 +348,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   m_back_flux_mass.synchronize(); 
   m_front_flux_mass.synchronize();
     
-  
+#if 1
   {
     Integer order2 = options()->ordreProjection - 1;
     Real thresold = m_arithmetic_thresold;
@@ -487,7 +488,24 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       // energie cinetique
       inout_u_dual_lagrange[nid][4] += in_back_flux_mass[nid] * BackupwindEcin - 
       in_front_flux_mass[nid] * FrontupwindEcin;
-      
+    };
+  }
+  
+  {
+    auto command = makeCommand(queue);
+    
+    Real thresold = m_arithmetic_thresold;
+    
+    auto cart_ndm = fact_cart.nodeDirection(idir);
+    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    
+    auto node_group = cart_ndm.innerNodes();
+    
+    auto inout_u_dual_lagrange   = ax::viewInOut(command, m_u_dual_lagrange  );
+    auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
+    
+    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
       // filtre des valeurs abherentes
       if (abs(inout_u_dual_lagrange[nid][0]) < thresold) inout_u_dual_lagrange[nid][0]=0.;
       if (abs(inout_u_dual_lagrange[nid][1]) < thresold) inout_u_dual_lagrange[nid][1]=0.;
@@ -503,146 +521,157 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       inout_phi_dual_lagrange[nid][4] = inout_u_dual_lagrange[nid][4] /  inout_u_dual_lagrange[nid][3];
     };
   }
+#else
   
-//   Real3 FrontupwindVelocity;
-//   Real3 BackupwindVelocity;
-//   Real FrontupwindEcin;
-//   Real BackupwindEcin;
-//   Integer order2 = options()->ordreProjection - 1;
-//   
-//   ENUMERATE_NODE(inode, ndm.innerNodes()) {
-//     Node node = *inode;
-//     DirNode dir_node(ndm[inode]);
-//     // info() << " Passage avec le noeud " << node.localId();
-//     Node backnode = dir_node.previous();
-//     Node frontnode = dir_node.next();
-//  
-//     // flux de masse
-//     m_u_dual_lagrange[inode][3] += m_back_flux_mass[inode] - m_front_flux_mass[inode];
-// 
-//     
-//     FrontupwindVelocity = 0.;
-//     BackupwindVelocity = 0.;
-//     // vitesse = vitesse(pNode) si FrontFluxMasse(pNode) > 0 et vitesse(voisin devant) sinon 
-//     Integer signfront;
-//     Real ufront = 0.5 * (m_phi_dual_lagrange[node][idir] + m_phi_dual_lagrange[frontnode][idir]);
-// 
-//     if (ufront > 0)  signfront = 1;
-//     else signfront = -1;
-//     if (m_front_flux_mass[inode] < 0.) {
-//       // vittese front upwind
-//       FrontupwindVelocity[0] = m_phi_dual_lagrange[frontnode][0]
-//       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][0]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       FrontupwindVelocity[1] = m_phi_dual_lagrange[frontnode][1]
-//       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][1]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       FrontupwindVelocity[2] = m_phi_dual_lagrange[frontnode][2]
-//       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][2]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       // energie cinetique
-//       FrontupwindEcin = m_phi_dual_lagrange[frontnode][4]
-//       + order2 * ( 0.5 * m_dual_grad_phi[frontnode][4] * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//     
-//     } else {
-//       // vittese front upwind
-//       FrontupwindVelocity[0] = m_phi_dual_lagrange[node][0]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       FrontupwindVelocity[1] = m_phi_dual_lagrange[node][1]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       FrontupwindVelocity[2] = m_phi_dual_lagrange[node][2]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//       // energie cinetique
-//       FrontupwindEcin = m_phi_dual_lagrange[node][4]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
-//       (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
-//       
-//     }
-//     BackupwindVelocity = 0.;
-//     BackupwindEcin = 0.;
-//     // Backvitesse = vitesse(voisin amont)) si backFluxMasse(pNode) > 0 et vitesse(pNode) sinon
-//     Integer signback;
-//     Real  uback= 0.5 * (m_phi_dual_lagrange[backnode][idir] + m_phi_dual_lagrange[node][idir]);
-// 
-//     if (uback > 0) signback = 1;
-//     else signback= -1;
-// 
-//     if (m_back_flux_mass[inode] > 0.) {
-//       // vittese back upwind
-//       BackupwindVelocity[0] = m_phi_dual_lagrange[backnode][0]
-//       + order2 * ( 0.5 * m_dual_grad_phi[backnode][0]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       BackupwindVelocity[1] = m_phi_dual_lagrange[backnode][1]
-//       + order2 * ( 0.5 * m_dual_grad_phi[backnode][1]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       BackupwindVelocity[2] = m_phi_dual_lagrange[backnode][2]
-//       + order2 * ( 0.5 * m_dual_grad_phi[backnode][2]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       // energie cinetique
-//       BackupwindEcin = m_phi_dual_lagrange[backnode][4]
-//       + order2 * ( 0.5 * m_dual_grad_phi[backnode][4] * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       
-//     } else {
-//       // vittese back upwind
-//       BackupwindVelocity[0] = m_phi_dual_lagrange[node][0]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       BackupwindVelocity[1] = m_phi_dual_lagrange[node][1]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       BackupwindVelocity[2] = m_phi_dual_lagrange[node][2]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//       // energie cinetique
-//       BackupwindEcin = m_phi_dual_lagrange[node][4]
-//       + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
-//       (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
-//       
-//     }
-//      
-//     m_u_dual_lagrange[inode][0] += m_back_flux_mass[inode] * BackupwindVelocity[0] - 
-//         m_front_flux_mass[inode] * FrontupwindVelocity[0];
-//     m_u_dual_lagrange[inode][1] += m_back_flux_mass[inode] * BackupwindVelocity[1] - 
-//         m_front_flux_mass[inode] * FrontupwindVelocity[1];
-//     m_u_dual_lagrange[inode][2] += m_back_flux_mass[inode] * BackupwindVelocity[2] - 
-//         m_front_flux_mass[inode] * FrontupwindVelocity[2];
-//     // energie cinetique
-//     m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
-//         m_front_flux_mass[inode] * FrontupwindEcin;
-//         
-//     // filtre des valeurs abherentes
-//     if (abs(m_u_dual_lagrange[node][0]) < m_arithmetic_thresold) m_u_dual_lagrange[node][0]=0.;
-//     if (abs(m_u_dual_lagrange[node][1]) < m_arithmetic_thresold) m_u_dual_lagrange[node][1]=0.;
-//     if (abs(m_u_dual_lagrange[node][2]) < m_arithmetic_thresold) m_u_dual_lagrange[node][2]=0.;
-//     // recalcul des phi apres cette projection
-//     // phi vitesse
-//     m_phi_dual_lagrange[node][0] = m_u_dual_lagrange[inode][0] /  m_u_dual_lagrange[inode][3];
-//     m_phi_dual_lagrange[node][1] = m_u_dual_lagrange[inode][1] /  m_u_dual_lagrange[inode][3];
-//     m_phi_dual_lagrange[node][2] = m_u_dual_lagrange[inode][2] /  m_u_dual_lagrange[inode][3];
-//     // Phi masse nodale
-//     m_phi_dual_lagrange[node][3] = m_u_dual_lagrange[inode][3] ;
-//     // Phi energie
-//     m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
-//   }
+  Real3 FrontupwindVelocity;
+  Real3 BackupwindVelocity;
+  Real FrontupwindEcin;
+  Real BackupwindEcin;
+  Integer order2 = options()->ordreProjection - 1;
+  
+  
+  ENUMERATE_NODE(inode, ndm.innerNodes()) {
+    Node node = *inode;
+    DirNode dir_node(ndm[inode]);
+    // info() << " Passage avec le noeud " << node.localId();
+    Node backnode = dir_node.previous();
+    Node frontnode = dir_node.next();
+    
+    // flux de masse
+    m_u_dual_lagrange[inode][3] += m_back_flux_mass[inode] - m_front_flux_mass[inode];
+
+    
+    FrontupwindVelocity = 0.;
+    BackupwindVelocity = 0.;
+    // vitesse = vitesse(pNode) si FrontFluxMasse(pNode) > 0 et vitesse(voisin devant) sinon 
+    Integer signfront;
+    Real ufront = 0.5 * (m_phi_dual_lagrange[node][idir] + m_phi_dual_lagrange[frontnode][idir]);
+
+    if (ufront > 0)  signfront = 1;
+    else signfront = -1;
+    if (m_front_flux_mass[inode] < 0.) {
+      // vittese front upwind
+      FrontupwindVelocity[0] = m_phi_dual_lagrange[frontnode][0]
+      + order2 * ( 0.5 * m_dual_grad_phi[frontnode][0]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      FrontupwindVelocity[1] = m_phi_dual_lagrange[frontnode][1]
+      + order2 * ( 0.5 * m_dual_grad_phi[frontnode][1]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      FrontupwindVelocity[2] = m_phi_dual_lagrange[frontnode][2]
+      + order2 * ( 0.5 * m_dual_grad_phi[frontnode][2]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      // energie cinetique
+      FrontupwindEcin = m_phi_dual_lagrange[frontnode][4]
+      + order2 * ( 0.5 * m_dual_grad_phi[frontnode][4] * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+    
+    } else {
+      // vittese front upwind
+      FrontupwindVelocity[0] = m_phi_dual_lagrange[node][0]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      FrontupwindVelocity[1] = m_phi_dual_lagrange[node][1]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      FrontupwindVelocity[2] = m_phi_dual_lagrange[node][2]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+      // energie cinetique
+      FrontupwindEcin = m_phi_dual_lagrange[node][4]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
+      (signfront * (m_node_coord[frontnode][idir] - m_node_coord[node][idir]) - deltat * ufront));
+      
+    }
+    BackupwindVelocity = 0.;
+    BackupwindEcin = 0.;
+    // Backvitesse = vitesse(voisin amont)) si backFluxMasse(pNode) > 0 et vitesse(pNode) sinon
+    Integer signback;
+    Real  uback= 0.5 * (m_phi_dual_lagrange[backnode][idir] + m_phi_dual_lagrange[node][idir]);
+
+    if (uback > 0) signback = 1;
+    else signback= -1;
+
+    if (m_back_flux_mass[inode] > 0.) {
+      // vittese back upwind
+      BackupwindVelocity[0] = m_phi_dual_lagrange[backnode][0]
+      + order2 * ( 0.5 * m_dual_grad_phi[backnode][0]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      BackupwindVelocity[1] = m_phi_dual_lagrange[backnode][1]
+      + order2 * ( 0.5 * m_dual_grad_phi[backnode][1]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      BackupwindVelocity[2] = m_phi_dual_lagrange[backnode][2]
+      + order2 * ( 0.5 * m_dual_grad_phi[backnode][2]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      // energie cinetique
+      BackupwindEcin = m_phi_dual_lagrange[backnode][4]
+      + order2 * ( 0.5 * m_dual_grad_phi[backnode][4] * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      
+    } else {
+      // vittese back upwind
+      BackupwindVelocity[0] = m_phi_dual_lagrange[node][0]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][0]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      BackupwindVelocity[1] = m_phi_dual_lagrange[node][1]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][1]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      BackupwindVelocity[2] = m_phi_dual_lagrange[node][2]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][2]  * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+      // energie cinetique
+      BackupwindEcin = m_phi_dual_lagrange[node][4]
+      + order2 * ( 0.5 * m_dual_grad_phi[node][4] * 
+      (signback * (m_node_coord[node][idir] - m_node_coord[backnode][idir]) - deltat * uback));
+      
+    }
+     
+    m_u_dual_lagrange[inode][0] += m_back_flux_mass[inode] * BackupwindVelocity[0] - 
+        m_front_flux_mass[inode] * FrontupwindVelocity[0];
+    m_u_dual_lagrange[inode][1] += m_back_flux_mass[inode] * BackupwindVelocity[1] - 
+        m_front_flux_mass[inode] * FrontupwindVelocity[1];
+    m_u_dual_lagrange[inode][2] += m_back_flux_mass[inode] * BackupwindVelocity[2] - 
+        m_front_flux_mass[inode] * FrontupwindVelocity[2];
+    // energie cinetique
+    m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
+        m_front_flux_mass[inode] * FrontupwindEcin;
+  }
+  
+  ENUMERATE_NODE(inode, ndm.innerNodes()) {
+    Node node = *inode;
+        
+    // filtre des valeurs abherentes
+    if (abs(m_u_dual_lagrange[node][0]) < m_arithmetic_thresold) m_u_dual_lagrange[node][0]=0.;
+    if (abs(m_u_dual_lagrange[node][1]) < m_arithmetic_thresold) m_u_dual_lagrange[node][1]=0.;
+    if (abs(m_u_dual_lagrange[node][2]) < m_arithmetic_thresold) m_u_dual_lagrange[node][2]=0.;
+    // recalcul des phi apres cette projection
+    // phi vitesse
+    m_phi_dual_lagrange[node][0] = m_u_dual_lagrange[inode][0] /  m_u_dual_lagrange[inode][3];
+    m_phi_dual_lagrange[node][1] = m_u_dual_lagrange[inode][1] /  m_u_dual_lagrange[inode][3];
+    m_phi_dual_lagrange[node][2] = m_u_dual_lagrange[inode][2] /  m_u_dual_lagrange[inode][3];
+    // Phi masse nodale
+    m_phi_dual_lagrange[node][3] = m_u_dual_lagrange[inode][3] ;
+    // Phi energie
+    m_phi_dual_lagrange[node][4] = m_u_dual_lagrange[inode][4] /  m_u_dual_lagrange[inode][3];
+  }
+  
+  
+
+#endif
+
   PROF_ACC_END;
 }
 /*
