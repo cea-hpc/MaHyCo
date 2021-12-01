@@ -4,7 +4,7 @@ chez vous.
 Pour compiler Mahyco, se placer dans le repertoire correspondant
 et lancer la commande
 
-  cmake . -B "repertoire build"
+  cmake . -B "repertoire build" -DArcane_ROOT="/your/path/to/arcane/"
 
 Pour tester Mahyco , se placer dans le repertoire "repertoire build"/src et lancer l'executable en
 specifiant en argument le jeu de donnees (extension .arc).

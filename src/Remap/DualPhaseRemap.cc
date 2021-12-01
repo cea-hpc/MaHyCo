@@ -217,6 +217,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     // energie cinetique
     m_u_dual_lagrange[inode][4] += m_back_flux_mass[inode] * BackupwindEcin - 
         m_front_flux_mass[inode] * FrontupwindEcin;
+  }
+  
+  ENUMERATE_NODE(inode, ndm.innerNodes()) {
+    Node node = *inode;
         
     // filtre des valeurs abherentes
     if (abs(m_u_dual_lagrange[node][0]) < m_arithmetic_thresold) m_u_dual_lagrange[node][0]=0.;
