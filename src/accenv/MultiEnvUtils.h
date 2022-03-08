@@ -5,7 +5,7 @@
 
 #include "arcane/MeshVariableScalarRef.h"
 #include "arcane/MeshVariableArrayRef.h"
-#include "arcane/accelerator/Views.h"
+#include "arcane/accelerator/VariableViews.h"
 #include <arcane/IMesh.h>
 #include <arcane/VariableBuildInfo.h>
 
@@ -30,6 +30,11 @@ ArrayView<value_type> envView(CellMaterialVariableScalarRef<value_type>& var_men
 /*---------------------------------------------------------------------------*/
 class EnvVarIndex {
  public:
+  EnvVarIndex() :
+    m_array_index (-1),
+    m_value_index (-1)
+  {  }
+
   ARCCORE_HOST_DEVICE EnvVarIndex(Int32 array_index, Int32 value_index) :
     m_array_index (array_index),
     m_value_index (value_index)
@@ -64,6 +69,10 @@ class MultiEnvView {
 
   ARCCORE_HOST_DEVICE void setValue(const EnvVarIndex& evi, value_type val) const {
     return m_var_menv_views[evi.arrayIndex()].setItem(evi.valueIndex(), val);
+  }
+
+  ARCCORE_HOST_DEVICE value_type& ref(const EnvVarIndex& evi) const {
+    return m_var_menv_views[evi.arrayIndex()].item(evi.valueIndex());
   }
 
  public:

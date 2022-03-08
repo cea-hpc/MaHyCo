@@ -3,6 +3,9 @@
 
 #include "accenv/IAccEnv.h"
 #include "arcane/materials/MeshMaterialVariableRef.h"
+
+// Ce fichier doit être inclu avant AccEnvDefault_axl.h
+#include "accenv/AccEnvDefaultOptions.h"
 #include "accenv/AccEnvDefault_axl.h"
 
 using namespace Arcane;
@@ -19,21 +22,18 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   ax::Runner& runner() override { return m_runner; }
   ax::RunQueue newQueue() override { return makeQueue(m_runner); }
+  Ref<ax::RunQueue> refQueueAsync(eQueuePriority qp=QP_default) override;
 
   AccMemAdviser* accMemAdv() override { return m_acc_mem_adv; }
 
   UnstructuredMeshConnectivityView& connectivityView() override { return m_connectivity_view; }
   const UnstructuredMeshConnectivityView& connectivityView() const override { return m_connectivity_view; }
   
-  void initMesh(ICartesianMesh* cartesian_mesh) override;
+  void initMesh(IMesh* mesh) override;
 
-  Span<const Int16> nodeIndexInCells() const { return m_node_index_in_cells.constSpan(); }
-  Span<const Int16> nodeIndexInFaces() const { return m_node_index_in_faces.constSpan(); }
-  Span<const Int16> faceIndexInCells() const { return m_face_index_in_cells.constSpan(); }
+  Span<const Int16> nodeIndexInCells() const override { return m_node_index_in_cells.constSpan(); }
 
   Integer maxNodeCell() const override { return 8; }
-  Integer maxNodeFace() const override { return 4; }
-  Integer maxFaceCell() const override { return 6; }
 
   void initMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
   MultiAsyncRunQueue* multiEnvQueue() override { return m_menv_queue; }
@@ -44,11 +44,11 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   MultiEnvCellStorage* multiEnvCellStorage() override { return m_menv_cell; }
 
+  VarSyncMng* vsyncMng() override { return m_vsync_mng; }
+
  protected:
 
   void _computeNodeIndexInCells();
-  void _computeNodeIndexInFaces();
-  void _computeFaceIndexInCells();
 
  protected:
   ax::Runner m_runner;
@@ -56,14 +56,15 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   UnstructuredMeshConnectivityView m_connectivity_view;
 
   UniqueArray<Int16> m_node_index_in_cells;
-  UniqueArray<Int16> m_node_index_in_faces;
-  UniqueArray<Int16> m_face_index_in_cells;
 
   //! Description/accès aux mailles multi-env
   MultiEnvCellStorage* m_menv_cell=nullptr;
 
   // Les queues asynchrones d'exéution
   MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
+
+  //! Pour "synchroniser" les items fantômes
+  VarSyncMng* m_vsync_mng=nullptr;
 };
 
 #endif
