@@ -77,7 +77,7 @@ hydroStartInit()
   m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
   
-  m_acc_env->initMesh(m_cartesian_mesh);
+  m_acc_env->initMesh(mesh());
 
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
@@ -283,7 +283,7 @@ hydroContinueInit()
     m_cartesian_mesh = _initCartMesh();
     m_dimension = mesh()->dimension(); 
     
-    m_acc_env->initMesh(m_cartesian_mesh);
+    m_acc_env->initMesh(mesh());
     _initBoundaryConditionsForAcc();
 
     mm = IMeshMaterialMng::getReference(defaultMesh());
@@ -2189,7 +2189,7 @@ computeDeltaT()
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-inline void MahycoModule::
+ARCCORE_HOST_DEVICE inline void MahycoModule::
 computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs)
 {
   const Real3 c0 = face_coord[0];
