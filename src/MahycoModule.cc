@@ -318,8 +318,8 @@ saveValuesAtN()
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
-  m_cell_cqs.synchronize();
-  m_velocity.synchronize();
+//   m_cell_cqs.synchronize();
+//   m_velocity.synchronize();
 
   // Exploitation de plusieurs queues asynchrones en concurrence
   // queue_cell => recopie des valeurs pures et globales
@@ -1108,7 +1108,7 @@ computeGeometricValues()
       }
     }  
  }
-  m_cell_cqs.synchronize(); // TODO : pourquoi synchronize ?
+//   m_cell_cqs.synchronize(); // TODO : pourquoi synchronize ?
  
   if (options()->longueurCaracteristique() == "faces-opposees")
   {
@@ -1416,9 +1416,9 @@ updateDensity()
   queue_glob.barrier();
   menv_queue->waitAllQueues();
   
-  m_density.synchronize();
-  m_tau_density.synchronize();
-  m_div_u.synchronize();
+//   m_density.synchronize();
+//   m_tau_density.synchronize();
+//   m_div_u.synchronize();
   PROF_ACC_END;
 }
 /**
