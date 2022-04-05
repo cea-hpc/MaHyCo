@@ -181,6 +181,7 @@ set( TEST_NAMES_PARA_4
 		"CAS_2D_Lag_SodCaseY"
 		"CAS_Lag_BiSodCaseZ"
      		"CAS_Lag_SodCaseX"
+		"CAS_BiSodCaseX"
      		"CAS_BiSodCaseY"
 		"CAS_BiSodCaseZ"
 		"CAS_SodCaseY"
