@@ -320,21 +320,21 @@ saveValuesAtN()
   m_global_old_deltat = m_old_deltat;
   
   // synchronisation debut de pas de temps (avec projection nécéssaire ?)
-//   m_pseudo_viscosity.synchronize();
-//   m_density.synchronize();
-//   m_internal_energy.synchronize();
-//   m_cell_volume.synchronize();
-//   m_pressure.synchronize();
+  m_pseudo_viscosity.synchronize();
+  m_density.synchronize();
+  m_internal_energy.synchronize();
+  m_cell_volume.synchronize();
+  m_pressure.synchronize();
   
-  auto queue_synchronize = m_acc_env->refQueueAsync();
-  MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
-  mvsl.add(m_pseudo_viscosity);
-  mvsl.add(m_density);
-  mvsl.add(m_internal_energy);
-  mvsl.add(m_cell_volume);
-  mvsl.add(m_pressure);
-  m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
-  queue_synchronize->barrier();
+//   auto queue_synchronize = m_acc_env->refQueueAsync();
+//   MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
+//   mvsl.add(m_pseudo_viscosity);
+//   mvsl.add(m_density);
+//   mvsl.add(m_internal_energy);
+//   mvsl.add(m_cell_volume);
+//   mvsl.add(m_pressure);
+//   m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
+//   queue_synchronize->barrier();
   
   
 //   m_cell_cqs.synchronize();
