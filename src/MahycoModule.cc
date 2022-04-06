@@ -181,6 +181,9 @@ hydroStartInit()
     };
   }
 
+  auto* mm = IMeshMaterialMng::getReference(defaultMesh());
+  mm->setSynchronizeVariableVersion(6);
+
   PROF_ACC_END;
 }
 
