@@ -89,12 +89,11 @@ void async_unpack_buf2var(IntegerConstArrayView item_idx,
 /*---------------------------------------------------------------------------*/
 template< typename DataType>
 void async_pack_varmenv2buf(ConstArrayView<EnvVarIndex> levis, 
-    MultiEnvVar<DataType>& var_menv,
+    MultiEnvData<DataType>& in_var_menv,
     ArrayView<Byte> buf, RunQueue& queue) 
 {
   auto command = makeCommand(queue);
 
-  auto in_var_menv = var_menv.span();
   Span<const EnvVarIndex> in_levis(levis);
   Span<DataType> buf_vals(MultiBufView::valBuf<DataType>(buf));
 
@@ -113,11 +112,10 @@ void async_pack_varmenv2buf(ConstArrayView<EnvVarIndex> levis,
 template< typename DataType>
 void async_unpack_buf2varmenv(ConstArrayView<EnvVarIndex> levis,
     ArrayView<Byte> buf, 
-    MultiEnvVar<DataType>& var_menv, RunQueue& queue) 
+    MultiEnvData<DataType>& out_var_menv, RunQueue& queue) 
 {
   auto command = makeCommand(queue);
 
-  auto out_var_menv = var_menv.span();
   Span<const EnvVarIndex> in_levis(levis);
   Span<const DataType>    buf_vals(MultiBufView::valBuf<DataType>(buf));
 

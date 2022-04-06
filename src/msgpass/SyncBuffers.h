@@ -2,18 +2,11 @@
 #define MSG_PASS_SYNC_BUFFERS_H
 
 #include "accenv/AcceleratorUtils.h"
+#include "msgpass/MeshVariableSynchronizerList.h"
+
 #include <arcane/utils/MultiArray2.h>
 
 using namespace Arcane;
-
-/*---------------------------------------------------------------------------*/
-/* Emplacement de la mémoire                                                 */
-/*---------------------------------------------------------------------------*/
-enum eLocMem {
-  LM_HostMem=0,
-  LM_DevMem,
-  MAX_LocMem
-};
 
 /*---------------------------------------------------------------------------*/
 /* Encapsule les buffers des valeurs à envoyer/recevoir                      */
@@ -21,7 +14,7 @@ enum eLocMem {
 class MultiBufView {
  public:
   MultiBufView();
-  MultiBufView(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes, eLocMem loc_mem=LM_HostMem);
+  MultiBufView(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes);
   MultiBufView(const MultiBufView& rhs);
 
   MultiBufView& operator=(const MultiBufView& rhs);
@@ -39,8 +32,34 @@ class MultiBufView {
 
   //! Retourne [beg_ptr, end_ptr[ qui contient tous les buffers (peut-être espacés de trous)
   Span<Byte> rangeSpan();
+  ArrayView<Byte> rangeView();
 
  protected:
+  SharedArray<Byte*> m_ptrs;
+  SharedArray<Int64> m_sizes;
+};
+
+/*---------------------------------------------------------------------------*/
+/* Encapsule les buffers des valeurs à envoyer/recevoir en 2 dimensions      */
+/*---------------------------------------------------------------------------*/
+class MultiBufView2 {
+ public:
+  MultiBufView2();
+  MultiBufView2(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes, 
+      Integer dim1_sz, Integer dim2_sz);
+  MultiBufView2(const MultiBufView2& rhs);
+
+  MultiBufView2& operator=(const MultiBufView2& rhs);
+
+  //! Accès à la sous-vue MultiBufView pour l'indice i1 dans la première dimension
+  MultiBufView multiView(Integer i1);
+
+  //! Retourne [beg_ptr, end_ptr[ qui contient tous les buffers (peut-être espacés de trous)
+  Span<Byte> rangeSpan();
+
+ protected:
+  Integer m_dim1_sz;
+  Integer m_dim2_sz;
   SharedArray<Byte*> m_ptrs;
   SharedArray<Int64> m_sizes;
 };
@@ -60,13 +79,14 @@ class SyncBuffers {
   void addEstimatedMaxSz(IntegerConstArrayView item_sizes, Integer degree);
 
   // 
+  void allocIfNeeded(Int64 buf_estim_sz);
   void allocIfNeeded();
 
   /*!
    * \brief A partir des nb d'items à communiquer, estime une borne sup de la taille du buffer en octets
    */
   template<typename DataType>
-  Int64 estimatedMaxBufSz(IntegerConstArrayView item_sizes, Integer degree);
+  static Int64 estimatedMaxBufSz(IntegerConstArrayView item_sizes, Integer degree);
 
   /*!
    * \brief A partir de la vue sur m_buf_bytes, construit une vue par voisin des buffers
@@ -75,6 +95,13 @@ class SyncBuffers {
   MultiBufView multiBufView(
     IntegerConstArrayView item_sizes, Integer degree, Integer imem);
 
+  /*!
+   * \brief Construit des vues par voisin et par variable
+   */
+  MultiBufView2 multiBufViewVars(
+    ConstArrayView<IMeshVarSync*> vars,
+    IntegerConstArrayView item_sizes, Integer imem);
+
  protected:
   /*!
    * \brief A partir de la vue sur un buffer déjà alloué, construit une vue par voisin des buffers
@@ -82,6 +109,13 @@ class SyncBuffers {
   template<typename DataType>
   MultiBufView _multiBufView(
       IntegerConstArrayView item_sizes, Integer degree,
+      Span<Byte> buf_bytes);
+  
+  /*!
+   * \brief TODO : à commenter
+   */
+  MultiBufView2 _multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
+      IntegerConstArrayView item_sizes,
       Span<Byte> buf_bytes);
 
  protected:

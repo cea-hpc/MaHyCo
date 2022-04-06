@@ -25,7 +25,7 @@ SyncEnvIndexes::SyncEnvIndexes(MatVarSpace mvs, IMeshMaterialMng* mm,
     m_mmvs = m_mesh_material_mng->_allCellsEnvOnlySynchronizer();
   } else {
     throw NotSupportedException(A_FUNCINFO,
-        String::format("Invalid space space={1}",(int)m_mvs));
+        String::format("Invalid space ={0}",(int)m_mvs));
   }
 }
 

@@ -2,12 +2,14 @@
 #define ACC_ENV_MULTI_ENV_UTILS_H
 
 #include "accenv/AcceleratorUtils.h"
+#include "accenv/BufAddrMng.h"
 
 #include "arcane/MeshVariableScalarRef.h"
 #include "arcane/MeshVariableArrayRef.h"
 #include "arcane/accelerator/VariableViews.h"
 #include <arcane/IMesh.h>
 #include <arcane/VariableBuildInfo.h>
+#include <arcane/utils/IMemoryRessourceMng.h>
 
 #include <arcane/materials/ComponentPartItemVectorView.h>
 #include "arcane/materials/IMeshEnvironment.h"
@@ -68,7 +70,7 @@ class MultiEnvView {
   }
 
   ARCCORE_HOST_DEVICE void setValue(const EnvVarIndex& evi, value_type val) const {
-    return m_var_menv_views[evi.arrayIndex()].setItem(evi.valueIndex(), val);
+    m_var_menv_views[evi.arrayIndex()].setItem(evi.valueIndex(), val);
   }
 
   ARCCORE_HOST_DEVICE value_type& ref(const EnvVarIndex& evi) const {
@@ -103,6 +105,147 @@ class MultiEnvVar {
 
  protected:
   UniqueArray< Span<value_type> > m_var_menv_impl;
+};
+
+/*---------------------------------------------------------------------------*/
+/* Accès aux données d'une variable multi-env sans protection                */
+/*---------------------------------------------------------------------------*/
+template<typename value_type>
+class MultiEnvData {
+ public:
+  MultiEnvData(value_type** dta) :
+    m_var_menv_data (dta)
+  {
+  }
+
+  ARCCORE_HOST_DEVICE MultiEnvData(const MultiEnvData<value_type>& rhs) :
+    m_var_menv_data (rhs.m_var_menv_data)
+  {
+  }
+
+  ARCCORE_HOST_DEVICE value_type operator[](const EnvVarIndex& evi) const {
+    return m_var_menv_data[evi.arrayIndex()][evi.valueIndex()];
+  }
+
+  ARCCORE_HOST_DEVICE void setValue(const EnvVarIndex& evi, value_type val) const {
+    m_var_menv_data[evi.arrayIndex()][evi.valueIndex()] = val;
+  }
+
+  ARCCORE_HOST_DEVICE value_type& ref(const EnvVarIndex& evi) const {
+    return m_var_menv_data[evi.arrayIndex()][evi.valueIndex()];
+  }
+
+  auto data() {
+    return m_var_menv_data;
+  }
+
+ public:
+  value_type** m_var_menv_data; //!< Les données non gardées en 2 dimensions
+};
+
+/*---------------------------------------------------------------------------*/
+/* Pour créer des vues non protégées sur une variable multi-environnement    */
+/*---------------------------------------------------------------------------*/
+template<typename value_type>
+class MultiEnvDataVar {
+ public:
+  MultiEnvDataVar(CellMaterialVariableScalarRef<value_type>& var_menv, IMeshMaterialMng* mm,
+      eMemoryRessource mem_res = eMemoryRessource::UnifiedMemory) :
+   m_buf_addr(platform::getDataMemoryRessourceMng()->getAllocator(mem_res), 
+       mm->environments().size()+1)
+  {
+    m_var_menv_impl = _viewFromBuf(m_buf_addr);
+
+    _initViewFromVar(var_menv, mm);
+  }
+
+  // Allocation mais pas encore d'association à une variable multi-env
+  MultiEnvDataVar(IMeshMaterialMng* mm, eMemoryRessource mem_res) :
+   m_buf_addr(platform::getDataMemoryRessourceMng()->getAllocator(mem_res), 
+       mm->environments().size()+1)
+  {
+    m_var_menv_impl = _viewFromBuf(m_buf_addr);
+  }
+
+  // A partir d'un buffer déjà existant
+  MultiEnvDataVar(CellMaterialVariableScalarRef<value_type>& var_menv, IMeshMaterialMng* mm,
+      ArrayView<Int64> buf_addr) 
+  {
+    m_var_menv_impl = _viewFromBuf(buf_addr);
+
+    _initViewFromVar(var_menv, mm);
+  }
+
+  MultiEnvDataVar(ArrayView<Int64> buf_addr) 
+  {
+    m_var_menv_impl = _viewFromBuf(buf_addr);
+  }
+
+  // Copie asynchrone de h_var_menv (sur hôte)
+  void asyncCpy(MultiEnvDataVar<value_type>& h_var_menv, Ref<RunQueue> queue) {
+    value_type** h_menv_var_vw = h_var_menv.span().data(); // Vue sur l'hôte
+    void* d_dst     = static_cast<void*>(m_var_menv_impl.data()); // adresse sur device
+    void* h_src     = static_cast<void*>(h_menv_var_vw);
+    Int64 sz = m_var_menv_impl.size()*sizeof(value_type*);
+    queue->copyMemory(ax::MemoryCopyArgs(d_dst, h_src, sz).addAsync());
+  }
+
+  //! Pour y accéder en lecture/écriture
+  auto span() {
+    return MultiEnvData<value_type>(m_var_menv_impl.data());
+  }
+
+ protected:
+
+  ArrayView<value_type*> _viewFromBuf(ArrayView<Int64> buf_addr) {
+    void* base_ptr_v = static_cast<void*>(buf_addr.data());
+    value_type** base_ptr = static_cast<value_type**>(base_ptr_v);
+    return ArrayView<value_type*>(buf_addr.size(), base_ptr);
+  }
+
+  void _initViewFromVar(CellMaterialVariableScalarRef<value_type>& var_menv, 
+      IMeshMaterialMng* mm) {
+
+    m_var_menv_impl[0] = var_menv._internalValue()[0].data();
+    ENUMERATE_ENV(ienv, mm) {
+      IMeshEnvironment* env = *ienv;
+      Integer env_id = env->id();
+      m_var_menv_impl[env_id+1] = envView(var_menv,env).data();
+    }
+  }
+
+ protected:
+  UniqueArray<Int64> m_buf_addr;  //<! Int64 va être converti en value_type*
+  ArrayView< value_type* > m_var_menv_impl;
+};
+
+/*---------------------------------------------------------------------------*/
+/* Pour créer des vues non protégées sur une variable multi-environnement en */
+/* mémoires Host et Device                                                   */
+/*---------------------------------------------------------------------------*/
+template<typename value_type>
+class MultiEnvVarHD {
+ public:
+  MultiEnvVarHD(CellMaterialVariableScalarRef<value_type>& var_menv,
+      BufAddrMng* bam) :
+    m_menv_var_h(var_menv, bam->materialMng(), bam->nextHostView()),
+    m_menv_var_d(bam->nextDeviceView())
+  {
+  }
+
+  //! Vue en mémoire Hôte
+  auto spanH() {
+    return m_menv_var_h.span();
+  }
+
+  //! Vue en mémoire Device
+  auto spanD() {
+    return m_menv_var_d.span();
+  }
+
+ protected:
+  MultiEnvDataVar<value_type> m_menv_var_h;  //! View in HOST memory on multi-mat data
+  MultiEnvDataVar<value_type> m_menv_var_d;  //! View in DEVICE memory on multi-mat data
 };
 
 /*---------------------------------------------------------------------------*/
