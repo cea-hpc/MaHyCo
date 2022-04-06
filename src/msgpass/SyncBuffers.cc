@@ -1,7 +1,11 @@
 #include "msgpass/SyncBuffers.h"
 
 #include <arcane/utils/IMemoryRessourceMng.h>
+#include <arcane/utils/IndexOutOfRangeException.h>
 
+/*---------------------------------------------------------------------------*/
+/* MultiBufView                                                              */
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /* Encapsule des vues sur plusieurs buffers de communication                 */
 /*---------------------------------------------------------------------------*/
@@ -10,8 +14,7 @@ MultiBufView::MultiBufView()
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-MultiBufView::MultiBufView(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes,
-    eLocMem loc_mem) :
+MultiBufView::MultiBufView(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes) :
   m_ptrs    (ptrs),
   m_sizes   (sizes)
 {
@@ -82,6 +85,84 @@ ArrayView<Byte> MultiBufView::byteBuf(Integer i) {
 /*---------------------------------------------------------------------------*/
 //! Retourne [beg_ptr, end_ptr[ qui contient tous les buffers (peut-être espacés de trous)
 Span<Byte> MultiBufView::rangeSpan() {
+  if (m_ptrs.size()==0) {
+    return Span<Byte>();
+  } else {
+    Byte* beg_ptr=m_ptrs[0];
+    Integer last = m_ptrs.size()-1;
+    Byte* end_ptr=m_ptrs[last]+m_sizes[last];
+    Int64 sz = end_ptr-beg_ptr;
+    return Span<Byte>(beg_ptr, sz);
+  }
+}
+
+ArrayView<Byte> MultiBufView::rangeView() {
+  auto sp = rangeSpan();
+  return ArrayView<Byte>(sp.size(), sp.data());
+}
+
+/*---------------------------------------------------------------------------*/
+/* MultiBufView2                                                             */
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+/* Encapsule des vues sur plusieurs buffers de communication en 2 dimensions */
+/*---------------------------------------------------------------------------*/
+MultiBufView2::MultiBufView2()
+{ }
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+MultiBufView2::MultiBufView2(ArrayView<Byte*> ptrs, Int64ConstArrayView sizes,
+    Integer dim1_sz, Integer dim2_sz) :
+  m_dim1_sz (dim1_sz),
+  m_dim2_sz (dim2_sz),
+  m_ptrs    (ptrs),
+  m_sizes   (sizes)
+{
+  ARCANE_ASSERT(ptrs.size()==sizes.size(), ("ptrs.size()!=sizes.size()"));
+  ARCANE_ASSERT(ptrs.size()==(m_dim1_sz*m_dim2_sz), 
+      ("ptrs.size()!=(dim1_sz*dim2_sz)"));
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+MultiBufView2::MultiBufView2(const MultiBufView2& rhs) :
+  m_dim1_sz (rhs.m_dim1_sz),
+  m_dim2_sz (rhs.m_dim2_sz),
+  m_ptrs    (rhs.m_ptrs),
+  m_sizes   (rhs.m_sizes)
+{
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+MultiBufView2& MultiBufView2::operator=(const MultiBufView2& rhs)
+{
+  m_dim1_sz = rhs.m_dim1_sz;
+  m_dim2_sz = rhs.m_dim2_sz;
+  m_ptrs    = rhs.m_ptrs;
+  m_sizes   = rhs.m_sizes;
+  return *this;
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+//! Accès en lecture/écriture au i-ème buffer d'octets
+MultiBufView MultiBufView2::multiView(Integer i1) {
+  if (i1<0 || i1>=m_dim1_sz) {
+    throw IndexOutOfRangeException(A_FUNCINFO,
+        String::format("Invalid dim1 index value={0}",i1),
+        i1, 0, m_dim1_sz);
+  }
+  return MultiBufView(
+      m_ptrs.subView(i1*m_dim2_sz, m_dim2_sz),
+      m_sizes.subView(i1*m_dim2_sz, m_dim2_sz));
+}
+
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+//! Retourne [beg_ptr, end_ptr[ qui contient tous les buffers (peut-être espacés de trous)
+Span<Byte> MultiBufView2::rangeSpan() {
   if (m_ptrs.size()==0) {
     return Span<Byte>();
   } else {
@@ -179,18 +260,23 @@ void SyncBuffers::BufMem::reallocIfNeededOnDevice(Int64 wanted_size) {
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-void SyncBuffers::allocIfNeeded() {
+void SyncBuffers::allocIfNeeded(Int64 buf_estim_sz) {
+  m_buf_estim_sz = buf_estim_sz;
   // D'abord l'hote
-  m_buf_mem[0].reallocIfNeededOnHost(m_buf_estim_sz, m_is_accelerator_available);
+  m_buf_mem[0].reallocIfNeededOnHost(buf_estim_sz, m_is_accelerator_available);
 
   // Puis le device si celui-ci existe
   if (m_is_accelerator_available) {
-    m_buf_mem[1].reallocIfNeededOnDevice(m_buf_estim_sz);
+    m_buf_mem[1].reallocIfNeededOnDevice(buf_estim_sz);
   }
   if (!m_is_accelerator_available) {
     // Pour débugger, le buffer "device" se trouve dans la mémoire hôte
-    m_buf_mem[1].reallocIfNeededOnHost(m_buf_estim_sz, m_is_accelerator_available);
+    m_buf_mem[1].reallocIfNeededOnHost(buf_estim_sz, m_is_accelerator_available);
   }
+}
+
+void SyncBuffers::allocIfNeeded() {
+  allocIfNeeded(m_buf_estim_sz);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -278,15 +364,103 @@ MultiBufView SyncBuffers::multiBufView(
 }
 
 /*---------------------------------------------------------------------------*/
+/* TODO
+ */
+/*---------------------------------------------------------------------------*/
+MultiBufView2 SyncBuffers::_multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
+    IntegerConstArrayView item_sizes,
+    Span<Byte> buf_bytes) {
+
+  Integer nb_nei = item_sizes.size(); // nb de voisins
+  Integer nb_var = vars.size();  // nb de variables à synchroniser
+  UniqueArray<Byte*> ptrs(nb_nei*nb_var); // le pointeur de base du buffer par voisin et par variable
+  Int64UniqueArray sizes_in_bytes(nb_nei*nb_var); // la taille en octets du buffer par voisin et par variable
+
+  Byte* cur_ptr{buf_bytes.data()};
+  size_t available_space = buf_bytes.size();
+  Integer inei;
+
+  for(inei=0 ; inei<nb_nei ; ++inei) {
+    for(Integer ivar=0 ; available_space>0 && ivar<nb_var ; ++ivar) {
+
+      // Par voisin et par variable, le tableau de valeurs doit être aligné sur size_infos.alignOf;
+      auto size_infos = vars[ivar]->sizeInfos();
+
+      void* cur_ptr_v = static_cast<void*>(cur_ptr);
+      if (std::align(size_infos.alignOf, size_infos.sizeOf, cur_ptr_v, available_space)) {
+
+        cur_ptr = static_cast<Byte*>(cur_ptr_v); // cur_ptr_v a été potentiellement modifié
+
+        // Ici, cur_ptr a été modifié et est aligné sur size_infos.alignOf
+        // available_space a été diminué du nb d'octets = cur_ptr(après appel) - cur_ptr(avant appel)
+
+        // Calcul en octets de l'occupation des valeurs pour le voisin inei
+        size_t sz_nei_in_bytes = item_sizes[inei]*size_infos.sizeOfItem;
+
+        ptrs[inei*nb_var+ivar] = cur_ptr;
+        sizes_in_bytes[inei*nb_var+ivar] = sz_nei_in_bytes;
+
+        cur_ptr += sz_nei_in_bytes; // ici, cur_ptr n'est plus forcement aligné avec alignof(T)
+        if (sz_nei_in_bytes <= available_space) {
+          available_space -= sz_nei_in_bytes;
+        } else {
+          throw NotSupportedException(A_FUNCINFO, 
+              String("Espace insuffisant pour aligner les données dans le buffer, available_space va devenir négatif"));
+          break; // available_space ne pourra jamais être négatif car size_t est non signé
+        }
+      } else {
+        throw NotSupportedException(A_FUNCINFO, 
+            String("Espace insuffisant pour aligner les données dans le buffer d'après std::align"));
+        break;
+      }
+    }
+  }
+
+  if (inei==nb_nei) {
+    MultiBufView2 mb2(ptrs, sizes_in_bytes, nb_nei, nb_var);
+    return mb2;
+  } else {
+    // On ne devait jamais arriver là
+    throw NotSupportedException(A_FUNCINFO, String("On ne devrait pas etre la"));
+    return MultiBufView2();
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+/* */
+/*---------------------------------------------------------------------------*/
+MultiBufView2 SyncBuffers::multiBufViewVars(
+    ConstArrayView<IMeshVarSync*> vars,
+    IntegerConstArrayView item_sizes, Integer imem) {
+
+  auto& buf_mem = m_buf_mem[imem];
+  Byte* new_ptr = buf_mem.m_buf->data()+buf_mem.m_first_av_pos;
+  Int64 av_space = buf_mem.m_buf->size()-buf_mem.m_first_av_pos;
+  Span<Byte> buf_bytes(new_ptr, av_space);
+
+  auto mb2 = _multiBufViewVars(vars, item_sizes, buf_bytes);
+
+  auto rg{mb2.rangeSpan()}; // Encapsule [beg_ptr, end_ptr[
+  Byte* end_ptr = rg.data()+rg.size();
+  buf_mem.m_first_av_pos = (end_ptr - buf_mem.m_buf->data());
+  return mb2;
+}
+
+
+/*---------------------------------------------------------------------------*/
 /* INSTANCIATIONS STATIQUES                                                  */
 /*---------------------------------------------------------------------------*/
+#include <arcane/utils/Real3x3.h>
 
 #define INST_SYNC_BUFFERS(__DataType__) \
   template ArrayView<__DataType__> MultiBufView::valBuf<__DataType__>(ArrayView<Byte> buf); \
   template Array2View<__DataType__> MultiBufView::valBuf2<__DataType__>(ArrayView<Byte> buf, Integer dim2_size); \
   template MultiBufView SyncBuffers::multiBufView<__DataType__>(IntegerConstArrayView item_sizes, Integer degree, Integer imem); \
-  template void SyncBuffers::addEstimatedMaxSz<__DataType__>(IntegerConstArrayView item_sizes, Integer degree)
+  template void SyncBuffers::addEstimatedMaxSz<__DataType__>(IntegerConstArrayView item_sizes, Integer degree); \
+  template Int64 SyncBuffers::estimatedMaxBufSz<__DataType__>(IntegerConstArrayView item_sizes, Integer degree)
 
+INST_SYNC_BUFFERS(Integer);
 INST_SYNC_BUFFERS(Real);
 INST_SYNC_BUFFERS(Real3);
+INST_SYNC_BUFFERS(Real3x3);
 

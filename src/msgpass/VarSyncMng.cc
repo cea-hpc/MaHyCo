@@ -4,6 +4,7 @@
 #include <arcane/IVariableSynchronizer.h>
 #include <arcane/IItemFamily.h>
 #include <arcane/IParallelMng.h>
+#include <arcane/utils/NotSupportedException.h>
 
 // Définie ailleurs
 bool is_comm_device_aware();
@@ -45,6 +46,9 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
   // la priorité doit être la même que celle de la queue qui servira au pack/unpack des buffers de comms = QP_high
   m_ref_queue_bnd  = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
   m_ref_queue_data = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
+
+  // Pour synchro algo1
+  m_vsync_algo1 = new VarSyncAlgo1(m_pm, m_neigh_ranks);
 }
 
 VarSyncMng::~VarSyncMng() {
@@ -54,6 +58,12 @@ VarSyncMng::~VarSyncMng() {
   delete m_neigh_queues;
 
   delete m_sync_evi;
+
+  delete m_buf_addr_mng;
+
+  delete m_vsync_algo1;
+  delete m_a1_mmat_dh_pi;
+  delete m_a1_mmat_d_pi;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -65,6 +75,20 @@ void VarSyncMng::initSyncMultiEnv(IMeshMaterialMng* mesh_material_mng) {
     m_sync_evi = new SyncEnvIndexes(
         MatVarSpace::MaterialAndEnvironment, m_mesh_material_mng,
         m_neigh_ranks, m_acc_mem_adv);
+
+    // m_sync_evi doit être créé pour construire m_a1_*
+    // _dh_ = Device-Host
+    m_a1_mmat_dh_pi = 
+      new Algo1SyncDataMMatDH::PersistentInfo(m_nb_nei, m_runner, m_sync_evi, m_sync_buffers);
+    // _d_ = only Device
+    m_a1_mmat_d_pi = 
+      new Algo1SyncDataMMatD::PersistentInfo(m_is_device_aware,
+          m_nb_nei, m_runner, m_sync_evi, m_sync_buffers);
+  }
+
+  // Buffers mémoire pré-alloués pour minimiser coût des allocs, c'est un TEST
+  if (!m_buf_addr_mng) {
+    m_buf_addr_mng = new BufAddrMng(m_runner, m_mesh_material_mng);
   }
 }
 
@@ -89,6 +113,13 @@ bool VarSyncMng::isAcceleratorAvailable() const {
 /*---------------------------------------------------------------------------*/
 bool VarSyncMng::isDeviceAware() const {
   return m_is_device_aware;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Buffer d'adresses pour gérer les côuts des allocations                    */
+/*---------------------------------------------------------------------------*/
+BufAddrMng* VarSyncMng::bufAddrMng() {
+  return m_buf_addr_mng;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -129,5 +160,29 @@ void VarSyncMng::_preAllocBuffers() {
   m_sync_buffers->addEstimatedMaxSz<Real3>(nb_ghost_item_idx_pn, degree);
   // Le buffer de tous les messages est réalloué si pas assez de place
   m_sync_buffers->allocIfNeeded();
+}
+
+/*---------------------------------------------------------------------------*/
+/* Maj des mailles fantômes d'une liste de variables multi-mat               */
+/*---------------------------------------------------------------------------*/
+void VarSyncMng::multiMatSynchronize(MeshVariableSynchronizerList& vars, 
+    Ref<RunQueue> ref_queue, eVarSyncVersion vs_version)
+{
+  IAlgo1SyncData* sync_data=nullptr;
+  if (vs_version==VS_bulksync_evqueue) 
+  {
+    sync_data = new Algo1SyncDataMMatDH(vars, ref_queue, *m_a1_mmat_dh_pi);
+  } 
+  else if (vs_version == VS_bulksync_evqueue_d) 
+  {
+    sync_data = new Algo1SyncDataMMatD(vars, m_ref_queue_bnd, *m_a1_mmat_d_pi);
+  } 
+  else 
+  {
+    throw NotSupportedException(A_FUNCINFO, 
+        String::format("Invalid eVarSyncVersion for this method ={0}",(int)vs_version));
+  }
+  m_vsync_algo1->synchronize(sync_data);
+  delete sync_data;
 }
 

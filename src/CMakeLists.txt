@@ -65,7 +65,10 @@ add_library(msgpass msgpass/VarSyncMng.cc
                     msgpass/SyncItems.cc
                     msgpass/SyncBuffers.cc
                     msgpass/SyncEnvIndexes.cc
-                    msgpass/MultiMatSynchronize.cc)
+                    msgpass/Algo1SyncDataMMatD.cc
+                    msgpass/Algo1SyncDataMMatDH.cc
+                    msgpass/MeshVariableSynchronizerList.cc
+                    msgpass/VarSyncAlgo1.cc)
 target_include_directories(msgpass PUBLIC .)
 target_link_libraries(msgpass PUBLIC arcane_core)
 # Pour MPI
@@ -117,7 +120,6 @@ arcane_accelerator_add_source_files(msgpass/PackTransfer.cc)
 arcane_accelerator_add_source_files(msgpass/SyncItems.cc)
 arcane_accelerator_add_source_files(msgpass/SyncEnvIndexes.cc)
 arcane_accelerator_add_source_files(msgpass/SyncBuffers.cc)
-arcane_accelerator_add_source_files(msgpass/MultiMatSynchronize.cc)
 arcane_accelerator_add_to_target(Mahyco)
 arcane_accelerator_add_to_target(Remap)
 arcane_accelerator_add_to_target(PerfectGas)

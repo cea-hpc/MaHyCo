@@ -147,7 +147,7 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
   auto arr_item_status = item_status.asArray();
   // = 0 : "private" : item intérieur qui ne participe à aucune comm
   // > 0 : "shared" : item "own" dont les valeurs doivent être envoyées
-  // > 0 : "ghost"  : item fantôme dont on va recevoir une valeur
+  // < 0 : "ghost"  : item fantôme dont on va recevoir une valeur
   arr_item_status.fill(0);
 
   IntegerUniqueArray all_shared_lids;
@@ -196,9 +196,10 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
 
   // Création des groupes
   const char* str_items = get_string_items<ItemType>();
-  m_private_items= item_family->createGroup( String("Private")+str_items, private_item_ids);
-  m_shared_items = item_family->createGroup( String("Shared") +str_items, all_shared_lids);
-  m_ghost_items  = item_family->createGroup( String("Ghost")  +str_items, all_ghost_lids);
+  // On doit toujours écraser les groupes au cas où sauvegardées par check/restart
+  m_private_items= item_family->createGroup( String("Private")+str_items, private_item_ids, /*do_override=*/true);
+  m_shared_items = item_family->createGroup( String("Shared") +str_items, all_shared_lids , /*do_override=*/true);
+  m_ghost_items  = item_family->createGroup( String("Ghost")  +str_items, all_ghost_lids  , /*do_override=*/true);
 
   ARCANE_ASSERT(own_items.size()==(m_private_items.size()+m_shared_items.size()),
       ("own != private+shared"));
