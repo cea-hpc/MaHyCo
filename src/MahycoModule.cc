@@ -318,23 +318,24 @@ saveValuesAtN()
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
-  
+
+#if 0  
   // synchronisation debut de pas de temps (avec projection nécéssaire ?)
   m_pseudo_viscosity.synchronize();
   m_density.synchronize();
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
+#endif
   
-//   auto queue_synchronize = m_acc_env->refQueueAsync();
-//   MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
-//   mvsl.add(m_pseudo_viscosity);
-//   mvsl.add(m_density);
-//   mvsl.add(m_internal_energy);
-//   mvsl.add(m_cell_volume);
-//   mvsl.add(m_pressure);
-//   m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
-//   queue_synchronize->barrier();
+   auto queue_synchronize = m_acc_env->refQueueAsync();
+   MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
+   mvsl.add(m_pseudo_viscosity);
+   mvsl.add(m_density);
+   mvsl.add(m_internal_energy);
+   mvsl.add(m_cell_volume);
+   mvsl.add(m_pressure);
+   m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
   
   
 //   m_cell_cqs.synchronize();
@@ -679,7 +680,6 @@ updateForceAndVelocity(Real dt,
 //   v_velocity_out.synchronize();
   auto queue_synchronize = m_acc_env->refQueueAsync();
   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, v_velocity_out);
-  queue_synchronize->barrier();
   PROF_ACC_END;
 }
 
