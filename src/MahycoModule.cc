@@ -48,6 +48,8 @@ accBuild()
 void MahycoModule::
 hydroStartInit()
 {
+  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
+
   PROF_ACC_BEGIN(__FUNCTION__);
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
@@ -281,6 +283,8 @@ computeNodeMass()
 void MahycoModule::
 hydroContinueInit()
 {
+  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
+
   PROF_ACC_BEGIN(__FUNCTION__);
   if (subDomain()->isContinue()) {
     
