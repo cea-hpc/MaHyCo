@@ -209,3 +209,10 @@ void Algo1SyncDataMMatDH::finalizeReceipts() {
   m_ref_queue->barrier();
 }
 
+/*---------------------------------------------------------------------------*/
+/* Finalize if no communication needed                                       */
+/*---------------------------------------------------------------------------*/
+void Algo1SyncDataMMatDH::finalizeWoComm() {
+  m_ref_queue->barrier();
+}
+

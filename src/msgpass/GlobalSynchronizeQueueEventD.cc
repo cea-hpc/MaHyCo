@@ -15,6 +15,7 @@ template<typename MeshVariableRefT>
 void VarSyncMng::globalSynchronizeQueueEventD(Ref<RunQueue> ref_queue, MeshVariableRefT var)
 {
   if (m_nb_nei==0) {
+    ref_queue->barrier();
     return;
   }
   ARCANE_ASSERT(isDeviceAware(), 

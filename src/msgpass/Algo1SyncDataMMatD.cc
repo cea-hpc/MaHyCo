@@ -182,3 +182,10 @@ void Algo1SyncDataMMatD::finalizeReceipts() {
   m_ref_queue->barrier();
 }
 
+/*---------------------------------------------------------------------------*/
+/* Finalize if no communication needed                                       */
+/*---------------------------------------------------------------------------*/
+void Algo1SyncDataMMatD::finalizeWoComm() {
+  m_ref_queue->barrier();
+}
+
