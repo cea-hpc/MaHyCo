@@ -267,7 +267,6 @@ computeNodeMass()
   //   m_node_mass.synchronize();
   auto queue_synchronize = m_acc_env->refQueueAsync();
   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_mass);
-  queue_synchronize->barrier();
   PROF_ACC_END;
 }
 /**
@@ -1083,7 +1082,6 @@ computeGeometricValues()
 //   m_node_coord.synchronize();
   auto queue_synchronize = m_acc_env->refQueueAsync();
   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_coord);
-  queue_synchronize->barrier();
   
   if ( m_dimension == 3) {
     {
