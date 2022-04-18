@@ -1079,7 +1079,9 @@ computeGeometricValues()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   
-//   m_node_coord.synchronize();
+  // m_node_coord.synchronize();
+  // TODO (BM) 15/03/2022 besoin de synchro meme si updatePosition met à jour m_node_coord sur les allNodes
+  //                      A comprendre ...
   auto queue_synchronize = m_acc_env->refQueueAsync();
   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_coord);
   
