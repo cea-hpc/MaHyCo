@@ -197,7 +197,7 @@ computeMatAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     tm->debug() << "nosync";
     // Pas de synchro
     // Calcul sur tous les items "all"
-    auto all_items = get_own_items<ItemType>(m_mesh);
+    auto all_items = get_all_items<ItemType>(m_mesh);
     auto ref_queue = AcceleratorUtils::refQueueAsync(m_runner, QP_default); 
     depends_on(ref_queue, depends_on_evts);
     func(all_items, ref_queue.get());
