@@ -265,8 +265,11 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   } 
   queue_dfac.barrier(); // fin calcul m_is_dir_face
 #endif
-  m_grad_phi_face.synchronize();
-  m_h_cell_lagrange.synchronize();
+//   m_grad_phi_face.synchronize();
+//   m_h_cell_lagrange.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_grad_phi_face);
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_h_cell_lagrange);
   PROF_ACC_END;
 }
 /**

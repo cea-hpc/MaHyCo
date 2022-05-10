@@ -30,6 +30,7 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
   m_nb_nei = m_neigh_ranks.size();
 
   m_sync_cells = new SyncItems<Cell>(m_mesh,m_neigh_ranks, m_acc_mem_adv);
+  m_sync_faces = new SyncItems<Face>(m_mesh,m_neigh_ranks, m_acc_mem_adv);
   m_sync_nodes = new SyncItems<Node>(m_mesh,m_neigh_ranks, m_acc_mem_adv);
   m_sync_buffers = new SyncBuffers(isAcceleratorAvailable());
   m_neigh_queues = new MultiAsyncRunQueue(m_runner, m_nb_nei, /*unlimited=*/true);
@@ -55,6 +56,7 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
 
 VarSyncMng::~VarSyncMng() {
   delete m_sync_cells;
+  delete m_sync_faces;
   delete m_sync_nodes;
   delete m_sync_buffers;
   delete m_neigh_queues;
@@ -158,6 +160,11 @@ SyncItems<ItemType>* VarSyncMng::getSyncItems() {
 template<>
 SyncItems<Cell>* VarSyncMng::getSyncItems() {
   return m_sync_cells;
+}
+
+template<>
+SyncItems<Face>* VarSyncMng::getSyncItems() {
+  return m_sync_faces;
 }
 
 template<>
