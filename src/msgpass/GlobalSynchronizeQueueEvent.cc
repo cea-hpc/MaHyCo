@@ -15,6 +15,7 @@ template<typename MeshVariableRefT>
 void VarSyncMng::globalSynchronizeQueueEvent(Ref<RunQueue> ref_queue, MeshVariableRefT var)
 {
   if (m_nb_nei==0) {
+    ref_queue->barrier();
     return;
   }
 
@@ -225,5 +226,6 @@ void VarSyncMng::globalSynchronizeQueueEvent(Ref<RunQueue> ref_queue, MeshVariab
   template void VarSyncMng::globalSynchronizeQueueEvent(Ref<RunQueue> ref_queue, __MeshVariableRefT__ var)
 
 INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT(VariableCellReal);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT(VariableNodeReal);
 INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT(VariableNodeReal3);
 

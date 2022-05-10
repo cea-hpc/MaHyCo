@@ -37,6 +37,9 @@ class IAlgo1SyncData {
 
   //! Finalize the receipts for every neighbour
   virtual void finalizeReceipts() = 0;
+
+  //! Finalize if no communication needed 
+  virtual void finalizeWoComm() = 0;
 };
 
 #endif

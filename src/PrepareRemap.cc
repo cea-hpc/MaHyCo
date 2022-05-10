@@ -117,8 +117,9 @@ computeFaceQuantitesForRemap()
     };
   }
   
-  m_face_length_lagrange.synchronize();
-  m_face_normal_velocity.synchronize();
+  // Ces deux var ont été calculées sur allFaces, on enlève les synchro
+  // m_face_length_lagrange.synchronize();
+  // m_face_normal_velocity.synchronize();
   PROF_ACC_END;
 }
 

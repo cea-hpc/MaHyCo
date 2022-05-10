@@ -48,6 +48,8 @@ accBuild()
 void MahycoModule::
 hydroStartInit()
 {
+  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
+
   PROF_ACC_BEGIN(__FUNCTION__);
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
@@ -261,7 +263,10 @@ computeNodeMass()
       out_node_mass[nid] = one_over_nbnode * sum_mass;
     };
   }
-  m_node_mass.synchronize();
+  
+  //   m_node_mass.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_mass);
   PROF_ACC_END;
 }
 /**
@@ -277,6 +282,8 @@ computeNodeMass()
 void MahycoModule::
 hydroContinueInit()
 {
+  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
+
   PROF_ACC_BEGIN(__FUNCTION__);
   if (subDomain()->isContinue()) {
     
@@ -314,13 +321,25 @@ saveValuesAtN()
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
-  
+
+#if 0  
   // synchronisation debut de pas de temps (avec projection nécéssaire ?)
   m_pseudo_viscosity.synchronize();
   m_density.synchronize();
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
+  
+   auto queue_synchronize = m_acc_env->refQueueAsync();
+   MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
+   mvsl.add(m_pseudo_viscosity);
+   mvsl.add(m_density);
+   mvsl.add(m_internal_energy);
+   mvsl.add(m_cell_volume);
+   mvsl.add(m_pressure);
+   m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
+#endif
+  
 //   m_cell_cqs.synchronize();
 //   m_velocity.synchronize();
 
@@ -660,7 +679,9 @@ updateForceAndVelocity(Real dt,
   }
 #endif
 
-  v_velocity_out.synchronize();
+//   v_velocity_out.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, v_velocity_out);
   PROF_ACC_END;
 }
 
@@ -1057,7 +1078,12 @@ computeGeometricValues()
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << my_rank << " : " << " Entree dans computeGeometricValues() ";
   
-  m_node_coord.synchronize();
+  // m_node_coord.synchronize();
+  // TODO (BM) 15/03/2022 besoin de synchro meme si updatePosition met à jour m_node_coord sur les allNodes
+  //                      A comprendre ...
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_coord);
+  
   if ( m_dimension == 3) {
     {
       auto queue = m_acc_env->newQueue();

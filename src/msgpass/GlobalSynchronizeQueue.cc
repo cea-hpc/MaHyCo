@@ -14,6 +14,7 @@ template<typename MeshVariableRefT>
 void VarSyncMng::globalSynchronizeQueue(Ref<RunQueue> ref_queue, MeshVariableRefT var)
 {
   if (m_nb_nei==0) {
+    ref_queue->barrier(); 
     return;
   }
 

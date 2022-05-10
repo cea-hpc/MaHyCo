@@ -25,6 +25,7 @@ VarSyncAlgo1::~VarSyncAlgo1() {
 void VarSyncAlgo1::synchronize(IAlgo1SyncData* sync_data)
 {
   if (m_nb_nei==0 || sync_data->isEmpty()) {
+    sync_data->finalizeWoComm();
     return;
   }
 

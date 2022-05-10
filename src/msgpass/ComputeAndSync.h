@@ -118,7 +118,7 @@ computeAndSync(Func func, MeshVariableRefT var, eVarSyncVersion vs_version) {
     tm->debug() << "nosync";
     // Pas de synchro
     // Calcul sur tous les items "all"
-    auto all_items = get_own_items<ItemType>(m_mesh);
+    auto all_items = get_all_items<ItemType>(m_mesh);
     auto ref_queue = AcceleratorUtils::refQueueAsync(m_runner, QP_default); 
     func(all_items, ref_queue.get());
     ref_queue->barrier();

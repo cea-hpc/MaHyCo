@@ -69,6 +69,9 @@ class Algo1SyncDataMMatD : public IAlgo1SyncData {
   //! Finalize the receipts for every neighbour
   void finalizeReceipts() override;
 
+  //! Finalize if no communication needed
+  void finalizeWoComm() override;
+
  protected:
   MeshVariableSynchronizerList& m_vars;
   Ref<RunQueue> m_ref_queue;
