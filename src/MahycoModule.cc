@@ -329,7 +329,6 @@ saveValuesAtN()
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
-#endif
   
    auto queue_synchronize = m_acc_env->refQueueAsync();
    MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng()->bufAddrMng());
@@ -339,7 +338,7 @@ saveValuesAtN()
    mvsl.add(m_cell_volume);
    mvsl.add(m_pressure);
    m_acc_env->vsyncMng()->multiMatSynchronize(mvsl, queue_synchronize, VS_bulksync_evqueue);
-  
+#endif
   
 //   m_cell_cqs.synchronize();
 //   m_velocity.synchronize();
