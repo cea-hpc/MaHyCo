@@ -82,6 +82,9 @@ class VarSyncMng {
   //! Buffer d'adresses pour gérer les côuts des allocations
   BufAddrMng* bufAddrMng();
 
+  //! Pour gérer les EnvVarIndex(es) pour les comms
+  SyncEnvIndexes* syncEnvIndexes();
+
   // Retourne l'instance de SyncItems<T> en fonction de T
   template<typename ItemType>
   SyncItems<ItemType>* getSyncItems();
@@ -129,6 +132,7 @@ class VarSyncMng {
   void multiMatSynchronize(MeshVariableSynchronizerList& vars, Ref<RunQueue> ref_queue, 
       eVarSyncVersion vs_version=VS_bulksync_evqueue);
 
+  /* computeMatAndSync[OnEvents] */
 
   // Overlapping entre calcul et communications pour variable multi-mat
   template<typename Func, typename DataType>
@@ -153,6 +157,26 @@ class VarSyncMng {
   void computeMatAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
       Func func, MeshVariableSynchronizerList& vars, 
       eVarSyncVersion vs_version=VS_overlap_evqueue);
+
+  /* enumerateEnvAndSync[OnEvents] */
+
+  template<typename Func, typename DataType>
+  void enumerateEnvAndSync(Func func, CellMaterialVariableScalarRef<DataType> var, 
+      eVarSyncVersion vs_version=VS_overlap_evqueue);
+
+  template<typename Func, typename DataType>
+  void enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
+    Func func, CellMaterialVariableScalarRef<DataType> var, 
+    eVarSyncVersion vs_version=VS_overlap_evqueue);
+
+  template<typename Func>
+  void enumerateEnvAndSync(Func func, MeshVariableSynchronizerList& vars, 
+      eVarSyncVersion vs_version=VS_overlap_evqueue);
+
+  template<typename Func>
+  void enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
+    Func func, MeshVariableSynchronizerList& vars, 
+    eVarSyncVersion vs_version=VS_overlap_evqueue);
 
  protected:
   
@@ -181,12 +205,16 @@ class VarSyncMng {
 
   MultiAsyncRunQueue* m_neigh_queues=nullptr;  //! Pour gérer plusieurs queues pour les voisins
 
+  Ref<ax::RunQueue> m_ref_queue_inr;  //! Référence sur queue standard pour traitement items intérieurs
   Ref<ax::RunQueue> m_ref_queue_bnd;  //! Référence sur queue prioritaire pour traitement items bords
   Ref<ax::RunQueue> m_ref_queue_data;  //! Référence sur une queue prioritaire pour le transfert des données
   UniqueArray<Ref<ax::RunQueueEvent>> m_pack_events;  //! Les evenements pour le packing des données
   UniqueArray<Ref<ax::RunQueueEvent>> m_transfer_events;  //! Les evenements pour le transfert des données
 
   SyncEnvIndexes* m_sync_evi=nullptr;  //! Pour gérer les EnvVarIndex(es) pour les comms
+
+  MultiAsyncRunQueue* m_menv_queue_inr=nullptr;  //!< queues pour traiter les environnements de façon asynchrone à l'intérieur du sous-domaine
+  MultiAsyncRunQueue* m_menv_queue_bnd=nullptr;  //!< queues pour traiter les environnements de façon asynchrone sur le bord du sous-domaine
 
   // TEST pour amortir le cout des allocs
   BufAddrMng* m_buf_addr_mng=nullptr;
@@ -200,6 +228,7 @@ class VarSyncMng {
 // Implementation template de computeAndSync
 #include "msgpass/ComputeAndSync.h"
 #include "msgpass/ComputeMatAndSync.h"
+#include "msgpass/EnumerateEnvAndSync.h"
 
 /*---------------------------------------------------------------------------*/
 /* Spécialisations pour retourner le nb de fois un type élémentaire DataType */
