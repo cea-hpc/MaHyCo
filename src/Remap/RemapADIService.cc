@@ -29,12 +29,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      /*
-       *  TODO (BM) 10/05/2022 : dans la branche master, on a la condition (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1)
-       *                         en effet, GG a corrigé un bug dans arcane le 01/03/2022 sur les infos dans mesh cartesian (arcane mode)
-       *                         TODO : reporter ce fix dans le cartesian de David pour avoir le meme test que la bracnhe master.
-       */
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
