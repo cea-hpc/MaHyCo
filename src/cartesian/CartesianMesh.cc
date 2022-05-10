@@ -245,64 +245,61 @@ computeDirections()
 
   info() << "Informations from IMesh properties:";
   Properties* mesh_properties = mesh()->properties();
-  Int64 global_nb_cell_x = mesh_properties->getInt64WithDefault("GlobalNbCellX",-1);
-  Int64 global_nb_cell_y = mesh_properties->getInt64WithDefault("GlobalNbCellY",-1);
-  Int64 global_nb_cell_z = mesh_properties->getInt64WithDefault("GlobalNbCellZ",-1);
+  Int64 global_nb_cell[3];
+  global_nb_cell[MD_DirX] = mesh_properties->getInt64WithDefault("GlobalNbCellX",-1);
+  global_nb_cell[MD_DirY] = mesh_properties->getInt64WithDefault("GlobalNbCellY",-1);
+  global_nb_cell[MD_DirZ] = mesh_properties->getInt64WithDefault("GlobalNbCellZ",-1);
   info() << "GlobalNbCell: "
-         << " X=" << global_nb_cell_x
-         << " Y=" << global_nb_cell_y
-         << " Z=" << global_nb_cell_z;
+         << " X=" << global_nb_cell[MD_DirX]
+         << " Y=" << global_nb_cell[MD_DirY]
+         << " Z=" << global_nb_cell[MD_DirZ];
 
-  Int32 own_nb_cell_x = mesh_properties->getInt32WithDefault("OwnNbCellX",-1);
-  Int32 own_nb_cell_y = mesh_properties->getInt32WithDefault("OwnNbCellY",-1);
-  Int32 own_nb_cell_z = mesh_properties->getInt32WithDefault("OwnNbCellZ",-1);
+  Int32 own_nb_cell[3];
+  own_nb_cell[MD_DirX] = mesh_properties->getInt32WithDefault("OwnNbCellX",-1);
+  own_nb_cell[MD_DirY] = mesh_properties->getInt32WithDefault("OwnNbCellY",-1);
+  own_nb_cell[MD_DirZ] = mesh_properties->getInt32WithDefault("OwnNbCellZ",-1);
   info() << "OwnNbCell: "
-         << " X=" << own_nb_cell_x
-         << " Y=" << own_nb_cell_y
-         << " Z=" << own_nb_cell_z;
+         << " X=" << own_nb_cell[MD_DirX]
+         << " Y=" << own_nb_cell[MD_DirY]
+         << " Z=" << own_nb_cell[MD_DirZ];
 
-  Int32 sub_domain_offset_x = mesh_properties->getInt32WithDefault("SubDomainOffsetX",-1);
-  Int32 sub_domain_offset_y = mesh_properties->getInt32WithDefault("SubDomainOffsetY",-1);
-  Int32 sub_domain_offset_z = mesh_properties->getInt32WithDefault("SubDomainOffsetZ",-1);
+  Int32 sub_domain_offset[3];
+  sub_domain_offset[MD_DirX] = mesh_properties->getInt32WithDefault("SubDomainOffsetX",-1);
+  sub_domain_offset[MD_DirY] = mesh_properties->getInt32WithDefault("SubDomainOffsetY",-1);
+  sub_domain_offset[MD_DirZ] = mesh_properties->getInt32WithDefault("SubDomainOffsetZ",-1);
   info() << "SubDomainOffset: "
-         << " X=" << sub_domain_offset_x
-         << " Y=" << sub_domain_offset_y
-         << " Z=" << sub_domain_offset_z;
+         << " X=" << sub_domain_offset[MD_DirX]
+         << " Y=" << sub_domain_offset[MD_DirY]
+         << " Z=" << sub_domain_offset[MD_DirZ];
 
-  Int64 own_cell_offset_x = mesh_properties->getInt64WithDefault("OwnCellOffsetX",-1);
-  Int64 own_cell_offset_y = mesh_properties->getInt64WithDefault("OwnCellOffsetY",-1);
-  Int64 own_cell_offset_z = mesh_properties->getInt64WithDefault("OwnCellOffsetZ",-1);
+  Int64 own_cell_offset[3];
+  own_cell_offset[MD_DirX] = mesh_properties->getInt64WithDefault("OwnCellOffsetX",-1);
+  own_cell_offset[MD_DirY] = mesh_properties->getInt64WithDefault("OwnCellOffsetY",-1);
+  own_cell_offset[MD_DirZ] = mesh_properties->getInt64WithDefault("OwnCellOffsetZ",-1);
   info() << "OwnCellOffset: "
-         << " X=" << own_cell_offset_x
-         << " Y=" << own_cell_offset_y
-         << " Z=" << own_cell_offset_z;
+         << " X=" << own_cell_offset[MD_DirX]
+         << " Y=" << own_cell_offset[MD_DirY]
+         << " Z=" << own_cell_offset[MD_DirZ];
 
   if (next_face_x!=(-1)){
     m_local_face_direction[MD_DirX] = next_face_x;
     _computeMeshDirection(MD_DirX,cells_center,faces_center);
-    CellDirectionMng& cdm = m_cell_directions[MD_DirX];
-    cdm.m_global_nb_cell = global_nb_cell_x;
-    cdm.m_own_nb_cell = own_nb_cell_x;
-    cdm.m_sub_domain_offset = sub_domain_offset_x;
-    cdm.m_own_cell_offset = own_cell_offset_x;
   }
   if (next_face_y!=(-1)){
     m_local_face_direction[MD_DirY] = next_face_y;
     _computeMeshDirection(MD_DirY,cells_center,faces_center);
-    CellDirectionMng& cdm = m_cell_directions[MD_DirY];
-    cdm.m_global_nb_cell = global_nb_cell_y;
-    cdm.m_own_nb_cell = own_nb_cell_y;
-    cdm.m_sub_domain_offset = sub_domain_offset_y;
-    cdm.m_own_cell_offset = own_cell_offset_y;
   }
   if (next_face_z!=(-1)){
     m_local_face_direction[MD_DirZ] = next_face_z;
     _computeMeshDirection(MD_DirZ,cells_center,faces_center);
-    CellDirectionMng& cdm = m_cell_directions[MD_DirZ];
-    cdm.m_global_nb_cell = global_nb_cell_z;
-    cdm.m_own_nb_cell = own_nb_cell_z;
-    cdm.m_sub_domain_offset = sub_domain_offset_z;
-    cdm.m_own_cell_offset = own_cell_offset_z;
+  }
+
+  for(Integer idir=0 ; idir<m_mesh->dimension() ; ++idir) {
+    CellDirectionMng& cdm = m_cell_directions[idir];
+    cdm.m_global_nb_cell = global_nb_cell[idir];
+    cdm.m_own_nb_cell = own_nb_cell[idir];
+    cdm.m_sub_domain_offset = sub_domain_offset[idir];
+    cdm.m_own_cell_offset = own_cell_offset[idir];
   }
 }
 

@@ -43,6 +43,8 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
     m_transfer_events[inei] = makeEventRef(m_runner);
   }
 
+  // Queue avec priorité "standard"
+  m_ref_queue_inr  = AcceleratorUtils::refQueueAsync(m_runner, QP_default);
   // la priorité doit être la même que celle de la queue qui servira au pack/unpack des buffers de comms = QP_high
   m_ref_queue_bnd  = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
   m_ref_queue_data = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
@@ -59,6 +61,9 @@ VarSyncMng::~VarSyncMng() {
 
   delete m_sync_evi;
 
+  delete m_menv_queue_inr;
+  delete m_menv_queue_bnd;
+
   delete m_buf_addr_mng;
 
   delete m_vsync_algo1;
@@ -74,7 +79,7 @@ void VarSyncMng::initSyncMultiEnv(IMeshMaterialMng* mesh_material_mng) {
   if (!m_sync_evi) {
     m_sync_evi = new SyncEnvIndexes(
         MatVarSpace::MaterialAndEnvironment, m_mesh_material_mng,
-        m_neigh_ranks, m_acc_mem_adv);
+        m_neigh_ranks, m_sync_cells, m_acc_mem_adv);
 
     // m_sync_evi doit être créé pour construire m_a1_*
     // _dh_ = Device-Host
@@ -84,6 +89,18 @@ void VarSyncMng::initSyncMultiEnv(IMeshMaterialMng* mesh_material_mng) {
     m_a1_mmat_d_pi = 
       new Algo1SyncDataMMatD::PersistentInfo(m_is_device_aware,
           m_nb_nei, m_runner, m_sync_evi, m_sync_buffers);
+  }
+
+  // Pour les traitements multi-env "intérieurs" ou de "bord"
+  if (!m_menv_queue_inr) {
+    m_menv_queue_inr = new MultiAsyncRunQueue(m_runner, 
+        m_mesh_material_mng->environments().size(),
+        /*unlimited=*/false, QP_default);
+  }
+  if (!m_menv_queue_bnd) {
+    m_menv_queue_bnd = new MultiAsyncRunQueue(m_runner, 
+        m_mesh_material_mng->environments().size(),
+        /*unlimited=*/false, QP_high);
   }
 
   // Buffers mémoire pré-alloués pour minimiser coût des allocs, c'est un TEST
@@ -120,6 +137,13 @@ bool VarSyncMng::isDeviceAware() const {
 /*---------------------------------------------------------------------------*/
 BufAddrMng* VarSyncMng::bufAddrMng() {
   return m_buf_addr_mng;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Pour gérer les EnvVarIndex(es) pour les comms                             */
+/*---------------------------------------------------------------------------*/
+SyncEnvIndexes* VarSyncMng::syncEnvIndexes() {
+  return m_sync_evi;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -169,13 +193,13 @@ void VarSyncMng::multiMatSynchronize(MeshVariableSynchronizerList& vars,
     Ref<RunQueue> ref_queue, eVarSyncVersion vs_version)
 {
   IAlgo1SyncData* sync_data=nullptr;
-  if (vs_version==VS_bulksync_evqueue) 
+  if (vs_version==VS_bulksync_evqueue || vs_version==VS_overlap_evqueue) 
   {
     sync_data = new Algo1SyncDataMMatDH(vars, ref_queue, *m_a1_mmat_dh_pi);
   } 
-  else if (vs_version == VS_bulksync_evqueue_d) 
+  else if (vs_version == VS_bulksync_evqueue_d || vs_version==VS_overlap_evqueue_d) 
   {
-    sync_data = new Algo1SyncDataMMatD(vars, m_ref_queue_bnd, *m_a1_mmat_d_pi);
+    sync_data = new Algo1SyncDataMMatD(vars, ref_queue, *m_a1_mmat_d_pi);
   } 
   else 
   {

@@ -3,17 +3,39 @@
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 SyncEnvIndexes::SyncEnvIndexes(MatVarSpace mvs, IMeshMaterialMng* mm,
-    Int32ConstArrayView neigh_ranks, AccMemAdviser* acc_mem_adv) :
+    Int32ConstArrayView neigh_ranks,
+    SyncItems<Cell>* sync_cells, 
+    AccMemAdviser* acc_mem_adv) :
   m_mesh_material_mng    (mm),
   m_acc_mem_adv          (acc_mem_adv),
+  m_sync_cells           (sync_cells),
   m_mvs                  (mvs),
   m_nb_nei               (neigh_ranks.size()),
+
   m_buf_owned_evi        (platform::getAcceleratorHostMemoryAllocator()),
   m_indexes_owned_evi_pn (platform::getAcceleratorHostMemoryAllocator()),
   m_nb_owned_evi_pn      (platform::getAcceleratorHostMemoryAllocator()),
+  
   m_buf_ghost_evi        (platform::getAcceleratorHostMemoryAllocator()),
   m_indexes_ghost_evi_pn (platform::getAcceleratorHostMemoryAllocator()),
-  m_nb_ghost_evi_pn      (platform::getAcceleratorHostMemoryAllocator())
+  m_nb_ghost_evi_pn      (platform::getAcceleratorHostMemoryAllocator()),
+
+  m_buf_all_evi_4env     (platform::getAcceleratorHostMemoryAllocator()),
+  m_indexes_all_evi_penv (platform::getAcceleratorHostMemoryAllocator()),
+  m_nb_all_evi_penv      (platform::getAcceleratorHostMemoryAllocator()),
+
+  m_buf_owned_evi_4env     (platform::getAcceleratorHostMemoryAllocator()),
+  m_indexes_owned_evi_penv (platform::getAcceleratorHostMemoryAllocator()),
+  m_nb_owned_evi_penv      (platform::getAcceleratorHostMemoryAllocator()),
+
+  m_buf_private_evi_4env     (platform::getAcceleratorHostMemoryAllocator()),
+  m_indexes_private_evi_penv (platform::getAcceleratorHostMemoryAllocator()),
+  m_nb_private_evi_penv      (platform::getAcceleratorHostMemoryAllocator()),
+
+  m_buf_shared_evi_4env     (platform::getAcceleratorHostMemoryAllocator()),
+  m_indexes_shared_evi_penv (platform::getAcceleratorHostMemoryAllocator()),
+  m_nb_shared_evi_penv      (platform::getAcceleratorHostMemoryAllocator())
+
 {
   if (!m_mesh_material_mng) {
     throw NotSupportedException(A_FUNCINFO, "Unsupported m_mesh_material_mng nullptr");
@@ -90,6 +112,85 @@ void SyncEnvIndexes::updateEnvIndexes() {
     m_acc_mem_adv->setReadMostly(m_buf_ghost_evi       .view());
     m_acc_mem_adv->setReadMostly(m_indexes_ghost_evi_pn.view());
     m_acc_mem_adv->setReadMostly(m_nb_ghost_evi_pn     .view());
+  }
+
+  // Construction des EnvVarIndex(es) par environnement des groupes de mailles ...
+  // "all" (TODO : on pourrait passer directement par les EnvCell)
+  _eviListFromGroup(m_mesh_material_mng->mesh()->allCells(),
+      m_buf_all_evi_4env, 
+      m_indexes_all_evi_penv, m_nb_all_evi_penv);
+
+  // "owned"
+  _eviListFromGroup(m_mesh_material_mng->mesh()->ownCells(),
+      m_buf_owned_evi_4env, 
+      m_indexes_owned_evi_penv, m_nb_owned_evi_penv);
+
+  // "private"
+  _eviListFromGroup(m_sync_cells->privateItems(),
+      m_buf_private_evi_4env, 
+      m_indexes_private_evi_penv, m_nb_private_evi_penv);
+
+  // "shared"
+  _eviListFromGroup(m_sync_cells->sharedItems(),
+      m_buf_shared_evi_4env, 
+      m_indexes_shared_evi_penv, m_nb_shared_evi_penv);
+}
+
+/*---------------------------------------------------------------------------*/
+/* Calcule les listes de EnvIndex(es) par environnement à partir d'un groupe de mailles */
+/*---------------------------------------------------------------------------*/
+void SyncEnvIndexes::_eviListFromGroup(CellGroup cell_group,
+    UniqueArray<EnvVarIndex>& buf_evi, 
+    IntegerUniqueArray&       indexes_evi_penv,
+    IntegerUniqueArray&       nb_evi_penv
+    ) {
+
+  Integer nb_env = m_mesh_material_mng->environments().size();
+
+  // Un premier parcours des mailles pour compter et allouer
+  nb_evi_penv.resize(nb_env, 0);
+
+  ENUMERATE_ALLENVCELL(iallevc, m_mesh_material_mng, cell_group){
+    AllEnvCell allevc = *iallevc;
+    ENUMERATE_CELL_ENVCELL(ievc, allevc){
+      EnvCell evc = *ievc;
+      Integer env_id = evc.environmentId();
+      nb_evi_penv[env_id]++;
+    }
+  }
+
+  indexes_evi_penv.resize(nb_env);
+  Integer accu_nb_evi=0;
+  for(Integer ienv=0 ; ienv<nb_env ; ++ienv) {
+    indexes_evi_penv[ienv] = accu_nb_evi;
+    accu_nb_evi += nb_evi_penv[ienv];
+  }
+
+  // Un deuxième parcours des mailles pour remplir les evi cette fois-ci
+  buf_evi.resize(accu_nb_evi);
+
+  // On construit des multi-vues sur des zones allouées en mémoire managées
+  MultiArray2View<EnvVarIndex> levis_penv(buf_evi.view(),
+      indexes_evi_penv.constView(), nb_evi_penv.constView());
+
+  IntegerUniqueArray cur_penv(nb_env, 0);
+
+  ENUMERATE_ALLENVCELL(iallevc, m_mesh_material_mng, cell_group){
+    AllEnvCell allevc = *iallevc;
+    ENUMERATE_CELL_ENVCELL(ievc, allevc){
+      EnvCell evc = *ievc;
+      Integer env_id = evc.environmentId();
+      const MatVarIndex& mvi = evc._varIndex();
+      Integer i = cur_penv[env_id];
+      levis_penv[env_id][i] = EnvVarIndex(mvi.arrayIndex(), mvi.valueIndex());
+      cur_penv[env_id]++;
+    }
+  }
+
+  if (m_acc_mem_adv) {
+    m_acc_mem_adv->setReadMostly(buf_evi          .view());
+    m_acc_mem_adv->setReadMostly(indexes_evi_penv .view());
+    m_acc_mem_adv->setReadMostly(nb_evi_penv      .view());
   }
 }
 

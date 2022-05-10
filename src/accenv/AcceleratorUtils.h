@@ -156,37 +156,34 @@ class AcceleratorUtils {
 class MultiAsyncRunQueue {
  public:
 
-  MultiAsyncRunQueue(ax::Runner& runner, Integer asked_nb_queue, bool unlimited=false) {
+  MultiAsyncRunQueue(ax::Runner& runner, Integer asked_nb_queue, 
+      bool unlimited=false, eQueuePriority qp=QP_default) {
     if (unlimited) {
       m_nb_queue=asked_nb_queue;
     } else {
       // au plus 32 queues (32 = nb de kernels max exécutables simultanément)
       m_nb_queue = std::min(asked_nb_queue, 32);
     }
-    m_queues.resize(m_nb_queue);
+    m_queues.reserve(m_nb_queue);
     for(Integer iq=0 ; iq<m_nb_queue ; ++iq) {
-      m_queues[iq] = new ax::RunQueue(runner);
-      m_queues[iq]->setAsync(true);
+      m_queues.add(AcceleratorUtils::refQueueAsync(runner, qp));
     }
   }
 
   virtual ~MultiAsyncRunQueue() {
-    for(auto q : m_queues) {
-      delete q;
-    }
     m_nb_queue=0;
     m_queues.clear();
   }
 
   // Pour récupérer la iq%nbQueue()-ième queue d'exécution
   inline ax::RunQueue& queue(Integer iq) {
-    return *(m_queues[iq%m_nb_queue]);
+    return *(m_queues[iq%m_nb_queue].get());
   }
 
   // Force l'attente de toutes les RunQueue
   void waitAllQueues() {
-    for(auto q : m_queues) {
-      q->barrier();
+    for(Integer iq=0 ; iq<m_nb_queue ; ++iq) {
+      m_queues[iq]->barrier();
     }
   }
 
@@ -197,7 +194,7 @@ class MultiAsyncRunQueue {
   }
 
  protected:
-  UniqueArray<ax::RunQueue*> m_queues; //!< toutes les RunQueue
+  UniqueArray< Ref<ax::RunQueue> > m_queues; //!< toutes les RunQueue
   Integer m_nb_queue=0; //!< m_queues.size()
 };
 
