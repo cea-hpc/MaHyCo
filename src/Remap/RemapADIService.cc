@@ -1056,9 +1056,13 @@ void RemapADIService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
     m_phi_lagrange.synchronize();
     m_u_lagrange.synchronize();
-    m_est_mixte.synchronize();
-    m_est_pure.synchronize();
     m_dual_phi_flux.synchronize();
+    
+//     m_est_mixte.synchronize();
+//     m_est_pure.synchronize();
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_mixte);
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_pure);
 }
 /*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
