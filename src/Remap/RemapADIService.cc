@@ -1062,6 +1062,8 @@ void RemapADIService::synchronizeUremap()  {
 //     m_est_pure.synchronize();
     auto queue_synchronize = m_acc_env->refQueueAsync();
     m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_lagrange);
+//   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_u_lagrange);    // FAIT DES DIFFS PAR RAPPORT A SYNCHRONIZE
+//   m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_dual_phi_flux); // FAIT DES DIFFS PAR RAPPORT A SYNCHRONIZE
     m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_mixte);
     m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_pure);
 }
