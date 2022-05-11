@@ -718,7 +718,9 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
     };
   }
 
-  m_phi_face.synchronize();      
+//   m_phi_face.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_face);
   PROF_ACC_END;
 }
 
