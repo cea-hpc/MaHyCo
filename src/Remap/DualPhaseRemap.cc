@@ -61,7 +61,12 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
         computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
       }
     }
+#if 0
     m_dual_grad_phi.synchronize();
+#else
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_dual_grad_phi);
+#endif
   }
   
 #if 0
@@ -343,10 +348,18 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
 #endif
 
   // doit etre inutile si on augmente le nombre de mailles fantomes
+#if 0
   m_back_flux_mass_env.synchronize(); 
   m_front_flux_mass_env.synchronize();
   m_back_flux_mass.synchronize(); 
   m_front_flux_mass.synchronize();
+#else
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_back_flux_mass_env);
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_front_flux_mass_env);
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_back_flux_mass);
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_front_flux_mass);
+#endif
     
 #if 1
   {
@@ -683,8 +696,14 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
  */
 void RemapADIService::synchronizeDualUremap()  {
     debug() << " Entree dans synchronizeUremap()";
+#if 0
     m_phi_dual_lagrange.synchronize();
     m_u_dual_lagrange.synchronize();
+#else
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_dual_lagrange);
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_u_dual_lagrange);
+#endif
 }
 
 
