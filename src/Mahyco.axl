@@ -1,0 +1,341 @@
+<?xml version="1.0" ?>
+<module name="Mahyco" version="1.0">
+
+<description>Descripteur du module Mahyco</description>
+
+<variables>
+    <!-- Pas de temps Old --> 
+  <variable field-name="old_deltat" name="OldDeltat" data-type="real"
+	    dim="0" dump="true" />    
+  <!-- sens de la projection --> 
+  <variable field-name="sens_projection" name="SensProjection" data-type="integer"
+	    dim="0" dump="true" />
+  <!-- Materiau -->
+  <variable field-name="materiau" name="Materiau" data-type="real" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- DENSITY OLD N -->
+  <variable field-name="density_n" name="DensityN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- DENSITY -->
+  <variable field-name="density" name="Density" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- PRESSURE OLD N-->
+  <variable field-name="pressure_n" name="PressureN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- PRESSURE -->
+  <variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- PSEUDO OLD N-1-->
+  <variable field-name="pseudo_viscosity_nmoins1" name="PseudoViscosityNmoins1" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- PSEUDO OLD N-->
+  <variable field-name="pseudo_viscosity_n" name="PseudoViscosityN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- PSEUDO -->
+  <variable field-name="pseudo_viscosity" name="PseudoViscosity" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- MASS FRACTION-->
+  <variable field-name="mass_fraction" name="MassFraction" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL MASS -->
+  <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- INTERNAL ENERGY OLD N -->
+  <variable field-name="internal_energy_n" name="InternalEnergyN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- INTERNAL ENERGY	 -->
+  <variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- DPDE -->
+  <variable field-name="dpde" name="DpDe" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- FRACVOL -->
+  <variable field-name="fracvol" name="FracVol" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME OLD N	 -->
+  <variable field-name="cell_volume_n" name="CellVolumeN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME	 -->
+  <variable field-name="cell_volume" name="CellVolume" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- CELL VOLUME EULER	 -->
+  <variable field-name="euler_volume" name="EulerVolume" data-type="real" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+  <!-- DIV U	 -->
+  <variable field-name="div_u" name="DivU" data-type="real" item-kind="cell"
+	    dim="0" dump="false" need-sync="true" />
+  <!-- TAUX DENSITY	 -->
+  <variable field-name="tau_density" name="TauxDensity" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="false" need-sync="true" />
+  <!-- GLOBAL CELL	 -->
+  <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
+	    dim="0" material="true" dump="false" need-sync="false" />
+  <!-- ENV ID -->
+  <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
+	    dim="0" dump="false" need-sync="false" />
+  <!-- FORCE	 -->
+  <variable field-name="force" name="Force" data-type="real3" item-kind="node"
+	    dim="0" dump="false" need-sync="false" />
+  <!-- 	VELOCITY OLD N	 -->
+  <variable field-name="velocity_n" name="VelocityN" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	VELOCITY -->
+  <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	NODE MASS	 -->
+  <variable field-name="node_mass" name="NodeMass" data-type="real" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CARACTERISTIC LENGTH	 -->
+  <variable field-name="caracteristic_length" name="CaracteristicLength" data-type="real" item-kind="cell"
+	    dim="0" dump="false" need-sync="true" />
+  <!-- 	SOUND SPEED	 -->
+  <variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	NODE COORD	 -->
+  <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	NODE COORD_0	 -->
+  <variable field-name="node_coord_0" name="NodeCoord0" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL COORD	 -->
+  <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL CQS	 -->
+  <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />
+  <!-- 	CELL OLD CQS	 -->
+  <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
+  <!-- 	FACE COORD	 -->
+  <variable field-name="face_coord" name="FaceCoord" data-type="real3" item-kind="face"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	FACE NORMAL	 -->
+  <variable field-name="face_normal" name="FaceNormal" data-type="real3" item-kind="face"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	FACE NORMAL VELOCITY	 -->
+  <variable field-name="face_normal_velocity" name="FaceNormalVelocity" data-type="real" item-kind="face"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	FACE LENGHT	 -->
+  <variable field-name="face_length_lagrange" name="FaceLenghtLagrange" data-type="real3" item-kind="face"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	U LAGRANGE	 -->
+    <variable field-name="u_lagrange" name="ULagrange" data-type="real" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />
+  <!-- 	U DUAL LAGRANGE	 -->
+    <variable field-name="u_dual_lagrange" name="UDualLagrange" data-type="real" item-kind="node"
+	    dim="1" dump="true" need-sync="true" />
+  <!-- 	PHI LAGRANGE	 -->
+    <variable field-name="phi_lagrange" name="PhiLagrange" data-type="real" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />
+   <!-- 	PHI DUAL LAGRANGE	 -->
+    <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
+	      dim="1" dump="true" need-sync="true" />
+    <!-- 	GRAD PHI DUAL LAGRANGE	pour les vitesses -->
+    <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real" item-kind="node"
+	      dim="1" dump="true" need-sync="true" />
+    <!-- MIXTE	 -->
+    <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+    <!-- PURE	 -->
+    <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+    <!-- 	isDirFace	 -->
+    <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
+	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
+    <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" />
+  </variables>
+
+
+<entry-points>
+  <entry-point method-name="accBuild" name="AccBuild" where="build" property="none" />
+  <entry-point method-name="hydroStartInit" name="HydroStartInit" where="start-init" property="none" />
+  <entry-point method-name="hydroContinueInit" name="HydroContinueInit" where="continue-init" property="none" />
+  <entry-point method-name="computeCellMass" name="ComputeCellMass" where="start-init" property="none" />
+  <entry-point method-name="computeNodeMass" name="ComputeNodeMass" where="start-init" property="none" />
+  <entry-point method-name="PrepareFaceGroup" name="PrepareFaceGroup" where="start-init" property="none" />
+  <entry-point method-name="saveValuesAtN" name="SaveValuesAtN" where="compute-loop" property="none" />
+  <entry-point method-name="updateVelocity" name="UpdateVelocity" where="compute-loop" property="none" />
+  <entry-point method-name="applyBoundaryCondition" name="ApplyBoundaryCondition" where="compute-loop" property="none" />
+  <entry-point method-name="updatePosition" name="UpdatePosition" where="compute-loop" property="none" />
+  <entry-point method-name="computeGeometricValues" name="ComputeGeometricValues" where="compute-loop" property="none" />
+  <entry-point method-name="updateDensity" name="UpdateDensity" where="compute-loop" property="none" />
+  <entry-point method-name="computeArtificialViscosity" name="ComputeArtificialViscosity" where="compute-loop" property="none" />
+  <entry-point method-name="updateEnergyAndPressure" name="UpdateEnergyAndPressure" where="compute-loop" property="none" />
+  <entry-point method-name="computePressionMoyenne" name="ComputePressionMoyenne" where="compute-loop" property="none" />
+  <entry-point method-name="remap" name="Remap" where="compute-loop" property="none" />
+  <entry-point method-name="computeDeltaT" name="ComputeDeltaT" where="compute-loop" property="none" /> 
+</entry-points>
+
+<options>
+  <!-- Infos sur les materiaux -->
+  <complex
+   name = "material"
+   type = "Material"
+    minOccurs = "1"
+    maxOccurs = "unbounded"
+  >
+   <description>Materiaux</description>
+
+   <simple
+    name = "name"
+    type = "string"
+   >
+    <description>Nom du materiau</description>
+   </simple>
+
+  </complex>
+
+  <!-- Liste des milieux et composition des materiaux -->
+  <complex
+   name = "environment"
+   type = "Environment"
+    minOccurs = "1"
+    maxOccurs = "unbounded"
+  >
+   <description>Milieu</description>
+
+   <simple
+    name = "name"
+    type = "string"
+   >
+    <description>Nom du milieu</description>
+   </simple>
+
+   <simple
+    name = "material"
+    type = "string"
+    minOccurs = "1"
+    maxOccurs = "unbounded"
+   >
+    <description>Nom du materiau</description>
+   </simple>
+
+   <service-instance name="eos-model" type="IEquationOfState">
+    <description>Service d'equation d'état</description>
+   </service-instance>
+
+  </complex>
+  
+  <service-instance name="cas-model" type="IInitialisations">
+  <description>Service d'initialisation du cas test</description>
+  </service-instance>
+  
+  
+   <!-- - - - - - projection - - - - -->
+  <service-instance name="remap" type="IRemap" default="RemapADI">
+    <description>Service de projection </description>
+  </service-instance>
+
+   <!-- - - - cartesian sort faces - - - - -->
+  <simple name="cartesian-sort-faces" type="bool" default="true">
+    <description>
+     Impose le tri cartésien des faces (valable que si le maillage est lui-même cartésien)
+    </description>
+  </simple>
+
+   <!-- - - - schema csts - - - - -->
+  <simple name="schema-csts" type="bool">
+    <description>
+     schema CSTS 
+    </description>
+  </simple>
+
+  <!-- - - - options pseudo-centree - - - - -->
+  <simple name="pseudo-centree" type="bool">
+    <description>
+     Option pseudo-centree 
+    </description>
+  </simple>
+  
+  <!-- - - - options longueur caracteristic - - - - -->
+  <simple name="longueur-caracteristique" type="string">
+    <description>
+     Type de longueur caracteristique
+    </description>
+  </simple>
+
+  <!-- - - - - - deltat-min - - - - -->
+  <simple name="deltat-min" type="real">
+    <description>
+      Valeur minimale que peut prendre le
+      <em>deltat</em>
+      entre deux itérations.
+    </description>
+  </simple>
+
+  <!-- - - - - - deltat-max - - - - -->
+  <simple name="deltat-max" type="real">
+    <description>
+      Valeur maximale que peut prendre le
+      <em>deltat</em>
+      entre deux itérations. Si le deltat calculé est supérieur à cette valeur, il est ramené à cette valeur.
+    </description>
+  </simple>
+
+  <!-- - - - - - deltat-init - - - - -->
+  <simple name="deltat-init" type="real">
+    <description>
+      Valeur du
+      <em>deltat</em>
+      au moment du démarrage.
+    </description>
+  </simple>
+
+  <!-- - - - - - final time - - - - -->
+  <simple name="final-time" type="real">
+    <name lang="fr">temps-final</name>
+    <description>
+      Temps auquel on stoppe la simulation. Le code s'arrête dès que le temps courant est
+      <strong>strictement</strong>
+      supérieur à ce temps.
+    </description>
+  </simple>
+
+  <!-- - - - - - cfl - - - - -->
+  <simple name="cfl" type="real" default="0.3">
+    <description>Définition de la CFL</description>
+  </simple>
+  <!-- - - - - - thresold - - - - -->
+  <simple name="threshold" type="real" default="1.e-10">
+    <description>Définition de la valeur limite des petites fractions et autres </description>
+  </simple>
+   <!-- - - - - sans-lagrange- - - - - -->
+  <simple name="sans-lagrange" type="bool" default="false">
+    <description> Calcul le schema Lagrange </description>
+  </simple> 
+  <!-- - - - - with newton for energy- - - - - -->
+  <simple name="with-newton" type="bool" default="false">
+    <description> Calcul de l'energie avec newton </description>
+  </simple>
+   <!-- - - - - with-projection- - - - - -->
+  <simple name="with-projection" type="bool" default="true">
+    <description> Calcul avec projection ADI </description>
+  </simple>
+  <!-- - - - - - boundary-condition - - - - -->
+  <complex name="boundary-condition" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded">
+    <description>Condition aux limites</description>
+
+    <enumeration name="type" type="TypesMahyco::eBoundaryCondition">
+      <description>Type de condition aux limites</description>
+      <enumvalue genvalue="TypesMahyco::VelocityX" name="Vx" />
+      <enumvalue genvalue="TypesMahyco::VelocityY" name="Vy" />
+      <enumvalue genvalue="TypesMahyco::VelocityZ" name="Vz" />
+    </enumeration>
+
+    <simple name="surface" type="string">
+      <description>Surface sur laquelle s'applique la condition aux limites</description>
+    </simple>
+
+    <simple name="value" type="real">
+      <description>Valeur de la composante à fixer</description>
+    </simple>
+  </complex>
+		
+  <!-- - - - - - geometry - - - - -->
+  <service-instance name="geometry" type="Arcane::Numerics::IGeometryMng" default="Euclidian3Geometry">
+    <description>Service Géométrie</description>
+  </service-instance>
+  
+</options>
+</module>
