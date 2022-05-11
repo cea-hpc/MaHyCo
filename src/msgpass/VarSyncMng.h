@@ -199,6 +199,7 @@ class VarSyncMng {
   Int32ConstArrayView m_neigh_ranks;  //! Liste des rangs des voisins
 
   SyncItems<Cell>* m_sync_cells=nullptr;
+  SyncItems<Face>* m_sync_faces=nullptr;
   SyncItems<Node>* m_sync_nodes=nullptr;
 
   SyncBuffers* m_sync_buffers=nullptr;

@@ -265,8 +265,14 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   } 
   queue_dfac.barrier(); // fin calcul m_is_dir_face
 #endif
-  m_grad_phi_face.synchronize();
-  m_h_cell_lagrange.synchronize();
+//   m_h_cell_lagrange.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+#if 0
+  m_grad_phi_face.synchronize(); // INUTILE ?
+#else
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_grad_phi_face);
+#endif
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_h_cell_lagrange);
   PROF_ACC_END;
 }
 /**
@@ -715,7 +721,12 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
     };
   }
 
-  m_phi_face.synchronize();      
+#if 0
+  m_phi_face.synchronize(); // INUTILE ?
+#else
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_face);
+#endif
   PROF_ACC_END;
 }
 
@@ -1049,11 +1060,24 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
  */
 void RemapADIService::synchronizeUremap()  {
     debug() << " Entree dans synchronizeUremap()";
-    m_phi_lagrange.synchronize();
+    
+//     m_est_mixte.synchronize();
+//     m_est_pure.synchronize();
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+#if 0
+    m_phi_lagrange.synchronize(); // INUTILE ?
+#else
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_lagrange);
+#endif
+#if 0
     m_u_lagrange.synchronize();
-    m_est_mixte.synchronize();
-    m_est_pure.synchronize();
     m_dual_phi_flux.synchronize();
+#else
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_u_lagrange);   
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_dual_phi_flux);
+#endif
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_mixte);
+    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_pure);
 }
 /*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);

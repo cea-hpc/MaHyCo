@@ -744,7 +744,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   }
 
   queue_nm.barrier();
-  m_node_mass.synchronize();
+//   m_node_mass.synchronize();
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_mass);
   menv_queue->waitAllQueues();
 #endif
  

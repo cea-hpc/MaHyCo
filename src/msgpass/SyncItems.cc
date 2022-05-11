@@ -19,6 +19,11 @@ eItemKind get_item_kind<Cell>() {
 }
 
 template<>
+eItemKind get_item_kind<Face>() {
+  return IK_Face;
+}
+
+template<>
 eItemKind get_item_kind<Node>() {
   return IK_Node;
 }
@@ -33,6 +38,11 @@ ItemGroupT<ItemType> get_all_items(IMesh* mesh) {
 template<>
 ItemGroupT<Cell> get_all_items(IMesh* mesh) {
   return mesh->allCells();
+}
+
+template<>
+ItemGroupT<Face> get_all_items(IMesh* mesh) {
+  return mesh->allFaces();
 }
 
 template<>
@@ -53,6 +63,11 @@ ItemGroupT<Cell> get_own_items(IMesh* mesh) {
 }
 
 template<>
+ItemGroupT<Face> get_own_items(IMesh* mesh) {
+  return mesh->ownFaces();
+}
+
+template<>
 ItemGroupT<Node> get_own_items(IMesh* mesh) {
   return mesh->ownNodes();
 }
@@ -67,6 +82,11 @@ const char* get_string_items() {
 template<>
 const char* get_string_items<Cell>() {
   return "Cell";
+}
+
+template<>
+const char* get_string_items<Face>() {
+  return "Face";
 }
 
 template<>
@@ -228,5 +248,6 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
   template class SyncItems<__ItemType__>
 
 INST_SYNC_ITEMS(Cell);
+INST_SYNC_ITEMS(Face);
 INST_SYNC_ITEMS(Node);
 

@@ -20,7 +20,7 @@ void async_pack_var2buf(IntegerConstArrayView item_idx,
     ArrayView<Byte> buf, RunQueue& queue) 
 {
   // Ne devrait jamais être appelé
-  ARCANE_ASSERT(false, ("async_pack_var2buf à spécifialiser"));
+  throw NotSupportedException(A_FUNCINFO, String("async_pack_var2buf à spécialiser"));
 }
 
 // Spécialisation pour MeshVariable***Scalar***RefT
@@ -36,14 +36,45 @@ void async_pack_var2buf(IntegerConstArrayView item_idx,
   auto in_var = ax::viewIn(command, var);
 
   Span<const Integer> in_item_idx(item_idx);
-  Span<DataType> buf_vals(MultiBufView::valBuf<DataType>(buf));
-
   Integer nb_item_idx = item_idx.size();
+
+  Span<DataType> buf_vals(MultiBufView::valBuf<DataType>(buf));
 
   command << RUNCOMMAND_LOOP1(iter, nb_item_idx) {
     auto [i] = iter();
     ItemIdType lid(in_item_idx[i]); 
     buf_vals[i] = in_var[lid];
+  }; // asynchrone
+}
+
+// Spécialisation pour MeshVariable***Array***RefT
+template<typename ItemType, typename DataType>
+void async_pack_var2buf(IntegerConstArrayView item_idx, 
+    const MeshVariableArrayRefT<ItemType, DataType>& var,
+    ArrayView<Byte> buf, RunQueue& queue) 
+{
+  using ItemIdType = typename ItemType::LocalIdType;
+
+  auto command = makeCommand(queue);
+
+  auto in_var = ax::viewIn(command, var);
+
+  Span<const Integer> in_item_idx(item_idx);
+  Integer nb_item_idx = item_idx.size();
+
+  Integer degree = var.arraySize();
+  // Vue sur tableau 2D [nb_item][degree]
+  Span2<DataType> buf_vals(MultiBufView::valBuf2<DataType>(buf, degree));
+
+  command << RUNCOMMAND_LOOP1(iter, nb_item_idx) {
+    auto [i] = iter();
+    ItemIdType lid(in_item_idx[i]); 
+
+    Span<const DataType> in_var_lid  (in_var[lid]);
+    Span<DataType>       buf_vals_i  (buf_vals[i]);
+    for(Integer j=0 ; j<degree ; ++j) {
+      buf_vals_i[j] = in_var_lid[j];
+    }
   }; // asynchrone
 }
 
@@ -56,7 +87,7 @@ void async_unpack_buf2var(IntegerConstArrayView item_idx,
     MeshVarRefT<ItemType, DataType> &var, RunQueue& queue) 
 {
   // Ne devrait jamais être appelé
-  ARCANE_ASSERT(false, ("async_unpack_buf2var à spécifialiser"));
+  throw NotSupportedException(A_FUNCINFO, String("async_unpack_buf2var à spécialiser"));
 }
 
 // Spécialisation pour MeshVariable***Scalar***RefT
@@ -70,16 +101,43 @@ void async_unpack_buf2var(IntegerConstArrayView item_idx,
   auto command = makeCommand(queue);
 
   Span<const Integer>  in_item_idx(item_idx);
+  Integer nb_item_idx = item_idx.size();
+
   Span<const DataType> buf_vals(MultiBufView::valBuf<DataType>(buf));
 
   auto out_var = ax::viewOut(command, var);
-
-  Integer nb_item_idx = item_idx.size();
 
   command << RUNCOMMAND_LOOP1(iter, nb_item_idx) {
     auto [i] = iter();
     ItemIdType lid(in_item_idx[i]);
     out_var[lid] = buf_vals[i];
+  }; // asynchrone
+}
+
+// Spécialisation pour MeshVariable***Array***RefT
+template<typename ItemType, typename DataType>
+void async_unpack_buf2var(IntegerConstArrayView item_idx, 
+    ArrayView<Byte> buf,
+    MeshVariableArrayRefT<ItemType, DataType> &var, RunQueue& queue)
+{
+  using ItemIdType = typename ItemType::LocalIdType;
+
+  auto command = makeCommand(queue);
+
+  Span<const Integer>  in_item_idx(item_idx);
+  Integer nb_item_idx = item_idx.size();
+
+  Integer degree = var.arraySize();
+  // Vue sur tableau 2D [nb_item][degree]
+  Span2<const DataType> buf_vals(MultiBufView::valBuf2<DataType>(buf, degree));
+
+  auto out_var = ax::viewOut(command, var);
+
+  command << RUNCOMMAND_LOOP1(iter, nb_item_idx) {
+    auto [i] = iter();
+    ItemIdType lid(in_item_idx[i]);
+
+    out_var[lid].copy(buf_vals[i]);
   }; // asynchrone
 }
 
