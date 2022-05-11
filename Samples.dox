@@ -1,0 +1,12 @@
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// -*- C++ -*-
+/*!
+  \mainpage Les sources de Mahyco sous  ARCANE
+
+
+  Ce répertoire  \c microhydro contient l'application Mahyco sous Arcane : schéma numérique VNR et Projection ADI sur maillage cartésien structurée
+   / \c MicroHydroModule. Ce module délègue le calcul de son équation d'état au service ARCANE \c IEquationOfState.
+
+  Pour toutes les questions relatives à l'utilisation de ARCANE, n'oubliez pas de consulter la documentation
+  des <b><a href="pages.html">pages associées</a></b>.
+*/
