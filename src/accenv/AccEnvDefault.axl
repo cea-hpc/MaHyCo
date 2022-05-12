@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="AccEnvDefault" version="1.0" type="subdomain" singleton="true">
+
+	<description>Environnement à partager pour les accélérateurs</description>
+  <interface name="IAccEnv" />
+
+  <variables>
+  <!-- GLOBAL CELL	 -->
+  <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
+	    dim="0" material="true" dump="false" need-sync="false" />
+  <!-- ENV ID -->
+  <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
+	    dim="0" dump="false" need-sync="false" />
+  </variables>
+    
+    <options>
+  <!-- - - - - - acc-mem-advise - - - - -->
+  <simple name="acc-mem-advise" type="bool" default="true"><description>Active/désactive tous les conseils mémoire (ie tous les appels à cudaMemAdvise).</description></simple>
+
+  <!-- - - - - device-affinity - - - - -->
+  <enumeration name="device-affinity" type="eDeviceAffinity" default="node_rank">
+    <description>Manière de choisir le device attaché au processus</description>
+    <enumvalue name="none" genvalue="DA_none" />
+    <enumvalue name="world_rank" genvalue="DA_world_rank" />
+    <enumvalue name="node_rank" genvalue="DA_node_rank" />
+    <!-- <enumvalue name="cu_hwloc" genvalue="DA_cu_hwloc" /> -->
+  </enumeration>
+
+  <!-- - - - - heterog-partition - - - - -->
+  <enumeration name="heterog-partition" type="eHeterogPartition" default="none">
+    <description>Manière de répartir Host/Device sur les sous-domaines</description>
+    <enumvalue name="none" genvalue="HP_none" />
+    <enumvalue name="heterog1" genvalue="HP_heterog1" />
+  </enumeration>
+
+	</options>
+</service>
