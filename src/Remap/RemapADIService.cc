@@ -889,8 +889,6 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
   int nbmat = nb_env;
   Real deltat = m_global_deltat();
           
-  for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-  
     auto queue = m_acc_env->newQueue();
     queue.setAsync(true);
     auto command = makeCommand(queue);
@@ -907,6 +905,7 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
     
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
+  for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
       
       out_dual_phi_flux[cid][ivar] = 0.;
       
@@ -934,8 +933,8 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
         ++index;
       }
       out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
-    }; 
-  }
+    } 
+  };
   
   // On fait les diagnostics et controles 
   {
