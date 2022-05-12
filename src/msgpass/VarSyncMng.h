@@ -79,6 +79,12 @@ class VarSyncMng {
   //! Retourne vrai si on peut utiliser les adresses dans DEVICE pour les comms
   bool isDeviceAware() const;
 
+  //! Affecte la version par défaut de implem pour synchronisation var globale
+  void setDefaultGlobVarSyncVersion(eVarSyncVersion vs_version);
+
+  //! Retourne la version par défaut de implem pour synchronisation var globale
+  eVarSyncVersion defaultGlobVarSyncVersion() const;
+
   //! Buffer d'adresses pour gérer les côuts des allocations
   BufAddrMng* bufAddrMng();
 
@@ -117,6 +123,12 @@ class VarSyncMng {
   // Amorce un globalSynchronizeQueue
   template<typename ItemType, typename DataType, template<typename, typename> class MeshVarRefT>
   Ref<GlobalSyncRequest<ItemType, DataType, MeshVarRefT> > iGlobalSynchronizeQueue(Ref<RunQueue> ref_queue, MeshVarRefT<ItemType, DataType> var);
+
+  /* computeAndSync */
+
+  // Equivalent à un "var.synchronize()" (implem dépend de vs_version) + plus barrière sur ref_queue
+  template<typename MeshVariableRefT>
+  void globalSynchronize(Ref<RunQueue> ref_queue, MeshVariableRefT var, eVarSyncVersion vs_version = VS_default);
 
   // Overlapping entre calcul et communications pour variable "globale"
   template<typename Func, typename MeshVariableRefT>
@@ -219,6 +231,8 @@ class VarSyncMng {
 
   // TEST pour amortir le cout des allocs
   BufAddrMng* m_buf_addr_mng=nullptr;
+
+  eVarSyncVersion m_glob_deflt_vs_version;  //!< Version implem pour synchronisation var globale
 
   // Pour synchro algo1
   VarSyncAlgo1* m_vsync_algo1=nullptr;

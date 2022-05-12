@@ -65,7 +65,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     m_dual_grad_phi.synchronize();
 #else
     auto queue_synchronize = m_acc_env->refQueueAsync();
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_dual_grad_phi);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_dual_grad_phi);
 #endif
   }
   
@@ -355,10 +355,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   m_front_flux_mass.synchronize();
 #else
   auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_back_flux_mass_env);
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_front_flux_mass_env);
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_back_flux_mass);
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_front_flux_mass);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_back_flux_mass_env);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_front_flux_mass_env);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_back_flux_mass);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_front_flux_mass);
 #endif
     
 #if 1
@@ -701,8 +701,8 @@ void RemapADIService::synchronizeDualUremap()  {
     m_u_dual_lagrange.synchronize();
 #else
     auto queue_synchronize = m_acc_env->refQueueAsync();
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_dual_lagrange);
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_u_dual_lagrange);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_phi_dual_lagrange);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_u_dual_lagrange);
 #endif
 }
 

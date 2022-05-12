@@ -696,10 +696,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 #else
   // On peut calculer simultanément m_node_mass sur les noeuds 
   // et m_cell_volume sur les mailles mixtes
-  auto queue_nm = m_acc_env->newQueue();
-  queue_nm.setAsync(true);
+  auto ref_queue_nm = m_acc_env->refQueueAsync();
   {
-    auto command_nm = makeCommand(queue_nm);
+    auto command_nm = makeCommand(ref_queue_nm.get());
 
     auto in_cell_mass  = ax::viewIn(command_nm, m_cell_mass.globalVariable());
     auto out_node_mass = ax::viewOut(command_nm, m_node_mass);
@@ -743,10 +742,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     };
   }
 
-  queue_nm.barrier();
 //   m_node_mass.synchronize();
-  auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_node_mass);
+  // ref_queue_nm va être synchronisée dans globalSynchronize
+  m_acc_env->vsyncMng()->globalSynchronize(ref_queue_nm, m_node_mass);
   menv_queue->waitAllQueues();
 #endif
  
