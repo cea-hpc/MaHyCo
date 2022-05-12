@@ -199,5 +199,11 @@ void VarSyncMng::globalSynchronizeQueueEventD(Ref<RunQueue> ref_queue, MeshVaria
   template void VarSyncMng::globalSynchronizeQueueEventD(Ref<RunQueue> ref_queue, __MeshVariableRefT__ var)
 
 INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableCellReal);
-INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableNodeReal3);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableCellArrayReal);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableCellInteger);
 
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableNodeReal);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableNodeReal3);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableNodeArrayReal);
+
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE_EVENT_D(VariableFaceArrayReal);

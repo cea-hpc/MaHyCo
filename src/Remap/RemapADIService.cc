@@ -270,9 +270,9 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
 #if 0
   m_grad_phi_face.synchronize(); // INUTILE ?
 #else
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_grad_phi_face);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_grad_phi_face);
 #endif
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_h_cell_lagrange);
+  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_h_cell_lagrange);
   PROF_ACC_END;
 }
 /**
@@ -669,10 +669,10 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
-  auto queue = m_acc_env->newQueue();
+  auto ref_queue = m_acc_env->refQueueAsync();
   // Init 0, pour simplifier sur toutes les faces
   {
-    auto command = makeCommand(queue);
+    auto command = makeCommand(ref_queue.get());
 
     auto out_phi_face = ax::viewOut(command, m_phi_face);
 
@@ -685,7 +685,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
   {
     Integer order2 = options()->ordreProjection - 1;
     
-    auto command = makeCommand(queue);
+    auto command = makeCommand(ref_queue.get());
 
     auto cart_fdm = fact_cart.faceDirection(idir);
     auto f2cid_stm = cart_fdm.face2CellIdStencil();
@@ -724,8 +724,8 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 #if 0
   m_phi_face.synchronize(); // INUTILE ?
 #else
-  auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_face);
+  // ref_queue va être synchronisée dans globalSynchronize
+  m_acc_env->vsyncMng()->globalSynchronize(ref_queue, m_phi_face);
 #endif
   PROF_ACC_END;
 }
@@ -1067,17 +1067,17 @@ void RemapADIService::synchronizeUremap()  {
 #if 0
     m_phi_lagrange.synchronize(); // INUTILE ?
 #else
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_phi_lagrange);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_phi_lagrange);
 #endif
 #if 0
     m_u_lagrange.synchronize();
     m_dual_phi_flux.synchronize();
 #else
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_u_lagrange);   
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_dual_phi_flux);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_u_lagrange);   
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_dual_phi_flux);
 #endif
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_mixte);
-    m_acc_env->vsyncMng()->globalSynchronizeQueueEvent(queue_synchronize, m_est_pure);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_mixte);
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_pure);
 }
 /*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);

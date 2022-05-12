@@ -50,6 +50,9 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
   m_ref_queue_bnd  = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
   m_ref_queue_data = AcceleratorUtils::refQueueAsync(m_runner, QP_high);
 
+  // Version par défaut de implem pour synchronisation var globale
+  setDefaultGlobVarSyncVersion((isAcceleratorAvailable() ? VS_overlap_evqueue : VS_bulksync_std));
+
   // Pour synchro algo1
   m_vsync_algo1 = new VarSyncAlgo1(m_pm, m_neigh_ranks);
 }
@@ -132,6 +135,32 @@ bool VarSyncMng::isAcceleratorAvailable() const {
 /*---------------------------------------------------------------------------*/
 bool VarSyncMng::isDeviceAware() const {
   return m_is_device_aware;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Affecte la version par défaut de implem pour synchronisation var globale  */
+/*---------------------------------------------------------------------------*/
+void VarSyncMng::setDefaultGlobVarSyncVersion(eVarSyncVersion vs_version) {
+  if (vs_version == VS_default)
+  {
+    // Détermination automatique
+    if (isAcceleratorAvailable())
+      m_glob_deflt_vs_version = VS_overlap_evqueue;
+    else
+      m_glob_deflt_vs_version = VS_bulksync_std; // .synchronize() Arcane
+  }
+  else
+  {
+    // Choix imposé par l'utilisateur
+    m_glob_deflt_vs_version = vs_version;
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+/* Retourne la version par défaut de implem pour synchronisation var globale */
+/*---------------------------------------------------------------------------*/
+eVarSyncVersion VarSyncMng::defaultGlobVarSyncVersion() const {
+  return m_glob_deflt_vs_version;
 }
 
 /*---------------------------------------------------------------------------*/
