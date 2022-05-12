@@ -903,6 +903,11 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     
     auto out_dual_phi_flux = ax::viewInOut(command, m_dual_phi_flux );
     auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
+
+    auto out_est_mixte = ax::viewOut(command, m_est_mixte);
+    auto out_est_pure  = ax::viewOut(command, m_est_pure);
+    
+    auto inout_phi_lagrange = ax::viewInOut(command, m_phi_lagrange);
     
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
   for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
@@ -934,38 +939,25 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
       }
       out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
     } 
-  };
-  
-  // On fait les diagnostics et controles 
-  {
-    auto queue = m_acc_env->newQueue();
-    auto command = makeCommand(queue);
-    
-    auto out_est_mixte = ax::viewOut(command, m_est_mixte);
-    auto out_est_pure  = ax::viewOut(command, m_est_pure);
-    
-    auto inout_u_lagrange   = ax::viewInOut(command, m_u_lagrange);
-    auto inout_phi_lagrange = ax::viewInOut(command, m_phi_lagrange);
-    
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
-      for (int imat = 0; imat < nbmat; imat++) {
-        if (inout_u_lagrange[cid][nbmat + imat] < 0.) {
-          inout_u_lagrange[cid][nbmat + imat] = 0.;
+  	// On fait les diagnostics et controles 
+  	  for (int imat = 0; imat < nbmat; imat++) {
+        if (out_u_lagrange[cid][nbmat + imat] < 0.) {
+          out_u_lagrange[cid][nbmat + imat] = 0.;
         }
-        if (inout_u_lagrange[cid][2*nbmat + imat] < 0.) {
-          inout_u_lagrange[cid][2*nbmat + imat] = 0.;
+        if (out_u_lagrange[cid][2*nbmat + imat] < 0.) {
+          out_u_lagrange[cid][2*nbmat + imat] = 0.;
         }
       }
       
       // Calcul du volume de la maille apres 
       double somme_volume = 0.;
       for (int imat = 0; imat < nbmat; imat++) {
-        somme_volume += inout_u_lagrange[cid][imat];
+        somme_volume += out_u_lagrange[cid][imat];
       }
       
       // somme_volume doit etre égale à m_cell_volume[cell]
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
-        inout_phi_lagrange[cid][ivar] = inout_u_lagrange[cid][ivar] / somme_volume;
+        inout_phi_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] / somme_volume;
       }
       
       // Mises à jour de l'indicateur mailles mixtes   
@@ -984,9 +976,8 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
           out_est_pure[cid] = imatpure;
         }
       }
-    };
-  }
-    
+  };
+  
 //   ENUMERATE_CELL(icell,allCells()) {
 //     Cell cell = * icell;
 //     // diagnostics et controle
