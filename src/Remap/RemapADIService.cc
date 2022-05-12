@@ -923,20 +923,22 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
       // Sur GPU, on a gardé le meme pattern cell -> cell.faces(), ainsi pour accéder à 
       // m_outer_face_normal[cell][face.index()], il suffit d'un int que l'on incrémente
       // au fur et à mesure du parcours faces(cell). (pas besoin de face_index_in_cells finalement)
-      Integer index = 0;
-      for( FaceLocalId fid : cfc.faces(cid) ) {
-        Real in_face_normal_face_idir = in_face_normal[fid][idir];
-        if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
-          Real face_normal_velocity(in_face_normal_velocity[fid]);
-          Real face_length(in_face_length_lagrange[fid][idir]);
-          Real3 outer_face_normal(in_outer_face_normal[cid][index]);
-          Real outer_face_normal_dir = outer_face_normal[idir];
-          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
-          flux_face += flux;
-          out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
-        }
-        ++index;
-      }
+			int dimension=nb_env+1;
+			// Pour j=0 on accède uniquement à faces[1] et faces[4], pour j=1 à faces[2] et faces[5]
+			// pour j=2 à faces[0]et faces[3]
+			// On n'a plus besoin de la variable index, c'est j
+	  for( int j = (idir+1)%dimension; j<= (idir+1)%dimension + dimension;j+=dimension) { 
+		  FaceLocalId fid = (FaceLocalId)cfc.faces(cid)[j];
+
+		  Real face_normal_velocity(in_face_normal_velocity[fid]);
+		  Real face_length(in_face_length_lagrange[fid][idir]);
+		  Real3 outer_face_normal(in_outer_face_normal[cid][j]);
+		  Real outer_face_normal_dir = outer_face_normal[idir];
+		  flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
+		  flux_face += flux;
+		  out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
+
+	  }
       out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
     } 
   	// On fait les diagnostics et controles 
