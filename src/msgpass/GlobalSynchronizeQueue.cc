@@ -112,5 +112,12 @@ void VarSyncMng::globalSynchronizeQueue(Ref<RunQueue> ref_queue, MeshVariableRef
   template void VarSyncMng::globalSynchronizeQueue(Ref<RunQueue> ref_queue, __MeshVariableRefT__ var)
 
 INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableCellReal);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableCellArrayReal);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableCellInteger);
+
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableNodeReal);
 INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableNodeReal3);
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableNodeArrayReal);
+
+INST_VAR_SYNC_MNG_GLOBAL_SYNCHRONIZE_QUEUE(VariableFaceArrayReal);
 

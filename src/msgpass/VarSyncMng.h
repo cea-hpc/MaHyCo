@@ -128,11 +128,11 @@ class VarSyncMng {
 
   // Equivalent à un "var.synchronize()" (implem dépend de vs_version) + plus barrière sur ref_queue
   template<typename MeshVariableRefT>
-  void globalSynchronize(Ref<RunQueue> ref_queue, MeshVariableRefT var, eVarSyncVersion vs_version = VS_default);
+  void globalSynchronize(Ref<RunQueue> ref_queue, MeshVariableRefT var, eVarSyncVersion vs_version = VS_auto);
 
   // Overlapping entre calcul et communications pour variable "globale"
   template<typename Func, typename MeshVariableRefT>
-  void computeAndSync(Func func, MeshVariableRefT var, eVarSyncVersion vs_version=VS_overlap_evqueue);
+  void computeAndSync(Func func, MeshVariableRefT var, eVarSyncVersion vs_version=VS_auto);
 
 
   //! Equivalent à un var.synchronize() où var est une variable multi-mat

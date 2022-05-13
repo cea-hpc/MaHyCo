@@ -16,8 +16,8 @@
 template<typename MeshVariableRefT>
 void VarSyncMng::
 globalSynchronize(Ref<RunQueue> ref_queue, MeshVariableRefT var, eVarSyncVersion vs_version) {
-  if (vs_version == VS_default) {
-    vs_version = m_glob_deflt_vs_version;
+  if (vs_version == VS_auto) {
+    vs_version = defaultGlobVarSyncVersion();
   }
 
   if (vs_version==VS_bulksync_evqueue || vs_version==VS_overlap_evqueue) 
@@ -60,6 +60,10 @@ template<typename Func, typename MeshVariableRefT>
 void VarSyncMng::
 computeAndSync(Func func, MeshVariableRefT var, eVarSyncVersion vs_version) {
   PROF_ACC_BEGIN(__FUNCTION__);
+
+  if (vs_version == VS_auto) {
+    vs_version = defaultGlobVarSyncVersion();
+  }
 
   using ItemType = typename MeshVariableRefT::ItemType;
   

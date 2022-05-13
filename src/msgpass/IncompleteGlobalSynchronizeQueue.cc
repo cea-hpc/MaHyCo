@@ -140,5 +140,11 @@ void GlobalSyncRequest<ItemType, DataType, MeshVarRefT>::wait()
    VarSyncMng::iGlobalSynchronizeQueue(Ref<RunQueue> ref_queue, __MeshVarRefT__<__ItemType__, __DataType__> var)
 
 INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Cell, Real, MeshVariableScalarRefT);
-INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Node, Real3, MeshVariableScalarRefT);
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Cell, Real, MeshVariableArrayRefT);
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Cell, Integer, MeshVariableScalarRefT);
 
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Node, Real, MeshVariableScalarRefT);
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Node, Real3, MeshVariableScalarRefT);
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Node, Real, MeshVariableArrayRefT);
+
+INST_VAR_SYNC_MNG_I_GLOBAL_SYNCHRONIZE_QUEUE(Face, Real, MeshVariableArrayRefT);

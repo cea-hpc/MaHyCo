@@ -36,7 +36,7 @@
   <!-- - - - - global-var-sync-version - - - - -->
   <enumeration name="global-var-sync-version" type="eVarSyncVersion" default="auto">
     <description>Choix implémentation globalSynchronize(var) où var est globale</description>
-    <enumvalue name="auto" genvalue="VS_default" />
+    <enumvalue name="auto" genvalue="VS_auto" />
     <enumvalue name="nosync" genvalue="VS_nosync" />
     <enumvalue name="bulksync_std" genvalue="VS_bulksync_std" />
     <enumvalue name="bulksync_evqueue" genvalue="VS_bulksync_evqueue" />

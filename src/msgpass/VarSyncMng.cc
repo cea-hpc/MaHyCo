@@ -141,7 +141,7 @@ bool VarSyncMng::isDeviceAware() const {
 /* Affecte la version par défaut de implem pour synchronisation var globale  */
 /*---------------------------------------------------------------------------*/
 void VarSyncMng::setDefaultGlobVarSyncVersion(eVarSyncVersion vs_version) {
-  if (vs_version == VS_default)
+  if (vs_version == VS_auto)
   {
     // Détermination automatique
     if (isAcceleratorAvailable())

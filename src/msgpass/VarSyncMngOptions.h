@@ -4,7 +4,7 @@
 /*! \brief Définit les implémentations de synchronisations d'une variable
  */
 enum eVarSyncVersion {
-  VS_default = -1,  // Synchronisation par défaut
+  VS_auto = -1,  // Détection automatique
   VS_nosync = 0,  // Pas de synchronisation
   VS_bulksync_std, // "Bulk-Synchronous" avec .synchronize() "classique" Arcane
   VS_bulksync_queue,  // "Bulk-Synchronous" avec packing/unpacking buf comm sur GPU
