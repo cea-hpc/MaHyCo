@@ -637,44 +637,46 @@ updateForceAndVelocity(Real dt,
     SimdNode snode=*inode;
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
+  v_velocity_out.synchronize();
 #else
-  auto ref_queue = m_acc_env->refQueueAsync();
-  auto command = makeCommand(ref_queue.get());
-
-  auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
-  auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
-  auto in_cell_cqs         = ax::viewIn(command, v_cell_cqs);
-  // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
-  auto out_force           = ax::viewOut(command, m_force);
-
-  auto node_index_in_cells = m_acc_env->nodeIndexInCells();
-  const Integer max_node_cell = m_acc_env->maxNodeCell();
-
-  auto nc_cty = m_acc_env->connectivityView().nodeCell();
-
-  auto in_mass      = ax::viewIn(command, m_node_mass);
-  auto in_velocity  = ax::viewIn(command, v_velocity_in);
-  auto out_velocity = ax::viewOut(command, v_velocity_out);
-
-  command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
-    Int32 first_pos = nid.localId() * max_node_cell;
-    Integer index = 0;
-    Real3 node_force = Real3::zero();
-    for( CellLocalId cid : nc_cty.cells(nid) ){
-      Int16 node_index = node_index_in_cells[first_pos + index];
-      node_force += (in_pressure[cid]+in_pseudo_viscosity[cid]) 
-	* in_cell_cqs[cid][node_index];
-      ++index;
-    }
-    out_force[nid] = node_force;
-
-    // On peut mettre la vitesse à jour dans la foulée
-    out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
-  };
+  m_acc_env->vsyncMng()->computeAndSync(
+    [&](NodeGroup node_group, RunQueue* async_queue) {
+  
+      auto command = makeCommand(async_queue);
+     
+      auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
+      auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
+      auto in_cell_cqs         = ax::viewIn(command, v_cell_cqs);
+      // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
+      auto out_force           = ax::viewOut(command, m_force);
+     
+      auto node_index_in_cells = m_acc_env->nodeIndexInCells();
+      const Integer max_node_cell = m_acc_env->maxNodeCell();
+     
+      auto nc_cty = m_acc_env->connectivityView().nodeCell();
+     
+      auto in_mass      = ax::viewIn(command, m_node_mass);
+      auto in_velocity  = ax::viewIn(command, v_velocity_in);
+      auto out_velocity = ax::viewOut(command, v_velocity_out);
+     
+      command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
+        Int32 first_pos = nid.localId() * max_node_cell;
+        Integer index = 0;
+        Real3 node_force = Real3::zero();
+        for( CellLocalId cid : nc_cty.cells(nid) ){
+          Int16 node_index = node_index_in_cells[first_pos + index];
+          node_force += (in_pressure[cid]+in_pseudo_viscosity[cid]) 
+            * in_cell_cqs[cid][node_index];
+          ++index;
+        }
+        out_force[nid] = node_force;
+     
+        // On peut mettre la vitesse à jour dans la foulée
+        out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
+      };
+    },
+    v_velocity_out);
 #endif
-
-//   v_velocity_out.synchronize();
-  m_acc_env->vsyncMng()->globalSynchronize(ref_queue, v_velocity_out);
   PROF_ACC_END;
 }
 
