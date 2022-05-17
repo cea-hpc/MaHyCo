@@ -1059,6 +1059,7 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
  *******************************************************************************
  */
 void RemapADIService::synchronizeUremap()  {
+  PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
     
 //     m_est_mixte.synchronize();
@@ -1078,6 +1079,7 @@ void RemapADIService::synchronizeUremap()  {
 #endif
     m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_mixte);
     m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_pure);
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);

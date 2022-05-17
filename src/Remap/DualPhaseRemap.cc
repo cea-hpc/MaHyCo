@@ -695,6 +695,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
  *******************************************************************************
  */
 void RemapADIService::synchronizeDualUremap()  {
+  PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
 #if 0
     m_phi_dual_lagrange.synchronize();
@@ -704,6 +705,7 @@ void RemapADIService::synchronizeDualUremap()  {
     m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_phi_dual_lagrange);
     m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_u_dual_lagrange);
 #endif
+  PROF_ACC_END;
 }
 
 
