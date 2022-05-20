@@ -24,7 +24,7 @@ void VarSyncMng::
 enumerateEnvAndSync(Func func, CellMaterialVariableScalarRef<DataType> var, eVarSyncVersion vs_version) {
 
   // Liste avec une seule variable
-  MeshVariableSynchronizerList mvsl(m_buf_addr_mng);
+  MeshVariableSynchronizerList mvsl(this);
   mvsl.add(var);
 
   enumerateEnvAndSyncOnEvents<Func>(UniqueArray<Ref<ax::RunQueueEvent>>() /*liste vide d'événements*/,
@@ -49,7 +49,7 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     Func func, CellMaterialVariableScalarRef<DataType> var, eVarSyncVersion vs_version) {
 
   // Liste avec une seule variable
-  MeshVariableSynchronizerList mvsl(m_buf_addr_mng);
+  MeshVariableSynchronizerList mvsl(this);
   mvsl.add(var);
 
   enumerateEnvAndSyncOnEvents<Func>(depends_on_evts,

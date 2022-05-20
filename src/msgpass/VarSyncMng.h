@@ -17,6 +17,7 @@
 #include "msgpass/VarSyncAlgo1.h"
 #include "msgpass/Algo1SyncDataMMatDH.h"
 #include "msgpass/Algo1SyncDataMMatD.h"
+#include "msgpass/Algo1SyncDataGlobDH.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -94,6 +95,10 @@ class VarSyncMng {
   // Retourne l'instance de SyncItems<T> en fonction de T
   template<typename ItemType>
   SyncItems<ItemType>* getSyncItems();
+
+  // Synchronise les éléments fantômes sur une liste de variables
+  void synchronize(MeshVariableSynchronizerList& vars, 
+    Ref<RunQueue> ref_queue, eVarSyncVersion vs_version=VS_auto);
 
   // Equivalent à un var.synchronize() où var est une variable globale (i.e. non multi-mat)
   template<typename MeshVariableRefT>
@@ -236,6 +241,7 @@ class VarSyncMng {
 
   // Pour synchro algo1
   VarSyncAlgo1* m_vsync_algo1=nullptr;
+  Algo1SyncDataGlobDH::PersistentInfo* m_a1_glob_dh_pi=nullptr;
   Algo1SyncDataMMatDH::PersistentInfo* m_a1_mmat_dh_pi=nullptr;
   Algo1SyncDataMMatD::PersistentInfo* m_a1_mmat_d_pi=nullptr;
 };

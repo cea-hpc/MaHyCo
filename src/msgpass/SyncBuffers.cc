@@ -364,7 +364,7 @@ MultiBufView SyncBuffers::multiBufView(
 }
 
 /*---------------------------------------------------------------------------*/
-/* TODO
+/* TODO : à supprimer
  */
 /*---------------------------------------------------------------------------*/
 MultiBufView2 SyncBuffers::_multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
@@ -446,6 +446,91 @@ MultiBufView2 SyncBuffers::multiBufViewVars(
   return mb2;
 }
 
+
+/*---------------------------------------------------------------------------*/
+/* TODO
+ */
+/*---------------------------------------------------------------------------*/
+MultiBufView2 SyncBuffers::_multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
+    Integer nb_nei, IMeshVarSync::eItemSync item_sync,
+    Span<Byte> buf_bytes) {
+
+  Integer nb_var = vars.size();  // nb de variables à synchroniser
+  UniqueArray<Byte*> ptrs(nb_nei*nb_var); // le pointeur de base du buffer par voisin et par variable
+  Int64UniqueArray sizes_in_bytes(nb_nei*nb_var); // la taille en octets du buffer par voisin et par variable
+
+  Byte* cur_ptr{buf_bytes.data()};
+  size_t available_space = buf_bytes.size();
+  Integer inei;
+
+  for(inei=0 ; inei<nb_nei ; ++inei) {
+    for(Integer ivar=0 ; available_space>0 && ivar<nb_var ; ++ivar) {
+
+      auto var = vars[ivar];
+
+      // Par voisin et par variable, le tableau de valeurs doit être aligné sur size_infos.alignOf;
+      auto size_infos = var->sizeInfos();
+
+      void* cur_ptr_v = static_cast<void*>(cur_ptr);
+      if (std::align(size_infos.alignOf, size_infos.sizeOf, cur_ptr_v, available_space)) {
+
+        cur_ptr = static_cast<Byte*>(cur_ptr_v); // cur_ptr_v a été potentiellement modifié
+
+        // Ici, cur_ptr a été modifié et est aligné sur size_infos.alignOf
+        // available_space a été diminué du nb d'octets = cur_ptr(après appel) - cur_ptr(avant appel)
+
+        // Calcul en octets de l'occupation des valeurs pour le voisin inei
+        //size_t sz_nei_in_bytes = item_sizes[inei]*size_infos.sizeOfItem;
+        size_t sz_nei_in_bytes = var->sizeInBytes(item_sync, inei);
+
+        ptrs[inei*nb_var+ivar] = cur_ptr;
+        sizes_in_bytes[inei*nb_var+ivar] = sz_nei_in_bytes;
+
+        cur_ptr += sz_nei_in_bytes; // ici, cur_ptr n'est plus forcement aligné avec alignof(T)
+        if (sz_nei_in_bytes <= available_space) {
+          available_space -= sz_nei_in_bytes;
+        } else {
+          throw NotSupportedException(A_FUNCINFO, 
+              String("Espace insuffisant pour aligner les données dans le buffer, available_space va devenir négatif"));
+          break; // available_space ne pourra jamais être négatif car size_t est non signé
+        }
+      } else {
+        throw NotSupportedException(A_FUNCINFO, 
+            String("Espace insuffisant pour aligner les données dans le buffer d'après std::align"));
+        break;
+      }
+    }
+  }
+
+  if (inei==nb_nei) {
+    MultiBufView2 mb2(ptrs, sizes_in_bytes, nb_nei, nb_var);
+    return mb2;
+  } else {
+    // On ne devait jamais arriver là
+    throw NotSupportedException(A_FUNCINFO, String("On ne devrait pas etre la"));
+    return MultiBufView2();
+  }
+}
+
+/*---------------------------------------------------------------------------*/
+/* */
+/*---------------------------------------------------------------------------*/
+MultiBufView2 SyncBuffers::multiBufViewVars(
+    ConstArrayView<IMeshVarSync*> vars,
+    Integer nb_nei, IMeshVarSync::eItemSync item_sync, Integer imem) {
+
+  auto& buf_mem = m_buf_mem[imem];
+  Byte* new_ptr = buf_mem.m_buf->data()+buf_mem.m_first_av_pos;
+  Int64 av_space = buf_mem.m_buf->size()-buf_mem.m_first_av_pos;
+  Span<Byte> buf_bytes(new_ptr, av_space);
+
+  auto mb2 = _multiBufViewVars(vars, nb_nei, item_sync, buf_bytes);
+
+  auto rg{mb2.rangeSpan()}; // Encapsule [beg_ptr, end_ptr[
+  Byte* end_ptr = rg.data()+rg.size();
+  buf_mem.m_first_av_pos = (end_ptr - buf_mem.m_buf->data());
+  return mb2;
+}
 
 /*---------------------------------------------------------------------------*/
 /* INSTANCIATIONS STATIQUES                                                  */

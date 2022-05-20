@@ -55,6 +55,8 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
 
   // Pour synchro algo1
   m_vsync_algo1 = new VarSyncAlgo1(m_pm, m_neigh_ranks);
+  m_a1_glob_dh_pi = 
+    new Algo1SyncDataGlobDH::PersistentInfo(m_nb_nei, m_runner, m_sync_buffers);
 }
 
 VarSyncMng::~VarSyncMng() {
@@ -74,6 +76,7 @@ VarSyncMng::~VarSyncMng() {
   delete m_vsync_algo1;
   delete m_a1_mmat_dh_pi;
   delete m_a1_mmat_d_pi;
+  delete m_a1_glob_dh_pi;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -244,5 +247,58 @@ void VarSyncMng::multiMatSynchronize(MeshVariableSynchronizerList& vars,
   }
   m_vsync_algo1->synchronize(sync_data);
   delete sync_data;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Maj des mailles fantômes d'une liste de variables (pour l'instant globales) */
+/*---------------------------------------------------------------------------*/
+void VarSyncMng::synchronize(MeshVariableSynchronizerList& vars, 
+    Ref<RunQueue> ref_queue, eVarSyncVersion vs_version)
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  if (vs_version == VS_auto) {
+    vs_version = defaultGlobVarSyncVersion();
+  }
+
+  if (vs_version == VS_bulksync_std)
+  {
+    // On va construire autant de liste de variables qu'il y a de types d'items
+    constexpr Integer MAX_ItemKind = IK_DoF;
+    UniqueArray<VariableCollection> all_vc(MAX_ItemKind);
+
+    auto lvars = vars.varsList();
+    for(auto var : lvars) {
+      if (!var->materialVariable()) {
+	// Si on est ici, c'est que la variable est globale
+	IVariable* v = var->variable();
+	eItemKind item_kind = v->itemKind();
+	all_vc[item_kind].add(v);
+      }
+    }
+    // Synchronisation type d'items par type d'item
+    for(Integer ik = 0 ; ik<MAX_ItemKind ; ++ik) {
+      eItemKind item_kind = static_cast<eItemKind>(ik);
+      IItemFamily* item_family = m_mesh->itemFamily(item_kind);
+      item_family->synchronize(all_vc[ik]);
+    }
+  }
+  else
+  {
+    IAlgo1SyncData* sync_data=nullptr;
+    if (vs_version==VS_bulksync_evqueue || vs_version==VS_overlap_evqueue) 
+    {
+      sync_data = new Algo1SyncDataGlobDH(vars, ref_queue, *m_a1_glob_dh_pi);
+    } 
+    else 
+    {
+      throw NotSupportedException(A_FUNCINFO, 
+	  String::format("Invalid eVarSyncVersion for this method ={0}",(int)vs_version));
+    }
+    m_vsync_algo1->synchronize(sync_data);
+    delete sync_data;
+  }
+  
+  PROF_ACC_END;
 }
 

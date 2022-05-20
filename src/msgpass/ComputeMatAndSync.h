@@ -17,7 +17,7 @@ void VarSyncMng::multiMatSynchronize(
     CellMaterialVariableScalarRef<DataType> var_menv, Ref<RunQueue> ref_queue, 
     eVarSyncVersion vs_version)
 {
-  MeshVariableSynchronizerList mvsl(m_buf_addr_mng);
+  MeshVariableSynchronizerList mvsl(this);
   mvsl.add(var_menv);
 
   this->multiMatSynchronize(mvsl, ref_queue, vs_version);
@@ -38,7 +38,7 @@ void VarSyncMng::
 computeMatAndSync(Func func, CellMaterialVariableScalarRef<DataType> var, eVarSyncVersion vs_version) {
 
   // Liste avec une seule variable
-  MeshVariableSynchronizerList mvsl(m_buf_addr_mng);
+  MeshVariableSynchronizerList mvsl(this);
   mvsl.add(var);
 
   computeMatAndSyncOnEvents<Func>(UniqueArray<Ref<ax::RunQueueEvent>>() /*liste vide d'événements*/,
@@ -63,7 +63,7 @@ computeMatAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     Func func, CellMaterialVariableScalarRef<DataType> var, eVarSyncVersion vs_version) {
 
   // Liste avec une seule variable
-  MeshVariableSynchronizerList mvsl(m_buf_addr_mng);
+  MeshVariableSynchronizerList mvsl(this);
   mvsl.add(var);
 
   computeMatAndSyncOnEvents<Func>(depends_on_evts,
