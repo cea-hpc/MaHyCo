@@ -422,23 +422,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto inout_cell_mass_g   = ax::viewInOut(command, m_cell_mass.globalVariable());
 
     // Variables multi-environnement
-    MultiEnvVar<Real> menv_fracvol(m_fracvol, mm);
-    auto inout_menv_fracvol(menv_fracvol.span());
+    auto bam = m_acc_env->vsyncMng()->bufAddrMng();
+    MultiEnvVarHD<Real> menv_fracvol         (m_fracvol         , bam);
+    MultiEnvVarHD<Real> menv_mass_fraction   (m_mass_fraction   , bam);
+    MultiEnvVarHD<Real> menv_cell_mass       (m_cell_mass       , bam);
+    MultiEnvVarHD<Real> menv_pseudo_viscosity(m_pseudo_viscosity, bam);
+    MultiEnvVarHD<Real> menv_density         (m_density         , bam);
+    MultiEnvVarHD<Real> menv_internal_energy (m_internal_energy , bam);
 
-    MultiEnvVar<Real> menv_mass_fraction(m_mass_fraction, mm);
-    auto inout_menv_mass_fraction(menv_mass_fraction.span());
+    bam->asyncCpyHToD(queue); 
+    // copie asynchrone avant le kernel de calcul qui se fait aussi sur <queue>
 
-    MultiEnvVar<Real> menv_cell_mass(m_cell_mass, mm);
-    auto inout_menv_cell_mass(menv_cell_mass.span());
-
-    MultiEnvVar<Real> menv_pseudo_viscosity(m_pseudo_viscosity, mm);
-    auto inout_menv_pseudo_viscosity(menv_pseudo_viscosity.span());
-
-    MultiEnvVar<Real> menv_density(m_density, mm);
-    auto inout_menv_density(menv_density.span());
-
-    MultiEnvVar<Real> menv_internal_energy(m_internal_energy, mm);
-    auto inout_menv_internal_energy(menv_internal_energy.span());
+    auto inout_menv_fracvol         (menv_fracvol         .spanD());
+    auto inout_menv_mass_fraction   (menv_mass_fraction   .spanD());
+    auto inout_menv_cell_mass       (menv_cell_mass       .spanD());
+    auto inout_menv_pseudo_viscosity(menv_pseudo_viscosity.spanD());
+    auto inout_menv_density         (menv_density         .spanD());
+    auto inout_menv_internal_energy (menv_internal_energy .spanD());
 
     // Pour décrire l'accés multi-env sur GPU
     auto in_menv_cell(m_acc_env->multiEnvCellStorage()->viewIn(command));
