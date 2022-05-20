@@ -354,11 +354,15 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   m_back_flux_mass.synchronize(); 
   m_front_flux_mass.synchronize();
 #else
+  MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng());
+
+  mvsl.add(m_back_flux_mass_env);
+  mvsl.add(m_front_flux_mass_env);
+  mvsl.add(m_back_flux_mass);
+  mvsl.add(m_front_flux_mass);
+
   auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_back_flux_mass_env);
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_front_flux_mass_env);
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_back_flux_mass);
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_front_flux_mass);
+  m_acc_env->vsyncMng()->synchronize(mvsl, queue_synchronize);
 #endif
     
 #if 1
@@ -701,9 +705,13 @@ void RemapADIService::synchronizeDualUremap()  {
     m_phi_dual_lagrange.synchronize();
     m_u_dual_lagrange.synchronize();
 #else
+    MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng());
+
+    mvsl.add(m_phi_dual_lagrange);
+    mvsl.add(m_u_dual_lagrange);
+
     auto queue_synchronize = m_acc_env->refQueueAsync();
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_phi_dual_lagrange);
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_u_dual_lagrange);
+    m_acc_env->vsyncMng()->synchronize(mvsl, queue_synchronize);
 #endif
   PROF_ACC_END;
 }
