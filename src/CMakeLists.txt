@@ -251,11 +251,16 @@ set( TEST_NAMES_CUDA_1
 		"CAS_RiderRotation"
 		)
 
+set( TEST_NAMES_CUDA_4
+		"CAS_BiSodCaseX"
+		)
+
 set( PARA4 "para_4")
 set( PARA8 "para_8")
 set( SEQ "seq")
 set( SEQPR "seq_pr")
 set( CUDA1 "cuda_1")
+set( CUDA4 "cuda_4")
 
 # Pour définir le launcher MPI
 set(MPI_LAUNCHER mpiexec CACHE STRING "Définit le launcher MPI" )
@@ -287,6 +292,11 @@ if(WANT_CUDA)
 # mono-processus 1 GPU
 foreach( TEST_NAME ${TEST_NAMES_CUDA_1} )
  add_test(NAME "${CUDA1}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${CUDA1} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+
+# sur 4 GPUs (1 GPU par processus)
+foreach( TEST_NAME ${TEST_NAMES_CUDA_4} )
+ add_test(NAME "${CUDA4}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${CUDA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 endif()
 
