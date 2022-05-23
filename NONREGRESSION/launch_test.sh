@@ -74,6 +74,20 @@ function launch_computation_cuda_1 {
   fi
   return ${return_code}
 }
+# This function launch the computation by calling the executable with arguments
+# taken from args.txt file
+function launch_computation_cuda_4 {
+  local readonly exe_path=$1
+  local readonly data_dir=$2
+  local readonly mpi_launcher=$3
+  local return_code=0
+  ${mpi_launcher} -n 4 $1 -A,AcceleratorRuntime=cuda $data_dir/Donnees.arc
+  if [[ $? -ne 0 ]]; then
+    echo "A problem occured during test execution."
+    return_code=1
+  fi
+  return ${return_code}
+}
 # This function compares the results obtained in the output directory with those
 # expected in the reference directory
 function compare_results {
@@ -143,6 +157,10 @@ function main {
   then
       echo " lancement sequentiel 1 GPU" 
       launch_computation_cuda_1 ${exe_path} ${test_dir} ${mpi_launcher}
+  elif [ ${type}  = "cuda_4" ]
+  then
+      echo " lancement parallele 4 GPUs" 
+      launch_computation_cuda_4 ${exe_path} ${test_dir} ${mpi_launcher}
   else
       echo " lancement sequentiel" 
       launch_computation ${exe_path} ${test_dir} ${mpi_launcher}

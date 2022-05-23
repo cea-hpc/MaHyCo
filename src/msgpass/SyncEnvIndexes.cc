@@ -148,7 +148,10 @@ void SyncEnvIndexes::_eviListFromGroup(CellGroup cell_group,
   Integer nb_env = m_mesh_material_mng->environments().size();
 
   // Un premier parcours des mailles pour compter et allouer
-  nb_evi_penv.resize(nb_env, 0);
+  nb_evi_penv.resize(nb_env);
+  for(Integer ienv=0 ; ienv<nb_env ; ++ienv) {
+    nb_evi_penv[ienv] = 0;
+  }
 
   ENUMERATE_ALLENVCELL(iallevc, m_mesh_material_mng, cell_group){
     AllEnvCell allevc = *iallevc;
