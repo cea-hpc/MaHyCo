@@ -57,6 +57,8 @@ VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_a
   m_vsync_algo1 = new VarSyncAlgo1(m_pm, m_neigh_ranks);
   m_a1_glob_dh_pi = 
     new Algo1SyncDataGlobDH::PersistentInfo(m_nb_nei, m_runner, m_sync_buffers);
+  m_a1_glob_d_pi = 
+    new Algo1SyncDataGlobD::PersistentInfo(m_is_device_aware, m_nb_nei, m_runner, m_sync_buffers);
 }
 
 VarSyncMng::~VarSyncMng() {
@@ -77,6 +79,7 @@ VarSyncMng::~VarSyncMng() {
   delete m_a1_mmat_dh_pi;
   delete m_a1_mmat_d_pi;
   delete m_a1_glob_dh_pi;
+  delete m_a1_glob_d_pi;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -289,6 +292,10 @@ void VarSyncMng::synchronize(MeshVariableSynchronizerList& vars,
     if (vs_version==VS_bulksync_evqueue || vs_version==VS_overlap_evqueue) 
     {
       sync_data = new Algo1SyncDataGlobDH(vars, ref_queue, *m_a1_glob_dh_pi);
+    } 
+    else if (vs_version==VS_bulksync_evqueue_d || vs_version==VS_overlap_evqueue_d) 
+    {
+      sync_data = new Algo1SyncDataGlobD(vars, ref_queue, *m_a1_glob_d_pi);
     } 
     else 
     {

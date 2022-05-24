@@ -16,32 +16,11 @@
 template<typename MeshVariableRefT>
 void VarSyncMng::
 globalSynchronize(Ref<RunQueue> ref_queue, MeshVariableRefT var, eVarSyncVersion vs_version) {
-  if (vs_version == VS_auto) {
-    vs_version = defaultGlobVarSyncVersion();
-  }
 
-  if (vs_version==VS_bulksync_evqueue || vs_version==VS_overlap_evqueue) 
-  {
-    this->globalSynchronizeQueueEvent(ref_queue, var);
-  } 
-  else if (vs_version == VS_bulksync_evqueue_d || vs_version==VS_overlap_evqueue_d) 
-  {
-    this->globalSynchronizeQueueEventD(ref_queue, var);
-  } 
-  else if (vs_version == VS_bulksync_std) 
-  {
-    var.synchronize();
-    ref_queue->barrier();
-  }
-  else if (vs_version == VS_nosync) 
-  {
-    ref_queue->barrier();
-  }
-  else 
-  {
-    throw NotSupportedException(A_FUNCINFO, 
-        String::format("Invalid eVarSyncVersion for this method ={0}",(int)vs_version));
-  }
+  MeshVariableSynchronizerList mvsl(this);
+  mvsl.add(var);
+
+  this->synchronize(mvsl, ref_queue, vs_version);
 }
 
 /*---------------------------------------------------------------------------*/

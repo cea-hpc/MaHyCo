@@ -68,6 +68,7 @@ add_library(msgpass msgpass/VarSyncMng.cc
                     msgpass/Algo1SyncDataMMatD.cc
                     msgpass/Algo1SyncDataMMatDH.cc
                     msgpass/Algo1SyncDataGlobDH.cc
+                    msgpass/Algo1SyncDataGlobD.cc
                     msgpass/MeshVariableSynchronizerList.cc
                     msgpass/VarSyncAlgo1.cc)
 target_include_directories(msgpass PUBLIC .)
@@ -124,6 +125,7 @@ arcane_accelerator_add_source_files(msgpass/SyncBuffers.cc)
 arcane_accelerator_add_source_files(msgpass/Algo1SyncDataMMatD.cc)
 arcane_accelerator_add_source_files(msgpass/Algo1SyncDataMMatDH.cc)
 arcane_accelerator_add_source_files(msgpass/Algo1SyncDataGlobDH.cc)
+arcane_accelerator_add_source_files(msgpass/Algo1SyncDataGlobD.cc)
 arcane_accelerator_add_source_files(msgpass/MeshVariableSynchronizerList.cc)
 arcane_accelerator_add_source_files(msgpass/VarSyncAlgo1.cc)
 arcane_accelerator_add_to_target(Mahyco)
