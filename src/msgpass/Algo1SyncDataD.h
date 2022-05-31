@@ -1,5 +1,5 @@
-#ifndef MSG_PASS_ALGO1_SYNC_DATA_GLOB_D_H
-#define MSG_PASS_ALGO1_SYNC_DATA_GLOB_D_H
+#ifndef MSG_PASS_ALGO1_SYNC_DATA_D_H
+#define MSG_PASS_ALGO1_SYNC_DATA_D_H
 
 #include "msgpass/IAlgo1SyncData.h"
 #include "msgpass/MeshVariableSynchronizerList.h"
@@ -7,18 +7,18 @@
 #include "msgpass/SyncBuffers.h"
 
 /*---------------------------------------------------------------------------*/
-/* \class Algo1SyncDataGlobD                                                 */
-/* \brief Implementation of IAlgo1SyncData for global variables (ie non multi-mat) */
+/* \class Algo1SyncDataD                                                     */
+/* \brief Implementation of IAlgo1SyncData for all variable types            */
 /*   packing/unpacking on Device                                             */
 /*   communicating (MPI) on Host                                             */
 /*---------------------------------------------------------------------------*/
-class Algo1SyncDataGlobD : public IAlgo1SyncData {
+class Algo1SyncDataD : public IAlgo1SyncData {
  public:
   /*!
    * \brief Persistent information which don't depend on the variables
    */
   class PersistentInfo {
-    friend class Algo1SyncDataGlobD;
+    friend class Algo1SyncDataD;
    public:
     PersistentInfo(bool is_device_aware,
 	Integer nb_nei,
@@ -34,11 +34,11 @@ class Algo1SyncDataGlobD : public IAlgo1SyncData {
   };
 
  public:
-  Algo1SyncDataGlobD(MeshVariableSynchronizerList& vars,
+  Algo1SyncDataD(MeshVariableSynchronizerList& vars,
       Ref<RunQueue> ref_queue,
       PersistentInfo& pi);
 
-  virtual ~Algo1SyncDataGlobD();
+  virtual ~Algo1SyncDataD();
 
   //! True if there is no data to synchronize
   bool isEmpty() override;

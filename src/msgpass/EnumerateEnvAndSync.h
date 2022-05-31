@@ -4,8 +4,6 @@
 #include <arcane/utils/ITraceMng.h>
 #include <arcane/materials/MeshMaterialVariableSynchronizerList.h>
 
-#include "msgpass/Algo1SyncDataMMatDH.h"
-#include "msgpass/Algo1SyncDataMMatD.h"
 #include "msgpass/VarSyncAlgo1.h"
 
 
@@ -132,29 +130,8 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     m_menv_queue_inr->waitAllQueues();
 
     // Puis comms
-    PROF_ACC_BEGIN("syncVar");
-    if (vs_version == VS_bulksync_std) {
-      tm->debug() << "bulksync_std";
-      MeshMaterialVariableSynchronizerList mmvsl(m_mesh_material_mng);
-      for(auto v : vars.varsList()) {
-        auto matv = v->materialVariable();
-        if (matv) {
-          mmvsl.add(matv);
-        }
-      }
-      mmvsl.apply(); // les synchros regroupées en une
-    } else if (vs_version == VS_bulksync_queue) {
-      tm->debug() << "bulksync_queue";
-      throw NotSupportedException(A_FUNCINFO,
-        String::format("Invalid eVarSyncVersion={0}",(int)vs_version));
-    } else {
-      ARCANE_ASSERT((vs_version==VS_bulksync_evqueue || vs_version==VS_bulksync_evqueue_d), 
-          ("Ici, option differente de bulksync_evqueue ou de bulksync_evqueue_d"));
-      tm->debug() << "bulksync_evqueue ou bulksync_evqueue_d";
-      // On utilise m_ref_queue_inr qui a une priorité par défault
-      this->multiMatSynchronize(vars, m_ref_queue_inr, vs_version);
-    }
-    PROF_ACC_END;
+    // On utilise m_ref_queue_inr qui a une priorité par défault
+    this->synchronize(vars, m_ref_queue_inr, vs_version);
 
   } 
   else if (vs_version == VS_overlap_evqueue ||
@@ -181,7 +158,7 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     m_menv_queue_bnd->waitAllQueues();
     // Sur la queue prioritaire m_ref_queue_bnd, on amorce le packing des données
     // puis les comms MPI sur CPU, puis unpacking des données et on synchronise 
-    this->multiMatSynchronize(vars, m_ref_queue_bnd, vs_version);
+    this->synchronize(vars, m_ref_queue_bnd, vs_version);
 
     // On attend la terminaison des calculs intérieurs
     m_menv_queue_inr->waitAllQueues();

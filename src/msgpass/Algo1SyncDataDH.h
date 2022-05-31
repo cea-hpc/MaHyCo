@@ -1,32 +1,30 @@
-#ifndef MSG_PASS_ALGO1_SYNC_DATA_MMAT_DH_H
-#define MSG_PASS_ALGO1_SYNC_DATA_MMAT_DH_H
+#ifndef MSG_PASS_ALGO1_SYNC_DATA_DH_H
+#define MSG_PASS_ALGO1_SYNC_DATA_DH_H
 
 #include "msgpass/IAlgo1SyncData.h"
 #include "msgpass/MeshVariableSynchronizerList.h"
-#include "msgpass/SyncEnvIndexes.h"
+#include "msgpass/SyncItems.h"
 #include "msgpass/SyncBuffers.h"
 
 /*---------------------------------------------------------------------------*/
-/* \class Algo1SyncDataMMatDH                                                */
-/* \brief Implementation of IAlgo1SyncData for multi-material variables      */
+/* \class Algo1SyncDataDH                                                    */
+/* \brief Implementation of IAlgo1SyncData for all variable types            */
 /*   packing/unpacking on Device                                             */
 /*   communicating (MPI) on Host                                             */
 /*---------------------------------------------------------------------------*/
-class Algo1SyncDataMMatDH : public IAlgo1SyncData {
+class Algo1SyncDataDH : public IAlgo1SyncData {
  public:
   /*!
    * \brief Persistent information which don't depend on the variables
    */
   class PersistentInfo {
-    friend class Algo1SyncDataMMatDH;
+    friend class Algo1SyncDataDH;
    public:
     PersistentInfo(Integer nb_nei,
         Runner& runner,
-        SyncEnvIndexes* sync_evi,
         SyncBuffers* sync_buffers);
     virtual ~PersistentInfo();
    protected:
-    SyncEnvIndexes* m_sync_evi=nullptr;
     SyncBuffers* m_sync_buffers=nullptr;
     Integer m_nb_nei=0;
 
@@ -36,11 +34,11 @@ class Algo1SyncDataMMatDH : public IAlgo1SyncData {
   };
 
  public:
-  Algo1SyncDataMMatDH(MeshVariableSynchronizerList& vars,
+  Algo1SyncDataDH(MeshVariableSynchronizerList& vars,
       Ref<RunQueue> ref_queue,
       PersistentInfo& pi);
 
-  virtual ~Algo1SyncDataMMatDH();
+  virtual ~Algo1SyncDataDH();
 
   //! True if there is no data to synchronize
   bool isEmpty() override;
@@ -76,8 +74,6 @@ class Algo1SyncDataMMatDH : public IAlgo1SyncData {
   MeshVariableSynchronizerList& m_vars;
   Ref<RunQueue> m_ref_queue;
   PersistentInfo& m_pi;
-
-  ConstMultiArray2View<EnvVarIndex> m_ghost_evi_pn;  //! Ghost EnvIndex(es) to update
 
   MultiBufView2 m_buf_snd_h;  //! Buffers on Host (_h) to send
   MultiBufView2 m_buf_rcv_h;  //! Buffers on Host (_h) to recv

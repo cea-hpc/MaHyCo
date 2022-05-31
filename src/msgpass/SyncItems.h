@@ -15,6 +15,13 @@ class SyncItems {
  public:
   // Le type de groupe d'items associé à ItemType
   using ItemGroupType = ItemGroupT<ItemType>;
+
+  //! Categorie d'un groupe
+  enum eGroupCategory {
+    GC_own = 0,
+    GC_all
+  };
+
  public:
   SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks, 
       AccMemAdviser* acc_mem_adv);
@@ -53,6 +60,16 @@ class SyncItems {
     return m_ghost_items;
   }
 
+  // sharedItems() U ghostItems() 
+  auto sharedGhostItems() const {
+    return m_shared_ghost_items;
+  }
+
+  // Pour une catégorie de groupe donnée (own ou all), retourne les items concernés par les comms
+  auto boundaryItems(eGroupCategory group_category) {
+    return (group_category==GC_own ? sharedItems() : sharedGhostItems());
+  }
+
  protected:
   // "shared" ou "owned" : les items intérieurs au sous-domaine et qui doivent être envoyés
   // "ghost" : les items fantômes pour lesquels on va recevoir des informations
@@ -72,9 +89,11 @@ class SyncItems {
   // Les groupes d'items
   // own() = private + shared  , private \inter shared = 0
   // all() = own() + ghost
+  // all() = private + shared + ghost
   ItemGroupType m_private_items;
   ItemGroupType m_shared_items;
   ItemGroupType m_ghost_items;
+  ItemGroupType m_shared_ghost_items;
 };
 
 /* Retourne les groupes associés aux types d'items

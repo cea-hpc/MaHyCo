@@ -172,10 +172,12 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
 
   IntegerUniqueArray all_shared_lids;
   IntegerUniqueArray all_ghost_lids;
+  IntegerUniqueArray all_shared_ghost_lids; // {shared} U {ghost}
 
   auto own_items = get_own_items<ItemType>(mesh);
   all_shared_lids.reserve(own_items.size()); // on surestime
   all_ghost_lids.reserve(all_items.size()-own_items.size());
+  all_shared_ghost_lids.reserve(2*all_ghost_lids.capacity()); // une estimation
 
   for(Integer inei=0 ; inei<nb_nei ; ++inei) {
     auto shared_item_idx = owned_item_idx_pn[inei];
@@ -190,6 +192,7 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
         // Ici, l'item lid n'a pas encore été traité comme un "shared" item
         arr_item_status[lid] = shared_status;
         all_shared_lids.add(idx); // cet item ne sera ajouté qu'une seule fois
+	all_shared_ghost_lids.add(idx);
       }
     }
 
@@ -201,6 +204,7 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
         // Ici, l'item lid n'a pas encore été traité comme un "ghost" item
         arr_item_status[lid] = ghost_status;
         all_ghost_lids.add(idx); // cet item ne sera ajouté qu'une seule fois
+	all_shared_ghost_lids.add(idx);
       }
     }
   }
@@ -220,11 +224,16 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
   m_private_items= item_family->createGroup( String("Private")+str_items, private_item_ids, /*do_override=*/true);
   m_shared_items = item_family->createGroup( String("Shared") +str_items, all_shared_lids , /*do_override=*/true);
   m_ghost_items  = item_family->createGroup( String("Ghost")  +str_items, all_ghost_lids  , /*do_override=*/true);
+  m_shared_ghost_items = item_family->createGroup( String("SharedGhost")  +str_items, all_shared_ghost_lids  , /*do_override=*/true);
 
   ARCANE_ASSERT(own_items.size()==(m_private_items.size()+m_shared_items.size()),
       ("own != private+shared"));
   ARCANE_ASSERT((all_items.size()-own_items.size())==m_ghost_items.size(),
       ("(all-own) != ghost"));
+  ARCANE_ASSERT(all_items.size()==(m_private_items.size()+m_shared_ghost_items.size()),
+      ("all != private+shared+ghost"));
+  ARCANE_ASSERT(m_shared_ghost_items.size()==(m_shared_items.size()+m_ghost_items.size()),
+      ("shared_ghost != shared+ghost"));
 
   // "Conseil" mémoire
   acc_mem_adv->setReadMostly(m_buf_owned_item_idx   .view());
@@ -238,6 +247,7 @@ SyncItems<ItemType>::SyncItems(IMesh* mesh, Int32ConstArrayView neigh_ranks,
   acc_mem_adv->setReadMostly(m_private_items.view().localIds());
   acc_mem_adv->setReadMostly(m_shared_items .view().localIds());
   acc_mem_adv->setReadMostly(m_ghost_items  .view().localIds());
+  acc_mem_adv->setReadMostly(m_shared_ghost_items.view().localIds());
 }
 
 /*---------------------------------------------------------------------------*/

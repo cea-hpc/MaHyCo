@@ -244,6 +244,7 @@ computeNodeMass()
   // de toute façon (d'où m_node_mass.synchronize) autant ne calculer
   // que sur ownNodes()
   m_acc_env->vsyncMng()->computeAndSync(
+    ownNodes(),
     [&](NodeGroup node_group, RunQueue* async_queue) {
 
       auto command = makeCommand(async_queue);
@@ -640,6 +641,7 @@ updateForceAndVelocity(Real dt,
   v_velocity_out.synchronize();
 #else
   m_acc_env->vsyncMng()->computeAndSync(
+    ownNodes(),
     [&](NodeGroup node_group, RunQueue* async_queue) {
   
       auto command = makeCommand(async_queue);
@@ -1076,42 +1078,50 @@ computeGeometricValues()
   // m_node_coord.synchronize();
   // TODO (BM) 15/03/2022 besoin de synchro meme si updatePosition met à jour m_node_coord sur les allNodes
   //                      A comprendre ...
-  auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_node_coord);
-  
   if ( m_dimension == 3) {
-    {
-      auto queue = m_acc_env->newQueue();
-      auto command = makeCommand(queue);
 
-      auto in_node_coord = ax::viewIn(command,m_node_coord);
-      auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
-
-      auto cnc = m_acc_env->connectivityView().cellNode();
-
-      command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
-        // Recopie les coordonnées locales (pour le cache)
-        Real3 coord[8];
-        Int32 index=0;
-        for( NodeLocalId nid : cnc.nodes(cid) ){
-          coord[index]=in_node_coord[nid];
-          ++index;
+    // Dans le principe, on synchronise m_node_coord (variable aux noeuds)
+    // puis on appelle la lambda sur tous les Cell de allCells()
+    m_acc_env->vsyncMng()->syncAndCompute(
+	m_node_coord,     // ----------------------------------> variable à synchroniser avant les calculs
+	allCells(),       // ----------------------------------> groupe d'items sur lequel on itère
+	[&](CellGroup cell_group, RunQueue* async_queue) // ---> définition du calcul sur un CellGroup
+        {
+          auto command = makeCommand(async_queue);
+        
+          auto in_node_coord = ax::viewIn(command,m_node_coord);
+          auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
+        
+          auto cnc = m_acc_env->connectivityView().cellNode();
+        
+          command << RUNCOMMAND_ENUMERATE(Cell, cid, cell_group){
+            // Recopie les coordonnées locales (pour le cache)
+            Real3 coord[8];
+            Int32 index=0;
+            for( NodeLocalId nid : cnc.nodes(cid) ){
+              coord[index]=in_node_coord[nid];
+              ++index;
+            }
+            // Calcul les coordonnées des centres des faces
+            Real3 face_coord[6] = {
+              0.25 * (coord[0] + coord[3] + coord[2] + coord[1]),
+              0.25 * (coord[0] + coord[4] + coord[7] + coord[3]),
+              0.25 * (coord[0] + coord[1] + coord[5] + coord[4]),
+              0.25 * (coord[4] + coord[5] + coord[6] + coord[7]),
+              0.25 * (coord[1] + coord[2] + coord[6] + coord[5]),
+              0.25 * (coord[2] + coord[3] + coord[7] + coord[6])
+            };
+        
+            // Calcule les résultantes aux sommets
+            computeCQs(coord, face_coord, out_cell_cqs[cid]);
+          };
         }
-        // Calcul les coordonnées des centres des faces
-        Real3 face_coord[6] = {
-          0.25 * (coord[0] + coord[3] + coord[2] + coord[1]),
-          0.25 * (coord[0] + coord[4] + coord[7] + coord[3]),
-          0.25 * (coord[0] + coord[1] + coord[5] + coord[4]),
-          0.25 * (coord[4] + coord[5] + coord[6] + coord[7]),
-          0.25 * (coord[1] + coord[2] + coord[6] + coord[5]),
-          0.25 * (coord[2] + coord[3] + coord[7] + coord[6])
-        };
+	);
 
-        // Calcule les résultantes aux sommets
-        computeCQs(coord, face_coord, out_cell_cqs[cid]);
-      };
-    }
   } else {
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_node_coord);
+
     Real3 npc[5];
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;
