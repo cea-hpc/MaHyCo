@@ -113,7 +113,6 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
   
   ITraceMng* tm = m_mesh->traceMng();
   if (vs_version == VS_bulksync_std ||
-      vs_version == VS_bulksync_queue ||
       vs_version == VS_bulksync_evqueue ||
       vs_version == VS_bulksync_evqueue_d) 
   {
@@ -169,10 +168,8 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     throw NotSupportedException(A_FUNCINFO,
         String::format("Invalid eVarSyncVersion={0}",(int)vs_version));
   } 
-  else
+  else if (vs_version == VS_nosync)
   {
-    ARCANE_ASSERT(vs_version==VS_nosync,
-        ("Ici, pas de synchro"));
     tm->debug() << "nosync";
     // Pas de synchro
     // Calcul sur tous les EnvVarIndex(es) "all"
@@ -186,6 +183,11 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
 
     // on attend la fin du calcul sur tous les environnements
     m_menv_queue_inr->waitAllQueues();
+  }
+  else
+  {
+    throw NotImplementedException(A_FUNCINFO,
+        String::format("Invalid eVarSyncVersion={0}",(int)vs_version));
   }
   PROF_ACC_END;
 }

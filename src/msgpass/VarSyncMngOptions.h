@@ -7,7 +7,6 @@ enum eVarSyncVersion {
   VS_auto = -1,  // Détection automatique
   VS_nosync = 0,  // Pas de synchronisation
   VS_bulksync_std, // "Bulk-Synchronous" avec .synchronize() "classique" Arcane
-  VS_bulksync_queue,  // "Bulk-Synchronous" avec packing/unpacking buf comm sur GPU
   VS_bulksync_evqueue, // "Bulk-Synchronous" avec packing/unpacking buf comm sur GPU avec events et waitSomeRequests
   VS_bulksync_evqueue_d, // Idem que VS_bulksync_evqueue mais comms avec adresses DEVICE (GPU-aware)
   VS_overlap_evqueue, // Recouvrement items shared+packing/unpacking GPU+comms (en utilisant des events) par calculs itemss private

@@ -164,8 +164,8 @@ computeAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
   
   ITraceMng* tm = m_mesh->traceMng();
   if (vs_version == VS_bulksync_std ||
-      vs_version == VS_bulksync_queue ||
-      vs_version == VS_bulksync_evqueue) 
+      vs_version == VS_bulksync_evqueue ||
+      vs_version == VS_bulksync_evqueue_d) 
   {
     // Calcul sur tous les items de item_group
     auto ref_queue = AcceleratorUtils::refQueueAsync(m_runner, QP_default); 
@@ -212,10 +212,8 @@ computeAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     throw NotSupportedException(A_FUNCINFO,
         String::format("Invalid eVarSyncVersion={0}",(int)vs_version));
   } 
-  else
+  else if (vs_version == VS_nosync)
   {
-    ARCANE_ASSERT(vs_version==VS_nosync,
-        ("Ici, pas de synchro"));
     tm->debug() << "nosync";
     // Pas de synchro
     // Calcul sur tous les items "all"
@@ -223,6 +221,11 @@ computeAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
     depends_on(ref_queue, depends_on_evts);
     func(item_group, ref_queue.get());
     ref_queue->barrier();
+  }
+  else
+  {
+    throw NotImplementedException(A_FUNCINFO,
+        String::format("Invalid eVarSyncVersion={0}",(int)vs_version));
   }
   PROF_ACC_END;
 }
