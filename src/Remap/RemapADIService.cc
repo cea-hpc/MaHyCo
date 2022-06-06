@@ -288,17 +288,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
   // il faut initialiser m_grad_phi = 0 pour le cas ordre 1 (CPU ou GPU). On passe par un RUNCOMMAND_ENUMERATE 
   // pour couvrir les cas GPU et CPU plutot qu'un fill qui conduirait à des transferts lors d'un run GPU.
 //   m_grad_phi.fill(0.0);
-  auto queue = m_acc_env->newQueue();
-  {
-    auto command = makeCommand(queue);
-    
-    auto out_grad_phi = ax::viewOut(command, m_grad_phi);
-    
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)
-        out_grad_phi[cid][ivar] = 0.;
-    };
-  }
+
   
   if (options()->ordreProjection > 1 && 
       options()->projectionPenteBorneMixte == false &&
