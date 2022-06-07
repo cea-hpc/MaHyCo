@@ -1,46 +1,44 @@
-#ifndef MSG_PASS_ALGO1_SYNC_DATA_MMAT_D_H
-#define MSG_PASS_ALGO1_SYNC_DATA_MMAT_D_H
+#ifndef MSG_PASS_ALGO1_SYNC_DATA_DH_H
+#define MSG_PASS_ALGO1_SYNC_DATA_DH_H
 
 #include "msgpass/IAlgo1SyncData.h"
 #include "msgpass/MeshVariableSynchronizerList.h"
-#include "msgpass/SyncEnvIndexes.h"
+#include "msgpass/SyncItems.h"
 #include "msgpass/SyncBuffers.h"
 
 /*---------------------------------------------------------------------------*/
-/* \class Algo1SyncDataMMatD                                                 */
-/* \brief Implementation of IAlgo1SyncData for multi-material variables      */
+/* \class Algo1SyncDataDH                                                    */
+/* \brief Implementation of IAlgo1SyncData for all variable types            */
 /*   packing/unpacking on Device                                             */
-/*   communicating with Device addresses (MPI gpu-aware)                     */
+/*   communicating (MPI) on Host                                             */
 /*---------------------------------------------------------------------------*/
-class Algo1SyncDataMMatD : public IAlgo1SyncData {
+class Algo1SyncDataDH : public IAlgo1SyncData {
  public:
   /*!
    * \brief Persistent information which don't depend on the variables
    */
   class PersistentInfo {
-    friend class Algo1SyncDataMMatD;
+    friend class Algo1SyncDataDH;
    public:
-    PersistentInfo(bool is_device_aware,
-        Integer nb_nei,
+    PersistentInfo(Integer nb_nei,
         Runner& runner,
-        SyncEnvIndexes* sync_evi,
         SyncBuffers* sync_buffers);
     virtual ~PersistentInfo();
    protected:
-    SyncEnvIndexes* m_sync_evi=nullptr;
     SyncBuffers* m_sync_buffers=nullptr;
     Integer m_nb_nei=0;
-    bool m_is_device_aware=false;
 
+    Ref<ax::RunQueue> m_ref_queue_data;  //! Référence sur une queue prioritaire pour le transfert des données
     UniqueArray<Ref<ax::RunQueueEvent>> m_pack_events;  //! Les evenements pour le packing des données
+    UniqueArray<Ref<ax::RunQueueEvent>> m_transfer_events;  //! Les evenements pour le transfert des données
   };
 
  public:
-  Algo1SyncDataMMatD(MeshVariableSynchronizerList& vars,
+  Algo1SyncDataDH(MeshVariableSynchronizerList& vars,
       Ref<RunQueue> ref_queue,
       PersistentInfo& pi);
 
-  virtual ~Algo1SyncDataMMatD();
+  virtual ~Algo1SyncDataDH();
 
   //! True if there is no data to synchronize
   bool isEmpty() override;
@@ -77,8 +75,8 @@ class Algo1SyncDataMMatD : public IAlgo1SyncData {
   Ref<RunQueue> m_ref_queue;
   PersistentInfo& m_pi;
 
-  ConstMultiArray2View<EnvVarIndex> m_ghost_evi_pn;  //! Ghost EnvIndex(es) to update
-
+  MultiBufView2 m_buf_snd_h;  //! Buffers on Host (_h) to send
+  MultiBufView2 m_buf_rcv_h;  //! Buffers on Host (_h) to recv
   MultiBufView2 m_buf_snd_d;  //! Buffers on Device (_d) to send
   MultiBufView2 m_buf_rcv_d;  //! Buffers on Device (_d) to recv
 };

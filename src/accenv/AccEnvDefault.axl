@@ -7,7 +7,7 @@
   <variables>
   <!-- GLOBAL CELL	 -->
   <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="false" need-sync="false" />
+	    dim="0" material="true" dump="false" need-sync="false" sub-domain-depend="true" />
   <!-- ENV ID -->
   <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
 	    dim="0" dump="false" need-sync="false" />
@@ -33,10 +33,10 @@
     <enumvalue name="heterog1" genvalue="HP_heterog1" />
   </enumeration>
 
-  <!-- - - - - global-var-sync-version - - - - -->
-  <enumeration name="global-var-sync-version" type="eVarSyncVersion" default="auto">
-    <description>Choix implémentation globalSynchronize(var) où var est globale</description>
-    <enumvalue name="auto" genvalue="VS_default" />
+  <!-- - - - - var-sync-version - - - - -->
+  <enumeration name="var-sync-version" type="eVarSyncVersion" default="auto">
+    <description>Choix implémentation synchronize(var)</description>
+    <enumvalue name="auto" genvalue="VS_auto" />
     <enumvalue name="nosync" genvalue="VS_nosync" />
     <enumvalue name="bulksync_std" genvalue="VS_bulksync_std" />
     <enumvalue name="bulksync_evqueue" genvalue="VS_bulksync_evqueue" />

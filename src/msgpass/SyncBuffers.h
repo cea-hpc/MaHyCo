@@ -102,6 +102,13 @@ class SyncBuffers {
     ConstArrayView<IMeshVarSync*> vars,
     IntegerConstArrayView item_sizes, Integer imem);
 
+  /*!
+   * \brief TODO : à commenter
+   */
+  MultiBufView2 multiBufViewVars(
+    ConstArrayView<IMeshVarSync*> vars,
+    Integer nb_nei, IMeshVarSync::eItemSync item_sync, Integer imem);
+
  protected:
   /*!
    * \brief A partir de la vue sur un buffer déjà alloué, construit une vue par voisin des buffers
@@ -117,6 +124,13 @@ class SyncBuffers {
   MultiBufView2 _multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
       IntegerConstArrayView item_sizes,
       Span<Byte> buf_bytes);
+
+  /*!
+   * \brief TODO : à commenter
+   */
+  MultiBufView2 _multiBufViewVars(ConstArrayView<IMeshVarSync*> vars,
+    Integer nb_nei, IMeshVarSync::eItemSync item_sync,
+    Span<Byte> buf_bytes);
 
  protected:
   struct BufMem {

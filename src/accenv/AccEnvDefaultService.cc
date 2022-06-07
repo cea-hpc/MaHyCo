@@ -299,7 +299,7 @@ initMesh(IMesh* mesh)
   m_acc_mem_adv->setReadMostly(ownFaces().view().localIds());
 
   m_vsync_mng = new VarSyncMng(mesh, m_runner, m_acc_mem_adv);
-  m_vsync_mng->setDefaultGlobVarSyncVersion(options()->getGlobalVarSyncVersion());
+  m_vsync_mng->setDefaultVarSyncVersion(options()->getVarSyncVersion());
 }
 
 /*---------------------------------------------------------------------------*/

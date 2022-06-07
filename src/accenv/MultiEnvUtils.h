@@ -307,7 +307,7 @@ class MultiEnvCellStorage {
     m_max_nb_env (mm->environments().size()),
     m_nb_env(VariableBuildInfo(mm->mesh(), "NbEnv" , IVariable::PNoDump| IVariable::PNoNeedSync)),
     m_l_env_arrays_idx(platform::getAcceleratorHostMemoryAllocator()),
-    m_l_env_values_idx(VariableBuildInfo(mm->mesh(), "LEnvValuesIdx" , IVariable::PNoDump| IVariable::PNoNeedSync)),
+    m_l_env_values_idx(VariableBuildInfo(mm->mesh(), "LEnvValuesIdx" , IVariable::PNoDump| IVariable::PNoNeedSync | IVariable::PSubDomainDepend)),
     m_env_id(VariableBuildInfo(mm->mesh(), "EnvId" , IVariable::PNoDump| IVariable::PNoNeedSync))
   {
     m_l_env_arrays_idx.resize(m_max_nb_env*mm->mesh()->allCells().size());

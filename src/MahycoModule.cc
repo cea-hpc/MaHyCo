@@ -239,31 +239,31 @@ computeNodeMass()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeNodeMass()";
-   // Initialisation ou reinitialisation de la masse nodale
-  auto ref_queue = m_acc_env->refQueueAsync();
-  auto command = makeCommand(ref_queue.get());
-
-  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
-  auto nc_cty = m_acc_env->connectivityView().nodeCell();
-
-  auto in_cell_mass_g = ax::viewIn(command,m_cell_mass.globalVariable());
-  auto out_node_mass = ax::viewOut(command, m_node_mass);
-
+  // Initialisation ou reinitialisation de la masse nodale
   // Le calcul sur les noeuds fantômes externes n'est pas correct
   // de toute façon (d'où m_node_mass.synchronize) autant ne calculer
   // que sur ownNodes()
-  //NodeGroup node_group = allNodes();
-  NodeGroup node_group = ownNodes();
+  m_acc_env->vsyncMng()->computeAndSync(
+    ownNodes(),
+    [&](NodeGroup node_group, RunQueue* async_queue) {
 
-  command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
-    Real sum_mass = 0.;
-    for( CellLocalId cid : nc_cty.cells(nid) )
-      sum_mass += in_cell_mass_g[cid];
-    out_node_mass[nid] = one_over_nbnode * sum_mass;
-  };
-  
-  //   m_node_mass.synchronize();
-  m_acc_env->vsyncMng()->globalSynchronize(ref_queue, m_node_mass);
+      auto command = makeCommand(async_queue);
+
+      Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+      auto nc_cty = m_acc_env->connectivityView().nodeCell();
+
+      auto in_cell_mass_g = ax::viewIn(command,m_cell_mass.globalVariable());
+      auto out_node_mass = ax::viewOut(command, m_node_mass);
+
+      command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
+        Real sum_mass = 0.;
+	for( CellLocalId cid : nc_cty.cells(nid) )
+	  sum_mass += in_cell_mass_g[cid];
+	out_node_mass[nid] = one_over_nbnode * sum_mass;
+      };
+    },
+    m_node_mass
+    );
   PROF_ACC_END;
 }
 /**
@@ -638,44 +638,47 @@ updateForceAndVelocity(Real dt,
     SimdNode snode=*inode;
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
+  v_velocity_out.synchronize();
 #else
-  auto ref_queue = m_acc_env->refQueueAsync();
-  auto command = makeCommand(ref_queue.get());
-
-  auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
-  auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
-  auto in_cell_cqs         = ax::viewIn(command, v_cell_cqs);
-  // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
-  auto out_force           = ax::viewOut(command, m_force);
-
-  auto node_index_in_cells = m_acc_env->nodeIndexInCells();
-  const Integer max_node_cell = m_acc_env->maxNodeCell();
-
-  auto nc_cty = m_acc_env->connectivityView().nodeCell();
-
-  auto in_mass      = ax::viewIn(command, m_node_mass);
-  auto in_velocity  = ax::viewIn(command, v_velocity_in);
-  auto out_velocity = ax::viewOut(command, v_velocity_out);
-
-  command << RUNCOMMAND_ENUMERATE(Node,nid,allNodes()) {
-    Int32 first_pos = nid.localId() * max_node_cell;
-    Integer index = 0;
-    Real3 node_force = Real3::zero();
-    for( CellLocalId cid : nc_cty.cells(nid) ){
-      Int16 node_index = node_index_in_cells[first_pos + index];
-      node_force += (in_pressure[cid]+in_pseudo_viscosity[cid]) 
-	* in_cell_cqs[cid][node_index];
-      ++index;
-    }
-    out_force[nid] = node_force;
-
-    // On peut mettre la vitesse à jour dans la foulée
-    out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
-  };
+  m_acc_env->vsyncMng()->computeAndSync(
+    ownNodes(),
+    [&](NodeGroup node_group, RunQueue* async_queue) {
+  
+      auto command = makeCommand(async_queue);
+     
+      auto in_pressure         = ax::viewIn(command, v_pressure.globalVariable());
+      auto in_pseudo_viscosity = ax::viewIn(command, v_pseudo_viscosity.globalVariable());
+      auto in_cell_cqs         = ax::viewIn(command, v_cell_cqs);
+      // TODO : supprimer m_force, qui ne devient qu'une variable temporaire de travail
+      auto out_force           = ax::viewOut(command, m_force);
+     
+      auto node_index_in_cells = m_acc_env->nodeIndexInCells();
+      const Integer max_node_cell = m_acc_env->maxNodeCell();
+     
+      auto nc_cty = m_acc_env->connectivityView().nodeCell();
+     
+      auto in_mass      = ax::viewIn(command, m_node_mass);
+      auto in_velocity  = ax::viewIn(command, v_velocity_in);
+      auto out_velocity = ax::viewOut(command, v_velocity_out);
+     
+      command << RUNCOMMAND_ENUMERATE(Node,nid,node_group) {
+        Int32 first_pos = nid.localId() * max_node_cell;
+        Integer index = 0;
+        Real3 node_force = Real3::zero();
+        for( CellLocalId cid : nc_cty.cells(nid) ){
+          Int16 node_index = node_index_in_cells[first_pos + index];
+          node_force += (in_pressure[cid]+in_pseudo_viscosity[cid]) 
+            * in_cell_cqs[cid][node_index];
+          ++index;
+        }
+        out_force[nid] = node_force;
+     
+        // On peut mettre la vitesse à jour dans la foulée
+        out_velocity[nid] = in_velocity[nid] + ( dt / in_mass[nid]) * node_force;
+      };
+    },
+    v_velocity_out);
 #endif
-
-//   v_velocity_out.synchronize();
-  m_acc_env->vsyncMng()->globalSynchronize(ref_queue, v_velocity_out);
   PROF_ACC_END;
 }
 
@@ -1075,42 +1078,50 @@ computeGeometricValues()
   // m_node_coord.synchronize();
   // TODO (BM) 15/03/2022 besoin de synchro meme si updatePosition met à jour m_node_coord sur les allNodes
   //                      A comprendre ...
-  auto queue_synchronize = m_acc_env->refQueueAsync();
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_node_coord);
-  
   if ( m_dimension == 3) {
-    {
-      auto queue = m_acc_env->newQueue();
-      auto command = makeCommand(queue);
 
-      auto in_node_coord = ax::viewIn(command,m_node_coord);
-      auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
-
-      auto cnc = m_acc_env->connectivityView().cellNode();
-
-      command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
-        // Recopie les coordonnées locales (pour le cache)
-        Real3 coord[8];
-        Int32 index=0;
-        for( NodeLocalId nid : cnc.nodes(cid) ){
-          coord[index]=in_node_coord[nid];
-          ++index;
+    // Dans le principe, on synchronise m_node_coord (variable aux noeuds)
+    // puis on appelle la lambda sur tous les Cell de allCells()
+    m_acc_env->vsyncMng()->syncAndCompute(
+	m_node_coord,     // ----------------------------------> variable à synchroniser avant les calculs
+	allCells(),       // ----------------------------------> groupe d'items sur lequel on itère
+	[&](CellGroup cell_group, RunQueue* async_queue) // ---> définition du calcul sur un CellGroup
+        {
+          auto command = makeCommand(async_queue);
+        
+          auto in_node_coord = ax::viewIn(command,m_node_coord);
+          auto out_cell_cqs = ax::viewInOut(command,m_cell_cqs);
+        
+          auto cnc = m_acc_env->connectivityView().cellNode();
+        
+          command << RUNCOMMAND_ENUMERATE(Cell, cid, cell_group){
+            // Recopie les coordonnées locales (pour le cache)
+            Real3 coord[8];
+            Int32 index=0;
+            for( NodeLocalId nid : cnc.nodes(cid) ){
+              coord[index]=in_node_coord[nid];
+              ++index;
+            }
+            // Calcul les coordonnées des centres des faces
+            Real3 face_coord[6] = {
+              0.25 * (coord[0] + coord[3] + coord[2] + coord[1]),
+              0.25 * (coord[0] + coord[4] + coord[7] + coord[3]),
+              0.25 * (coord[0] + coord[1] + coord[5] + coord[4]),
+              0.25 * (coord[4] + coord[5] + coord[6] + coord[7]),
+              0.25 * (coord[1] + coord[2] + coord[6] + coord[5]),
+              0.25 * (coord[2] + coord[3] + coord[7] + coord[6])
+            };
+        
+            // Calcule les résultantes aux sommets
+            computeCQs(coord, face_coord, out_cell_cqs[cid]);
+          };
         }
-        // Calcul les coordonnées des centres des faces
-        Real3 face_coord[6] = {
-          0.25 * (coord[0] + coord[3] + coord[2] + coord[1]),
-          0.25 * (coord[0] + coord[4] + coord[7] + coord[3]),
-          0.25 * (coord[0] + coord[1] + coord[5] + coord[4]),
-          0.25 * (coord[4] + coord[5] + coord[6] + coord[7]),
-          0.25 * (coord[1] + coord[2] + coord[6] + coord[5]),
-          0.25 * (coord[2] + coord[3] + coord[7] + coord[6])
-        };
+	);
 
-        // Calcule les résultantes aux sommets
-        computeCQs(coord, face_coord, out_cell_cqs[cid]);
-      };
-    }
   } else {
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_node_coord);
+
     Real3 npc[5];
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;

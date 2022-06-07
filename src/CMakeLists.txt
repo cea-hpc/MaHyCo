@@ -52,22 +52,15 @@ target_link_libraries(accenv PUBLIC arcane_core)
 
 # Message Passing
 add_library(msgpass msgpass/VarSyncMng.cc 
-                    msgpass/GlobalSynchronize.cc
-                    msgpass/GlobalSynchronizeQueue.cc
-                    msgpass/GlobalSynchronizeQueueEvent.cc
-                    msgpass/GlobalSynchronizeQueueEventD.cc
-                    msgpass/GlobalSynchronizeDevThr.cc
-                    msgpass/GlobalSynchronizeDevQueues.cc
-                    msgpass/IncompleteGlobalSynchronizeQueue.cc
                     msgpass/IsCommDeviceAware.cc
                     msgpass/MsgPassInit.cc
                     msgpass/PackTransfer.cc
                     msgpass/SyncItems.cc
                     msgpass/SyncBuffers.cc
                     msgpass/SyncEnvIndexes.cc
-                    msgpass/Algo1SyncDataMMatD.cc
-                    msgpass/Algo1SyncDataMMatDH.cc
                     msgpass/MeshVariableSynchronizerList.cc
+	            msgpass/Algo1SyncDataD.cc
+	            msgpass/Algo1SyncDataDH.cc
                     msgpass/VarSyncAlgo1.cc)
 target_include_directories(msgpass PUBLIC .)
 target_link_libraries(msgpass PUBLIC arcane_core)
@@ -107,22 +100,15 @@ arcane_accelerator_add_source_files(cartesian/NodeDirectionMng.cc)
 arcane_accelerator_add_source_files(cartesian/CartesianItemSorter.cc)
 arcane_accelerator_add_source_files(accenv/AccEnvDefaultService.cc)
 arcane_accelerator_add_source_files(msgpass/VarSyncMng.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronize.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronizeQueue.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronizeQueueEvent.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronizeQueueEventD.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronizeDevThr.cc)
-arcane_accelerator_add_source_files(msgpass/GlobalSynchronizeDevQueues.cc)
-arcane_accelerator_add_source_files(msgpass/IncompleteGlobalSynchronizeQueue.cc)
 arcane_accelerator_add_source_files(msgpass/IsCommDeviceAware.cc)
 arcane_accelerator_add_source_files(msgpass/MsgPassInit.cc)
 arcane_accelerator_add_source_files(msgpass/PackTransfer.cc)
 arcane_accelerator_add_source_files(msgpass/SyncItems.cc)
 arcane_accelerator_add_source_files(msgpass/SyncEnvIndexes.cc)
 arcane_accelerator_add_source_files(msgpass/SyncBuffers.cc)
-arcane_accelerator_add_source_files(msgpass/Algo1SyncDataMMatD.cc)
-arcane_accelerator_add_source_files(msgpass/Algo1SyncDataMMatDH.cc)
 arcane_accelerator_add_source_files(msgpass/MeshVariableSynchronizerList.cc)
+arcane_accelerator_add_source_files(msgpass/Algo1SyncDataD.cc)
+arcane_accelerator_add_source_files(msgpass/Algo1SyncDataDH.cc)
 arcane_accelerator_add_source_files(msgpass/VarSyncAlgo1.cc)
 arcane_accelerator_add_to_target(Mahyco)
 arcane_accelerator_add_to_target(Remap)
@@ -141,6 +127,7 @@ if (WANT_PROF_ACC)
   target_compile_definitions(Remap PRIVATE PROF_ACC)
   target_compile_definitions(cartesian PRIVATE PROF_ACC)
   target_compile_definitions(accenv PRIVATE PROF_ACC)
+  target_compile_definitions(msgpass PRIVATE PROF_ACC)
 endif()
 
 # Pour utiliser l'implémentation Arcane du cartésien

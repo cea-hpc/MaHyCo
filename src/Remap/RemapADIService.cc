@@ -265,14 +265,18 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   } 
   queue_dfac.barrier(); // fin calcul m_is_dir_face
 #endif
-//   m_h_cell_lagrange.synchronize();
-  auto queue_synchronize = m_acc_env->refQueueAsync();
 #if 0
   m_grad_phi_face.synchronize(); // INUTILE ?
+  m_h_cell_lagrange.synchronize();
 #else
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_grad_phi_face);
+  MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng());
+
+  mvsl.add(m_grad_phi_face);
+  mvsl.add(m_h_cell_lagrange);
+  
+  auto queue_synchronize = m_acc_env->refQueueAsync();
+  m_acc_env->vsyncMng()->synchronize(mvsl, queue_synchronize);
 #endif
-  m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_h_cell_lagrange);
   PROF_ACC_END;
 }
 /**
@@ -1059,25 +1063,28 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
  *******************************************************************************
  */
 void RemapADIService::synchronizeUremap()  {
+  PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
     
-//     m_est_mixte.synchronize();
-//     m_est_pure.synchronize();
-    auto queue_synchronize = m_acc_env->refQueueAsync();
 #if 0
     m_phi_lagrange.synchronize(); // INUTILE ?
-#else
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_phi_lagrange);
-#endif
-#if 0
     m_u_lagrange.synchronize();
     m_dual_phi_flux.synchronize();
+    m_est_mixte.synchronize();
+    m_est_pure.synchronize();
 #else
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_u_lagrange);   
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_dual_phi_flux);
+    MeshVariableSynchronizerList mvsl(m_acc_env->vsyncMng());
+
+    mvsl.add(m_phi_lagrange); // INUTILE ?
+    mvsl.add(m_u_lagrange);
+    mvsl.add(m_dual_phi_flux);
+    mvsl.add(m_est_mixte);
+    mvsl.add(m_est_pure);
+
+    auto queue_synchronize = m_acc_env->refQueueAsync();
+    m_acc_env->vsyncMng()->synchronize(mvsl, queue_synchronize);
 #endif
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_mixte);
-    m_acc_env->vsyncMng()->globalSynchronize(queue_synchronize, m_est_pure);
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
