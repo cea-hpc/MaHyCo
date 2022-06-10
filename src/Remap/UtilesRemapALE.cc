@@ -21,7 +21,7 @@ void RemapALEService::ComputeNodeGroupToRelax(){
         vecjjp = m_node_coord[cell.node(jp)] - m_node_coord[cell.node(jj)];
         vecjjm = m_node_coord[cell.node(jm)] - m_node_coord[cell.node(jj)];
         aircell = math::vecMul2D(vecjjp, vecjjm);
-        sincell = aircell / (vecjjp.abs() * vecjjm.abs());
+        sincell = aircell / (vecjjp.normL2() * vecjjm.normL2());
         airmin = ( aircell < airmin ? aircell : airmin );
         airmax = ( aircell > airmax ? aircell : airmax );
         sinmin = ( sincell < sinmin ? sincell : sinmin );

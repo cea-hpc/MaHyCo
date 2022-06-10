@@ -230,7 +230,7 @@ void MahycoModule::computeVariablesForRemap()
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
-    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs();
+    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].normL2();
 
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
@@ -241,7 +241,7 @@ void MahycoModule::computeVariablesForRemap()
      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
      // Phi energie cinétique
      //     if (options->projectionConservative == 1)
-     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs();
+     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].normL2();
   }
  
   PROF_ACC_END;
