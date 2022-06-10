@@ -137,7 +137,7 @@ void async_unpack_buf2var(IntegerConstArrayView item_idx,
     auto [i] = iter();
     ItemIdType lid(in_item_idx[i]);
 
-    out_var[lid].copy(buf_vals[i]);
+    out_var[lid].copy(buf_vals[i].smallView());
   }; // asynchrone
 }
 
