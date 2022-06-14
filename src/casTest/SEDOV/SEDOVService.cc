@@ -71,7 +71,7 @@ void SEDOVService::initVarMono(Integer dim)  {
       if (rnode < rmin) isCenterCell = true;
     }
     if (isCenterCell) { 
-      pinfo() << rmin << " cell " << cell.localId();
+      info() << rmin << " cell " << cell.localId();
       m_internal_energy[cell] += total_energy_deposit / vol;
       m_pressure[cell] = 0.4 * rhoInit * m_internal_energy[cell];
     }
