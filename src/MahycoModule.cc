@@ -1040,14 +1040,14 @@ InitGeometricValues()
         m_face_normal[iFace].x = produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y);
         m_face_normal[iFace].y = - produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x);
         m_face_normal[iFace].z = produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x);
-        m_face_normal[iFace] /= m_face_normal[iFace].abs();
+        m_face_normal[iFace] /= m_face_normal[iFace].normL2();
     }
   } else {
     ENUMERATE_FACE (iFace, allFaces()) {
       Face face = *iFace;
       m_face_normal[iFace].x = (m_node_coord[face.node(1)].y - m_node_coord[face.node(0)].y); 
       m_face_normal[iFace].y = (m_node_coord[face.node(1)].x - m_node_coord[face.node(0)].x); 
-      m_face_normal[iFace] /= m_face_normal[iFace].abs();
+      m_face_normal[iFace] /= m_face_normal[iFace].normL2();
     }
   }
   ENUMERATE_FACE (iFace, allFaces()) {
@@ -1061,7 +1061,7 @@ InitGeometricValues()
       const Face& face = *iface;
       Integer index = iface.index(); 
         m_outer_face_normal[icell][index] = (m_face_coord[face]-m_cell_coord[icell]) 
-            / (m_face_coord[face]-m_cell_coord[icell]).abs();
+            / (m_face_coord[face]-m_cell_coord[icell]).normL2();
     }
   }
   PROF_ACC_END;
@@ -1134,7 +1134,7 @@ computeGeometricValues()
       for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
         npc[inode.index()+1].x = 0.5 * (coord[inode.index()+1].y -  coord[inode.index()].y);
         npc[inode.index()+1].y = 0.5 * (coord[inode.index()].x -  coord[inode.index()+1].x);
-        // npc[inode.index()+1] = npc[inode.index()+1] / npc[inode.index()+1].abs();
+        // npc[inode.index()+1] = npc[inode.index()+1] / npc[inode.index()+1].normL2();
       }
       npc[0] = npc[4];
       for (Integer ii = 0; ii < 4; ++ii) {
@@ -1183,9 +1183,9 @@ computeGeometricValues()
         Real3 median1 = face_coord[0] - face_coord[3];
         Real3 median2 = face_coord[2] - face_coord[5];
         Real3 median3 = face_coord[1] - face_coord[4];
-        Real d1 = median1.abs();
-        Real d2 = median2.abs();
-        Real d3 = median3.abs();
+        Real d1 = median1.normL2();
+        Real d2 = median2.normL2();
+        Real d3 = median3.normL2();
 
         Real dx_numerator = d1 * d2 * d3;
         Real dx_denominator = d1 * d2 + d1 * d3 + d2 * d3;
@@ -2137,7 +2137,7 @@ computeDeltaT()
         Real vmax(0.);
         if (options()->withProjection)
           for (NodeEnumerator inode(cell.nodes()); inode.index() < cell.nbNode(); ++inode) {
-            vmax = math::max(m_velocity[inode].abs(), vmax);
+            vmax = math::max(m_velocity[inode].normL2(), vmax);
           }
         Real dx_sound = cell_dx / (sound_speed + vmax);
         minimum_aux = math::min(minimum_aux, dx_sound);

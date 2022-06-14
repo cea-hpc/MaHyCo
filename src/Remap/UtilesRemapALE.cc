@@ -21,7 +21,7 @@ void RemapALEService::ComputeNodeGroupToRelax(){
         vecjjp = m_node_coord[cell.node(jp)] - m_node_coord[cell.node(jj)];
         vecjjm = m_node_coord[cell.node(jm)] - m_node_coord[cell.node(jj)];
         aircell = math::vecMul2D(vecjjp, vecjjm);
-        sincell = aircell / (vecjjp.abs() * vecjjm.abs());
+        sincell = aircell / (vecjjp.normL2() * vecjjm.normL2());
         airmin = ( aircell < airmin ? aircell : airmin );
         airmax = ( aircell > airmax ? aircell : airmax );
         sinmin = ( sincell < sinmin ? sincell : sinmin );
@@ -85,9 +85,9 @@ void RemapALEService::computeLissage(){
         jacob = coordphi.x * coordpsi.y - coordpsi.x * coordphi.y;
             
                 
-        alpha = coordphi.abs2();
+        alpha = coordphi.squareNormL2();
         beta = 0.5*(coordphi.x * coordpsi.x + coordphi.y * coordpsi.y);
-        gamma = coordpsi.abs2();
+        gamma = coordpsi.squareNormL2();
         weight = 2.*(alpha+gamma);
         if (math::abs(jacob) > 1.e-8 && weight != 0.) {
             delta = (alpha * (m_node_coord[n4] + m_node_coord[n8]) 
