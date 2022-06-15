@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
 
@@ -66,13 +66,13 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     
     if (!cells_to_add.empty()) {
-      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
+      info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size() 
         << " ITERATION " << globalIteration();
       env_cells.addItems(cells_to_add);
       to_add_rm_cells = true;
     }
     if (!cells_to_remove.empty()){
-      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
+      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size()
         << " ITERATION " << globalIteration();
       env_cells.removeItems(cells_to_remove);
       to_add_rm_cells = true;
@@ -190,7 +190,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
       // On ajoute réellement les items à l'environnement
       CellGroup env_cells = env->cells();
-      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
+      info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
       env_cells.addItems(cells_to_add);
       to_add_rm_cells = true;
     }
@@ -206,7 +206,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
       // On retire réellement les items de l'environnement
       CellGroup env_cells = env->cells();
-      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
       env_cells.removeItems(cells_to_remove);
       to_add_rm_cells = true;
     }
@@ -344,7 +344,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     // mise à jour des valeurs moyennes aux allCells
     // densite
     m_density[cell] = density_nplus1;
-    // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
+    // info() << cell.localId() << " apres proj " << m_u_lagrange[cell];
     // recalcul de la masse
     // Boucle B
     m_cell_mass[cell] = m_euler_volume[cell] * density_nplus1;
@@ -563,7 +563,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // density_nplus1 est la valeur moyenne,
       // ne pas affecter dans le cas d'une maille pure sinon on n'aurait pas la valeur partielle
 
-      // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
+      // info() << cell.localId() << " apres proj " << m_u_lagrange[cell];
       // recalcul de la masse
       // Rem : on n'a plus besoin de m_cell_mass.fill(0.0)
       inout_cell_mass_g[cid] = in_euler_volume[cid] * density_nplus1;

@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapALEService.h"
 void RemapALEService::ComputeNodeGroupToRelax(){
     
@@ -58,7 +58,7 @@ void RemapALEService::computeLissage(){
   m_node_coord_l.copy(m_node_coord);
 
   NodeGroup Nodes_to_relax = mesh()->nodeFamily()->findGroup("NodeToRelax");
-  pinfo() << " nombre de noeuds à relaxer " << Nodes_to_relax.size();
+  info() << " nombre de noeuds à relaxer " << Nodes_to_relax.size();
   for( Integer iter=0; iter< options()->nbIterationWinslow ; ++iter){
     ENUMERATE_NODE(inode, Nodes_to_relax){
         Node n1 = *inode;
@@ -252,24 +252,24 @@ void RemapALEService::computeNewEnvCells(Integer index_env) {
     Cell cell = * icell;
     if (m_phi[cell][index_env] < options()->threshold  && cells_marker[cell.localId()] == 0) {
         cells_to_remove.add(cell.localId());
-        pinfo() << " cell " << cell.localId() 
+        info() << " cell " << cell.localId() 
             << " ( " << cell->uniqueId() << " ) " << " fraction " << m_phi[cell][index_env]
             << " retirée dans l'env " << env->name();
     }
         
     if (m_phi[cell][index_env] > options()->threshold  && cells_marker[cell.localId()] == -1) {
         cells_to_add.add(cell.localId());
-        pinfo() << " cell " << cell.localId() 
+        info() << " cell " << cell.localId() 
             << " ( " << cell->uniqueId() << " ) "  << " fraction " << m_phi[cell][index_env] 
             << " ajoutée dans l'env apres normalisation " << env->name();
     }
   }
   if (!cells_to_add.empty()) {
-    pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
+    info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
     env->cells().addItems(cells_to_add);
   }
   if (!cells_to_remove.empty()){
-    pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+    info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
     env->cells().removeItems(cells_to_remove);
   }
 }

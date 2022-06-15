@@ -72,7 +72,7 @@ void SODService::initVar(Integer dim)  {
         initVarMono(dim);
         return;
  }
- pinfo() << " on rentre ici"; 
+ info() << " on rentre ici"; 
  // mise à zero puis initialisation des fractions de masses et volumes
  m_mass_fraction.fill(0.0);
  m_fracvol.fill(0.0);
