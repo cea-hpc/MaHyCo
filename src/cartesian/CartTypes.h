@@ -3,6 +3,8 @@
 
 #include "arcane/utils/ArcaneGlobal.h"
 
+#include <array>
+
 namespace Cartesian {
 
 /*---------------------------------------------------------------------------*/
