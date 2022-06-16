@@ -291,7 +291,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       ENUMERATE_NODE(inode, cell->nodes()) {
         if (m_u_dual_lagrange[inode][3] != 0.) {
           ec_proj = m_u_dual_lagrange[inode][4] / m_u_dual_lagrange[inode][3];
-          ec_reconst = 0.5 * m_velocity[inode].abs2();
+          ec_reconst = 0.5 * m_velocity[inode].squareNormL2();
           delta_ec += 0.25 * ( ec_proj - ec_reconst);
         }
       }
