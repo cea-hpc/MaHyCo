@@ -19,7 +19,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
       pinfo() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
