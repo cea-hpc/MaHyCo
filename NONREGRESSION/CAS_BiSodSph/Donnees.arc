@@ -1,12 +1,12 @@
 <?xml version='1.0'?>
 <case codeversion="1.0" codename="Mahyco" xml:lang="en">
   <arcane>
-    <title>Exemple Arcane d'un module Hydro tres simplifie</title>
+    <title>CAS Sod Spherique 2 materiaux</title>
     <timeloop>MahycoLoop</timeloop>
   </arcane>
 
   <arcane-post-processing>
-    <output-period>10</output-period>
+    <output-period>50</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -27,11 +27,11 @@
      <cartesian>
        <nsd>2 2 2</nsd> 
        <origine>0.0 0.0 0.0</origine>
-       <lx nx='100' prx='1.0'>1.</lx>
+       <lx nx='80' prx='1.0'>1.</lx>
 
-       <ly ny='100' pry='1.0'>1.</ly>
+       <ly ny='80' pry='1.0'>1.</ly>
 
-       <lz nz='100' prz='1.0'>1.</lz>
+       <lz nz='80' prz='1.0'>1.</lz>
      </cartesian>
 
      </meshgenerator>
