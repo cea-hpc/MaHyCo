@@ -722,8 +722,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     // Des sortes de vues sur les valeurs impures pour l'environnement env
     Span<Real> out_cell_volume(envView(m_cell_volume, env));
@@ -736,7 +737,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
 
     command << RUNCOMMAND_LOOP1(iter,nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
       CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
       out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
     };

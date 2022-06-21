@@ -403,8 +403,9 @@ saveValuesAtN()
 
     auto command = makeCommand(menv_queue->queue(env->id()));
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     Span<const Real> in_pseudo_viscosity(envView(m_pseudo_viscosity, env));
     Span<const Real> in_pressure        (envView(m_pressure, env));
@@ -421,7 +422,7 @@ saveValuesAtN()
     Span<Real> out_internal_energy_n  (envView(m_internal_energy_n, env));
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
 
       out_pseudo_viscosity_nmoins1[imix] = inout_pseudo_viscosity_n[imix];
       inout_pseudo_viscosity_n[imix] = in_pseudo_viscosity[imix];
@@ -567,11 +568,12 @@ computeArtificialViscosity()
     Span<Real> inout_pseudo_viscosity(envView(m_pseudo_viscosity, env));
 
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
       CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
       // On calcule la valeur partielle sur la maille mixte
@@ -1305,8 +1307,9 @@ computeGeometricValues()
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     // Des sortes de vues sur les valeurs impures pour l'environnement env
     Span<Real> out_cell_volume(envView(m_cell_volume, env));
@@ -1319,7 +1322,7 @@ computeGeometricValues()
     auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
 
     command << RUNCOMMAND_LOOP1(iter,nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
       CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
       out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
     };
@@ -1427,8 +1430,9 @@ updateDensity()
 
     auto command = makeCommand(menv_queue->queue(env->id()));
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     Span<const Real> in_cell_volume(envView(m_cell_volume, env));
     Span<const Real> in_cell_mass(envView(m_cell_mass, env));
@@ -1438,7 +1442,7 @@ updateDensity()
     Span<Real> out_tau_density(envView(m_tau_density, env));
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
 
       compute_density_tau(in_density_n[imix], 
           in_cell_mass[imix], in_cell_volume[imix], 
@@ -1779,11 +1783,12 @@ updateEnergyAndPressureforGP()
 
       Real adiabatic_cst = m_adiabatic_cst_env(env->id());
 
-      // Nombre de mailles impures (mixtes) de l'environnement
-      Integer nb_imp = env->impureEnvItems().nbItem();
+      // Pour les mailles impures (mixtes), liste des indices valides 
+      Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+      Integer nb_imp = in_imp_idx.size();
 
       command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-        auto [imix] = iter(); // imix \in [0,nb_imp[
+	auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
         CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
         Real internal_energy = compute_eint(pseudo_centree, adiabatic_cst,
@@ -1930,11 +1935,12 @@ computePressionMoyenne()
     auto inout_pressure    = ax::viewInOut(command, m_pressure.globalVariable());
     auto inout_sound_speed = ax::viewInOut(command, m_sound_speed.globalVariable());
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
       CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
       inout_pressure[cid] += in_fracvol[imix] * in_pressure[imix];

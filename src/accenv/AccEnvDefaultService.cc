@@ -391,6 +391,7 @@ updateMultiEnv(IMeshMaterialMng* mesh_material_mng) {
   ENUMERATE_ENV(ienv,mesh_material_mng){
     IMeshEnvironment* env = *ienv;
     m_acc_mem_adv->setReadMostly(env->pureEnvItems().valueIndexes());
+    m_acc_mem_adv->setReadMostly(env->impureEnvItems().valueIndexes());
   }
 
   // Pour mettre à jours des listes pour les comms multi-env

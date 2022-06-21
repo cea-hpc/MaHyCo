@@ -346,9 +346,11 @@ class MultiEnvCellStorage {
 
         Span<const Integer> in_global_cell(envView(v_global_cell, env));
 
-        Integer nb_imp = env->impureEnvItems().nbItem();
+	Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+	Integer nb_imp = in_imp_idx.size();
+
         command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-          auto [imix] = iter(); // imix \in [0,nb_imp[
+	  auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
           CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
           Integer index_cell = inout_nb_env[cid];
