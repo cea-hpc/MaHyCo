@@ -67,9 +67,9 @@ computeFaceQuantitesForRemap()
  *                           3*nbmat+3 : pseudo-viscosite * volume
  *
  *         m_u_dual_lagrange (variables aux noeuds)
- *                           0 : masse
- *                           1 à 2 : quantite de mouvement
- *                           3 : energie cinetique
+ *                           0 à 2 : quantite de mouvement
+ *                           3 : masse nodale
+ *                           4 : energie cinetique
  *
  *  Pour l'option projection avec limiteurs pente-borne
  *
@@ -81,9 +81,9 @@ computeFaceQuantitesForRemap()
  *specifique 3*nbmat+3 : pseudo-viscosite
  *
  *         m_phi_dual_lagrange (variables aux noeuds)
- *                           0 : densite moyenne
- *                           1 à 2 : vitesse
- *                           3 : energie cinetique specifique
+ *                           0 à 2 : vitesse
+ *                           3 : masse nodale
+ *                           4 : energie cinetique specifique
  * \param 
  * \return m_u_lagrange, m_u_dual_lagrange, m_phi_lagrange, m_phi_dual_lagrange
  *******************************************************************************
