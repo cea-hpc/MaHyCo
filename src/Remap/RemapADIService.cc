@@ -98,8 +98,8 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
                                     / m_deltax_lagrange[iface];
       }
       // somme des distances entre le milieu de la maille et le milieu de la face
-      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).abs();
-      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
+      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).normL2();
+      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).normL2();
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
