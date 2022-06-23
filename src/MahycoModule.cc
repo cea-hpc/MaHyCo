@@ -22,23 +22,23 @@ hydroStartInit()
    my_rank = m_parallel_mng->commRank();
    
   
-  pinfo() <<  "Mon rang " << my_rank << " et mon nombre de mailles " << allCells().size();
-  pinfo() <<  " Mes mailles pures : " << ownCells().size();
-  pinfo() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
+  info() <<  "Mon rang " << my_rank << " et mon nombre de mailles " << allCells().size();
+  info() <<  " Mes mailles pures : " << ownCells().size();
+  info() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
   
   info() << " Check donnees ";
    if ((options()->remap()->getOrdreProjection() == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
-       pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
-       pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
-       pinfo() << " incompatible avec la projection d'ordre " << options()->remap()->getOrdreProjection();
-       pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+       info() << " mode parallele : " << m_parallel_mng->isParallel();
+       info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+       info() << " incompatible avec la projection d'ordre " << options()->remap()->getOrdreProjection();
+       info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
        subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
   if ((options()->withProjection == true) && (mesh()->ghostLayerMng()->nbGhostLayer() < 2) && (m_parallel_mng->isParallel() == true)) {
-      pinfo() << " mode parallele : " << m_parallel_mng->isParallel();
-      pinfo() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
-      pinfo() << " incompatible avec la projection ";
-      pinfo() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+      info() << " mode parallele : " << m_parallel_mng->isParallel();
+      info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+      info() << " incompatible avec la projection ";
+      info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
       subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
   
