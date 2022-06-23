@@ -136,9 +136,9 @@ computeFaceQuantitesForRemap()
  *                           3*nbmat+3 : pseudo-viscosite * volume
  *
  *         m_u_dual_lagrange (variables aux noeuds)
- *                           0 : masse
- *                           1 à 2 : quantite de mouvement
- *                           3 : energie cinetique
+ *                           0 à 2 : quantite de mouvement
+ *                           3 : masse nodale
+ *                           4 : energie cinetique
  *
  *  Pour l'option projection avec limiteurs pente-borne
  *
@@ -150,9 +150,9 @@ computeFaceQuantitesForRemap()
  *specifique 3*nbmat+3 : pseudo-viscosite
  *
  *         m_phi_dual_lagrange (variables aux noeuds)
- *                           0 : densite moyenne
- *                           1 à 2 : vitesse
- *                           3 : energie cinetique specifique
+ *                           0 à 2 : vitesse
+ *                           3 : masse nodale
+ *                           4 : energie cinetique specifique
  * \param 
  * \return m_u_lagrange, m_u_dual_lagrange, m_phi_lagrange, m_phi_dual_lagrange
  *******************************************************************************
@@ -230,7 +230,7 @@ void MahycoModule::computeVariablesForRemap()
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
-    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].normL2();
+    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].squareNormL2();
 
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
@@ -241,7 +241,7 @@ void MahycoModule::computeVariablesForRemap()
      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
      // Phi energie cinétique
      //     if (options->projectionConservative == 1)
-     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].normL2();
+     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].squareNormL2();
   }
  
   PROF_ACC_END;
@@ -419,7 +419,7 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
       out_u_dual_lagrange[nid][3] = in_node_mass[nid];
       // projection de l'energie cinétique
       //     if (options->projectionConservative == 1)
-      out_u_dual_lagrange[nid][4] = 0.5 * in_node_mass[nid] * in_velocity[nid].normL2();
+      out_u_dual_lagrange[nid][4] = 0.5 * in_node_mass[nid] * in_velocity[nid].squareNormL2();
       
       //         if (limiteurs->projectionAvecPlateauPente == 1) {   
       // *** variables Phi
@@ -430,7 +430,7 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
       out_phi_dual_lagrange[nid][3] = in_node_mass[nid];
       // Phi energie cinétique
       //     if (options->projectionConservative == 1)
-      out_phi_dual_lagrange[nid][4] = 0.5 * in_velocity[nid].normL2();
+      out_phi_dual_lagrange[nid][4] = 0.5 * in_velocity[nid].squareNormL2();
     };
   }
   
