@@ -19,9 +19,9 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == -1) continue;
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
-      pinfo() << " projection direction " << idir;
+      info() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
       // calcul des gradients des quantites à projeter aux cellules
@@ -98,8 +98,8 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
                                     / m_deltax_lagrange[iface];
       }
       // somme des distances entre le milieu de la maille et le milieu de la face
-      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).abs();
-      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).abs();     
+      m_h_cell_lagrange[cellb] +=  (m_face_coord[iface] - m_cell_coord[cellb]).normL2();
+      m_h_cell_lagrange[cellf] +=  (m_face_coord[iface] - m_cell_coord[cellf]).normL2();
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();

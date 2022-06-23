@@ -90,10 +90,10 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
          m_velocity_l[cell.node(2)].y + m_velocity_l[cell.node(3)].y);
        // energie cinetique
        // m_phi[cell][3*nb_env+3] = 0.5 * m_density_l[cell] * 0.25 * 
-       //  (m_velocity_l[cell.node(0)].abs2() + m_velocity_l[cell.node(1)].abs2() 
-       // + m_velocity_l[cell.node(2)].abs2() + m_velocity_l[cell.node(3)].abs2());
+       //  (m_velocity_l[cell.node(0)].squareNormL2() + m_velocity_l[cell.node(1)].squareNormL2() 
+       // + m_velocity_l[cell.node(2)].squareNormL2() + m_velocity_l[cell.node(3)].squareNormL2());
        m_phi[cell][3*nb_env+3] = 0.5 * m_density_l[cell] * (0.25 * (m_velocity_l[cell.node(0)] + m_velocity_l[cell.node(1)] 
-        + m_velocity_l[cell.node(2)] + m_velocity_l[cell.node(3)])).abs2();
+        + m_velocity_l[cell.node(2)] + m_velocity_l[cell.node(3)])).squareNormL2();
      }
     // ajout de la matiere dans les mailles voisines : creation de nouvelles envcell
     if (nb_env >1) { 
@@ -348,8 +348,8 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
           
           ec_proj = m_phi[c][3*nb_env+3] / m_density[c];
           // ec_reconst = 0.5 * 0.25 * 
-          //   (m_velocity[c.node(0)].abs2() + m_velocity[c.node(1)].abs2() + m_velocity[c.node(2)].abs2() + m_velocity[c.node(3)].abs2());
-          ec_reconst = 0.5 * (0.25 *(m_velocity[c.node(0)] + m_velocity[c.node(1)] + m_velocity[c.node(2)] + m_velocity[c.node(3)])).abs2();
+          //   (m_velocity[c.node(0)].squareNormL2() + m_velocity[c.node(1)].squareNormL2() + m_velocity[c.node(2)].squareNormL2() + m_velocity[c.node(3)].squareNormL2());
+          ec_reconst = 0.5 * (0.25 *(m_velocity[c.node(0)] + m_velocity[c.node(1)] + m_velocity[c.node(2)] + m_velocity[c.node(3)])).squareNormL2();
           delta_ec = std::max( 0., ec_proj - ec_reconst);
           m_internal_energy[c] += delta_ec;
         }
