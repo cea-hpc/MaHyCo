@@ -60,6 +60,7 @@ enum Test {
      RiderDeformation = 36,
      RiderVortexTimeReverse = 37,
      RiderDeformationTimeReverse = 38,
+     BiSodSph = 39,
   };
   
   enum limiteur {

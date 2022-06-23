@@ -53,6 +53,13 @@ void SODService::initMat(Integer dim)  {
     if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
+    if (options()->casTest == BiSodSph) 
+    {
+      const Real x = m_cell_coord[cell].x;
+      const Real y = m_cell_coord[cell].y;
+      const Real z = m_cell_coord[cell].z;
+      r = std::sqrt(x*x + y*y + z*z);
+    }
     if (r < 0.5) {
       m_materiau[cell] = 0.;
       // m_materiau[cell] = 0.9;
@@ -72,7 +79,7 @@ void SODService::initVar(Integer dim)  {
         initVarMono(dim);
         return;
  }
- pinfo() << " on rentre ici"; 
+ info() << " on rentre ici"; 
  // mise à zero puis initialisation des fractions de masses et volumes
  m_mass_fraction.fill(0.0);
  m_fracvol.fill(0.0);
@@ -85,6 +92,13 @@ void SODService::initVar(Integer dim)  {
     if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
+    if (options()->casTest == BiSodSph) 
+    {
+      const Real x = m_cell_coord[cell].x;
+      const Real y = m_cell_coord[cell].y;
+      const Real z = m_cell_coord[cell].z;
+      r = std::sqrt(x*x + y*y + z*z);
+    }
     if (r < 0.5) {
       m_density[cell] = 1.0;
       m_pressure[cell] = 1.0;
