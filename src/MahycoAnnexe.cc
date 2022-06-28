@@ -81,7 +81,11 @@ void MahycoModule::hydroStartInitEnvAndMat()
   info() << " Rangement des mailles  ";
   
   IMeshBlock* m_block1 = mm->createBlock(mbbi);
-  
+
+  int f  = (int)eModificationFlags::GenericOptimize;
+  f |= (int)eModificationFlags::OptimizeMultiAddRemove;
+  f |= (int)eModificationFlags::OptimizeMultiMaterialPerEnvironment; 
+  mm->setModificationFlags(f); 
   mm->endCreate(subDomain()->isContinue());
   
   Integer nb_cell = allCells().size();

@@ -383,6 +383,21 @@ void AccEnvDefaultService::
 updateMultiEnv(IMeshMaterialMng* mesh_material_mng) {
   debug() << "updateMultiEnv";
 
+#if 0
+  ENUMERATE_ENV(ienv,mesh_material_mng){
+    IMeshEnvironment* env = *ienv;
+
+    auto imp_env = env->impureEnvItems();
+    auto imp_idx = imp_env.valueIndexes();
+    for(Integer iimp = 0 ; iimp < imp_env.nbItem() ; ++iimp) {
+      Integer imix = imp_idx[iimp];
+      if (iimp != imix) {
+	throw FatalErrorException(A_FUNCINFO,"iimp != imix");
+      }
+    }
+  }
+#endif
+
   // Il faut recalculer m_global_cell et m_env_id car la
   // disposition des environnements a changé sur le maillage
   computeMultiEnvGlobalCellId(mesh_material_mng);

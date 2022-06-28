@@ -16,6 +16,7 @@
  *         m_node_velocity_nplus1, m_x_velocity, m_y_velocity
  *******************************************************************************
  */
+#define FORCE_RECOMPUTE 1
 void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
   PROF_ACC_BEGIN(__FUNCTION__);
@@ -25,6 +26,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   PROF_ACC_BEGIN("cellStatus");
 
   bool to_add_rm_cells = false;
+#ifndef FORCE_RECOMPUTE
+  Materials::MeshMaterialModifier modifier(mm);
+#endif
 #if 0
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
@@ -191,7 +195,11 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // On ajoute réellement les items à l'environnement
       CellGroup env_cells = env->cells();
       info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
+#ifdef FORCE_RECOMPUTE
       env_cells.addItems(cells_to_add);
+#else
+      modifier.addCells(env->materials()[0], cells_to_add);
+#endif
       to_add_rm_cells = true;
     }
     if (ncells_to_rm) {
@@ -207,7 +215,11 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // On retire réellement les items de l'environnement
       CellGroup env_cells = env->cells();
       info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+#ifdef FORCE_RECOMPUTE
       env_cells.removeItems(cells_to_remove);
+#else
+      modifier.removeCells(env->materials()[0], cells_to_remove);
+#endif
       to_add_rm_cells = true;
     }
   }
@@ -216,13 +228,33 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
   if (to_add_rm_cells) 
   {
-    PROF_ACC_BEGIN("forceRecompute");
     // finalisation avant remplissage des variables
+#ifdef FORCE_RECOMPUTE
+    PROF_ACC_BEGIN("forceRecompute");
     mm->forceRecompute();
     PROF_ACC_END;
+#else
+    PROF_ACC_BEGIN("endUpdate");
+    modifier.endUpdate();
+    PROF_ACC_END;
+#endif
 
     // Ici, la carte des environnements a changé
     m_acc_env->updateMultiEnv(mm);
+
+    // FIXME
+#if 0
+    ENUMERATE_ENV(env, mm) {
+
+      Span<const Int32> in_imp_idx((*env)->impureEnvItems().valueIndexes());
+      Integer nb_imp = in_imp_idx.size();
+
+      Span<Real> fracvol (envView(m_fracvol, *env));
+      Integer sz_var = fracvol.size();
+
+      pinfo() << "RATIO " << (*env)->name() << " imp/sz=" << nb_imp/Real(sz_var);
+    }
+#endif
   }
 
 #if 0
