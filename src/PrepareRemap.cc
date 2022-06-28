@@ -350,11 +350,12 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
       
       auto out_u_lagrange   = ax::viewOut(command, m_u_lagrange);
       
-      // Nombre de mailles impures (mixtes) de l'environnement
-      Integer nb_imp = env->impureEnvItems().nbItem();
+      // Pour les mailles impures (mixtes), liste des indices valides 
+      Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+      Integer nb_imp = in_imp_idx.size();
       
       command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-        auto [imix] = iter(); // imix \in [0,nb_imp[
+	auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
         CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
 
         // volumes matériels (partiels)
@@ -520,8 +521,9 @@ void MahycoModule::remap() {
     auto command = makeCommand(queue);
     Integer env_id = env->id();
 
-    // Nombre de mailles impures (mixtes) de l'environnement
-    Integer nb_imp = env->impureEnvItems().nbItem();
+    // Pour les mailles impures (mixtes), liste des indices valides 
+    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
+    Integer nb_imp = in_imp_idx.size();
 
     Span<const Real>    in_fracvol    (envView(m_fracvol, env));
     Span<const Integer> in_global_cell(envView(m_global_cell, env));
@@ -536,7 +538,7 @@ void MahycoModule::remap() {
     auto out_materiau           = ax::viewOut(command,m_materiau);
 
     command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto [imix] = iter(); // imix \in [0,nb_imp[
+      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
 
       out_pseudo_viscosity_n[imix] = 0.;
       out_pressure_n        [imix] = 0.;
