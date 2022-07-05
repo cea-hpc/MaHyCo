@@ -988,14 +988,14 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
     auto inout_phi_lagrange = ax::viewInOut(command, m_phi_lagrange);
     
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
-  for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
       
-      out_dual_phi_flux[cid][ivar] = 0.;
-      
+
+  
       Real flux = 0.;
-      Real flux_face = 0.;
-      
-      // On a besoin de la variable index car m_outer_face_normal a été rempli suivant 
+			for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+				out_dual_phi_flux[cid][ivar] = 0.;
+			} 
+			// On a besoin de la variable index car m_outer_face_normal a été rempli suivant 
       // le parcours ENUMERATE_CELL(cell,allCells()) -> ENUMERATE_FACE(face,cell.faces())
       // m_outer_face_normal[cell][face.index()] = ...
       // Sur GPU, on a gardé le meme pattern cell -> cell.faces(), ainsi pour accéder à 
@@ -1009,15 +1009,16 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
           Real face_length(in_face_length_lagrange[fid][idir]);
           Real3 outer_face_normal(in_outer_face_normal[cid][index]);
           Real outer_face_normal_dir = outer_face_normal[idir];
-          flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
-          flux_face += flux;
-          out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
-        }
+  				for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+						flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
+						out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
+						out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux;
+        	}
+      	}
         ++index;
-      }
-      out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux_face;
-    } 
-  	// On fait les diagnostics et controles 
+			} 
+
+			// On fait les diagnostics et controles 
   	  for (int imat = 0; imat < nbmat; imat++) {
         if (out_u_lagrange[cid][nbmat + imat] < 0.) {
           out_u_lagrange[cid][nbmat + imat] = 0.;
