@@ -467,6 +467,7 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
     auto out_delta_phi_face_av = ax::viewOut(command, m_delta_phi_face_av);
     auto out_delta_phi_face_ar = ax::viewOut(command, m_delta_phi_face_ar);
     auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
+    auto out_dual_phi_flux = ax::viewInOut(command, m_dual_phi_flux );
     auto inout_deltax_lagrange = ax::viewInOut(command, m_deltax_lagrange);
 
     command << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
@@ -504,6 +505,7 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
       // pour options()->projectionLimiteurId < minmodG (limiteur classique)
       // info() << " Passage gradient limite Classique ";
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+				out_dual_phi_flux[cid][ivar] = 0.;
 
         Real grad_phi_cell = 0.;
         Real grad_phi_face_back = (in_phi_lagrange[cid][ivar] - in_phi_lagrange[backCid][ivar]) / inout_deltax_lagrange[fid];
@@ -753,45 +755,91 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 
   auto queue = m_acc_env->newQueue();
 
+	Real deltat = m_global_deltat();
+
   // Puis on calcule m_grad_phi que que les faces intérieures dans la direction idir
   {
     Integer order2 = options()->ordreProjection - 1;
     
     auto command = makeCommand(queue);
-
     auto cart_fdm = fact_cart.faceDirection(idir);
+		auto face_group = cart_fdm.innerFaces();
     auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.innerFaces();
+    auto cart_cdm = fact_cart.cellDirection(idir);
+    auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
+    auto cell_group = cart_cdm.allCells();
+    auto faces_group = cart_fdm.allFaces();
+    auto c2cid_stm = cart_cdm.cell2CellIdStencil();
 
     auto in_deltax_lagrange      = ax::viewIn(command, m_deltax_lagrange);
-    auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
-    auto in_phi_lagrange         = ax::viewIn(command, m_phi_lagrange);
     auto in_face_coord           = ax::viewIn(command, m_face_coord);
     auto in_face_normal          = ax::viewIn(command, m_face_normal);
     auto in_cell_coord           = ax::viewIn(command, m_cell_coord);
     auto in_grad_phi             = ax::viewIn(command, m_grad_phi);
 
-    auto out_phi_face = ax::viewOut(command, m_phi_face);
+    auto cfc = m_acc_env->connectivityView().cellFace();
+    auto fcf = m_acc_env->connectivityView().faceCell();
     
-    command << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
+    auto in_face_length_lagrange = ax::viewIn(command, m_face_length_lagrange);
+    auto in_outer_face_normal    = ax::viewIn(command, m_outer_face_normal   );
+    auto inout_phi_face             = ax::viewInOut(command, m_phi_face            );
+    
+    auto out_dual_phi_flux = ax::viewInOut(command, m_dual_phi_flux );
+    auto out_u_lagrange    = ax::viewInOut(command, m_u_lagrange    );
 
-      // Acces mailles gauche/droite
-      auto f2cid = f2cid_stm.face(fid, idx);
-      CellLocalId bCid(f2cid.previousCell());
-      CellLocalId fCid(f2cid.nextCell());
+    auto out_est_mixte = ax::viewOut(command, m_est_mixte);
+    auto out_est_pure  = ax::viewOut(command, m_est_pure);
+    
+    
+		auto inout_u_lagrange   = ax::viewInOut(command, m_u_lagrange);
+		auto inout_phi_lagrange = ax::viewInOut(command, m_phi_lagrange);
 
-      // Maille upwind
-      CellLocalId upwCid = (in_face_normal_velocity[fid] * in_deltax_lagrange[fid] > 0.0 ? bCid : fCid);
+		command << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+			auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
 
-      // Independemment de ivar, on calcule dot((x_f - x_cb), face_normal)
-      Real dot_xf = math::dot((in_face_coord[fid] - in_cell_coord[upwCid]), in_face_normal[fid]);
+			Integer index = 0;
+			Real in_face_normal_face_idir = in_face_normal[fid][idir];
+			if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
 
-      // phi_cb + (dot((x_f - x_cb), face_normal) * grad_phi_cb)   
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) 
-        out_phi_face[fid][ivar] = in_phi_lagrange[upwCid][ivar] + order2 * dot_xf * in_grad_phi[upwCid][ivar];
-    };
-  }
+				// Acces mailles gauche/droite
+				auto f2cid = f2cid_stm.face(fid, idx);
+				CellLocalId bCid(f2cid.previousCell());
+				CellLocalId fCid(f2cid.nextCell());
+				if(fCid!=-1 && bCid!=-1){
+
+					// Maille upwind
+					CellLocalId upwCid = (in_face_normal_velocity[fid] * in_deltax_lagrange[fid] > 0.0 ? bCid : fCid);
+
+					// Independemment de ivar, on calcule dot((x_f - x_cb), face_normal)
+					Real dot_xf = math::dot((in_face_coord[fid] - in_cell_coord[upwCid]), in_face_normal[fid]);
+					int index_bcid=(idir+1)%3+3;
+					int index_fcid=(idir+1)%3;
+
+					Real face_normal_velocity(in_face_normal_velocity[fid]);
+					Real face_length(in_face_length_lagrange[fid][idir]);
+					Real3 outer_face_normal_back(in_outer_face_normal[bCid][index_bcid]);
+					Real3 outer_face_normal_front(in_outer_face_normal[fCid][index_fcid]);
+					Real outer_face_normal_back_dir = outer_face_normal_back[idir];
+					Real outer_face_normal_front_dir = outer_face_normal_front[idir];
+					for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
+						Real out_phi_face = inout_phi_lagrange[upwCid][ivar] + order2 * dot_xf * in_grad_phi[upwCid][ivar];
+						Real flux_back = outer_face_normal_back_dir * face_normal_velocity * face_length * deltat * out_phi_face;
+						Real flux_front = outer_face_normal_front_dir * face_normal_velocity * face_length * deltat * out_phi_face;
+
+						out_dual_phi_flux[bCid][ivar] += 0.5 * flux_back * outer_face_normal_back[idir];
+						out_dual_phi_flux[fCid][ivar] += 0.5 * flux_front * outer_face_normal_front[idir];
+
+						out_u_lagrange[bCid][ivar] = out_u_lagrange[bCid][ivar] - flux_back; 
+						out_u_lagrange[fCid][ivar] = out_u_lagrange[fCid][ivar] - flux_front; 
+
+					}
+				}
+				++index;
+			}
+		};
+	}
+
 
   m_phi_face.synchronize();      
   PROF_ACC_END;
@@ -991,32 +1039,32 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
       
 
   
-      Real flux = 0.;
-			for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-				out_dual_phi_flux[cid][ivar] = 0.;
-			} 
-			// On a besoin de la variable index car m_outer_face_normal a été rempli suivant 
-      // le parcours ENUMERATE_CELL(cell,allCells()) -> ENUMERATE_FACE(face,cell.faces())
-      // m_outer_face_normal[cell][face.index()] = ...
-      // Sur GPU, on a gardé le meme pattern cell -> cell.faces(), ainsi pour accéder à 
-      // m_outer_face_normal[cell][face.index()], il suffit d'un int que l'on incrémente
-      // au fur et à mesure du parcours faces(cell). (pas besoin de face_index_in_cells finalement)
-      Integer index = 0;
-      for( FaceLocalId fid : cfc.faces(cid) ) {
-        Real in_face_normal_face_idir = in_face_normal[fid][idir];
-        if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
-          Real face_normal_velocity(in_face_normal_velocity[fid]);
-          Real face_length(in_face_length_lagrange[fid][idir]);
-          Real3 outer_face_normal(in_outer_face_normal[cid][index]);
-          Real outer_face_normal_dir = outer_face_normal[idir];
-  				for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
-						flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
-						out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
-						out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux;
-        	}
-      	}
-        ++index;
-			} 
+      //Real flux = 0.;
+			//for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+				//out_dual_phi_flux[cid][ivar] = 0.;
+			//} 
+			//// On a besoin de la variable index car m_outer_face_normal a été rempli suivant 
+      //// le parcours ENUMERATE_CELL(cell,allCells()) -> ENUMERATE_FACE(face,cell.faces())
+      //// m_outer_face_normal[cell][face.index()] = ...
+      //// Sur GPU, on a gardé le meme pattern cell -> cell.faces(), ainsi pour accéder à 
+      //// m_outer_face_normal[cell][face.index()], il suffit d'un int que l'on incrémente
+      //// au fur et à mesure du parcours faces(cell). (pas besoin de face_index_in_cells finalement)
+      //Integer index = 0;
+      //for( FaceLocalId fid : cfc.faces(cid) ) {
+        //Real in_face_normal_face_idir = in_face_normal[fid][idir];
+        //if (std::fabs(in_face_normal_face_idir) >= 1.0E-10) {
+          //Real face_normal_velocity(in_face_normal_velocity[fid]);
+          //Real face_length(in_face_length_lagrange[fid][idir]);
+          //Real3 outer_face_normal(in_outer_face_normal[cid][index]);
+          //Real outer_face_normal_dir = outer_face_normal[idir];
+  				//for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {  
+						//flux = outer_face_normal_dir * face_normal_velocity * face_length * deltat * in_phi_face[fid][ivar];
+						//out_dual_phi_flux[cid][ivar] += 0.5 * flux * outer_face_normal[idir];
+						//out_u_lagrange[cid][ivar] = out_u_lagrange[cid][ivar] - flux;
+        	//}
+      	//}
+        //++index;
+			//} 
 
 			// On fait les diagnostics et controles 
   	  for (int imat = 0; imat < nbmat; imat++) {
