@@ -234,7 +234,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
           CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
 
           for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
             inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
           }
         }
@@ -252,7 +251,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
           CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
 
           for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
             inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
           }
         }
@@ -310,7 +308,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
             CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
 
             for (Integer index_env=0; index_env < nb_env; index_env++) { 
-              inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
               inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
             }
           }
@@ -332,7 +329,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
             CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
 
             for (Integer index_env=0; index_env < nb_env; index_env++) { 
-              inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
               inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
             }
           }
