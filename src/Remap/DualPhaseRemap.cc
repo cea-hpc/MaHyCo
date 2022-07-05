@@ -773,9 +773,9 @@ computeDualGradPhi_LimC(Integer idir) {
       // info() << " Passage gradient limite Classique ";
       for (Integer ivar = 0; ivar < 3; ivar++) {
         out_dual_grad_phi[nid][ivar] = 0.;
-        if (grad_back[ivar] != 0. ) 
+        if (fabs(grad_back[ivar]) > 10e-10 ) 
           out_dual_grad_phi[nid][ivar] += 0.5 * LimType::fluxLimiter( grad_front[ivar] / grad_back[ivar] ) * grad_back[ivar];
-        if (grad_front[ivar] !=0.)
+        if (fabs(grad_front[ivar]) > 10e-10 ) 
           out_dual_grad_phi[nid][ivar] += 0.5 * LimType::fluxLimiter( grad_back[ivar] / grad_front[ivar] ) * grad_front[ivar];
       }
     };
