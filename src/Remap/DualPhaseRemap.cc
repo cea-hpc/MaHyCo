@@ -727,27 +727,25 @@ computeDualGradPhi_LimC(Integer idir) {
       
       Real3 grad_front(0. , 0. , 0.);
       Real3 grad_back (0. , 0. , 0.);
+
+      Real inv_coord_front = 1./(in_node_coord[frontNid][idir] - in_node_coord[nid][idir]);
+			Real inv_coord_back = 1./(in_node_coord[nid][idir] - in_node_coord[backNid][idir]);
+
       
       // gradient vitesse X selon la direction idir
-      grad_front[0] = (in_phi_dual_lagrange[frontNid][0] - in_phi_dual_lagrange[nid][0]) /
-      (in_node_coord[frontNid][idir] - in_node_coord[nid][idir]);
-      
-      grad_back[0] = (in_phi_dual_lagrange[nid][0] - in_phi_dual_lagrange[backNid][0]) /
-      (in_node_coord[nid][idir] - in_node_coord[backNid][idir]);
-      
+      grad_front[0] = (in_phi_dual_lagrange[frontNid][0] - in_phi_dual_lagrange[nid][0]) * inv_coord_front;
+
+      grad_back[0] = (in_phi_dual_lagrange[nid][0] - in_phi_dual_lagrange[backNid][0]) *inv_coord_back;
+
       // gradient vitesse Y selon la direction idir
-      grad_front[1] = (in_phi_dual_lagrange[frontNid][1] - in_phi_dual_lagrange[nid][1]) /
-      (in_node_coord[frontNid][idir] - in_node_coord[nid][idir]);
+      grad_front[1] = (in_phi_dual_lagrange[frontNid][1] - in_phi_dual_lagrange[nid][1]) * inv_coord_front;
       
-      grad_back[1] = (in_phi_dual_lagrange[nid][1] - in_phi_dual_lagrange[backNid][1]) /
-      (in_node_coord[nid][idir] - in_node_coord[backNid][idir]);
+      grad_back[1] = (in_phi_dual_lagrange[nid][1] - in_phi_dual_lagrange[backNid][1]) *inv_coord_back;
       
       // gradient vitesse Z selon la direction idir
-      grad_front[2] = (in_phi_dual_lagrange[frontNid][2] - in_phi_dual_lagrange[nid][2]) /
-      (in_node_coord[frontNid][idir] - in_node_coord[nid][idir]);
+      grad_front[2] = (in_phi_dual_lagrange[frontNid][2] - in_phi_dual_lagrange[nid][2]) * inv_coord_front;
       
-      grad_back[2] = (in_phi_dual_lagrange[nid][2] - in_phi_dual_lagrange[backNid][2]) /
-      (in_node_coord[nid][idir] - in_node_coord[backNid][idir]);
+      grad_back[2] = (in_phi_dual_lagrange[nid][2] - in_phi_dual_lagrange[backNid][2]) *inv_coord_back;
       
       // largeurs des mailles duales
       Real hmoins, h0, hplus;
