@@ -11,6 +11,9 @@ using namespace Arcane;
 class IAlgo1SyncData {
  public:
 
+  //! Destructor to override
+  virtual ~IAlgo1SyncData() {}
+
   //! True if there is no data to synchronize
   virtual bool isEmpty() = 0;
 
