@@ -125,10 +125,10 @@ void RemapADIService::computeDualGradPhi(Node inode,
  *******************************************************************************
  */
 Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
-                           Real gradmoins, Real y0, Real yplus,
+                           Real gradmoins, [[maybe_unused]] Real y0, Real yplus,
                            Real ymoins, Real h0, Real hplus,
                            Real hmoins) {
-  Real grady, gradM, gradMplus, gradMmoins;
+  Real grady=0., gradM, gradMplus, gradMmoins;
   // limitation rupture de pente (formule 16 si on utilise pas le plateau pente)
   if (gradplus * gradmoins < 0.0) return 0.;
 
@@ -181,7 +181,7 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
  * \return y0plus, y0moins
  *******************************************************************************
  */
-Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
+Real RemapADIService::computeY0(int projectionLimiterId, [[maybe_unused]] Real y0, Real yplus,
                         Real ymoins, Real h0, Real hplus, Real hmoins,
                         int type) {
   // retourne {{y0plus, y0moins}}
@@ -421,7 +421,6 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
   Real flux1, flux2, flux3, flux1m, flux2m, flux3m;
   Real partie_positive_v = 0.5 * (face_normal_velocity + abs(face_normal_velocity)) * deltat_n;
   Real partie_positive_dual_v = 0.5 * (dual_normal_velocity + abs(dual_normal_velocity)) * deltat_n;
-  Integer cas_PP = 0;
     for (Integer ivar = 0; ivar < nb_vars; ivar++) {
       Real h0 = m_h_cell_lagrange[cell];
       Real hplus = m_h_cell_lagrange[frontcell];
@@ -548,10 +547,10 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
     // valeur moyenne de u calculée par le flux de vitesse / flux de volume
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
-    for (size_t imat = 0; imat < nbmat; imat++) somme_flux_volume += Flux[imat];
+    for (int imat = 0; imat < nbmat; imat++) somme_flux_volume += Flux[imat];
 
     if (std::fabs(somme_flux_volume) > flux_threshold ) {
-      for (size_t imat = 0; imat < nbmat; imat++) {
+      for (int imat = 0; imat < nbmat; imat++) {
         Flux[nbmat + imat] =
             (Flux[nbmat + imat] / somme_flux_volume) * Flux[imat];
         Flux[2. * nbmat + imat] =
@@ -577,7 +576,7 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
     // deduisent des flux de volumes avec la valeur de rho, e et u à la maille
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
-    for (size_t imat = 0; imat < nbmat; imat++) {
+    for (int imat = 0; imat < nbmat; imat++) {
       Flux[nbmat + imat] =
           m_phi_lagrange[cell][nbmat + imat] * Flux[imat];  // flux de masse de imat
       Flux[2 * nbmat + imat] =
@@ -640,7 +639,6 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
   Real flux1, flux2, flux3, flux1m, flux2m, flux3m;
   Real partie_positive_v = 0.5 * (face_normal_velocity + abs(face_normal_velocity)) * deltat_n;
   Real partie_positive_dual_v = 0.5 * (dual_normal_velocity + abs(dual_normal_velocity)) * deltat_n;
-  int cas_PP = 0;
   // on ne fait que la projection des volumes et masses
   for (Integer ivar = 0; ivar < nb_vars; ivar++) {
     Real h0 = m_h_cell_lagrange[cell];
@@ -765,10 +763,10 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
     // valeur moyenne de u calculée par le flux de vitesse / flux de volume
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
-    for (size_t imat = 0; imat < nbmat; imat++) somme_flux_volume += Flux[imat];
+    for (int imat = 0; imat < nbmat; imat++) somme_flux_volume += Flux[imat];
 
     if (std::fabs(somme_flux_volume) > flux_threshold ) {
-      for (size_t imat = 0; imat < nbmat; imat++) {
+      for (int imat = 0; imat < nbmat; imat++) {
         Flux[2. * nbmat + imat] =
             (Flux[2. * nbmat + imat] / somme_flux_volume) * Flux[nbmat + imat];
         somme_flux_masse += Flux[nbmat + imat];
@@ -791,7 +789,7 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
     // deduisent des flux de volumes * densite (dans phi)
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
-    for (size_t imat = 0; imat < nbmat; imat++) {
+    for (int imat = 0; imat < nbmat; imat++) {
       Flux[2 * nbmat + imat] =
           m_phi_lagrange[cell][2 * nbmat + imat] *
           Flux[nbmat + imat];  // flux de masse energy de imat
@@ -824,8 +822,8 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
 //  *******************************************************************************
 //  */
 Real RemapADIService::computeRemapFlux(
-        Integer projectionOrder, Integer projectionAvecPlateauPente,
-        Real face_normal_velocity, Real3 face_normal,
+        [[maybe_unused]] Integer projectionOrder, Integer projectionAvecPlateauPente,
+        Real face_normal_velocity, [[maybe_unused]] Real3 face_normal,
         Real face_length, Real phi_face,
         Real3 outer_face_normal, Real3 exy, Real deltat_n) {
     

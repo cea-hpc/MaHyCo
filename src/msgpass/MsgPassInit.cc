@@ -6,7 +6,7 @@
 
 using namespace Arcane;
 
-void msg_pass_init(int* argc, char*** argv) {
+void msg_pass_init([[maybe_unused]] int* argc, [[maybe_unused]] char*** argv) {
 //#define USE_THREAD_MULTIPLE
 #ifdef USE_THREAD_MULTIPLE
   // On impose le niveau MPI_THREAD_MULTIPLE
@@ -28,7 +28,9 @@ void msg_pass_init(int* argc, char*** argv) {
 #endif
 }
 #else
+#ifdef P4GPU_HAS_WARNING_INFO
 #warning "MPI non détecté : msg_pass_init(...) vide"
+#endif
 void msg_pass_init(int* , char*** ) {
 }
 #endif

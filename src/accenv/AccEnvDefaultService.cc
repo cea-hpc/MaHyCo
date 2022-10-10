@@ -1,9 +1,5 @@
 #include "AccEnvDefaultService.h"
 
-#include "cartesian/interface/CellDirectionMng.h"
-#include "cartesian/interface/FaceDirectionMng.h"
-#include "cartesian/interface/NodeDirectionMng.h"
-
 #include "arcane/materials/CellToAllEnvCellConverter.h"
 #include "arcane/materials/IMeshEnvironment.h"
 #include "arcane/materials/ComponentPartItemVectorView.h"
@@ -350,7 +346,7 @@ computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
 }
 
 void AccEnvDefaultService::
-checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
+checkMultiEnvGlobalCellId([[maybe_unused]] IMeshMaterialMng* mesh_material_mng) {
 #ifdef ARCANE_DEBUG
   debug() << "checkMultiEnvGlobalCellId";
 

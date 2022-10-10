@@ -59,11 +59,11 @@ public:
   /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
-  virtual Real getAdiabaticCst(IMeshEnvironment* env);
+  Real getAdiabaticCst(IMeshEnvironment* env) override;
   /** 
    *  Renvoie la constante tension limit de l'environnement. 
    */
-  virtual Real getTensionLimitCst(IMeshEnvironment* env);
+  Real getTensionLimitCst(IMeshEnvironment* env) override;
 
 private:
   // Pour l'utilisation des accélérateurs

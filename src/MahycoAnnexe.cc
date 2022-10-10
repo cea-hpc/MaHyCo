@@ -42,7 +42,6 @@ _initCartMesh() {
 void MahycoModule::hydroStartInitEnvAndMat()
 {
   info() << " Preparation des env  ";
-  IMeshMaterialMng* m_material_mng;
   mm = IMeshMaterialMng::getReference(defaultMesh());
   // lecture des environnements
   MeshBlockBuildInfo mbbi("BLOCK1",allCells());
@@ -84,7 +83,6 @@ void MahycoModule::hydroStartInitEnvAndMat()
   
   mm->endCreate(subDomain()->isContinue());
   
-  Integer nb_cell = allCells().size();
   Integer nb_env = m_block1->nbEnvironment();
   m_nb_env = nb_env;
   m_nb_vars_to_project = 3 * nb_env + 3 + 1 + 1;
@@ -108,24 +106,21 @@ void MahycoModule::hydroStartInitEnvAndMat()
     m_cell_coord[cell] = one_over_nbnode * somme ;
   }
   
-  IMeshMaterial* m_mat[nb_env];
-  IMeshEnvironment* m_env[nb_env];
+  UniqueArray<IMeshMaterial*> m_mat(nb_env);
   info() << " Initialisation du cas test";
   
   options()->casModel()->initMat(m_dimension);
       
   for (Integer i= 0 ; i <  nb_env; ++i) {
     m_mat[i] = mm->environments()[i]->materials()[0];
-    m_env[i] = mm->environments()[0];
   }
   
   
-  Int32UniqueArray mat_indexes[nb_env];
+  UniqueArray<Int32UniqueArray> mat_indexes(nb_env);
   info() << " Nb environments " << nb_env ;
   
   info() << " Trie par environnements  ";
   ENUMERATE_CELL(icell,allCells()){
-    Cell cell = *icell;
     if (m_materiau[icell] == 0.) {
       mat_indexes[0].add(icell.itemLocalId());
     } else if (m_materiau[icell] == 1.) {
@@ -187,9 +182,6 @@ void MahycoModule::PrepareFaceGroup() {
   Int32UniqueArray face_xmax_lid;
   Int32UniqueArray face_ymax_lid;
   Int32UniqueArray face_zmax_lid;
-  Real3 ex = {1. , 0. , 0.};
-  Real3 ey = {0. , 1. , 0.};
-  Real3 ez = {0. , 0. , 1.};
   Real3 maxCoor= {-1. , -1. , -1.};
   ENUMERATE_NODE(inode, allNodes()){
       maxCoor.x = std::max(maxCoor.x, m_node_coord[inode].x);

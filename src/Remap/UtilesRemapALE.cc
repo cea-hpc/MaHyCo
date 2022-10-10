@@ -51,7 +51,6 @@ void RemapALEService::computeLissage(){
   Real jacob;
   Real alpha, beta, gamma, weight, dplmax, dplmin;
   Real tauxdlp = 0.00025;
-  Real3 cc = {0.5, 0.5, 0.};
   
   
   // sauvegarde de l'ancien maillage 
@@ -285,7 +284,7 @@ void RemapALEService::computeApproPhi(Integer index_env,
                                       VariableCellArrayReal CellVolumeOrMassePartiel, 
                                       VariableCellArrayReal DeltaVolumeOrMass){    
     
-    Real dx0, dx1, dx2, dx3, dx0p, dx1p, dx2p, dx3p;
+    Real dx0=0., dx1=0., dx2=0., dx3=0., dx0p, dx1p, dx2p, dx3p;
     Real dfia0, dfi2a, dfia1, dfi3a;
     Real sign(0), fiprim, fiprimtmp;
     m_appro_phi.fill(0.0);

@@ -16,7 +16,7 @@
  *         m_node_velocity_nplus1, m_x_velocity, m_y_velocity
  *******************************************************************************
  */
-void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, [[maybe_unused]] Integer nb_vars_to_project, Integer nb_env) {
   
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans remapVariables";
@@ -114,7 +114,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // Recherche de l'appartenance de la maille à l'env index_env
       bool cell_in_env = false;
       for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
+        //auto evi = in_menv_cell.envCell(cid,ienv);
         Integer index_env_loc = in_menv_cell.envId(cid,ienv);
         if (index_env_loc == index_env)
           cell_in_env = true;

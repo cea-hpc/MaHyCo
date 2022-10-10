@@ -24,7 +24,9 @@ namespace ax = Arcane::Accelerator;
 
 #if defined(ARCANE_COMPILING_CUDA) && defined(PROF_ACC)
 
+#ifdef P4GPU_HAS_WARNING_INFO
 #warning "PROF_ACC : instrumentation avec nvtx"
+#endif
 #include <nvtx3/nvToolsExt.h>
 #include <cuda_profiler_api.h>
 
@@ -46,7 +48,9 @@ namespace ax = Arcane::Accelerator;
 
 #elif defined(ARCANE_COMPILING_HIP) && defined(PROF_ACC)
 
+#ifdef P4GPU_HAS_WARNING_INFO
 #warning "PROF_ACC : instrumentation avec roctx"
+#endif
 #include <roctracer/roctx.h>
 //#include <roctracer/roctracer_ext.h>
 
@@ -120,7 +124,7 @@ class AcceleratorUtils {
 #endif
   }
 
-  static void setDevice(Integer device) {
+  static void setDevice([[maybe_unused]] Integer device) {
 #if defined(ARCANE_COMPILING_CUDA)
     cudaSetDevice(device);
 #elif defined(ARCANE_COMPILING_HIP)
@@ -216,7 +220,7 @@ class AccMemAdviser {
   bool enable() const { return m_enable; }
 
   template<typename ViewType>
-  void setReadMostly(ViewType view) {
+  void setReadMostly([[maybe_unused]] ViewType view) {
 #ifdef ARCANE_COMPILING_CUDA
     if (m_enable && view.size()) {
       cudaMemAdvise (view.data(), view.size(), cudaMemAdviseSetReadMostly,m_device);

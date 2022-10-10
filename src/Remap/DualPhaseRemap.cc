@@ -25,10 +25,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
   Real deltat = m_global_deltat();
   
-  Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
-                   1.0 * idir * (2 -idir), 
-                   -0.5 * idir * (1 - idir)};  
-  
   auto queue = m_acc_env->newQueue();
   Cartesian::FactCartDirectionMng fact_cart(mesh());
   
@@ -70,6 +66,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   }
   
 #if 0
+  Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
+                   1.0 * idir * (2 -idir), 
+                   -0.5 * idir * (1 - idir)};  
+ 
   ENUMERATE_NODE(inode, allNodes()){
     for (Integer index_env=0; index_env < nb_env; index_env++) {
       m_back_flux_mass_env[inode][index_env] =0.;
@@ -140,7 +140,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto face_group = cart_fdm.allFaces();
     
     auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
-    auto in_outer_face_normal  = ax::viewIn(command_f, m_outer_face_normal);
     
     auto out_back_flux_contrib_env   = ax::viewOut(command_f, m_back_flux_contrib_env );
     auto out_front_flux_contrib_env  = ax::viewOut(command_f, m_front_flux_contrib_env );
@@ -166,8 +165,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
           }
           index_face_backCid++;
         }
-        Real3 outer_face_normalb(in_outer_face_normal[backCid][index_face_backCid]);
-        Real outer_face_normal_dirb = outer_face_normalb[idir];
 
         for (Integer index_env=0; index_env < nb_env; index_env++) {
           out_back_flux_contrib_env[backCid][index_env] = oneovernbcell * in_dual_phi_flux[backCid][nb_env+index_env];
@@ -183,8 +180,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
           }
           index_face_frontCid++;
         }
-        Real3 outer_face_normalf(in_outer_face_normal[frontCid][index_face_frontCid]);
-        Real outer_face_normal_dirf = outer_face_normalf[idir];
         
         for (Integer index_env=0; index_env < nb_env; index_env++) {
           out_front_flux_contrib_env[frontCid][index_env] = oneovernbcell * in_dual_phi_flux[frontCid][nb_env+index_env];
@@ -368,7 +363,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
 #if 1
   {
     Integer order2 = options()->ordreProjection - 1;
-    Real thresold = m_arithmetic_thresold;
     
     auto command = makeCommand(queue);
     
@@ -781,20 +775,6 @@ computeDualGradPhi_LimC(Integer idir) {
       
       grad_back[2] = (in_phi_dual_lagrange[nid][2] - in_phi_dual_lagrange[backNid][2]) /
       (in_node_coord[nid][idir] - in_node_coord[backNid][idir]);
-      
-      // largeurs des mailles duales
-      Real hmoins, h0, hplus;
-      h0 = 0.5 * (in_node_coord[frontNid][idir]- in_node_coord[backNid][idir]);
-      if (ItemId::null(backbackNid)) {
-        hmoins = 0.;
-        hplus = 0.5 * (in_node_coord[frontfrontNid][idir]- in_node_coord[nid][idir]);
-      } else if (ItemId::null(frontfrontNid)) {
-        hplus = 0.;
-        hmoins = 0.5 * (in_node_coord[nid][idir] - in_node_coord[backbackNid][idir]);
-      } else {
-        hmoins = 0.5 * (in_node_coord[nid][idir] - in_node_coord[backbackNid][idir]);
-        hplus = 0.5 * (in_node_coord[frontfrontNid][idir]- in_node_coord[nid][idir]);
-      }
       
       // info() << " Passage gradient limite Classique ";
       for (Integer ivar = 0; ivar < 3; ivar++) {

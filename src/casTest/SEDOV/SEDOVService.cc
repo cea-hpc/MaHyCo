@@ -1,7 +1,7 @@
 #include "SEDOVService.h"
 
 
-void SEDOVService::initMatMono(Integer dim)  {
+void SEDOVService::initMatMono([[maybe_unused]] Integer dim)  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -19,7 +19,6 @@ void SEDOVService::initMat(Integer dim)  {
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     Real rmin(1.e-10);  // depot sur 1 maille
-    Real rmax(0.);
     bool isCenterCell = false;  
     m_materiau[cell] = 0;
     ENUMERATE_NODE(inode, cell.nodes()) {
@@ -40,7 +39,6 @@ void SEDOVService::initVarMono(Integer dim)  {
     
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = 1.;
-  Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
   Real rmin(1.e-10);  // depot sur 1 maille
@@ -49,7 +47,6 @@ void SEDOVService::initVarMono(Integer dim)  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    Real rmax(0.);
     bool isCenterCell = false;  
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
@@ -90,7 +87,6 @@ void SEDOVService::initVar(Integer dim)  {
 
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = 1.;
-  Real pInit = 1.e-6;
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
   Real rmin(1.e-10);  // depot sur 1 maille
@@ -98,7 +94,6 @@ void SEDOVService::initVar(Integer dim)  {
   
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    Real rmax(0.);
     bool isCenterCell = false;  
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;

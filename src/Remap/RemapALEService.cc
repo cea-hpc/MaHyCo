@@ -14,7 +14,8 @@ bool RemapALEService::hasConservationEnergieTotale() { return options()->conserv
 bool RemapALEService::isEuler() {return options()->getIsEulerScheme();}
 /**
  *******************************************************************************/
-void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapALEService::appliRemap([[maybe_unused]] Integer dimension, Integer withDualProjection, 
+    Integer nb_vars_to_project, Integer nb_env) {
     
     synchronizeUremap();  
     resizeRemapVariables( nb_vars_to_project,  nb_env);
@@ -106,7 +107,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     if (nb_env >1) { 
      /************************************************************/
      for (Integer index_env=0; index_env < nb_env ; index_env++) { 
-        IMeshEnvironment* env = mm->environments()[index_env];
+        //IMeshEnvironment* env = mm->environments()[index_env];
         // pinfo() << " Projection du volume pour l'environement " << env->name() << " nombre de cell " << env->cells().size();
 
         computeApproPhi(index_env, m_cell_volume_partial_l, m_cell_delta_volume);
@@ -368,7 +369,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
 }
 /**
  *******************************************************************************/
-void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) {
+void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env) {
 
   m_cell_volume_partial_l.resize(4);
   m_cell_masse_partial_l.resize(4);
@@ -380,7 +381,9 @@ void RemapALEService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
 }
 /**
  *******************************************************************************/
-void RemapALEService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapALEService::remapVariables([[maybe_unused]] Integer dimension, 
+    [[maybe_unused]] Integer withDualProjection, [[maybe_unused]] Integer nb_vars_to_project, 
+    [[maybe_unused]] Integer nb_env) {
 }
 /**
  *******************************************************************************

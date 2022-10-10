@@ -1,9 +1,9 @@
 #include "OTHERService.h"
 
 
-void OTHERService::initMatMono(Integer dim)  {
+void OTHERService::initMatMono([[maybe_unused]] Integer dim)  {
 }
-void OTHERService::initMat(Integer dim)  {
+void OTHERService::initMat([[maybe_unused]] Integer dim)  {
     
   // rayon interne et externe
   double rb(0.5);
@@ -19,9 +19,9 @@ void OTHERService::initMat(Integer dim)  {
     } 
   }
 }
-void OTHERService::initVarMono(Integer dim)  {
+void OTHERService::initVarMono([[maybe_unused]] Integer dim)  {
 }
-void OTHERService::initVar(Integer dim)  {
+void OTHERService::initVar([[maybe_unused]] Integer dim)  {
 
   // rayon interne et externe
   double rb(0.5);

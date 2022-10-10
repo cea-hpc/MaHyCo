@@ -1,7 +1,7 @@
 #include "RIDERService.h"
 
 
-void RIDERService::initMatMono(Integer dim)  {
+void RIDERService::initMatMono([[maybe_unused]] Integer dim)  {
     
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -36,11 +36,6 @@ void RIDERService::initMat(Integer dim)  {
     // Air partout
     m_materiau[cell] = 0;
     // bulle surchargera l'aire
-    // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
     
     if (rmax < rb) {
       // maille pure de bulle
@@ -51,7 +46,7 @@ void RIDERService::initMat(Integer dim)  {
     }
   }
 }
-void RIDERService::initVarMono(Integer dim)  {
+void RIDERService::initVarMono([[maybe_unused]] Integer dim)  {
     
   Real3 Xb;
   if (options()->casTest < MonoRiderRotation) 
@@ -81,11 +76,7 @@ void RIDERService::initVarMono(Integer dim)  {
     m_density[cell] = 0.;
     m_pressure[cell] = 0.;
     // bulle surchargera l'aire
-    // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
+
     if (rmax < rb) {
       // maille pure de bulle
       m_density[cell] = 1.;
@@ -170,11 +161,7 @@ void RIDERService::initVar(Integer dim)  {
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
     // bulle surchargera l'aire
-    // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
+    
     if (rmax < rb) {
       // maille pure de bulle
       m_density[cell] = 1.;
