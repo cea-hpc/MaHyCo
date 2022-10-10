@@ -87,7 +87,7 @@ class CartFace2CellIdStencil : public CartLocalIdNumberingT<FaceLocalId> {
    *              |       |       |
    *               ------- ------- 
    */
-  ARCCORE_HOST_DEVICE CartDirFace face(FaceLocalId fid, IdxType fidx) const {
+  ARCCORE_HOST_DEVICE CartDirFace face([[maybe_unused]] FaceLocalId fid, IdxType fidx) const {
     LocalIdType next_cid = m_cart_numb_cell_id.id(fidx[0], fidx[1], fidx[2]);
     return CartDirFace(fidx[m_dir], m_ncellsm1_dir+1, next_cid, m_delta_dir);
   }
@@ -102,7 +102,7 @@ class CartFace2CellIdStencil : public CartLocalIdNumberingT<FaceLocalId> {
    * ilayer          -3      -2      -1       +1      +2      +3
    */
   template<Integer NLayer>
-  ARCCORE_HOST_DEVICE auto stencilFace2Cell(FaceLocalId fid, IdxType fidx) const {
+  ARCCORE_HOST_DEVICE auto stencilFace2Cell([[maybe_unused]] FaceLocalId fid, IdxType fidx) const {
     // A partir d'une face (i,j,k) on détermine l'id de la maille avec le même (i,j,k)
     // Cette maille se trouve juste apres la face d'où NEXT_cid
     LocalIdType next_cid = m_cart_numb_cell_id.id(fidx[0], fidx[1], fidx[2]);

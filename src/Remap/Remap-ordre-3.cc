@@ -15,7 +15,7 @@ Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
 // ----------------------------------
 // fonction pour évaluer ystar
 Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
-                             Real ymm, Real ym, Real yp, Real ypp,
+                             [[maybe_unused]] Real ymm, Real ym, Real yp, [[maybe_unused]] Real ypp,
                              Real gradm, Real gradp) {
   Real ystar, tmp1, tmp2;
   tmp1 = (2. * hp * hm) / (hm + hp) *
@@ -71,7 +71,7 @@ Real RemapADIService::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
                                 Real hmm, Real hm, Real hp, Real hpp,
                                 Real hppp, Real vdt) {
 
-  Real flux;
+  Real flux=0.;
   Real gradmm, gradm, gradp, gradpp;
   Real ystarm, ystar, ystarp;
   Real ym_m, ym_p, yp_m, yp_p;

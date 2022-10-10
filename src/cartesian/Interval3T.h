@@ -71,5 +71,5 @@ class Interval3T {
   IdType m_size; //! Nb d'éléments dans l'ensmble = (m_end[0]-m_beg[0])*(m_end[1]-m_beg[1])*(m_end[2]-m_beg[2])
 };
 
-};
+}
 #endif

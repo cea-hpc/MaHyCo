@@ -280,7 +280,7 @@ class VanLeer {
 
 class DefaultO1 {
  public:
-  static ARCCORE_HOST_DEVICE Real fluxLimiter(Real r) {
+  static ARCCORE_HOST_DEVICE Real fluxLimiter([[maybe_unused]] Real r) {
     return 0.0;  // ordre 1
   }
 };

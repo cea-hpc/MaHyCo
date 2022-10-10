@@ -401,7 +401,7 @@ class MultiEnvCellStorage {
   }
 
   //! Verification
-  void checkStorage(Materials::MaterialVariableCellInteger& v_global_cell) {
+  void checkStorage([[maybe_unused]] Materials::MaterialVariableCellInteger& v_global_cell) {
 #ifdef ARCANE_DEBUG
     PROF_ACC_BEGIN(__FUNCTION__);
     // m_env_id doit être calculé

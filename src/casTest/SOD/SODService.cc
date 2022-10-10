@@ -1,6 +1,6 @@
 #include "SODService.h"
 
-void SODService::initMatMono(Integer dim)  {
+void SODService::initMatMono([[maybe_unused]] Integer dim)  {
     
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
@@ -8,7 +8,7 @@ void SODService::initMatMono(Integer dim)  {
   }
 }
 
-void SODService::initVarMono(Integer dim)  {
+void SODService::initVarMono([[maybe_unused]] Integer dim)  {
     
   // mise à zero puis initialisation des fractions de masses et volumes
   m_mass_fraction.fill(0.0);
@@ -18,7 +18,6 @@ void SODService::initVarMono(Integer dim)  {
     double r(0.);
     double pInit;
     double rhoInit;
-    double eInit;
     if (options()->casTest == SodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == SodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == SodCaseZ) r = m_cell_coord[cell].z;
@@ -88,7 +87,6 @@ void SODService::initVar(Integer dim)  {
     Cell cell = *icell;
     AllEnvCell all_env_cell = all_env_cell_converter[cell]; 
     double r(0.);
-    double eInit;
     if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
@@ -107,7 +105,7 @@ void SODService::initVar(Integer dim)  {
       if (all_env_cell.nbEnvironment() !=1) {
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
           EnvCell ev = *ienvcell;  
-          Integer index_env = ev.environmentId();  
+          // Integer index_env = ev.environmentId();  
             m_density[ev] = 1.0;
             m_pressure[ev] = 1.0;
             // ajout mailles mixtes partouts
@@ -124,7 +122,7 @@ void SODService::initVar(Integer dim)  {
       if (all_env_cell.nbEnvironment() !=1) {
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
           EnvCell ev = *ienvcell;  
-          Integer index_env = ev.environmentId();  
+          // Integer index_env = ev.environmentId();  
             m_density[ev] = 0.125;
             m_pressure[ev] = 0.1;
             // ajout mailles mixtes partouts

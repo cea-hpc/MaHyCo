@@ -218,7 +218,7 @@ class CartCell2FaceIdStencil : public CartLocalIdNumberingT<CellLocalId> {
    *
    */
   template<Integer NLayer>
-  ARCCORE_HOST_DEVICE auto stencilCell2Face(CellLocalId cid, IdxType cidx) const {
+  ARCCORE_HOST_DEVICE auto stencilCell2Face([[maybe_unused]] CellLocalId cid, IdxType cidx) const {
     // A partir d'une maille (i,j,k) on détermine l'id de la face avec le même (i,j,k)
     // Cette face se trouve juste avant la maille d'où PREV_fid
     LocalIdType prev_fid = m_cart_numb_face_id.id(cidx[0], cidx[1], cidx[2]); 

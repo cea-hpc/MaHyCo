@@ -18,11 +18,13 @@ class UnstructNeighCellsTraits {
   static constexpr Integer stencil_sz = -1;
   using ArrayCellType = UniqueArray<Cell>;
  public:
-  static void neighCells(const Cell& cell, ArrayCellType& adj_cells, const CartesianInterface::CartesianConnectivity& cc) {
+  static void neighCells([[maybe_unused]] const Cell& cell, ArrayCellType& adj_cells, 
+      [[maybe_unused]] const CartesianInterface::CartesianConnectivity& cc) {
     ARCANE_ASSERT(false, ("UnstructNeighCellsTraits<DIM>::neighCells(const Cell& cell, ...) doit être spécialisé"));
   }
 
-  static void applyBC(ArrayCellType& adj_cells, ITraceMng* trace_mng) {
+  static void applyBC([[maybe_unused]] ArrayCellType& adj_cells, 
+      [[maybe_unused]] ITraceMng* trace_mng) {
     ARCANE_ASSERT(false, ("UnstructNeighCellsTraits<DIM>::applyBC(...) doit être spécialisé"));
   }
 };
@@ -75,7 +77,7 @@ class UnstructNeighCellsTraits<2> {
     adj_cells[8] = cell;
   }
 
-  static void applyBC(ArrayCellType& adj_cells, ITraceMng* trace_mng) {
+  static void applyBC(ArrayCellType& adj_cells, [[maybe_unused]] ITraceMng* trace_mng) {
     // Conditions aux limites
     using CP = eCellPos;
     // Bord du bas

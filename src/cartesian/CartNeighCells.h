@@ -256,7 +256,7 @@ class NeighCellsBC<2> {
   using Traits = CartNeighCellsTraits<2>;
   using CP = Traits::eCellPos;
  public:
-  static void applyBC(ArrayCellType& adj_cells, ITraceMng* trace_mng) {
+  static void applyBC(ArrayCellType& adj_cells, [[maybe_unused]] ITraceMng* trace_mng) {
 
     // Conditions aux limites
     // Bord du bas

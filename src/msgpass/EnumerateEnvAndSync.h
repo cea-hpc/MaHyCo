@@ -83,11 +83,13 @@ enumerateEnvAndSyncOnEvents(ArrayView<Ref<ax::RunQueueEvent>> depends_on_evts,
   PROF_ACC_BEGIN(__FUNCTION__);
 
   // Pour qu'une queue attende des événements avant de commencer
+#if 0
   auto depends_on = [](Ref<RunQueue> rqueue, ArrayView<Ref<ax::RunQueueEvent>>& levts) {
     for(Integer iev=0 ; iev<levts.size() ; ++iev) {
       rqueue->waitEvent(levts[iev]);
     }
   };
+#endif
 
   // Pour que l'hôte attende des événements avant de commencer
   auto wait_for = [](ArrayView<Ref<ax::RunQueueEvent>>& levts) {

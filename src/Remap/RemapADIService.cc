@@ -88,7 +88,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  * \param \return m_grad_phi, m_h_cell_lagrange
  *******************************************************************************
  */
-void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
+void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
   
@@ -900,7 +900,7 @@ void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_proj
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeUremap_PBorn0()";
   
-  Real threshold = options()->threshold;
+//  Real threshold = options()->threshold;
   int nbmat = nb_env;
   Real deltat = m_global_deltat();
           

@@ -231,6 +231,7 @@ Integer get_var_degree(MeshVarRefT<ItemType, DataType> var) {
 }
 template<typename ItemType, typename DataType>
 Integer get_var_degree(MeshVariableScalarRefT<ItemType, DataType> var) {
+  (void)var;
   return 1;
 }
 

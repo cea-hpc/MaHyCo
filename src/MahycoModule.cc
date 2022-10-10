@@ -368,8 +368,6 @@ saveValuesAtN()
     auto out_internal_energy_n  = ax::viewOut(command,m_internal_energy_n.globalVariable());
     auto out_cell_cqs_n         = ax::viewInOut(command,m_cell_cqs_n);
 
-    const Integer nb_node_in_cell = m_cell_cqs.arraySize();
-
     command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
       out_pseudo_viscosity_nmoins1[cid] = inout_pseudo_viscosity_n[cid];
       inout_pseudo_viscosity_n[cid] = in_pseudo_viscosity[cid];
@@ -1525,8 +1523,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
     if (!csts) {
       ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
-        Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
-        Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst(env);
         ENUMERATE_ENVCELL(ienvcell,env){
           EnvCell ev = *ienvcell;
           Real pseudo(0.);
@@ -1540,15 +1536,12 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double rn  = m_density_n[ev];
           double pn  = m_pressure_n[ev];
           double qnn1 = pseudo;
-          double m   = m_cell_mass[ev];
           double rn1 = m_density[ev];
           double en  = m_internal_energy_n[ev];
-          double g = adiabatic_cst;
-          double t = tension_limit;
           // les iterations denewton
           double epsilon = options()->threshold;
           double itermax = 50;
-          double enew=0, e=en, p, c, dpde;
+          double enew=0, e=en, p=0., c=0., dpde;
           int i = 0;
         
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
@@ -1585,8 +1578,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
     } else {
       ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
-        Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
-        Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst(env);
         ENUMERATE_ENVCELL(ienvcell,env){
           EnvCell ev = *ienvcell;
           Cell cell=ev.globalCell();
@@ -1604,15 +1595,11 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
             cqs_v_old_n += math::dot(m_velocity_n[cell.node(inode)], m_cell_cqs_n[cell] [inode])
             * m_global_old_deltat();
           }
-          double rn  = m_density_n[ev];
           double pn  = m_pressure_n[ev];
           double qn = m_pseudo_viscosity_n[ev];
           double qn1 = m_pseudo_viscosity[ev];
           double m   = m_cell_mass[ev];
-          double rn1 = m_density[ev];
           double en  = m_internal_energy_n[ev];
-          double g = adiabatic_cst;
-          double t = tension_limit;
           double cn1 = cqs_v_nplus1;
           double cn = cqs_v_n;
           double cdn = cqs_delta_v;
@@ -1621,7 +1608,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           // les iterations de newton
           double epsilon = options()->threshold;
           double itermax = 50;
-          double enew=0, e=en, p, c, dpde;
+          double enew=0, e=en, p=0., c=0., dpde;
           int i = 0;
         
           while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1, cdn, cdon, qnm1))>=epsilon)
@@ -2038,18 +2025,18 @@ class DtCellInfoVoid {
   class VarCellSetter {
    public:
 
-    ARCCORE_HOST_DEVICE inline void setCellValue(CellLocalId cid, Real value) const {
+    ARCCORE_HOST_DEVICE inline void setCellValue([[maybe_unused]] CellLocalId cid, [[maybe_unused]] Real value) const {
       // aucune valeur modifiée
     }
   };
 
-  VarCellSetter dxSoundSetter(ax::RunCommand& command) {
+  VarCellSetter dxSoundSetter([[maybe_unused]] ax::RunCommand& command) {
     return VarCellSetter();
   }
 
-  Real computeMinCellInfo(CellGroup cell_group, Materials::IMeshMaterialMng* mm, 
-      const Materials::MaterialVariableCellReal& v_sound_speed,
-      const VariableCellReal& v_caracteristic_length) {
+  Real computeMinCellInfo([[maybe_unused]] CellGroup cell_group, [[maybe_unused]] Materials::IMeshMaterialMng* mm, 
+      [[maybe_unused]] const Materials::MaterialVariableCellReal& v_sound_speed,
+      [[maybe_unused]] const VariableCellReal& v_caracteristic_length) {
     return FloatInfo < Real >::maxValue();
   }
 
@@ -2098,7 +2085,7 @@ computeHydroDeltaT(DtCellInfoType &dt_cell_info)
     minimum_aux = minimum_aux_reducer.reduce();
   }
   // En fonction du type de dt_cell_info, on calcule ou pas les infos sur la maille qui fait le pas de temps
-  Real h_minimum_aux = dt_cell_info.computeMinCellInfo(allCells(), mm, m_sound_speed, m_caracteristic_length);
+  [[maybe_unused]] Real h_minimum_aux = dt_cell_info.computeMinCellInfo(allCells(), mm, m_sound_speed, m_caracteristic_length);
   ARCANE_ASSERT(h_minimum_aux==minimum_aux, ("Les minimum_aux calculés sur CPU et GPU sont différents"));
 
   Real dt_hydro = options()->cfl() * minimum_aux;
