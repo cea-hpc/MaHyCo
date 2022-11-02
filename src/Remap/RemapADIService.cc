@@ -801,7 +801,9 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) 
         out_phi_face[fid][ivar] = in_phi_lagrange[upwCid][ivar] + order2 * dot_xf * in_grad_phi[upwCid][ivar];
     };
-  }
+	}
+	/* Possibilité de merge computeUpwindFaceQuantitiesForProjection_PBorn0_O2 et computeUremap_PBorn0 pour supprimer le tableau out_phi_face qui est un des deux tableaux qui prend le plus de mémoire. 
+	 * L'inconvénient de ce merge est que l'on écrit sur des cellules dans une boucle sur les faces */
 
 #if 0
   m_phi_face.synchronize(); // INUTILE ?
