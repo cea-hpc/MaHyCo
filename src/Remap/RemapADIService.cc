@@ -762,17 +762,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
   auto ref_queue = m_acc_env->refQueueAsync();
-  // Init 0, pour simplifier sur toutes les faces
-  {
-    auto command = makeCommand(ref_queue.get());
 
-    auto out_phi_face = ax::viewOut(command, m_phi_face);
-
-    command << RUNCOMMAND_ENUMERATE(Face, fid, allFaces()) {
-      for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)
-        out_phi_face[fid][ivar] = 0.;
-    };
-  }
   // Puis on calcule m_grad_phi que que les faces intérieures dans la direction idir
   {
     Integer order2 = options()->ordreProjection - 1;
