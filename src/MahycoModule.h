@@ -141,7 +141,10 @@ class MahycoModule
 
  public:
 
-  //! Initialise l'environnement pour les accélérateurs
+  /**
+   * Pour préparer les accélérateurs
+   * 
+   */
   void accBuild() override;
 
   /** 
@@ -176,16 +179,70 @@ class MahycoModule
    *    - appelle hydroStartInitEnvAndMat() pour la création des env et des mat
    *      en fonction du maillage
    */
-  virtual void hydroStartInit();
-  virtual void hydroStartInitEnvAndMat();
-  virtual void PrepareFaceGroup();
-  
-  /** 
-   *  Initialise le module en cas de reprise. 
-   *  Afin d'éviter de sauvegarder le volume des mailles, cette méthode
-   *  recalcule le volume en fonction des coordonnées.
+
+  /**
+   * Vérification de la compatibilité des options
+   * 
    */
-  virtual void hydroContinueInit();
+  void checkOptions() override;
+
+  /**
+   * Initialisation de m_cartesian_mesh et m_dimensio
+   * 
+   */
+  void initCartesianMesh() override;
+
+  /**
+   * Allocation dans la deuxième dimension des tableaux CQS
+   * 
+   */
+  void allocCqs() override;
+
+  /**
+   * Init pas de temps
+   * 
+   */
+  void initDtIni() override;
+
+  /**
+   * 
+   * 
+   */
+  void hydroStartInitEnvAndMat() override;
+
+  /**
+   * A appeler après hydroStartInitEnvAndMat pour préparer
+   * traitement des environnements sur accélérateur
+   */
+  void initEnvForAcc() override;
+
+  /**
+   * Creation des groupes de faces suivant X, Y et Z
+   * 
+   */
+  void prepareFaceGroupForBc() override;
+  
+  /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
+   *  préalable par un appel à prepareFaceGroupForBc()
+   */
+  void initBoundaryConditionsForAcc() override;
+
+  /** Initialise les variables hydro
+   */
+  void initHydroVar() override;
+
+  /** Affecte le type de synchronisation des variables arcane
+   */
+  void setSyncVarVers() override;
+
+  /** 
+   */
+  void continueForMultiMat() override;
+
+  /** Affecte pas de temps précédent et l'itération en cours lors d'une reprise
+   */
+  void continueForIterationDt() override;
+
   
   /** 
    *  Sauvegarde des variables à l'instant n 
@@ -278,7 +335,9 @@ class MahycoModule
    * sur une maille, sont stockées localement les coordonnées de ses noeuds 
    * et celles du centre de ses faces.
    */
-  virtual void computeGeometricValues();
+  void computeGeometricValues() override;
+  void computeGeometricValuesIni() override; // Pt d'entrée appelé lors de l'init
+
    /**
       Ce point d'entrée regroupe l'ensemble des calculs géométriques
    * utiles pour le schéma de projection (normal aux faces et centres des faces)
@@ -393,17 +452,6 @@ class MahycoModule
   ARCCORE_HOST_DEVICE inline void computeCQs(Real3 node_coord[8], Real3 face_coord[6], Span<Real3> out_cqs);
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
-
-  /**
-   * A appeler après hydroStartInitEnvAndMat pour préparer
-   * traitement des environnements sur accélérateur
-   */
-  void _initEnvForAcc();
-
-  /** Les listes de faces XMIN, XMAX, YMIN ... doivent être construites au
-   *  préalable par un appel à PrepareFaceGroup()
-   */
-  void _initBoundaryConditionsForAcc();
 
   /** Construit le maillage cartésien et les managers par direction
    */

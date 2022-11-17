@@ -149,11 +149,24 @@
 
 <entry-points>
   <entry-point method-name="accBuild" name="AccBuild" where="build" property="none" />
-  <entry-point method-name="hydroStartInit" name="HydroStartInit" where="start-init" property="none" />
-  <entry-point method-name="hydroContinueInit" name="HydroContinueInit" where="continue-init" property="none" />
+
+  <entry-point method-name="checkOptions" name="CheckOptions" where="start-init" property="none" />
+  <entry-point method-name="initCartesianMesh" name="InitCartesianMesh" where="init" property="none" />
+  <entry-point method-name="allocCqs" name="AllocCqs" where="start-init" property="none" />
+  <entry-point method-name="initDtIni" name="InitDtIni" where="start-init" property="none" />
+  <entry-point method-name="hydroStartInitEnvAndMat" name="HydroStartInitEnvAndMat" where="start-init" property="none" />
+  <entry-point method-name="initEnvForAcc" name="InitEnvForAcc" where="init" property="none" />
+  <entry-point method-name="computeGeometricValuesIni" name="ComputeGeometricValuesIni" where="start-init" property="none" />
+  <entry-point method-name="prepareFaceGroupForBc" name="PrepareFaceGroupForBc" where="start-init" property="none" />
+  <entry-point method-name="initBoundaryConditionsForAcc" name="InitBoundaryConditionsForAcc" where="init" property="none" />
+  <entry-point method-name="initHydroVar" name="InitHydroVar" where="start-init" property="none" />
+  <entry-point method-name="setSyncVarVers" name="SetSyncVarVers" where="start-init" property="none" />
   <entry-point method-name="computeCellMass" name="ComputeCellMass" where="start-init" property="none" />
   <entry-point method-name="computeNodeMass" name="ComputeNodeMass" where="start-init" property="none" />
-  <entry-point method-name="PrepareFaceGroup" name="PrepareFaceGroup" where="start-init" property="none" />
+
+  <entry-point method-name="continueForMultiMat" name="ContinueForMultiMat" where="continue-init" property="none" />
+  <entry-point method-name="continueForIterationDt" name="ContinueForIterationDt" where="continue-init" property="none" />
+
   <entry-point method-name="saveValuesAtN" name="SaveValuesAtN" where="compute-loop" property="none" />
   <entry-point method-name="updateVelocity" name="UpdateVelocity" where="compute-loop" property="none" />
   <entry-point method-name="applyBoundaryCondition" name="ApplyBoundaryCondition" where="compute-loop" property="none" />

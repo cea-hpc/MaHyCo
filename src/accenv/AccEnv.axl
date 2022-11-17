@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<module name="AccEnv" version="1.0">
+
+<description>Descripteur du module AccEnv</description>
+
+<entry-points>
+  <entry-point method-name="accBuild" name="AccBuild" where="build" property="none" />
+
+  <entry-point method-name="initMesh" name="InitMesh" where="init" property="none" />
+  <entry-point method-name="initMultiEnv" name="InitMultiEnv" where="init" property="none" />
+  <entry-point method-name="startInstrument" name="StartInstrument" where="init" property="none" />
+
+  <entry-point method-name="stopInstrument" name="StopInstrument" where="exit" property="none" />
+</entry-points>
+
+</module>
+

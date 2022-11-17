@@ -54,6 +54,7 @@ target_link_libraries(cartesian PUBLIC arcane_core)
 
 # Services communs pour les accélérateurs
 add_library(accenv accenv/AccEnvDefaultService.cc
+                   accenv/AccEnvModule.cc
                    accenv/ProfAcc.cc)
 target_include_directories(accenv PUBLIC .)
 target_link_libraries(accenv PUBLIC arcane_core)
@@ -110,6 +111,7 @@ arcane_accelerator_add_source_files(cartesian/FaceDirectionMng.cc)
 arcane_accelerator_add_source_files(cartesian/NodeDirectionMng.cc)
 arcane_accelerator_add_source_files(cartesian/CartesianItemSorter.cc)
 arcane_accelerator_add_source_files(accenv/AccEnvDefaultService.cc)
+arcane_accelerator_add_source_files(accenv/AccEnvModule.cc)
 arcane_accelerator_add_source_files(accenv/ProfAcc.cc)
 arcane_accelerator_add_source_files(msgpass/VarSyncMng.cc)
 arcane_accelerator_add_source_files(msgpass/IsCommDeviceAware.cc)
@@ -170,6 +172,7 @@ arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
 
 arcane_target_add_axl(accenv accenv/AccEnvDefault)
+arcane_target_add_axl(accenv accenv/AccEnv)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)
