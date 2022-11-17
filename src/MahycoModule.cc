@@ -50,7 +50,7 @@ hydroStartInit()
 {
   PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
 
-  PROF_ACC_BEGIN(__FUNCTION__);
+  prof_acc_begin("[EP]MahycoModule::hydroStartInit");
 
    IParallelMng* m_parallel_mng = subDomain()->parallelMng();
    my_rank = m_parallel_mng->commRank();
@@ -186,7 +186,7 @@ hydroStartInit()
   auto* mm = IMeshMaterialMng::getReference(defaultMesh());
   mm->setSynchronizeVariableVersion(6);
 
-  PROF_ACC_END;
+  prof_acc_end("[EP]MahycoModule::hydroStartInit");
 }
 
 /**

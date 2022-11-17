@@ -53,7 +53,8 @@ target_include_directories(cartesian PUBLIC .)
 target_link_libraries(cartesian PUBLIC arcane_core)
 
 # Services communs pour les accélérateurs
-add_library(accenv accenv/AccEnvDefaultService.cc)
+add_library(accenv accenv/AccEnvDefaultService.cc
+                   accenv/ProfAcc.cc)
 target_include_directories(accenv PUBLIC .)
 target_link_libraries(accenv PUBLIC arcane_core)
 
@@ -109,6 +110,7 @@ arcane_accelerator_add_source_files(cartesian/FaceDirectionMng.cc)
 arcane_accelerator_add_source_files(cartesian/NodeDirectionMng.cc)
 arcane_accelerator_add_source_files(cartesian/CartesianItemSorter.cc)
 arcane_accelerator_add_source_files(accenv/AccEnvDefaultService.cc)
+arcane_accelerator_add_source_files(accenv/ProfAcc.cc)
 arcane_accelerator_add_source_files(msgpass/VarSyncMng.cc)
 arcane_accelerator_add_source_files(msgpass/IsCommDeviceAware.cc)
 arcane_accelerator_add_source_files(msgpass/MsgPassInit.cc)

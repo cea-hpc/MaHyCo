@@ -11,6 +11,8 @@
 #include "arcane/accelerator/core/RunQueueBuildInfo.h"
 #include <arcane/accelerator/core/Memory.h>
 
+#include "accenv/ProfAcc.h"
+
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
 /*---------------------------------------------------------------------------*/
