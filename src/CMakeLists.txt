@@ -72,16 +72,19 @@ add_library(msgpass msgpass/VarSyncMng.cc
 target_include_directories(msgpass PUBLIC .)
 target_link_libraries(msgpass PUBLIC arcane_core)
 # Pour MPI
-find_package(MPI)
-if(MPI_FOUND)
-  target_compile_definitions(msgpass PRIVATE OMPI_SKIP_MPICXX)
-  target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI)
-  target_include_directories(msgpass PRIVATE "${MPI_INCLUDE_PATH}")
-  find_path(P4GPU_MPI_EXT NAMES "mpi-ext.h" PATHS "${MPI_C_HEADER_DIR}")
-  if(P4GPU_MPI_EXT)
-    target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI_EXT)
-  endif()
-endif()
+#find_package(MPI)
+#if(MPI_FOUND)
+#  target_compile_definitions(msgpass PRIVATE OMPI_SKIP_MPICXX)
+#  target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI)
+#  target_include_directories(msgpass PRIVATE "${MPI_INCLUDE_PATH}")
+#  find_path(P4GPU_MPI_EXT NAMES "mpi-ext.h" PATHS "${MPI_C_HEADER_DIR}")
+#  if(P4GPU_MPI_EXT)
+#    target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI_EXT)
+#    target_link_libraries(msgpass PRIVATE mpi)
+#  endif()
+#endif()
+# On force is_comm_device_aware() == true
+target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_COMM_DEVICE_AWARE)
 # fin MPI
 
 # Pour la gestion des accélérateurs et des sources à compiler avec le
