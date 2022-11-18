@@ -13,6 +13,8 @@
 
 #include "accenv/ProfAcc.h"
 
+#include "arcane_version.h"
+
 /*---------------------------------------------------------------------------*/
 /* Pour les accélérateurs                                                    */
 /*---------------------------------------------------------------------------*/
@@ -240,7 +242,11 @@ class AccMemAdviser {
 class Real3_View8
 {
  public:
+#if ARCANE_VERSION >= 30800
+  Real3_View8(NumArray<Real3,MDDim2>& v) : m_ptr(v.to1DSpan().data()), nb_cell(v.dim2Size()) {}
+#else
   Real3_View8(NumArray<Real3,2>& v) : m_ptr(v.to1DSpan().data()), nb_cell(v.dim2Size()) {}
+#endif
  public:
   ARCCORE_HOST_DEVICE Real3& operator()(int node_index,int cell_index) const
   {
