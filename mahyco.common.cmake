@@ -4,6 +4,13 @@ if (NOT EXAMPLE_NAME)
 endif()
 
 find_package(Arcane)
+# Indique la version minimale de Arcane nécessaire
+# À partir de la version 3.8 de Arcane, il sera possible
+# d'utiliser directement 'find_package(Arcane 3.8 REQUIRED)'
+if (Arcane_VERSION VERSION_LESS "3.7.18")
+  message(FATAL_ERROR "Arcane version '${Arcane_VERSION}' is too old."
+    " Version 3.7.18+ is required")
+endif()
 
 include(${Arcane_DIR}/ArcaneDotNet.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/mahyco.utils.cmake)
