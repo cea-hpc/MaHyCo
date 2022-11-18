@@ -41,6 +41,9 @@ _initCartMesh() {
 
 void MahycoModule::hydroStartInitEnvAndMat()
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  info() << " Initialisation des environnements";
   info() << " Preparation des env  ";
   mm = IMeshMaterialMng::getReference(defaultMesh());
   // lecture des environnements
@@ -145,7 +148,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
    }
   }
  
-  
+  PROF_ACC_END;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -153,8 +156,10 @@ void MahycoModule::hydroStartInitEnvAndMat()
 /* traitement des environnements sur accélérateur                            */
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
-_initEnvForAcc() {
-  debug() << "_initEnvForAcc";
+initEnvForAcc() {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  debug() << "initEnvForAcc";
 
   // On récupère sur CPU les adiabatic_cst de chaque environnement
   // On utilise un NumArray pour qu'il soit utilisable aussi sur GPU
@@ -167,15 +172,19 @@ _initEnvForAcc() {
   }
 
   m_acc_env->accMemAdv()->setReadMostly(out_adiabatic_cst_env);
+ 
+  PROF_ACC_END;
 }
 
 /**
  *******************************************************************************
- * \file PrepareFaceGroup()
+ * \file prepareFaceGroupForBc()
  * \brief Creation des groupes de faces suivant X, Y et Z
  *******************************************************************************
  */
-void MahycoModule::PrepareFaceGroup() {
+void MahycoModule::prepareFaceGroupForBc() {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   Int32UniqueArray face_x0_lid;
   Int32UniqueArray face_y0_lid;
   Int32UniqueArray face_z0_lid;
@@ -240,6 +249,8 @@ void MahycoModule::PrepareFaceGroup() {
    info() << " nombre total de face " << allFaces().size();
    
    info() << " creation des groupes de dimension " << m_dimension;
+ 
+  PROF_ACC_END;
 } 
 
 /*---------------------------------------------------------------------------*/
@@ -247,8 +258,10 @@ void MahycoModule::PrepareFaceGroup() {
 /* préalable par un appel à PrepareFaceGroup()                               */
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
-_initBoundaryConditionsForAcc() {
-  debug() << "_initBoundaryConditionsForAcc";
+initBoundaryConditionsForAcc() {
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  debug() << "initBoundaryConditionsForAcc";
  
   // Remplit la structure contenant les informations sur les conditions aux limites
   // Cela permet de garantir avec les accélérateurs qu'on pourra accéder
@@ -270,5 +283,7 @@ _initBoundaryConditionsForAcc() {
       m_boundary_conditions.add(bcn);
     }
   }
+ 
+  PROF_ACC_END;
 }
 

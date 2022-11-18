@@ -11,6 +11,8 @@
 
 #include <arcane/ServiceBuilder.h>
 
+#include "accenv/SingletonIAccEnv.h"
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 
@@ -29,78 +31,104 @@ MahycoModule::~MahycoModule() {
 }
 
 /*---------------------------------------------------------------------------*/
+/* Pour préparer les accélérateurs */
 /*---------------------------------------------------------------------------*/
-
 void MahycoModule::
-accBuild()
+accBuild() 
 {
-  PROF_ACC_BEGIN(__FUNCTION__);
-
-  m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
-  m_acc_env->initAcc();
-
-  PROF_ACC_END;
+  m_acc_env = SingletonIAccEnv::accEnv(subDomain());
 }
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
+/*---------------------------------------------------------------------------*/
+/* Vérification de la compatibilité des options */
+/*---------------------------------------------------------------------------*/
 void MahycoModule::
-hydroStartInit()
+checkOptions()
 {
-  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
+  PROF_ACC_BEGIN(__FUNCTION__);
 
-  prof_acc_begin("[EP]MahycoModule::hydroStartInit");
+  IParallelMng* m_parallel_mng = subDomain()->parallelMng();
+  my_rank = m_parallel_mng->commRank();
 
-   IParallelMng* m_parallel_mng = subDomain()->parallelMng();
-   my_rank = m_parallel_mng->commRank();
-   
-  
+
   info() <<  "Mon rang " << my_rank << " et mon nombre de mailles " << allCells().size();
   info() <<  " Mes mailles pures : " << ownCells().size();
   info() <<  " Mes mailles frantomes : " << allCells().size() - ownCells().size();
-  
+
   info() << " Check donnees ";
-   if ((options()->remap()->getOrdreProjection() == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
-       info() << " mode parallele : " << m_parallel_mng->isParallel();
-       info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
-       info() << " incompatible avec la projection d'ordre " << options()->remap()->getOrdreProjection();
-       info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
-       subDomain()->timeLoopMng()->stopComputeLoop(true);
+  if ((options()->remap()->getOrdreProjection() == 3) && (mesh()->ghostLayerMng()->nbGhostLayer() != 3) && (m_parallel_mng->isParallel() == true)) {
+    info() << " mode parallele : " << m_parallel_mng->isParallel();
+    info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+    info() << " incompatible avec la projection d'ordre " << options()->remap()->getOrdreProjection();
+    info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+    subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
   if ((options()->withProjection == true) && (mesh()->ghostLayerMng()->nbGhostLayer() < 2) && (m_parallel_mng->isParallel() == true)) {
-      info() << " mode parallele : " << m_parallel_mng->isParallel();
-      info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
-      info() << " incompatible avec la projection ";
-      info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
-      subDomain()->timeLoopMng()->stopComputeLoop(true);
+    info() << " mode parallele : " << m_parallel_mng->isParallel();
+    info() << " nombre de couches de mailles fantomes : " << mesh()->ghostLayerMng()->nbGhostLayer();
+    info() << " incompatible avec la projection ";
+    info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+    subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
-  
+
+  PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Initialisation de m_cartesian_mesh et m_dimension */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+initCartesianMesh()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
-  
-  m_acc_env->initMesh(mesh());
+
+  PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Allocation dans la deuxième dimension des tableaux CQS */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+allocCqs()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
 
   // Dimensionne les variables tableaux
   m_cell_cqs.resize(4*(m_dimension-1));
   m_cell_cqs_n.resize(4*(m_dimension-1));
 
+  PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Init pas de temps */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+initDtIni()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
     // Initialise le delta-t
   Real deltat_init = options()->deltatInit();
   m_global_deltat = deltat_init;
 
-  info() << " Initialisation des environnements";
-  hydroStartInitEnvAndMat();
-  m_acc_env->initMultiEnv(mm);
-  _initEnvForAcc();
- 
-  // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
-  computeGeometricValues(); 
-  
-  info() << " Initialisation des groupes de faces";
-  PrepareFaceGroup();
-  _initBoundaryConditionsForAcc();
-  
+  PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Initialise les variables hydro */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+initHydroVar()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   info() << " Initialisation des variables";
   // Initialises les variables (surcharge l'init d'arcane)
   options()->casModel()->initVar(m_dimension);
@@ -183,10 +211,21 @@ hydroStartInit()
     };
   }
 
+  PROF_ACC_END;
+}
+
+/*---------------------------------------------------------------------------*/
+/* Affecte le type de synchronisation des variables arcane */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+setSyncVarVers()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
   auto* mm = IMeshMaterialMng::getReference(defaultMesh());
   mm->setSynchronizeVariableVersion(6);
 
-  prof_acc_end("[EP]MahycoModule::hydroStartInit");
+  PROF_ACC_END;
 }
 
 /**
@@ -266,47 +305,39 @@ computeNodeMass()
     );
   PROF_ACC_END;
 }
-/**
- *******************************************************************************
- * \file hydroContinueInit()
- * \brief Initialisation suite à une reprise
- *
- * \param  
- * \return m_nb_env, m_nb_vars_to_project, m_sens_projection
- *******************************************************************************
- */
 
+/*---------------------------------------------------------------------------*/
+/* */
+/*---------------------------------------------------------------------------*/
 void MahycoModule::
-hydroContinueInit()
+continueForMultiMat()
 {
-  PROF_ACC_START_CAPTURE; // la capture du profiling commence réellement ici
-
   PROF_ACC_BEGIN(__FUNCTION__);
-  if (subDomain()->isContinue()) {
-    
-    debug() << " Entree dans hydroContinueInit()";
-    // en reprise 
 
-    m_cartesian_mesh = _initCartMesh();
-    m_dimension = mesh()->dimension(); 
-    
-    m_acc_env->initMesh(mesh());
-    _initBoundaryConditionsForAcc();
+  mm = IMeshMaterialMng::getReference(defaultMesh());
 
-    mm = IMeshMaterialMng::getReference(defaultMesh());
-  
-    mm->recreateFromDump();
-    m_nb_env = mm->environments().size();
-    m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
-    m_acc_env->initMultiEnv(mm);
-    _initEnvForAcc();
-    
-    m_global_old_deltat = m_old_deltat;
-    // mise a jour nombre iteration 
-    m_global_iteration = m_global_iteration() +1;
-  }
+  mm->recreateFromDump();
+  m_nb_env = mm->environments().size();
+  m_nb_vars_to_project = 3 * m_nb_env + 3 + 1 + 1;
+
   PROF_ACC_END;
 }
+
+/*---------------------------------------------------------------------------*/
+/* Affecte pas de temps précédent et l'itération en cours lors d'une reprise */
+/*---------------------------------------------------------------------------*/
+void MahycoModule::
+continueForIterationDt()
+{
+  PROF_ACC_BEGIN(__FUNCTION__);
+
+  m_global_old_deltat = m_old_deltat;
+  // mise a jour nombre iteration 
+  m_global_iteration = m_global_iteration() +1;
+
+  PROF_ACC_END;
+}
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 void MahycoModule::
@@ -1066,6 +1097,17 @@ InitGeometricValues()
   }
   PROF_ACC_END;
 }
+
+/*---------------------------------------------------------------------------*/
+/* Appel de computeGeometricValues lors de l'init */
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+computeGeometricValuesIni()
+{
+  this->computeGeometricValues();
+}
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
