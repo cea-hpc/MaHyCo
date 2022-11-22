@@ -105,7 +105,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto out_cell_status = ax::viewOut(command, m_cell_status); // var tempo
  
     // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvCellStorage()->viewIn(command));
+    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
 
     command.addKernelName("add_rm") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
@@ -222,7 +222,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     PROF_ACC_END;
 
     // Ici, la carte des environnements a changé
-    m_acc_env->updateMultiEnv(mm);
+    m_acc_env->multiEnvMng()->updateMultiEnv(m_acc_env->vsyncMng());
   }
 
 #if 0
@@ -441,7 +441,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto inout_menv_internal_energy (menv_internal_energy .spanD());
 
     // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvCellStorage()->viewIn(command));
+    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
 
     command.addKernelName("moy") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
@@ -718,7 +718,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   }
 
   // Mise à jour des m_cell_volume sur les mailles mixtes
-  auto menv_queue = m_acc_env->multiEnvQueue();
+  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
@@ -729,7 +729,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     // Des sortes de vues sur les valeurs impures pour l'environnement env
     Span<Real> out_cell_volume(envView(m_cell_volume, env));
     Span<const Real> in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
     auto command = makeCommand(menv_queue->queue(env->id()));

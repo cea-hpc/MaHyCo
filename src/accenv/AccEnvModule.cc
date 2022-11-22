@@ -64,7 +64,7 @@ initMultiEnv()
   prof_acc_begin("AccEnvModule::initMultiEnv");
 
   IMeshMaterialMng* mesh_material_mng = IMeshMaterialMng::getReference(defaultMesh());
-  m_acc_env->initMultiEnv(mesh_material_mng);
+  m_acc_env->createMultiEnvMng(mesh_material_mng);
 
   prof_acc_end("AccEnvModule::initMultiEnv");
 }

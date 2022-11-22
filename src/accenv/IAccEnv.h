@@ -3,10 +3,9 @@
 
 #include <arcane/ItemTypes.h>
 #include "accenv/AcceleratorUtils.h"
-#include "accenv/MultiEnvUtils.h"
+#include "accenv/MultiEnvMng.h"
 #include "msgpass/VarSyncMng.h"
 #include "arcane/UnstructuredMeshConnectivity.h"
-#include "arcane/materials/IMeshMaterialMng.h"
 #include "arcane/IMesh.h"
 
 using namespace Arcane;
@@ -34,14 +33,9 @@ class IAccEnv {
 
   virtual Integer maxNodeCell() const = 0;
 
-  virtual void initMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
-  virtual MultiAsyncRunQueue* multiEnvQueue() = 0;
+  virtual void createMultiEnvMng(IMeshMaterialMng* mesh_material_mng) = 0;
 
-  virtual void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
-  virtual void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) = 0;
-  virtual void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) = 0;
-
-  virtual MultiEnvCellStorage* multiEnvCellStorage() = 0;
+  virtual MultiEnvMng* multiEnvMng() = 0;
 
   virtual VarSyncMng* vsyncMng() = 0;
 };

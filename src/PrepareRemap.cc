@@ -301,7 +301,7 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
   {
     auto command = makeCommand(queue);
     
-    auto in_env_id           = ax::viewIn(command, m_env_id);
+    auto in_env_id           = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto in_pseudo_viscosity = ax::viewIn(command, m_pseudo_viscosity.globalVariable());
     auto in_density          = ax::viewIn(command, m_density.globalVariable()); 
     auto in_cell_volume      = ax::viewIn(command, m_cell_volume.globalVariable());
@@ -342,7 +342,7 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
       // Les kernels sont lancés environnement par environnement les uns après les autres
       auto command = makeCommand(queue);
       
-      Span<const Integer> in_global_cell      (envView(m_global_cell, env));
+      Span<const Integer> in_global_cell      (envView(m_acc_env->multiEnvMng()->globalCell(), env));
       Span<const Real>    in_pseudo_viscosity (envView(m_pseudo_viscosity, env));
       Span<const Real>    in_cell_volume      (envView(m_cell_volume, env));
       Span<const Real>    in_density          (envView(m_density, env)); 
@@ -488,7 +488,7 @@ void MahycoModule::remap() {
   {
     auto command = makeCommand(queue);
     
-    auto in_env_id              = ax::viewIn(command, m_env_id);
+    auto in_env_id              = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto in_fracvol_g           = ax::viewIn(command,m_fracvol.globalVariable());
 
     auto out_materiau           = ax::viewOut(command,m_materiau);
@@ -526,7 +526,7 @@ void MahycoModule::remap() {
     Integer nb_imp = in_imp_idx.size();
 
     Span<const Real>    in_fracvol    (envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
 
     Span<Real> out_pseudo_viscosity_n (envView(m_pseudo_viscosity_n, env));
     Span<Real> out_pressure_n         (envView(m_pressure_n, env));

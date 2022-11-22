@@ -36,14 +36,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   Integer maxNodeCell() const override { return 8; }
 
-  void initMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
-  MultiAsyncRunQueue* multiEnvQueue() override { return m_menv_queue; }
+  void createMultiEnvMng(IMeshMaterialMng* mesh_material_mng) override;
 
-  void computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
-  void checkMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) override;
-  void updateMultiEnv(IMeshMaterialMng* mesh_material_mng) override;
-
-  MultiEnvCellStorage* multiEnvCellStorage() override { return m_menv_cell; }
+  MultiEnvMng* multiEnvMng() override { return m_menv_mng; }
 
   VarSyncMng* vsyncMng() override { return m_vsync_mng; }
 
@@ -58,11 +53,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   UniqueArray<Int16> m_node_index_in_cells;
 
-  //! Description/accès aux mailles multi-env
-  MultiEnvCellStorage* m_menv_cell=nullptr;
-
-  // Les queues asynchrones d'exéution
-  MultiAsyncRunQueue* m_menv_queue=nullptr; //!< les queues pour traiter les environnements de façon asynchrone
+  MultiEnvMng* m_menv_mng=nullptr;  //!< Manager du multi-environnement
 
   //! Pour "synchroniser" les items fantômes
   VarSyncMng* m_vsync_mng=nullptr;

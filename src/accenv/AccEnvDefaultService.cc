@@ -1,9 +1,5 @@
 #include "AccEnvDefaultService.h"
 
-#include "arcane/materials/CellToAllEnvCellConverter.h"
-#include "arcane/materials/IMeshEnvironment.h"
-#include "arcane/materials/ComponentPartItemVectorView.h"
-
 #include <arcane/AcceleratorRuntimeInitialisationInfo.h>
 #include <arcane/IParallelMng.h>
 #include <arcane/ParallelMngUtils.h>
@@ -75,8 +71,7 @@ AccEnvDefaultService::AccEnvDefaultService(const ServiceBuildInfo & sbi) :
 /*---------------------------------------------------------------------------*/
 AccEnvDefaultService::~AccEnvDefaultService() {
   delete m_acc_mem_adv;
-  delete m_menv_cell;
-  delete m_menv_queue;
+  delete m_menv_mng;
   delete m_vsync_mng;
 }
 
@@ -299,116 +294,16 @@ initMesh(IMesh* mesh)
 }
 
 /*---------------------------------------------------------------------------*/
-/* Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte) */
-/* l'identifiant de la maille globale                                        */
+/* Fabrique l'instance de MultiEnvMng                                        */
 /*---------------------------------------------------------------------------*/
 void AccEnvDefaultService::
-computeMultiEnvGlobalCellId(IMeshMaterialMng* mesh_material_mng) {
-  PROF_ACC_BEGIN(__FUNCTION__);
-  debug() << "computeMultiEnvGlobalCellId";
-
-  ParallelLoopOptions options;
-  options.setPartitioner(ParallelLoopOptions::Partitioner::Auto);
-
-  // Calcul des cell_id globaux 
-  arcaneParallelForeach(allCells(), options, [&](CellVectorView cells) {
-    CellToAllEnvCellConverter all_env_cell_converter(mesh_material_mng);
-    ENUMERATE_CELL(icell, cells)
-    {
-      Cell cell = * icell;
-      Integer cell_id = cell.localId();
-      m_global_cell[cell] = cell_id;
-      AllEnvCell all_env_cell = all_env_cell_converter[cell];
-      if (all_env_cell.nbEnvironment() !=1) {
-        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-          EnvCell ev = *ienvcell;
-          m_global_cell[ev] = cell_id;
-        }
-        // Maille mixte ou vide,
-        // Si mixte, contient l'opposé du nombre d'environnements+1
-        // Si vide, vaut -1
-        m_env_id[icell] = -all_env_cell.nbEnvironment()-1;
-      } else {
-        // Maille pure, cette boucle est de taille 1
-        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-          EnvCell ev = *ienvcell;
-          // Cette affectation n'aura lieu qu'une fois
-          m_env_id[icell] = ev.environmentId();
-        }
-      }
-    }
-  });
-
-  m_menv_cell->buildStorage(m_runner, m_global_cell);
-
-  checkMultiEnvGlobalCellId(mesh_material_mng);
-  PROF_ACC_END;
-}
-
-void AccEnvDefaultService::
-checkMultiEnvGlobalCellId([[maybe_unused]] IMeshMaterialMng* mesh_material_mng) {
-#ifdef ARCANE_DEBUG
-  debug() << "checkMultiEnvGlobalCellId";
-
-  // Vérification
-  ENUMERATE_ENV(ienv, mesh_material_mng) {
-    IMeshEnvironment* env = *ienv;
-    Integer env_id = env->id();
-    ENUMERATE_ENVCELL(ienvcell,env){
-      EnvCell ev = *ienvcell;
-      Cell cell(ev.globalCell());
-      ARCANE_ASSERT(cell.localId()==m_global_cell[ev], ("lid differents"));
-      AllEnvCell all_env_cell(ev.allEnvCell());
-      if (all_env_cell.nbEnvironment()==1) {
-        ARCANE_ASSERT(m_env_id[cell]==env_id, ("cell pure : environnement id incorrect dans m_env_id[cell]"));
-      } else {
-        ARCANE_ASSERT(m_env_id[cell]==(-all_env_cell.nbEnvironment()-1), ("cell mixte ou vide : m_env_id[cell] différent de -nbEnvironment()-1"));
-      }
-    }
+createMultiEnvMng(IMeshMaterialMng* mesh_material_mng)
+{
+  if (m_menv_mng)
+  {
+    throw FatalErrorException(A_FUNCINFO, "Une instance de MultiEnvMng existe déjà");
   }
-
-  m_menv_cell->checkStorage(m_global_cell);
-#endif
-}
-
-/*---------------------------------------------------------------------------*/
-/* Préparer les données multi-envronnement pour l'accélérateur               */
-/* A appeler quand la carte des environnements change                        */
-/*---------------------------------------------------------------------------*/
-void AccEnvDefaultService::
-updateMultiEnv(IMeshMaterialMng* mesh_material_mng) {
-  debug() << "updateMultiEnv";
-
-  // Il faut recalculer m_global_cell et m_env_id car la
-  // disposition des environnements a changé sur le maillage
-  computeMultiEnvGlobalCellId(mesh_material_mng);
-
-  // "Conseils" utilisation de la mémoire unifiée
-  ENUMERATE_ENV(ienv,mesh_material_mng){
-    IMeshEnvironment* env = *ienv;
-    m_acc_mem_adv->setReadMostly(env->pureEnvItems().valueIndexes());
-    m_acc_mem_adv->setReadMostly(env->impureEnvItems().valueIndexes());
-  }
-
-  // Pour mettre à jours des listes pour les comms multi-env
-  m_vsync_mng->updateSyncMultiEnv();
-}
-
-/*---------------------------------------------------------------------------*/
-/* Préparer traitement des environnements sur accélérateur                   */
-/*---------------------------------------------------------------------------*/
-void AccEnvDefaultService::
-initMultiEnv(IMeshMaterialMng* mesh_material_mng) {
-
-  // 6 = toutes les variables sont synchronisées simultanément
-  mesh_material_mng->setSynchronizeVariableVersion(6);
-  m_vsync_mng->initSyncMultiEnv(mesh_material_mng);
-
-  m_menv_queue = new MultiAsyncRunQueue(m_runner, mesh_material_mng->environments().size());
-
-  m_menv_cell = new MultiEnvCellStorage(mesh_material_mng, m_acc_mem_adv);
-
-  updateMultiEnv(mesh_material_mng);
+  m_menv_mng = new MultiEnvMng(mesh_material_mng, this->runner(), m_vsync_mng, m_acc_mem_adv);
 }
 
 /*---------------------------------------------------------------------------*/
