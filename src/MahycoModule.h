@@ -61,8 +61,6 @@
 #include "accenv/AcceleratorUtils.h"
 //
 
-#include "arcane_version.h"
-
 #include "Mahyco_axl.h"
 
 // Pour les définitions, il faut finir par GCC car Clang et ICC définissent
@@ -506,11 +504,7 @@ class MahycoModule
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
   // Va contenir eosModel()->getAdiabaticCst(env), accessible à la fois sur CPU et GPU
-#if ARCANE_VERSION >= 30800
-  NumArray<Real,MDDim1> m_adiabatic_cst_env;
-#else
-  NumArray<Real,1> m_adiabatic_cst_env;
-#endif
+  NumArray<Real,MD_Dim1> m_adiabatic_cst_env;
 };
 
 #endif
