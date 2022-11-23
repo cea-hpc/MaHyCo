@@ -67,12 +67,6 @@
   <!-- TAUX DENSITY	 -->
   <variable field-name="tau_density" name="TauxDensity" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="false" need-sync="true" />
-  <!-- GLOBAL CELL	 -->
-  <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="false" need-sync="false" sub-domain-depend="true" />
-  <!-- ENV ID -->
-  <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
-	    dim="0" dump="false" need-sync="false" />
   <!-- FORCE	 -->
   <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />

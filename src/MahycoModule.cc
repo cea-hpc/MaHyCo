@@ -411,7 +411,7 @@ saveValuesAtN()
     }; // asynchrone
   }
 
-  auto menv_queue = m_acc_env->multiEnvQueue();
+  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -551,7 +551,7 @@ computeArtificialViscosity()
   {
     auto command = makeCommand(queue);
 
-    auto in_env_id               = ax::viewIn(command, m_env_id);
+    auto in_env_id               = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto in_div_u                = ax::viewIn(command, m_div_u);
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
     auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
@@ -592,7 +592,7 @@ computeArtificialViscosity()
 
     // Des sortes de vues sur les valeurs impures pour l'environnement env
     Span<const Real>    in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
     Span<const Real>    in_tau_density(envView(m_tau_density, env));
     Span<Real> inout_pseudo_viscosity(envView(m_pseudo_viscosity, env));
 
@@ -1339,11 +1339,11 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
-  m_acc_env->checkMultiEnvGlobalCellId(mm); // Vérifie que m_global_cell est correct
+  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId(); // Vérifie que m_acc_env->multiEnvMng()->globalCell() est correct
 
   // maille mixte
   // moyenne sur la maille
-  auto menv_queue = m_acc_env->multiEnvQueue();
+  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
   ENUMERATE_ENV(ienv, mm) {
     IMeshEnvironment* env = *ienv;
 
@@ -1354,7 +1354,7 @@ computeGeometricValues()
     // Des sortes de vues sur les valeurs impures pour l'environnement env
     Span<Real> out_cell_volume(envView(m_cell_volume, env));
     Span<const Real> in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_global_cell, env));
+    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
 
     // Les kernels sont lancés de manière asynchrone environnement par environnement
     auto command = makeCommand(menv_queue->queue(env->id()));
@@ -1444,7 +1444,7 @@ updateDensity()
   }
   // Pendant ce temps, calcul sur GPU sur la queue_glob
 
-  auto menv_queue = m_acc_env->multiEnvQueue();
+  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -1515,7 +1515,7 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
-  m_acc_env->checkMultiEnvGlobalCellId(mm);
+  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId();
 
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
@@ -1764,7 +1764,7 @@ updateEnergyAndPressureforGP()
     {
       auto command = makeCommand(queue);
 
-      auto in_env_id               = ax::viewIn(command, m_env_id);
+      auto in_env_id               = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
       auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
 
       auto in_pseudo_viscosity_n   = ax::viewIn(command, m_pseudo_viscosity_n.globalVariable()); 
@@ -1805,7 +1805,7 @@ updateEnergyAndPressureforGP()
       Span<const Real> in_pressure          (envView(m_pressure, env)); 
       Span<const Real> in_internal_energy_n (envView(m_internal_energy_n, env));
       Span<const Real> in_mass_fraction     (envView(m_mass_fraction, env));
-      Span<const Integer> in_global_cell    (envView(m_global_cell, env));
+      Span<const Integer> in_global_cell    (envView(m_acc_env->multiEnvMng()->globalCell(), env));
 
       Span<Real> out_internal_energy        (envView(m_internal_energy, env));
       auto inout_internal_energy_g = ax::viewInOut(command, m_internal_energy.globalVariable());
@@ -1922,7 +1922,7 @@ computePressionMoyenne()
     }
   }
 #else
-  m_acc_env->checkMultiEnvGlobalCellId(mm);
+  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId();
 
   // Pas très efficace mais on va lancer un kernel sur tout le maillage pour
   // ne sélectionner que les mailles mixtes et initialiser les grandeus
@@ -1936,7 +1936,7 @@ computePressionMoyenne()
   {
     auto command = makeCommand(queue);
 
-    auto in_env_id       = ax::viewIn(command, m_env_id);
+    auto in_env_id       = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto out_pressure    = ax::viewOut(command, m_pressure.globalVariable());
     auto out_sound_speed = ax::viewOut(command, m_sound_speed.globalVariable());
 
@@ -1956,7 +1956,7 @@ computePressionMoyenne()
     // Les kernels sont lancés environnement par environnement les uns après les autres
     auto command = makeCommand(queue);
     
-    Span<const Integer> in_global_cell    (envView(m_global_cell, env));
+    Span<const Integer> in_global_cell    (envView(m_acc_env->multiEnvMng()->globalCell(), env));
     Span<const Real>    in_fracvol        (envView(m_fracvol,     env)); 
     Span<const Real>    in_pressure       (envView(m_pressure,    env)); 
     Span<const Real>    in_sound_speed    (envView(m_sound_speed, env)); 

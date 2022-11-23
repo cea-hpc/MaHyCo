@@ -122,7 +122,7 @@ void RemapALEService::appliRemap([[maybe_unused]] Integer dimension, Integer wit
      // finalisation avant remplissage des variables
      mm->forceRecompute();
      // Ici, la carte des environnements a changé
-     m_acc_env->updateMultiEnv(mm);
+     m_acc_env->multiEnvMng()->updateMultiEnv(m_acc_env->vsyncMng());
      
      m_fracvol.fill(0.0);
      
