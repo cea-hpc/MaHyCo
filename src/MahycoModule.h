@@ -504,7 +504,7 @@ class MahycoModule
   UniqueArray<BoundaryCondition> m_boundary_conditions;
 
   // Va contenir eosModel()->getAdiabaticCst(env), accessible à la fois sur CPU et GPU
-  NumArray<Real,1> m_adiabatic_cst_env;
+  NumArray<Real,MD_Dim1> m_adiabatic_cst_env;
 };
 
 #endif
