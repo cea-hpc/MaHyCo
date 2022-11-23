@@ -12,7 +12,9 @@ MultiEnvMng::MultiEnvMng(IMeshMaterialMng* mm, ax::Runner& runner, VarSyncMng* v
   m_l_env_arrays_idx(platform::getAcceleratorHostMemoryAllocator()),
   m_l_env_values_idx(VariableBuildInfo(mm->mesh(), "LEnvValuesIdx" , IVariable::PNoDump| IVariable::PNoNeedSync | IVariable::PSubDomainDepend)),
   m_env_id          (VariableBuildInfo(mm->mesh(), "EnvId" , IVariable::PNoDump| IVariable::PNoNeedSync)),
-  m_global_cell     (VariableBuildInfo(mm->mesh(), "GlobalCell" , IVariable::PNoDump| IVariable::PNoNeedSync| IVariable::PSubDomainDepend))
+  m_global_cell     (VariableBuildInfo(mm->mesh(), "GlobalCell" , IVariable::PNoDump| IVariable::PNoNeedSync| IVariable::PSubDomainDepend)),
+  m_is_active_cell  (VariableBuildInfo(mm->mesh(), "IsActiveCell" , IVariable::PNoDump| IVariable::PNoNeedSync)),
+  m_is_active_node  (VariableBuildInfo(mm->mesh(), "IsActiveNode" , IVariable::PNoDump| IVariable::PNoNeedSync))
 {
   m_l_env_arrays_idx.resize(m_max_nb_env*mm->mesh()->allCells().size());
   acc_mem_adv->setReadMostly(m_l_env_arrays_idx.view());
@@ -244,5 +246,79 @@ void MultiEnvMng::checkStorage([[maybe_unused]] Materials::MaterialVariableCellI
   }
   PROF_ACC_END;
 #endif
+}
+
+/*---------------------------------------------------------------------------*/
+// Remplit les tableaux IsActiveCell et IsActiveNode à partir des groupes d'items actifs
+/*---------------------------------------------------------------------------*/
+/* Chaine de caractères correspondant à un type d'item
+ */
+template<typename ItemType>
+String get_item_string()
+{
+  return "UNDEF";
+}
+
+template<>
+String get_item_string<Cell>()
+{
+  return "cell";
+}
+
+template<>
+String get_item_string<Node>()
+{
+  return "node";
+}
+
+/* Affecte de façon asynchrone is_active[lid] à true pour les lid \in active_items
+ */
+template<typename ItemType>
+Ref<RunQueue> async_set_active(Runner& runner,
+    MeshVariableScalarRefT<ItemType, Byte> is_active,
+    ItemGroupT<ItemType> active_items,
+    ItemGroupT<ItemType> all_items)
+{
+  String str_item = get_item_string<ItemType>();
+
+  auto ref_queue = makeQueueRef(runner);
+  ref_queue->setAsync(true);
+  // ref_queue est détachée par rapport à l'hôte et devra être synchronisée avec barrier()
+  // Néanmoins, les 2 kernels doivent s'exécuter l'un après l'autre sur la même queue ref_queue
+  // On initialise d'abord à false sur l'ensemble des items (all_items)
+  {
+    auto command = makeCommand(ref_queue.get());
+    auto out_is_active = ax::viewOut(command, is_active);
+
+    // Il s'agit de la macro RUNCOMMAND_ENUMERATE expandée car cette macro ne gère pas bien le type template ItemType
+    command.addKernelName(String("init_active_"+str_item)) << A_FUNCINFO 
+      << all_items << [=] ARCCORE_HOST_DEVICE (typename ItemType::LocalIdType lid) 
+    {
+      out_is_active[lid] = false;
+    };
+  }
+  // Puis à true uniquement pour les items dans active_items
+  {
+    auto command = makeCommand(ref_queue.get());
+    auto out_is_active = ax::viewOut(command, is_active);
+
+    command.addKernelName(String("set_active_"+str_item)) << A_FUNCINFO 
+      << active_items << [=] ARCCORE_HOST_DEVICE (typename ItemType::LocalIdType lid) 
+    {
+      out_is_active[lid] = true;
+    };
+  }
+
+  return ref_queue;
+}
+
+void MultiEnvMng::setActiveItemsFromGroups(CellGroup active_cells, NodeGroup active_nodes) {
+
+  // Maj des tableaux m_is_active_cell et m_is_active_node de façon asynchrone
+  auto ref_queue_cell = async_set_active<Cell>(m_runner, m_is_active_cell, active_cells, m_mesh_material_mng->mesh()->allCells());
+  auto ref_queue_node = async_set_active<Node>(m_runner, m_is_active_node, active_nodes, m_mesh_material_mng->mesh()->allNodes());
+
+  ref_queue_cell->barrier();
+  ref_queue_node->barrier();
 }
 
