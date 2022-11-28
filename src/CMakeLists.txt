@@ -1,16 +1,27 @@
-set(EXAMPLE_NAME Mahyco)
 project(Mahyco LANGUAGES C CXX)
-include(../mahyco.common.cmake)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -pedantic -Wnon-virtual-dtor -g " CACHE STRING "" FORCE)
 
+find_package(Arcane 3.7 REQUIRED)
+
+include(${Arcane_DIR}/ArcaneDotNet.cmake)
+include(../mahyco.utils.cmake)
+
+add_executable(Mahyco MahycoModule.cc main.cc Mahyco_axl.h)
+
+arcane_generate_axl(Mahyco)
+configure_file(Mahyco.config ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
+configure_file(Mahyco.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
+arcane_add_arcane_libraries_to_target(Mahyco)
+target_include_directories(Mahyco PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
+
 # Pour avoir des #warning explicites
 add_compile_definitions(P4GPU_HAS_WARNING_INFO)
 
-target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
-target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
+target_sources(Mahyco PRIVATE MahycoAnnexe.cc)
+target_sources(Mahyco PRIVATE PrepareRemap.cc)
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
@@ -137,7 +148,7 @@ arcane_accelerator_add_to_target(msgpass)
 # Pour la gestion du profiling sur accélérateur
 option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
 if (WANT_PROF_ACC)
-  target_compile_definitions(${EXAMPLE_NAME} PRIVATE PROF_ACC)
+  target_compile_definitions(Mahyco PRIVATE PROF_ACC)
   target_compile_definitions(PerfectGas PRIVATE PROF_ACC)
   target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
   target_compile_definitions(Remap PRIVATE PROF_ACC)
@@ -149,7 +160,7 @@ endif()
 # Pour utiliser l'implémentation Arcane du cartésien
 option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
 if (WANT_IMPL_CART_ARCANE)
-  target_compile_definitions(${EXAMPLE_NAME} PRIVATE IMPL_CART_ARCANE)
+  target_compile_definitions(Mahyco PRIVATE IMPL_CART_ARCANE)
   target_compile_definitions(PerfectGas PRIVATE IMPL_CART_ARCANE)
   target_compile_definitions(StiffenedGas PRIVATE IMPL_CART_ARCANE)
   target_compile_definitions(Remap PRIVATE IMPL_CART_ARCANE)
@@ -160,7 +171,7 @@ if (WANT_IMPL_CART_ARCANE)
   # cartesian
 endif()
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian accenv msgpass)
+target_link_libraries(Mahyco PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian accenv msgpass)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
