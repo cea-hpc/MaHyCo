@@ -1,0 +1,14 @@
+@PACKAGE_INIT@
+
+# Set and Check must go first else macro might be redefined by find_dependency ...
+set_and_check(MAHYCO_TARGET_FILE "${PACKAGE_PREFIX_DIR}/@config_install_dir@/@MAHYCO_EXPORT_TARGET@.cmake")
+set_and_check(MAHYCO_MODULE_PATH "@PACKAGE_MAHYCO_MODULE_PATH@")
+
+include(CMakeFindDependencyMacro)
+
+find_dependency(Arcane)
+
+# set_and_check already done.
+include(${MAHYCO_TARGET_FILE})
+list(APPEND CMAKE_MODULE_PATH ${MAHYCO_MODULE_PATH})
+

@@ -1,4 +1,4 @@
-project(Mahyco LANGUAGES C CXX)
+project(Mahyco LANGUAGES C CXX VERSION 0.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,13 +9,20 @@ find_package(Arcane 3.7 REQUIRED)
 include(${Arcane_DIR}/ArcaneDotNet.cmake)
 include(../mahyco.utils.cmake)
 
+# Include module with fuction 'write_basic_package_version_file'
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
+set(MAHYCO_EXPORT_TARGET ${PROJECT_NAME}Targets)
+
+
 add_executable(Mahyco MahycoModule.cc main.cc Mahyco_axl.h)
 
 arcane_generate_axl(Mahyco)
 configure_file(Mahyco.config ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 configure_file(Mahyco.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 arcane_add_arcane_libraries_to_target(Mahyco)
-target_include_directories(Mahyco PUBLIC . ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(Mahyco PRIVATE . ${CMAKE_CURRENT_BINARY_DIR})
 
 # Pour avoir des #warning explicites
 add_compile_definitions(P4GPU_HAS_WARNING_INFO)
@@ -23,35 +30,43 @@ add_compile_definitions(P4GPU_HAS_WARNING_INFO)
 target_sources(Mahyco PRIVATE MahycoAnnexe.cc)
 target_sources(Mahyco PRIVATE PrepareRemap.cc)
 
+install(TARGETS Mahyco EXPORT ${MAHYCO_EXPORT_TARGET})
+
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
-target_include_directories(PerfectGas PUBLIC .)
+target_include_directories(PerfectGas PRIVATE .)
 target_link_libraries(PerfectGas PUBLIC arcane_core)
+install(TARGETS PerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
-target_include_directories(StiffenedGas PUBLIC .)
+target_include_directories(StiffenedGas PRIVATE .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
-
+install(TARGETS StiffenedGas EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(RIDER casTest/RIDER/RIDERService.cc)
-target_include_directories(RIDER PUBLIC .)
+target_include_directories(RIDER PRIVATE .)
 target_link_libraries(RIDER PUBLIC arcane_core)
+install(TARGETS RIDER EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(SOD casTest/SOD/SODService.cc)
-target_include_directories(SOD PUBLIC .)
+target_include_directories(SOD PRIVATE .)
 target_link_libraries(SOD PUBLIC arcane_core)
+install(TARGETS SOD EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(SEDOV casTest/SEDOV/SEDOVService.cc)
-target_include_directories(SEDOV PUBLIC .)
+target_include_directories(SEDOV PRIVATE .)
 target_link_libraries(SEDOV PUBLIC arcane_core)
+install(TARGETS SEDOV EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(OTHER casTest/OTHER/OTHERService.cc)
-target_include_directories(OTHER PUBLIC .)
+target_include_directories(OTHER PRIVATE .)
 target_link_libraries(OTHER PUBLIC arcane_core)
+install(TARGETS OTHER EXPORT ${MAHYCO_EXPORT_TARGET})
 
 
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
-target_include_directories(Remap PUBLIC .)
+target_include_directories(Remap PRIVATE .)
 target_link_libraries(Remap PUBLIC arcane_core)
+install(TARGETS Remap EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Cartesian
 add_library(cartesian cartesian/CartesianConnectivity.cc
@@ -60,16 +75,18 @@ add_library(cartesian cartesian/CartesianConnectivity.cc
                       cartesian/FaceDirectionMng.cc
                       cartesian/NodeDirectionMng.cc
                       cartesian/CartesianItemSorter.cc)
-target_include_directories(cartesian PUBLIC .)
+target_include_directories(cartesian PRIVATE .)
 target_link_libraries(cartesian PUBLIC arcane_core)
+install(TARGETS cartesian EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Services communs pour les accélérateurs
 add_library(accenv accenv/AccEnvDefaultService.cc
                    accenv/AccEnvModule.cc
                    accenv/MultiEnvMng.cc
                    accenv/ProfAcc.cc)
-target_include_directories(accenv PUBLIC .)
+target_include_directories(accenv PRIVATE .)
 target_link_libraries(accenv PUBLIC arcane_core)
+install(TARGETS accenv EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Message Passing
 add_library(msgpass msgpass/VarSyncMng.cc 
@@ -83,7 +100,7 @@ add_library(msgpass msgpass/VarSyncMng.cc
 	            msgpass/Algo1SyncDataD.cc
 	            msgpass/Algo1SyncDataDH.cc
                     msgpass/VarSyncAlgo1.cc)
-target_include_directories(msgpass PUBLIC .)
+target_include_directories(msgpass PRIVATE .)
 target_link_libraries(msgpass PUBLIC arcane_core)
 # Pour MPI
 #find_package(MPI)
@@ -100,6 +117,8 @@ target_link_libraries(msgpass PUBLIC arcane_core)
 # On force is_comm_device_aware() == true
 target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_COMM_DEVICE_AWARE)
 # fin MPI
+install(TARGETS msgpass EXPORT ${MAHYCO_EXPORT_TARGET})
+
 
 # Pour la gestion des accélérateurs et des sources à compiler avec le
 # compilateur pour accélérateur
@@ -315,3 +334,45 @@ foreach( TEST_NAME ${TEST_NAMES_CUDA_4} )
 endforeach()
 endif()
 
+
+# Configuration
+set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+set(generated_dir "${CMAKE_CURRENT_BINARY_DIR}/generated")
+
+set(version_config "${generated_dir}/${PROJECT_NAME}ConfigVersion.cmake")
+set(project_config "${generated_dir}/${PROJECT_NAME}Config.cmake")
+set(namespace "Alien::")
+
+# Configure '<PROJECT-NAME>ConfigVersion.cmake'
+# Use:
+#   * PROJECT_VERSION
+write_basic_package_version_file(
+        "${version_config}" COMPATIBILITY SameMajorVersion
+)
+
+set(MAHYCO_MODULE_PATH "${config_install_dir}")
+
+# Configure '<PROJECT-NAME>Config.cmake'
+# Use variables:
+#   * TARGETS_EXPORT_NAME
+#   * PROJECT_NAME
+configure_package_config_file(
+        "MahycoConfig.cmake.in"
+        "${project_config}"
+        INSTALL_DESTINATION "${config_install_dir}"
+        PATH_VARS MAHYCO_MODULE_PATH
+)
+
+set(Mahyco_project_config "${project_config}" CACHE FILEPATH "Mahyco project config" FORCE)
+get_filename_component(Mahyco_config_build_dir "${project_config}" DIRECTORY CACHE)
+set(Mahyco_config_install_dir "${config_install_dir}" CACHE STRING "Mahyco config install dir" FORCE)
+set(Mahyco_VERSION "${Mahyco_VERSION}" CACHE STRING "Mahyco version" FORCE)
+
+install(FILES "${project_config}" "${version_config}"
+        DESTINATION "${config_install_dir}"
+        )
+
+install(EXPORT ${MAHYCO_EXPORT_TARGET}
+        NAMESPACE ${namespace}
+        DESTINATION ${config_install_dir})

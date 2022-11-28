@@ -8,3 +8,9 @@ project(ArcaneSamples LANGUAGES CXX)
 enable_testing()
 
 add_subdirectory(src)
+
+include(GNUInstallDirs)
+install(DIRECTORY NONREGRESSION/
+  DESTINATION share/cases
+  PATTERN "output" EXCLUDE
+  )
