@@ -1,12 +1,9 @@
 #ifndef __ACCENV_ACC_ENV_MODULE_H
 #define __ACCENV_ACC_ENV_MODULE_H
 
-// Ajout pour accélérateur
-#include "accenv/IAccEnv.h"
-#include "accenv/AcceleratorUtils.h"
-//
-
-#include "accenv/AccEnv_axl.h"
+#include "AccEnv_axl.h"
+#include <arcane/ModuleBuildInfo.h>
+class IAccEnv;
 
 using namespace Arcane;
 

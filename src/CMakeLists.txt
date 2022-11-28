@@ -32,15 +32,7 @@ target_sources(Mahyco PRIVATE PrepareRemap.cc)
 
 install(TARGETS Mahyco EXPORT ${MAHYCO_EXPORT_TARGET})
 
-add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
-target_include_directories(PerfectGas PRIVATE .)
-target_link_libraries(PerfectGas PUBLIC Arcane::arcane_core)
-install(TARGETS PerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
-
-add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
-target_include_directories(StiffenedGas PRIVATE .)
-target_link_libraries(StiffenedGas PUBLIC Arcane::arcane_core)
-install(TARGETS StiffenedGas EXPORT ${MAHYCO_EXPORT_TARGET})
+add_subdirectory(eos)
 
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PRIVATE .)
@@ -62,63 +54,17 @@ target_include_directories(OTHER PRIVATE .)
 target_link_libraries(OTHER PUBLIC Arcane::arcane_core)
 install(TARGETS OTHER EXPORT ${MAHYCO_EXPORT_TARGET})
 
-
-add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
-target_include_directories(Remap PRIVATE .)
-target_link_libraries(Remap PUBLIC Arcane::arcane_core)
-install(TARGETS Remap EXPORT ${MAHYCO_EXPORT_TARGET})
+# Remap
+add_subdirectory(Remap)
 
 # Cartesian
-add_library(cartesian cartesian/CartesianConnectivity.cc
-                      cartesian/CartesianMesh.cc
-                      cartesian/CellDirectionMng.cc
-                      cartesian/FaceDirectionMng.cc
-                      cartesian/NodeDirectionMng.cc
-                      cartesian/CartesianItemSorter.cc)
-target_include_directories(cartesian PRIVATE .)
-target_link_libraries(cartesian PUBLIC Arcane::arcane_core)
-install(TARGETS cartesian EXPORT ${MAHYCO_EXPORT_TARGET})
+add_subdirectory(cartesian)
 
 # Services communs pour les accélérateurs
-add_library(accenv accenv/AccEnvDefaultService.cc
-                   accenv/AccEnvModule.cc
-                   accenv/MultiEnvMng.cc
-                   accenv/ProfAcc.cc)
-target_include_directories(accenv PRIVATE .)
-target_link_libraries(accenv PUBLIC Arcane::arcane_core)
-install(TARGETS accenv EXPORT ${MAHYCO_EXPORT_TARGET})
+add_subdirectory(accenv)
 
 # Message Passing
-add_library(msgpass msgpass/VarSyncMng.cc 
-                    msgpass/IsCommDeviceAware.cc
-                    msgpass/MsgPassInit.cc
-                    msgpass/PackTransfer.cc
-                    msgpass/SyncItems.cc
-                    msgpass/SyncBuffers.cc
-                    msgpass/SyncEnvIndexes.cc
-                    msgpass/MeshVariableSynchronizerList.cc
-	            msgpass/Algo1SyncDataD.cc
-	            msgpass/Algo1SyncDataDH.cc
-                    msgpass/VarSyncAlgo1.cc)
-target_include_directories(msgpass PRIVATE .)
-target_link_libraries(msgpass PUBLIC Arcane::arcane_core)
-# Pour MPI
-#find_package(MPI)
-#if(MPI_FOUND)
-#  target_compile_definitions(msgpass PRIVATE OMPI_SKIP_MPICXX)
-#  target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI)
-#  target_include_directories(msgpass PRIVATE "${MPI_INCLUDE_PATH}")
-#  find_path(P4GPU_MPI_EXT NAMES "mpi-ext.h" PATHS "${MPI_C_HEADER_DIR}")
-#  if(P4GPU_MPI_EXT)
-#    target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_MPI_EXT)
-#    target_link_libraries(msgpass PRIVATE mpi)
-#  endif()
-#endif()
-# On force is_comm_device_aware() == true
-target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_COMM_DEVICE_AWARE)
-# fin MPI
-install(TARGETS msgpass EXPORT ${MAHYCO_EXPORT_TARGET})
-
+add_subdirectory(msgpass)
 
 # Pour la gestion des accélérateurs et des sources à compiler avec le
 # compilateur pour accélérateur
@@ -126,43 +72,8 @@ arcane_accelerator_enable()
 arcane_accelerator_add_source_files(MahycoModule.cc )
 arcane_accelerator_add_source_files(MahycoAnnexe.cc)
 arcane_accelerator_add_source_files(PrepareRemap.cc )
-arcane_accelerator_add_source_files(Remap/DualPhaseRemap.cc)
-arcane_accelerator_add_source_files(Remap/RemapADIFinal.cc)
-arcane_accelerator_add_source_files(Remap/RemapADIService.cc)
-arcane_accelerator_add_source_files(Remap/RemapALEService.cc)
-arcane_accelerator_add_source_files(Remap/Remap-ordre-3.cc)
-arcane_accelerator_add_source_files(Remap/UtilesRemapALE.cc)
-arcane_accelerator_add_source_files(Remap/UtilesRemap.cc)
-arcane_accelerator_add_source_files(eos/perfectgas/PerfectGasEOSService.cc)
-arcane_accelerator_add_source_files(eos/stiffenedgas/StiffenedGasEOSService.cc)
-arcane_accelerator_add_source_files(cartesian/CartesianConnectivity.cc)
-arcane_accelerator_add_source_files(cartesian/CartesianMesh.cc)
-arcane_accelerator_add_source_files(cartesian/CellDirectionMng.cc)
-arcane_accelerator_add_source_files(cartesian/FaceDirectionMng.cc)
-arcane_accelerator_add_source_files(cartesian/NodeDirectionMng.cc)
-arcane_accelerator_add_source_files(cartesian/CartesianItemSorter.cc)
-arcane_accelerator_add_source_files(accenv/AccEnvDefaultService.cc)
-arcane_accelerator_add_source_files(accenv/AccEnvModule.cc)
-arcane_accelerator_add_source_files(accenv/MultiEnvMng.cc)
-arcane_accelerator_add_source_files(accenv/ProfAcc.cc)
-arcane_accelerator_add_source_files(msgpass/VarSyncMng.cc)
-arcane_accelerator_add_source_files(msgpass/IsCommDeviceAware.cc)
-arcane_accelerator_add_source_files(msgpass/MsgPassInit.cc)
-arcane_accelerator_add_source_files(msgpass/PackTransfer.cc)
-arcane_accelerator_add_source_files(msgpass/SyncItems.cc)
-arcane_accelerator_add_source_files(msgpass/SyncEnvIndexes.cc)
-arcane_accelerator_add_source_files(msgpass/SyncBuffers.cc)
-arcane_accelerator_add_source_files(msgpass/MeshVariableSynchronizerList.cc)
-arcane_accelerator_add_source_files(msgpass/Algo1SyncDataD.cc)
-arcane_accelerator_add_source_files(msgpass/Algo1SyncDataDH.cc)
-arcane_accelerator_add_source_files(msgpass/VarSyncAlgo1.cc)
 arcane_accelerator_add_to_target(Mahyco)
-arcane_accelerator_add_to_target(Remap)
-arcane_accelerator_add_to_target(PerfectGas)
-arcane_accelerator_add_to_target(StiffenedGas)
-arcane_accelerator_add_to_target(cartesian)
-arcane_accelerator_add_to_target(accenv)
-arcane_accelerator_add_to_target(msgpass)
+
 
 # Pour la gestion du profiling sur accélérateur
 option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
@@ -197,14 +108,6 @@ arcane_target_add_axl(SOD casTest/SOD/SOD)
 arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
 arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
 
-arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
-arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
-
-arcane_target_add_axl(Remap Remap/RemapADI)
-arcane_target_add_axl(Remap Remap/RemapALE)
-
-arcane_target_add_axl(accenv accenv/AccEnvDefault)
-arcane_target_add_axl(accenv accenv/AccEnv)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)

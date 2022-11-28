@@ -5,7 +5,6 @@
 #include "TypesMahyco.h"
 
 #include "Remap/IRemap.h"
-#include "Remap/RemapALE_axl.h"
 #include <arcane/ItemTypes.h>
 #include "arcane/IMesh.h"
 #include "arcane/IItemFamily.h"
@@ -34,9 +33,9 @@
 #include "cartesian/interface/NodeDirectionMng.h"
 #include "cartesian/interface/CartesianConnectivity.h"
 
-#include "accenv/IAccEnv.h"
+#include "RemapALE_axl.h"
 #include "accenv/AcceleratorUtils.h"
-
+#include "accenv/IAccEnv.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;

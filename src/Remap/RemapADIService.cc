@@ -4,6 +4,8 @@
 #include "cartesian/FactCartDirectionMng.h"
 #include <arcane/ServiceBuilder.h>
 
+#include <accenv/IAccEnv.h>
+
 /** Constructeur de la classe */
 RemapADIService::RemapADIService(const ServiceBuildInfo & sbi)
   : ArcaneRemapADIObject(sbi) {
