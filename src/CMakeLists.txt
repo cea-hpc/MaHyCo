@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Arcane 3.7 REQUIRED)
 
-include(${Arcane_DIR}/ArcaneDotNet.cmake)
-include(../mahyco.utils.cmake)
 
 # Include module with fuction 'write_basic_package_version_file'
 include(CMakePackageConfigHelpers)
