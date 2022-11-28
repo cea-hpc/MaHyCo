@@ -2,9 +2,8 @@
 #ifndef RIDERSERVICE_H
 #define RIDERSERVICE_H
 
-#include "TypesMahyco.h"
-#include "casTest/IInitialisations.h"
-#include "casTest/RIDER/RIDER_axl.h"
+#include "IInitialisations.h"
+#include "RIDER/RIDER_axl.h"
 #include "arcane/materials/IMeshMaterialMng.h"
 #include "arcane/materials/IMeshMaterial.h"
 #include "arcane/materials/IMeshEnvironment.h"
@@ -23,7 +22,7 @@
 #include "arcane/materials/MeshMaterialIndirectModifier.h"
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
-#include "cartesian/interface/ICartesianMesh.h"
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 

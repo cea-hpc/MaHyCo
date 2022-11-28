@@ -30,27 +30,10 @@ target_sources(Mahyco PRIVATE PrepareRemap.cc)
 
 install(TARGETS Mahyco EXPORT ${MAHYCO_EXPORT_TARGET})
 
+add_subdirectory(casTest)
+
+# Equation of State
 add_subdirectory(eos)
-
-add_library(RIDER casTest/RIDER/RIDERService.cc)
-target_include_directories(RIDER PRIVATE .)
-target_link_libraries(RIDER PUBLIC Arcane::arcane_core)
-install(TARGETS RIDER EXPORT ${MAHYCO_EXPORT_TARGET})
-
-add_library(SOD casTest/SOD/SODService.cc)
-target_include_directories(SOD PRIVATE .)
-target_link_libraries(SOD PUBLIC Arcane::arcane_core)
-install(TARGETS SOD EXPORT ${MAHYCO_EXPORT_TARGET})
-
-add_library(SEDOV casTest/SEDOV/SEDOVService.cc)
-target_include_directories(SEDOV PRIVATE .)
-target_link_libraries(SEDOV PUBLIC Arcane::arcane_core)
-install(TARGETS SEDOV EXPORT ${MAHYCO_EXPORT_TARGET})
-
-add_library(OTHER casTest/OTHER/OTHERService.cc)
-target_include_directories(OTHER PRIVATE .)
-target_link_libraries(OTHER PUBLIC Arcane::arcane_core)
-install(TARGETS OTHER EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Remap
 add_subdirectory(Remap)
@@ -99,13 +82,7 @@ if (WANT_IMPL_CART_ARCANE)
   # cartesian
 endif()
 
-target_link_libraries(Mahyco PRIVATE PerfectGas StiffenedGas RIDER SOD SEDOV OTHER Remap cartesian accenv msgpass)
-
-arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
-arcane_target_add_axl(SOD casTest/SOD/SOD)
-arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
-arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
-
+target_link_libraries(Mahyco PRIVATE PerfectGas StiffenedGas casTest Remap cartesian accenv msgpass)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)
