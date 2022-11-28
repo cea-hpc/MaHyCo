@@ -34,38 +34,38 @@ install(TARGETS Mahyco EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PRIVATE .)
-target_link_libraries(PerfectGas PUBLIC arcane_core)
+target_link_libraries(PerfectGas PUBLIC Arcane::arcane_core)
 install(TARGETS PerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PRIVATE .)
-target_link_libraries(StiffenedGas PUBLIC arcane_core)
+target_link_libraries(StiffenedGas PUBLIC Arcane::arcane_core)
 install(TARGETS StiffenedGas EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PRIVATE .)
-target_link_libraries(RIDER PUBLIC arcane_core)
+target_link_libraries(RIDER PUBLIC Arcane::arcane_core)
 install(TARGETS RIDER EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(SOD casTest/SOD/SODService.cc)
 target_include_directories(SOD PRIVATE .)
-target_link_libraries(SOD PUBLIC arcane_core)
+target_link_libraries(SOD PUBLIC Arcane::arcane_core)
 install(TARGETS SOD EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(SEDOV casTest/SEDOV/SEDOVService.cc)
 target_include_directories(SEDOV PRIVATE .)
-target_link_libraries(SEDOV PUBLIC arcane_core)
+target_link_libraries(SEDOV PUBLIC Arcane::arcane_core)
 install(TARGETS SEDOV EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(OTHER casTest/OTHER/OTHERService.cc)
 target_include_directories(OTHER PRIVATE .)
-target_link_libraries(OTHER PUBLIC arcane_core)
+target_link_libraries(OTHER PUBLIC Arcane::arcane_core)
 install(TARGETS OTHER EXPORT ${MAHYCO_EXPORT_TARGET})
 
 
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PRIVATE .)
-target_link_libraries(Remap PUBLIC arcane_core)
+target_link_libraries(Remap PUBLIC Arcane::arcane_core)
 install(TARGETS Remap EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Cartesian
@@ -76,7 +76,7 @@ add_library(cartesian cartesian/CartesianConnectivity.cc
                       cartesian/NodeDirectionMng.cc
                       cartesian/CartesianItemSorter.cc)
 target_include_directories(cartesian PRIVATE .)
-target_link_libraries(cartesian PUBLIC arcane_core)
+target_link_libraries(cartesian PUBLIC Arcane::arcane_core)
 install(TARGETS cartesian EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Services communs pour les accélérateurs
@@ -85,7 +85,7 @@ add_library(accenv accenv/AccEnvDefaultService.cc
                    accenv/MultiEnvMng.cc
                    accenv/ProfAcc.cc)
 target_include_directories(accenv PRIVATE .)
-target_link_libraries(accenv PUBLIC arcane_core)
+target_link_libraries(accenv PUBLIC Arcane::arcane_core)
 install(TARGETS accenv EXPORT ${MAHYCO_EXPORT_TARGET})
 
 # Message Passing
@@ -101,7 +101,7 @@ add_library(msgpass msgpass/VarSyncMng.cc
 	            msgpass/Algo1SyncDataDH.cc
                     msgpass/VarSyncAlgo1.cc)
 target_include_directories(msgpass PRIVATE .)
-target_link_libraries(msgpass PUBLIC arcane_core)
+target_link_libraries(msgpass PUBLIC Arcane::arcane_core)
 # Pour MPI
 #find_package(MPI)
 #if(MPI_FOUND)
