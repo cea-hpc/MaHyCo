@@ -24,3 +24,6 @@ arcane_accelerator_add_to_target(StiffenedGas)
 
 arcane_target_add_axl(PerfectGas perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas stiffenedgas/StiffenedGasEOS)
+
+add_library(eos INTERFACE)
+target_link_libraries(eos INTERFACE PerfectGas StiffenedGas)

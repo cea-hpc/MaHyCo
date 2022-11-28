@@ -82,7 +82,7 @@ if (WANT_IMPL_CART_ARCANE)
   # cartesian
 endif()
 
-target_link_libraries(Mahyco PRIVATE PerfectGas StiffenedGas casTest Remap cartesian accenv msgpass)
+target_link_libraries(Mahyco PRIVATE casTest Remap cartesian eos accenv msgpass)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)
