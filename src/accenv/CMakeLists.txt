@@ -20,6 +20,7 @@ add_library(accenv
 
 target_include_directories(accenv PRIVATE ..)
 target_link_libraries(accenv PUBLIC Arcane::arcane_core)
+target_link_libraries(accenv PRIVATE mahyco_config)
 install(TARGETS accenv EXPORT ${MAHYCO_EXPORT_TARGET})
 
 arcane_accelerator_enable()

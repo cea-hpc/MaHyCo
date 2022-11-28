@@ -15,6 +15,7 @@ UtilesRemap.cc
 
 target_include_directories(Remap PRIVATE ..)
 target_link_libraries(Remap PUBLIC Arcane::arcane_core)
+target_link_libraries(Remap PRIVATE mahyco_config)
 install(TARGETS Remap EXPORT ${MAHYCO_EXPORT_TARGET})
 
 arcane_accelerator_enable()

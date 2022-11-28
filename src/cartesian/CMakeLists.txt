@@ -46,6 +46,7 @@ add_library(cartesian CartCartesianMeshT.h
         interface/CartesianConnectivity.h)
 target_include_directories(cartesian PRIVATE ..)
 target_link_libraries(cartesian PUBLIC Arcane::arcane_core)
+target_link_libraries(cartesian PRIVATE mahyco_config)
 install(TARGETS cartesian EXPORT ${MAHYCO_EXPORT_TARGET})
 
 arcane_accelerator_enable()

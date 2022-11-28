@@ -41,6 +41,7 @@ target_link_libraries(msgpass PUBLIC Arcane::arcane_core)
 # On force is_comm_device_aware() == true
 target_compile_definitions(msgpass PRIVATE MSG_PASS_HAS_COMM_DEVICE_AWARE)
 # fin MPI
+target_link_libraries(msgpass PRIVATE mahyco_config)
 install(TARGETS msgpass EXPORT ${MAHYCO_EXPORT_TARGET})
 
 arcane_accelerator_enable()

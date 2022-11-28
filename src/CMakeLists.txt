@@ -4,6 +4,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_FLAGS "-Werror -Wall -Wextra -pedantic -Wnon-virtual-dtor -g " CACHE STRING "" FORCE)
 
+# Pour la gestion du profiling sur accélérateur
+option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
+add_library(mahyco_config INTERFACE)
+if (WANT_PROF_ACC)
+  target_compile_definitions(mahyco_config INTERFACE PROF_ACC)
+endif()
+
+# Pour utiliser l'implémentation Arcane du cartésien
+option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
+if (WANT_IMPL_CART_ARCANE)
+  target_compile_definitions(mahyco_config INTERFACE IMPL_CART_ARCANE)
+endif()
+
 find_package(Arcane 3.7 REQUIRED)
 
 
@@ -55,34 +68,7 @@ arcane_accelerator_add_source_files(MahycoAnnexe.cc)
 arcane_accelerator_add_source_files(PrepareRemap.cc )
 arcane_accelerator_add_to_target(Mahyco)
 
-
-# Pour la gestion du profiling sur accélérateur
-option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
-if (WANT_PROF_ACC)
-  target_compile_definitions(Mahyco PRIVATE PROF_ACC)
-  target_compile_definitions(PerfectGas PRIVATE PROF_ACC)
-  target_compile_definitions(StiffenedGas PRIVATE PROF_ACC)
-  target_compile_definitions(Remap PRIVATE PROF_ACC)
-  target_compile_definitions(cartesian PRIVATE PROF_ACC)
-  target_compile_definitions(accenv PRIVATE PROF_ACC)
-  target_compile_definitions(msgpass PRIVATE PROF_ACC)
-endif()
-
-# Pour utiliser l'implémentation Arcane du cartésien
-option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
-if (WANT_IMPL_CART_ARCANE)
-  target_compile_definitions(Mahyco PRIVATE IMPL_CART_ARCANE)
-  target_compile_definitions(PerfectGas PRIVATE IMPL_CART_ARCANE)
-  target_compile_definitions(StiffenedGas PRIVATE IMPL_CART_ARCANE)
-  target_compile_definitions(Remap PRIVATE IMPL_CART_ARCANE)
-  target_compile_definitions(cartesian PRIVATE IMPL_CART_ARCANE)
-  target_compile_definitions(accenv PRIVATE IMPL_CART_ARCANE)
-  # TODO : IMPL_CART_ARCANE est un define de cartesian, pour les autres target
-  # ce define pourrait etre recupere en exprimant la dependance de la target avec
-  # cartesian
-endif()
-
-target_link_libraries(Mahyco PRIVATE casTest Remap cartesian eos accenv msgpass)
+target_link_libraries(Mahyco PRIVATE mahyco_config casTest Remap cartesian eos accenv msgpass)
 
 # Commande pour lancer via 'arcane_run'
 set(RUN_COMMAND ${ARCANE_PREFIX_DIR}/bin/arcane_run -E ${CMAKE_CURRENT_BINARY_DIR}/Mahyco)
