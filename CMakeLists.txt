@@ -7,6 +7,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS TRUE)
 
+# Pour la gestion du profiling sur accélérateur
+option(WANT_CUDA "Active le deport GPU CUDA" FALSE)
+
 # Pour utiliser l'implémentation Arcane du cartésien
 option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
 
