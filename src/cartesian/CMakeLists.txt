@@ -49,6 +49,12 @@ target_link_libraries(cartesian PUBLIC Arcane::arcane_core)
 target_link_libraries(cartesian PRIVATE mahyco_config)
 install(TARGETS cartesian EXPORT ${MAHYCO_EXPORT_TARGET})
 
+# Should not be done like this.
+# Avoid compiling cartesian library if arcane/cea/ cartesian implementation is used
+if (WANT_IMPL_CART_ARCANE)
+    target_compile_definitions(cartesian PUBLIC IMPL_CART_ARCANE)
+endif()
+
 arcane_accelerator_enable()
 arcane_accelerator_add_source_files(CartesianConnectivity.cc)
 arcane_accelerator_add_source_files(CartesianMesh.cc)
