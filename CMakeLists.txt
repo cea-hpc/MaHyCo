@@ -13,9 +13,10 @@ option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arc
 # Pour la gestion du profiling sur accélérateur
 option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
 
-enable_testing()
-
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(NONREGRESSION)
 
 include(GNUInstallDirs)
 
