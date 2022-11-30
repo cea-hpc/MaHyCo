@@ -9,6 +9,10 @@ endif ()
 
 find_package(Arcane 3.7 REQUIRED)
 
+if (WANT_CUDA AND NOT ARCANE_HAS_CUDA)
+    MESSAGE(FATAL_ERROR "WANT_CUDA enabled but Arcane was compiled without CUDA support.")
+endif()
+
 # Include module with fuction 'write_basic_package_version_file'
 include(CMakePackageConfigHelpers)
 
@@ -23,15 +27,13 @@ add_executable(Mahyco
         PrepareRemap.cc
         TypesMahyco.h)
 
-arcane_generate_axl(Mahyco)
 arcane_add_arcane_libraries_to_target(Mahyco)
+arcane_target_add_axl(Mahyco Mahyco)
 target_include_directories(Mahyco PRIVATE . ${CMAKE_CURRENT_BINARY_DIR})
-target_sources(Mahyco PRIVATE MahycoAnnexe.cc)
-target_sources(Mahyco PRIVATE PrepareRemap.cc)
 
 install(TARGETS Mahyco EXPORT ${MAHYCO_EXPORT_TARGET})
-configure_file(Mahyco.config ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
-configure_file(Mahyco.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
+configure_file(Mahyco.config ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+install(FILES Mahyco.config DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory(casTest)
 
