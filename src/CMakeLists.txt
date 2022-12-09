@@ -3,9 +3,9 @@
 add_library(mahyco_config INTERFACE)
 if (WANT_PROF_ACC)
     target_compile_definitions(mahyco_config INTERFACE PROF_ACC)
-    # Pour avoir des #warning explicites
-    target_compile_definitions(mahyco_config INTERFACE P4GPU_HAS_WARNING_INFO)
 endif ()
+# Pour avoir des #warning explicites
+target_compile_definitions(mahyco_config INTERFACE P4GPU_HAS_WARNING_INFO)
 
 find_package(Arcane)
 # Indique la version minimale de Arcane nécessaire
