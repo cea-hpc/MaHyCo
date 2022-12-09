@@ -3,6 +3,8 @@
 #include "arcane/VariableView.h"
 #include "arcane/ServiceBuilder.h"
 
+#include <accenv/IAccEnv.h>
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 

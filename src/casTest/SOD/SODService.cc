@@ -1,4 +1,5 @@
 #include "SODService.h"
+#include "../../TypesMahyco.h"
 
 void SODService::initMatMono([[maybe_unused]] Integer dim)  {
     

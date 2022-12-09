@@ -2,6 +2,7 @@
 #include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
 
+#include <accenv/IAccEnv.h>
 /**
  *******************************************************************************
  * \file remapVariables()

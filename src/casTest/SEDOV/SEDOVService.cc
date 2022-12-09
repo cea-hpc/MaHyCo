@@ -1,5 +1,6 @@
 #include "SEDOVService.h"
 
+#include "../../TypesMahyco.h"
 
 void SEDOVService::initMatMono([[maybe_unused]] Integer dim)  {
     

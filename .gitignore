@@ -39,3 +39,6 @@ build/
 
 # emacs backup files
 *~
+
+# spack
+spack-*

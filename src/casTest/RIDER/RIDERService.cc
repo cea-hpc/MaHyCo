@@ -1,5 +1,6 @@
 #include "RIDERService.h"
 
+#include "../../TypesMahyco.h"
 
 void RIDERService::initMatMono([[maybe_unused]] Integer dim)  {
     

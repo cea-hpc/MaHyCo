@@ -5,7 +5,6 @@
 #include "TypesMahyco.h"
 
 #include "Remap/IRemap.h"
-#include "Remap/RemapADI_axl.h"
 #include <arcane/ItemTypes.h>
 #include "arcane/IMesh.h"
 #include "arcane/IItemFamily.h"
@@ -28,15 +27,14 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "cartesian/interface/ICartesianMesh.h"
+#include "RemapADI_axl.h"
+#include "cartesian/interface/CartesianConnectivity.h"
 #include "cartesian/interface/CellDirectionMng.h"
 #include "cartesian/interface/FaceDirectionMng.h"
+#include "cartesian/interface/ICartesianMesh.h"
 #include "cartesian/interface/NodeDirectionMng.h"
-#include "cartesian/interface/CartesianConnectivity.h"
 
-#include "accenv/IAccEnv.h"
-#include "accenv/AcceleratorUtils.h"
-
+class IAccEnv;
 
 using namespace Arcane;
 using namespace Arcane::Materials;

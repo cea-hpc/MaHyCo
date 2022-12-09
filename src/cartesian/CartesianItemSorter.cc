@@ -1,5 +1,5 @@
-#include "cartesian/CartesianItemSorter.h"
-#include "cartesian/CartesianFaceId.h"
+#include "CartesianItemSorter.h"
+#include "CartesianFaceId.h"
 #include "arcane/IItemFamily.h"
 #include "arcane/IMesh.h"
 

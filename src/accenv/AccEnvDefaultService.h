@@ -7,7 +7,8 @@
 // Ces fichiers doivent être inclus avant AccEnvDefault_axl.h
 #include "accenv/AccEnvDefaultOptions.h"
 #include "msgpass/VarSyncMngOptions.h"
-#include "accenv/AccEnvDefault_axl.h"
+
+#include "AccEnvDefault_axl.h"
 
 using namespace Arcane;
 

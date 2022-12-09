@@ -3,9 +3,14 @@
 
 #include "arcane/IMesh.h"
 #include "arcane/ItemTypes.h"
+#include <arcane/ItemEnumerator.h>
 
 namespace Cartesian {
-  
+
+using Arcane::Integer;
+using Arcane::Cell;
+using Arcane::IMesh;
+using Arcane::CellEnumerator;
 
 /*---------------------------------------------------------------------------*/
 /*!

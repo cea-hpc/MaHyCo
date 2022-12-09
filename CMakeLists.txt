@@ -1,14 +1,29 @@
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-set(BUILD_SHARED_LIBS TRUE)
-if (NOT Arcane_DIR)
-  include(ArcaneCompilerConfig.cmake)
-  message(STATUS "ArcaneRoot = ${Arcane_DIR}")
-  message(STATUS "AxlstarRoot = ${Axlstar_DIR}")
-  message(STATUS "ArcconRoot = ${Arccon_DIR}")
-  message(STATUS "ArccoreRoot = ${Arccore_DIR}")
-endif()
-project(ArcaneSamples LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+# Minimum version for Arcane
 
-enable_testing()
+project(Mahyco LANGUAGES C CXX VERSION 0.1)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(BUILD_SHARED_LIBS TRUE)
+
+# Pour la gestion du profiling sur accélérateur
+option(WANT_CUDA "Active le deport GPU CUDA" FALSE)
+
+# Pour utiliser l'implémentation Arcane du cartésien
+option(WANT_IMPL_CART_ARCANE "Utilisation de l'implémentation Arcane:: dans arcane/cea/" FALSE)
+
+# Pour la gestion du profiling sur accélérateur
+option(WANT_PROF_ACC "Active le profiling des points d'entrées pour accélérateur" FALSE)
 
 add_subdirectory(src)
+
+enable_testing()
+add_subdirectory(NONREGRESSION)
+
+include(GNUInstallDirs)
+
+install(DIRECTORY NONREGRESSION/
+  DESTINATION share/cases
+  PATTERN "output" EXCLUDE
+  )

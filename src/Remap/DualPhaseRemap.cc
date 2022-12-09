@@ -1,6 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
+#include "accenv/IAccEnv.h"
 #include "cartesian/FactCartDirectionMng.h"
 
 
