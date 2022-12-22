@@ -150,6 +150,34 @@ class MultiEnvData {
 };
 
 /*---------------------------------------------------------------------------*/
+/* Accès aux données en lecture d'une variable multi-env sans protection     */
+/*---------------------------------------------------------------------------*/
+template<typename value_type, typename value_type_ptr>
+class ConstMultiEnvDataP {
+ public:
+  ConstMultiEnvDataP(value_type_ptr* dta) :
+    m_var_menv_data (dta)
+  {
+  }
+
+  ARCCORE_HOST_DEVICE ConstMultiEnvDataP(const ConstMultiEnvDataP<value_type, value_type_ptr>& rhs) :
+    m_var_menv_data (rhs.m_var_menv_data)
+  {
+  }
+
+  ARCCORE_HOST_DEVICE value_type operator[](const EnvVarIndex& evi) const {
+    return m_var_menv_data[evi.arrayIndex()][evi.valueIndex()];
+  }
+
+  auto data() {
+    return m_var_menv_data;
+  }
+
+ public:
+  value_type_ptr* m_var_menv_data; //!< Les données non gardées en 2 dimensions
+};
+
+/*---------------------------------------------------------------------------*/
 /* Pour créer des vues non protégées sur une variable multi-environnement    */
 /*---------------------------------------------------------------------------*/
 template<typename value_type>
@@ -226,6 +254,91 @@ class MultiEnvDataVar {
 };
 
 /*---------------------------------------------------------------------------*/
+/* Pour créer des vues const sur une variable multi-environnement            */
+/*---------------------------------------------------------------------------*/
+template<typename value_type>
+class ConstMultiEnvDataVar {
+ public:
+  using value_type_ptr = value_type*;
+  using const_value_type_ptr = const value_type_ptr;
+
+ public:
+  ConstMultiEnvDataVar(const CellMaterialVariableScalarRef<value_type>& var_menv, IMeshMaterialMng* mm,
+      eMemoryRessource mem_res = eMemoryRessource::UnifiedMemory) :
+   m_buf_addr(platform::getDataMemoryRessourceMng()->getAllocator(mem_res), 
+       mm->environments().size()+1)
+  {
+    m_view_buf_addr = m_buf_addr.view();
+    m_var_menv_impl = _viewFromBuf(m_view_buf_addr);
+
+    _initViewFromVar(var_menv, mm);
+  }
+
+  // Allocation mais pas encore d'association à une variable multi-env
+  ConstMultiEnvDataVar(IMeshMaterialMng* mm, eMemoryRessource mem_res) :
+   m_buf_addr(platform::getDataMemoryRessourceMng()->getAllocator(mem_res), 
+       mm->environments().size()+1)
+  {
+    m_view_buf_addr = m_buf_addr.view();
+    m_var_menv_impl = _viewFromBuf(m_view_buf_addr);
+  }
+
+  // A partir d'un buffer déjà existant
+  ConstMultiEnvDataVar(const CellMaterialVariableScalarRef<value_type>& var_menv, IMeshMaterialMng* mm,
+      ArrayView<Int64> buf_addr) 
+  {
+    m_view_buf_addr = buf_addr;
+    m_var_menv_impl = _viewFromBuf(m_view_buf_addr);
+
+    _initViewFromVar(var_menv, mm);
+  }
+
+  ConstMultiEnvDataVar(ArrayView<Int64> buf_addr) 
+  {
+    m_view_buf_addr = buf_addr;
+    m_var_menv_impl = _viewFromBuf(m_view_buf_addr);
+  }
+
+  // Copie asynchrone de h_var_menv (sur hôte)
+  void asyncCpy(ConstMultiEnvDataVar<value_type>& h_var_menv, Ref<RunQueue> queue) {
+    value_type** h_menv_var_vw = h_var_menv.span().data(); // Vue sur l'hôte
+    void* d_dst     = static_cast<void*>(m_var_menv_impl.data()); // adresse sur device
+    void* h_src     = static_cast<void*>(h_menv_var_vw);
+    Int64 sz = m_var_menv_impl.size()*sizeof(value_type*);
+    queue->copyMemory(ax::MemoryCopyArgs(d_dst, h_src, sz).addAsync());
+  }
+
+  //! Pour y accéder en lecture
+  auto span() {
+    return ConstMultiEnvDataP<value_type, const_value_type_ptr>(m_var_menv_impl.data());
+  }
+
+ protected:
+
+  ArrayView<const_value_type_ptr> _viewFromBuf(ArrayView<Int64> buf_addr) {
+    void* base_ptr_v = static_cast<void*>(buf_addr.data());
+    const_value_type_ptr* base_ptr = static_cast<const_value_type_ptr*>(base_ptr_v);
+    return ArrayView<const_value_type_ptr>(buf_addr.size(), base_ptr);
+  }
+
+  void _initViewFromVar(const CellMaterialVariableScalarRef<value_type>& var_menv, 
+      IMeshMaterialMng* mm) {
+
+    m_view_buf_addr[0] = (Int64)(var_menv._internalValue()[0].data());
+    ENUMERATE_ENV(ienv, mm) {
+      IMeshEnvironment* env = *ienv;
+      Integer env_id = env->id();
+      m_view_buf_addr[env_id+1] = (Int64)(envView(var_menv,env).data());
+    }
+  }
+
+ protected:
+  UniqueArray<Int64> m_buf_addr;  //<! Int64 va être converti en value_type*
+  ArrayView<Int64> m_view_buf_addr;  //<! pointe vers m_buf_addr ou un buf_addr extérieur
+  ArrayView< const_value_type_ptr > m_var_menv_impl; //!< Pointe vers m_view_buf_addr
+};
+
+/*---------------------------------------------------------------------------*/
 /* Pour créer des vues non protégées sur une variable multi-environnement en */
 /* mémoires Host et Device                                                   */
 /*---------------------------------------------------------------------------*/
@@ -252,6 +365,35 @@ class MultiEnvVarHD {
  protected:
   MultiEnvDataVar<value_type> m_menv_var_h;  //! View in HOST memory on multi-mat data
   MultiEnvDataVar<value_type> m_menv_var_d;  //! View in DEVICE memory on multi-mat data
+};
+
+/*---------------------------------------------------------------------------*/
+/* Pour créer des vues const sur une variable multi-environnement en         */
+/* mémoires Host et Device                                                   */
+/*---------------------------------------------------------------------------*/
+template<typename value_type>
+class ConstMultiEnvVarHD {
+ public:
+  ConstMultiEnvVarHD(const CellMaterialVariableScalarRef<value_type>& var_menv,
+      BufAddrMng* bam) :
+    m_menv_var_h(var_menv, bam->materialMng(), bam->nextHostView()),
+    m_menv_var_d(bam->nextDeviceView())
+  {
+  }
+
+  //! Vue en mémoire Hôte
+  auto spanH() {
+    return m_menv_var_h.span();
+  }
+
+  //! Vue en mémoire Device
+  auto spanD() {
+    return m_menv_var_d.span();
+  }
+
+ protected:
+  ConstMultiEnvDataVar<value_type> m_menv_var_h;  //! View in HOST memory on multi-mat data
+  ConstMultiEnvDataVar<value_type> m_menv_var_d;  //! View in DEVICE memory on multi-mat data
 };
 
 /*---------------------------------------------------------------------------*/
