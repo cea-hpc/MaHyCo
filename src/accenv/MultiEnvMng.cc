@@ -21,12 +21,12 @@ MultiEnvMng::MultiEnvMng(IMeshMaterialMng* mm, ax::Runner& runner, VarSyncMng* v
   m_l_env_values_idx.resize(m_max_nb_env);
 
   m_menv_queue = new MultiAsyncRunQueue(runner, m_mesh_material_mng->environments().size());
-
-  updateMultiEnv(vsync_mng);
   
   // 6 = toutes les variables sont synchronisées simultanément
   m_mesh_material_mng->setSynchronizeVariableVersion(6);
   vsync_mng->initSyncMultiEnv(m_mesh_material_mng);
+
+  updateMultiEnv(vsync_mng);
 }
 
 MultiEnvMng::~MultiEnvMng()
@@ -313,6 +313,9 @@ Ref<RunQueue> async_set_active(Runner& runner,
 }
 
 void MultiEnvMng::setActiveItemsFromGroups(CellGroup active_cells, NodeGroup active_nodes) {
+
+  m_acc_mem_adv->setReadMostly(active_cells.view().localIds());
+  m_acc_mem_adv->setReadMostly(active_nodes.view().localIds());
 
   // Maj des tableaux m_is_active_cell et m_is_active_node de façon asynchrone
   auto ref_queue_cell = async_set_active<Cell>(m_runner, m_is_active_cell, active_cells, m_mesh_material_mng->mesh()->allCells());
