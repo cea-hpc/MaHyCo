@@ -1,6 +1,5 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
-
 /**
  *******************************************************************************
  * \file remapVariables()
@@ -69,7 +68,6 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     
   }
-  // finalisation avant remplissage des variables
   mm->forceRecompute();
   UniqueArray<Real> vol_nplus1(nb_env);
   UniqueArray<Real> density_env_nplus1(nb_env);
@@ -94,7 +92,6 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       masset += m_u_lagrange[cell][nb_env + index_env];
     }
     
-    // pinfo() << " cell " << cell.localId() << " fin des masses et volumes " << volt;
     double volt_normalise = 0.;   
     Real unsurvolt = 1./ volt;
     // normalisation des volumes + somme 
@@ -103,7 +100,6 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       vol_nplus1[index_env] *= vol * unsurvolt;
       volt_normalise += vol_nplus1[index_env];
     }
-    // info() << " cell " << cell.localId() << " fin des masses et volumes normalisées ";
     double somme_frac = 0.;
     Real unsurvol = 1. / vol;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
@@ -120,7 +116,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     Integer matcell(0);
     Integer imatpure(-1);  
     Real unsursomme_frac(0.);
-    if (somme_frac !=0.)  somme_frac = 1. / somme_frac;
+    if (somme_frac !=0.)  unsursomme_frac = 1. / somme_frac;
     index_env = 0;  
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;  
@@ -139,12 +135,11 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       m_est_mixte[cell] = 0;
       m_est_pure[cell] = imatpure;
     }
-    // pinfo() << " cell " << cell.localId() << " fin des tris pures mixtes ";
-    // on ne recalcule par les mailles à masses nulles - cas advection
+    // on ne recalcule par les mailles à masses nulles < threshold au carrée - cas advection
     // on enleve les petits fractions de volume aussi sur la fraction
     // massique et on normalise
-    Real fmasset = 0.;
-    if (masset != 0.) {
+    Real fmasset(0.);
+    if (masset > options()->threshold*options()->threshold) {
       Real unsurmasset = 1./  masset;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell;  
@@ -156,7 +151,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         }
         fmasset += m_mass_fraction[ev];
       }
-      if (fmasset!= 0.) {
+      if (fmasset != 0.) {
         Real unsurfmasset = 1. / fmasset;
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
           EnvCell ev = *ienvcell;  
@@ -171,9 +166,9 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       EnvCell ev = *ienvcell; 
       index_env = ev.environmentId();  
       density_env_nplus1[index_env] = 0.;
-      if (m_fracvol[ev] > options()->threshold)
-        density_env_nplus1[index_env] = m_u_lagrange[cell][nb_env + index_env] 
-                / vol_nplus1[index_env];
+      if (m_fracvol[ev] > options()->threshold && vol_nplus1[index_env] != 0.)
+          density_env_nplus1[index_env] = m_u_lagrange[cell][nb_env + index_env] 
+            / vol_nplus1[index_env];
       density_nplus1 += m_fracvol[ev] * density_env_nplus1[index_env];
       // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
     }
@@ -250,7 +245,6 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       }
     } 
   }   
-
   if (withDualProjection) {
   // variables aux noeuds
     ENUMERATE_NODE(inode, allNodes()){
