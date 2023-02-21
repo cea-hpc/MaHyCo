@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 
 /**
@@ -413,6 +413,7 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
                                     ) {
     
 
+  // std::cout << " Passage dans fluxPP"  << std::endl;
   Flux.fill(0.0);
   Flux_dual.fill(0.0);
 
@@ -633,6 +634,7 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
                                      RealArrayView Flux, RealArrayView Flux_dual,
                                      int nbmat, int nb_vars
                                     ) {
+  // std::cout << " Passage dans fluxPPPure"  << std::endl;
   Flux.fill(0.0);
   Flux_dual.fill(0.0);   
   Real y0plus, y0moins, xd, xg, yd, yg;
@@ -760,7 +762,8 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
   if (projectionPenteBorneDebarFix == 1) {
     // les flux d' energie se déduisent des flux de masse en utilisant 
     // une valeur moyenne de e calculée par le flux
-    // d'energie / flux de volume Celles de quantité de mouvement avec une
+    // d'energie / flux de volume
+    // Celles de quantité de mouvement avec une
     // valeur moyenne de u calculée par le flux de vitesse / flux de volume
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
