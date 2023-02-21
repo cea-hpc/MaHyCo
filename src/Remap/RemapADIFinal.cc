@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 
 /**
@@ -93,8 +93,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // somme des masses
       masset += m_u_lagrange[cell][nb_env + index_env];
     }
-    /*
-    info() << " cell " << cell.localId() << " fin des masses et volumes " << volt;*/
+    
+    // pinfo() << " cell " << cell.localId() << " fin des masses et volumes " << volt;
     double volt_normalise = 0.;   
     Real unsurvolt = 1./ volt;
     // normalisation des volumes + somme 
@@ -119,7 +119,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     // apres normamisation
     Integer matcell(0);
     Integer imatpure(-1);  
-    Real unsursomme_frac = 1. / somme_frac;
+    Real unsursomme_frac(0.);
+    if (somme_frac !=0.)  somme_frac = 1. / somme_frac;
     index_env = 0;  
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell;  
@@ -138,7 +139,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       m_est_mixte[cell] = 0;
       m_est_pure[cell] = imatpure;
     }
-    
+    // pinfo() << " cell " << cell.localId() << " fin des tris pures mixtes ";
     // on ne recalcule par les mailles à masses nulles - cas advection
     // on enleve les petits fractions de volume aussi sur la fraction
     // massique et on normalise
@@ -164,7 +165,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         }
       }
     }
-    Real density_nplus1 = 0.;
+    Real density_nplus1 = 0.;   
+    
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
       index_env = ev.environmentId();  
@@ -221,6 +223,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       index_env = ev.environmentId();  
 
       if (m_density[ev] < 0. || m_internal_energy[ev] < 0.) {
+        
         pinfo() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
                << index_env;
         pinfo() << " energie interne env " << m_internal_energy[ev] 
@@ -276,10 +279,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         Cell cell = ev.globalCell();
         m_cell_volume[ev] = m_fracvol[ev] * m_cell_volume[cell];
       }
+
     }
   }
   m_node_mass.synchronize();
- 
   // conservation energie totale lors du remap
   if (hasConservationEnergieTotale()) {
     ENUMERATE_CELL(icell, allCells()){
