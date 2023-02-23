@@ -23,4 +23,4 @@ cmake --build . -- -j16
 
 cd /home/perlatj/Workspace/MaHyCo/build/src
 cp ../../NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
-mpiexec -n 4 ./Mahyco Donnees.arc
+mpiexec -n 1 ./Mahyco Donnees.arc
