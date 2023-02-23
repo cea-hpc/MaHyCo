@@ -41,6 +41,11 @@ hydroStartInit()
       info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
       subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
+  if ((options()->remap()->hasProjectionSimplePente() == true) && options()->remap()->hasProjectionPenteBorne() == false)  {
+    info() << " Mode simple Pente activé que dans le cas ou Pente Borne est active";
+    info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
+    subDomain()->timeLoopMng()->stopComputeLoop(true);
+  }
   
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   m_dimension = mesh()->dimension(); 

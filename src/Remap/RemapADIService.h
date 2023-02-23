@@ -74,6 +74,7 @@ public:
   
   virtual Integer getOrdreProjection();
   virtual bool hasProjectionPenteBorne();
+  virtual bool hasProjectionSimplePente();    
   virtual bool hasConservationEnergieTotale();   
   virtual bool isEuler();
   

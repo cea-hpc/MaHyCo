@@ -3,6 +3,7 @@
 
 Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
+bool RemapADIService::hasProjectionSimplePente() { return options()->projectionSimplePente;}
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
 bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
 /**
@@ -20,6 +21,8 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
+      // cas 1D : on debranche la projeciton suivant Y
+      if (idir == 1) continue;
       
       info() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
@@ -166,7 +169,6 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
         limiter = options()->projectionLimiteurPureId;
       // calcul de m_grad_phi[cell] 
       computeAndLimitGradPhi(limiter, frontFace, backFace, cell, frontcell, backcell, nb_vars_to_project);
-      
 
       if (options()->projectionPenteBorne == 1) {
         // if (cstmesh->cylindrical_mesh) exy = varlp->faceNormal(flFaces);

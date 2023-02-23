@@ -154,6 +154,10 @@
   <simple name="projection-pente-borne" type="bool" default="false">
     <description> projection avec l'algorithme pente-borne </description>
   </simple>
+  <!-- - - - - projection-simple-pente- - - - - -->
+  <simple name="projection-simple-pente" type="bool" default="false">
+    <description> projection avec l'algorithme pente-borne mais en simple pente</description>
+  </simple>
   <!-- - - - - projection-pente-borne- - - - - -->
   <simple name="projection-pente-borne-debar-fix" type="integer" default="0">
     <description> projection avec l'algorithme pente-borne en evitant l'artefact de debar avec la valeur moyenne (1) ou valeur aux mailles (2) </description>

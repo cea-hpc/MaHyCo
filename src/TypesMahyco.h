@@ -64,14 +64,14 @@ enum Test {
   };
   
   enum limiteur {
-    minmod, 
-    superBee,
-    vanLeer ,
-    minmodG ,
-    superBeeG,
-    vanLeerG,
-    arithmeticG,
-    ultrabeeG,
+    minmod = 0, 
+    superBee = 1,
+    vanLeer = 2,
+    minmodG = 3,
+    superBeeG = 4,
+    vanLeerG = 5,
+    arithmeticG = 6,
+    ultrabeeG = 7,
   }; 
 #endif
 

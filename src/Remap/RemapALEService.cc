@@ -3,6 +3,7 @@
 
 Integer RemapALEService::getOrdreProjection() { return options()->ordreProjection;}
 bool RemapALEService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
+bool RemapALEService::hasProjectionSimplePente() { return options()->projectionSimplePente;}
 bool RemapALEService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
 bool RemapALEService::isEuler() {return options()->getIsEulerScheme();}
 /**

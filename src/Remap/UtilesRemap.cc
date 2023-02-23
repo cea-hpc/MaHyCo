@@ -127,7 +127,7 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
                            Real gradmoins, Real y0, Real yplus,
                            Real ymoins, Real h0, Real hplus,
                            Real hmoins) {
-  Real grady, gradM, gradMplus, gradMmoins;
+  Real grady, gradM, gradMplus, gradMmoins, gradyl;
   // limitation rupture de pente (formule 16 si on utilise pas le plateau pente)
   if (gradplus * gradmoins < 0.0) return 0.;
 
@@ -159,15 +159,22 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
     Real lambdamoins = (h0 / 2. + hmoins) / (h0 + hplus + hmoins);
     grady = lambdamoins * gradplus + lambdaplus * gradmoins;
   }
-  // limitation simple-pente (formule 10)
-  gradMplus = gradplus * (h0 + hplus) / h0;
-  gradMmoins = gradmoins * (h0 + hmoins) / h0;
-  gradM = std::min(fabs(gradMplus), fabs(gradMmoins));
-  if ((yplus - ymoins) > 0.)
-    grady = std::min(fabs(gradM), fabs(grady));
-  else
-    grady = -std::min(fabs(gradM), fabs(grady));
-
+  // Cas ou on force la simple pente (monotonie et TVD) 
+  // mais on veut rentrer dans le calcul des flux à l'ordre 2 en temps 
+  // c'est à dire avec la méthode Pente-Borne du calcul des flux
+  if (options()->projectionSimplePente) {
+    // limitation simple-pente (formule 10)  
+    gradMplus = gradplus * (h0 + hplus) / h0;
+    gradMmoins = gradmoins * (h0 + hmoins) / h0;
+    gradM = std::min(fabs(gradMplus), fabs(gradMmoins));
+    if ((yplus - ymoins) > 0.)
+    gradyl = std::min(fabs(gradM), fabs(grady));
+    else
+    gradyl = -std::min(fabs(gradM), fabs(grady));
+    // pinfo() << "limiteur utilisé ?";
+    //if (gradyl != grady) pinfo() << "limiteur actif" << gradyl << " au lieu " << grady;
+    grady =  gradyl;
+  }
   return grady;
 }
 /**
@@ -225,6 +232,14 @@ Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
     y0plus = yplus;
     y0moins = ymoins;
   }
+  // Cas ou on force la simple pente (monotonie et TVD) 
+  // mais on veut rentrer dans le calcul des flux à l'ordre 2 en temps 
+  // c'est à dire avec la méthode Pente-Borne du calcul des flux
+  if (options()->projectionSimplePente) {
+    y0plus = yplus;
+    y0moins = ymoins;
+  }
+      
   if (type == 0)
     return y0plus;
   else if (type == 1)
@@ -255,6 +270,7 @@ Real RemapADIService::computexgxd(Real y0, Real yplus,
     xmoins = (y0 - ymoins) / (y0moins - ymoins) - 1. / 2.;
   xd = +h0 * math::min(math::max(xplus, -1. / 2.), 1. / 2.);
   xg = -h0 * math::min(math::max(xmoins, -1. / 2.), 1. / 2.);
+  // if (xd != h0/2.) pinfo() << " xg=" << xg << " xd=" << xd << " et h0/2=" << h0/2.;
   if (type == 0)
     return xg;
   else if (type == 1)
