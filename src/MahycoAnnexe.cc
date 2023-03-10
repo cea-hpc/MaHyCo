@@ -37,7 +37,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
     info() << "Environment cree";
     saved_envs.add(env);
     // Le bloc ne contient que 2 milieux
-    if (i<2){
+    if (i<3){
       info() << "Add environment " << env_name << " to block1";
       mbbi.addEnvironment(env);
     }
@@ -96,9 +96,12 @@ void MahycoModule::hydroStartInitEnvAndMat()
       mat_indexes[0].add(icell.itemLocalId());
     } else if (m_materiau[icell] == 1.) {
       mat_indexes[1].add(icell.itemLocalId());
+    } else if (m_materiau[icell] == 2.) {
+      mat_indexes[2].add(icell.itemLocalId());
     } else {
       mat_indexes[0].add(icell.itemLocalId());
       mat_indexes[1].add(icell.itemLocalId());
+      mat_indexes[2].add(icell.itemLocalId());
     }
         
   }

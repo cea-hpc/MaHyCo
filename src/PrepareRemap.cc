@@ -115,8 +115,9 @@ void MahycoModule::computeVariablesForRemap()
       // // energie cinetique centree
       m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
       // // Pseudo partiel pour la quantité de mouvement
-      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
-//       if (cell.localId() == 754) info() << cell.localId() << " pseudo avant proj " << m_pseudo_viscosity[ev] 
+      // m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
+      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
+        
 //            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
@@ -130,7 +131,8 @@ void MahycoModule::computeVariablesForRemap()
         m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
         m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
         
-        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
+        // m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
+        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[cell];
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];

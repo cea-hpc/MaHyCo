@@ -16,7 +16,7 @@
  */
 void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
-  debug() << " Entree dans remapVariables";
+  info() << " Entree dans remapVariables";
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
@@ -33,10 +33,12 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       cells_marker[icell.localId()] = 0;
     }
     ENUMERATE_CELL(icell, allCells()){
-      if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) < options()->threshold 
+      if (((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) < options()->threshold ||(m_u_lagrange[icell][nb_env + index_env] == 0. && withDualProjection))
           && cells_marker[icell.localId()] == 0) {
+        // m_u_lagrange[icell][nb_env + index_env] == 0. && !withDualProjection signifie 
+        // masse nulle et cas avec lagrange i.e. pas dans le cas d'une advection pure dans le vide
         cells_to_remove.add(icell.localId());
-        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+        info() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
       } else if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) > options()->threshold 
           && cells_marker[icell.localId()] == -1) {  
         // verification que le volume normaliseé fournit une fraction de volume au-dessus du threshold             
@@ -50,7 +52,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
             && m_u_lagrange[icell][nb_env + index_env] != 0.) {
           cells_to_add.add(icell.localId());
           debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
-            << " ajoutée dans l'env apres normalisation" << env->name();
+            << " ajoutée dans l'env apres normalisation" << env->name() << " d'index " << index_env;
           debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
           debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell];
           debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
@@ -170,6 +172,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           density_env_nplus1[index_env] = m_u_lagrange[cell][nb_env + index_env] 
             / vol_nplus1[index_env];
       density_nplus1 += m_fracvol[ev] * density_env_nplus1[index_env];
+      if (cell.localId() == -1) pinfo() << cell.localId() << " calcul density moy env " << index_env << " et density " << density_env_nplus1[index_env] << " fraction " << m_fracvol[ev] << " m_u_lagrange[cell][nb_env + index_env] " <<  m_u_lagrange[cell][nb_env + index_env] << " et vol " << vol_nplus1[index_env];
       // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
     }
     Real energie_nplus1 = 0.;
@@ -187,6 +190,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     // mise à jour des valeurs moyennes aux allCells
     // densite
     m_density[cell] = density_nplus1;
+    if (cell.localId() == -1) pinfo() << cell.localId() << " apres proj density " << m_density[cell];
     // pinfo() << cell.localId() << " apres proj " << m_u_lagrange[cell];
     // recalcul de la masse
     m_cell_mass[cell] = m_euler_volume[cell] * density_nplus1;
@@ -207,6 +211,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // energie interne totale
       energie_nplus1 += m_mass_fraction[ev] * m_internal_energy[ev];
       pseudo_nplus1 += m_fracvol[ev] * m_pseudo_viscosity[ev];
+      if (cell.localId() == -1) pinfo() << cell.localId() << " apres proj env " << index_env << " et density " << m_density[ev];
     }
     // energie interne
     m_internal_energy[cell] = energie_nplus1;
@@ -275,6 +280,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       }
 
     }
+  } 
+  if (isEuler()) {
+      // info() << " recopie des valeurs initiales pour les sorties ";
+      m_node_coord.copy(m_node_coord_0);
   }
   m_node_mass.synchronize();
   // conservation energie totale lors du remap

@@ -15,6 +15,8 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
     EnvCell ev = *ienvcell;   
     Real pressure = m_pressure[ev];
     Real density = m_density[ev];
+    Cell cell = ev.globalCell();
+    info() << " cell localId " << cell.localId() << " pressure " << pressure << " density " << density;
     m_internal_energy[ev] = pressure / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
   }

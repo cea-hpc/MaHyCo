@@ -95,6 +95,7 @@ hydroStartInit()
         }
     }
   }
+  info() << " Apres passage dans EOS ";
   // initialisation du volume Euler
   ENUMERATE_CELL(icell,allCells()){
     Cell cell = *icell;
@@ -262,7 +263,10 @@ saveValuesAtN()
   m_cell_cqs_n.copy(m_cell_cqs);
   
   if (!options()->sansLagrange) m_velocity_n.copy(m_velocity);
-  if (options()->withProjection && options()->remap()->isEuler()) m_node_coord.copy(m_node_coord_0);
+  if (options()->withProjection && options()->remap()->isEuler()) {
+      // info() << " recopie des valeurs initiales ";
+      m_node_coord.copy(m_node_coord_0);
+  }
  
 }    
 /*---------------------------------------------------------------------------*/
@@ -486,7 +490,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
-  debug() << " Entree dans updatePosition()";
+  info() << " Entree dans updatePosition()";
   Real deltat = m_global_deltat();
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
@@ -655,8 +659,9 @@ computeGeometricValues()
       volume /= m_dimension;
       
       m_cell_volume[cell] = volume;
-    }
     
+      if (volume < 0.) info() << cell.localId() << " : " << " calcul du volume=" << volume;
+    }
     // Calcule la longueur caractéristique de la maille.
     {
         if (options()->longueurCaracteristique() == "faces-opposees")
@@ -711,6 +716,8 @@ computeGeometricValues()
       }
     }
   }
+  
+  info() << my_rank << " : " << " Fin de computeGeometricValues() ";
 }
 /**
  *******************************************************************************
@@ -728,6 +735,7 @@ computeGeometricValues()
 void MahycoModule::
 updateDensity()
 {
+  debug() << " Rentrée dans updatedensity";
   if (options()->sansLagrange) return;
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
   ENUMERATE_ENV(ienv,mm){
@@ -778,6 +786,7 @@ updateDensity()
 void MahycoModule::
 updateEnergyAndPressure()
 {
+  debug() << " Rentrée dans updateEnergyAndPressure";
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
   else

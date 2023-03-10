@@ -101,7 +101,7 @@ private:
   /**
    * calcul des valeurs aux cellules 
    **/
-   void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+   void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env, Integer withDualProjection);
 
   /**
    * fonction pour la phase de projection duales

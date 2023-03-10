@@ -23,7 +23,7 @@ enum Test {
     // cas test
      UnitTestCase = 0,
      Sedov = 1,
-     TriplePoint = 2,
+     MonoTriplePoint = 2,
      SodCaseX = 3,
      SodCaseY = 4,
      SodCaseZ = 5,

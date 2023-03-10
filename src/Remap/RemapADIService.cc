@@ -22,22 +22,26 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       // cas 1D : on debranche la projeciton suivant Y
-      if (idir == 1) continue;
+      // if (idir == 1) continue;
       
       info() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
+      info() << " after computeGradPhiFace " << idir;
       // calcul des gradients des quantites à projeter aux cellules
       // (avec limiteur ordinaire) 
       // et pour le pente borne, calcul des flux aux faces des cellules
       computeGradPhiCell(idir, nb_vars_to_project, nb_env);
+      info() << " after  computeGradPhiCell " << idir;
       // calcul de m_phi_face
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
       computeUpwindFaceQuantitiesForProjection(idir, nb_vars_to_project, nb_env);
+      info() << " after  computeUpwindFaceQuantitiesForProjection " << idir;
       
       
-      computeUremap(idir, nb_vars_to_project, nb_env);
+      computeUremap(idir, nb_vars_to_project, nb_env, withDualProjection);
+      info() << " after  computeUremap " << idir;
       synchronizeUremap();
       
       if (withDualProjection) {
@@ -50,6 +54,9 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
+    info() << " after  remapVariables " ;
+    
+    
 }
 /**
  *******************************************************************************/
@@ -249,7 +256,6 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
       DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
       Cell cellf = dir_face.nextCell();
-      
       // phiFace1 correspond
       // à la valeur de phi(x) à la face pour l'ordre 2 sans plateau pente
       // à la valeur du flux (integration de phi(x)) pour l'ordre 2 avec
@@ -337,6 +343,7 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
      }
   }
   m_phi_face.synchronize();      
+  debug() << " fin de computeUpwindFaceQuantitiesForProjection()";
 }
 /**
  *******************************************************************************
@@ -349,9 +356,9 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
  * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
-void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
+void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env, Integer withDualProjection) {
     
-    debug() << " Entree dans computeUremap()";
+    debug() << " Entree dans computeUremap " << nb_vars_to_project << " " << nb_env;
     Real3 dirproj = {0.5 * (1-idir) * (2-idir), 
                    1.0 * idir * (2 -idir), 
                    -0.5 * idir * (1 - idir)};  
@@ -394,6 +401,30 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
        // m_dual_phi_flux[cell][ivar] = 0.5 * flux_face[ivar]; 
         m_u_lagrange[cell][ivar] -= flux_face[ivar];
       }
+      
+      if (options()->projectionPenteBorne == 1 && withDualProjection) {
+        // dans le cas du pente borne i.e. projection d'ordre 2 en temps
+        // on peut obtenir les volumes, masses ou energies projetes tres faible 
+        // on les tronque
+        // info() << "rentrée ici que pour les cas avec lagrange : pas les advections dans le vide" ;
+        for (int imat = 0; imat < nbmat; imat++) {
+            if (m_u_lagrange[cell][imat] <  1. * options()->threshold) {
+                m_u_lagrange[cell][imat] = 0.;
+                m_u_lagrange[cell][nbmat + imat] = 0.;        
+                m_u_lagrange[cell][2 * nbmat + imat] = 0.;
+            } 
+            if (m_u_lagrange[cell][nbmat + imat] <  1. * options()->threshold) {
+                m_u_lagrange[cell][imat] = 0.;
+                m_u_lagrange[cell][nbmat + imat] = 0.;        
+                m_u_lagrange[cell][2 * nbmat + imat] = 0.;
+            }
+            if (m_u_lagrange[cell][2*nbmat + imat] <  1. * options()->threshold) {
+                m_u_lagrange[cell][imat] = 0.;
+                m_u_lagrange[cell][nbmat + imat] = 0.;        
+                m_u_lagrange[cell][2 * nbmat + imat] = 0.;
+            }
+        }
+      } 
       // diagnostics et controle
       for (int imat = 0; imat < nbmat; imat++) {
         if (m_u_lagrange[cell][nbmat + imat] < 0.) {
@@ -402,6 +433,8 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
                     << " proj 1 --masse tres faiblement negative   "
                     << " soit " << m_u_lagrange[cell][nbmat + imat]
                     << " et volume " << m_u_lagrange[cell][imat];
+                    
+          // m_u_lagrange[cell][imat] = 0.;
           m_u_lagrange[cell][nbmat + imat] = 0.;
         }
         if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
@@ -409,6 +442,8 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
             info() << " cell " << cell.localId()
                     << " --energie tres faiblement negative "
                     << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
+          // m_u_lagrange[cell][imat] = 0.;
+          // m_u_lagrange[cell][nbmat + imat] = 0.;
           m_u_lagrange[cell][2 * nbmat + imat] = 0.;
         }
       }
@@ -417,6 +452,8 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
       for (int imat = 0; imat < nbmat; imat++) {
         somme_volume += m_u_lagrange[cell][imat];
       }
+          
+ 
       if (options()->projectionPenteBorne == 1) {
         // option ou on ne regarde pas la variation de rho, V et e
         // phi = (f1, f2, rho1*f1, rho2*f2, Vx, Vy, e1, e2
