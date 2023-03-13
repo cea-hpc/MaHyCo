@@ -16,7 +16,7 @@
  */
 void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
   
-  info() << " Entree dans remapVariables";
+  debug() << " Entree dans remapVariables";
   mm = IMeshMaterialMng::getReference(mesh());
   CellToAllEnvCellConverter all_env_cell_converter(mm);
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();

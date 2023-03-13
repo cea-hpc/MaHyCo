@@ -310,6 +310,8 @@
       <enumvalue genvalue="TypesMahyco::VelocityX" name="Vx" />
       <enumvalue genvalue="TypesMahyco::VelocityY" name="Vy" />
       <enumvalue genvalue="TypesMahyco::VelocityZ" name="Vz" />
+      <enumvalue genvalue="TypesMahyco::Density" name="Density" />
+      <enumvalue genvalue="TypesMahyco::Pressure" name="Pressure" />
     </enumeration>
 
     <simple name="surface" type="string">

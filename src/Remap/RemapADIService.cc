@@ -24,24 +24,24 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       // cas 1D : on debranche la projeciton suivant Y
       // if (idir == 1) continue;
       
-      info() << " projection direction " << idir;
+      // info() << " projection direction " << idir;
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
-      info() << " after computeGradPhiFace " << idir;
+      // info() << " after computeGradPhiFace " << idir;
       // calcul des gradients des quantites à projeter aux cellules
       // (avec limiteur ordinaire) 
       // et pour le pente borne, calcul des flux aux faces des cellules
       computeGradPhiCell(idir, nb_vars_to_project, nb_env);
-      info() << " after  computeGradPhiCell " << idir;
+      // info() << " after  computeGradPhiCell " << idir;
       // calcul de m_phi_face
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
       computeUpwindFaceQuantitiesForProjection(idir, nb_vars_to_project, nb_env);
-      info() << " after  computeUpwindFaceQuantitiesForProjection " << idir;
+      // info() << " after  computeUpwindFaceQuantitiesForProjection " << idir;
       
       
       computeUremap(idir, nb_vars_to_project, nb_env, withDualProjection);
-      info() << " after  computeUremap " << idir;
+      // info() << " after  computeUremap " << idir;
       synchronizeUremap();
       
       if (withDualProjection) {
@@ -54,8 +54,7 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
-    info() << " after  remapVariables " ;
-    
+    // info() << " after  remapVariables " ;
     
 }
 /**
@@ -87,6 +86,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  *******************************************************************************
  */
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
+  
   debug() << " Entree dans computeGradPhiFace()";
   m_h_cell_lagrange.fill(0.0);
   

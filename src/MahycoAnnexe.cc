@@ -143,6 +143,11 @@ void MahycoModule::PrepareFaceGroup() {
       maxCoor.y = std::max(maxCoor.y, m_node_coord[inode].y);
       maxCoor.z = std::max(maxCoor.z, m_node_coord[inode].z);
   }
+  maxCoor.x = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.x);
+  maxCoor.y = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.y);
+  maxCoor.z = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.z);
+  
+  info() << " Valeur Max " << maxCoor;
   ENUMERATE_FACE(iface, allFaces()){
      const Face& face = *iface;
      Integer face_local_id = face.localId();
@@ -162,6 +167,9 @@ void MahycoModule::PrepareFaceGroup() {
          if (math::abs(m_node_coord[inode].x - maxCoor.x) > options()->threshold) flag_xmax = false;
          if (math::abs(m_node_coord[inode].y - maxCoor.y) > options()->threshold) flag_ymax = false;
          if (math::abs(m_node_coord[inode].z - maxCoor.z) > options()->threshold) flag_zmax = false;
+         //if (maxCoor.x > m_node_coord[inode].x) flag_xmax = false;
+         //if (maxCoor.y > m_node_coord[inode].y) flag_ymax = false;
+         //if (maxCoor.z > m_node_coord[inode].z) flag_zmax = false;
      }
      if (flag_x0 == true) face_x0_lid.add(face_local_id);
      if (flag_y0 == true) face_y0_lid.add(face_local_id);
@@ -177,9 +185,10 @@ void MahycoModule::PrepareFaceGroup() {
    FaceGroup facexmin = mesh()->faceFamily()->findGroup("XMIN");
    FaceGroup faceymin = mesh()->faceFamily()->findGroup("YMIN");
    FaceGroup facezmin = mesh()->faceFamily()->findGroup("ZMIN");
-   info() << " taille x 0 " << facexmin.size();
-   info() << " taille y 0 " << faceymin.size();
-   info() << " taille z 0 " << facezmin.size();
+   pinfo() << " taille x 0 " << facexmin.size();
+   pinfo() << " taille y 0 " << faceymin.size();
+   pinfo() << " taille z 0 " << facezmin.size();
+   pinfo() << " thresold " << options()->threshold;
    
    mesh()->faceFamily()->createGroup("XMAX", face_xmax_lid,true);
    mesh()->faceFamily()->createGroup("YMAX", face_ymax_lid,true);
@@ -187,12 +196,13 @@ void MahycoModule::PrepareFaceGroup() {
    FaceGroup facexmax = mesh()->faceFamily()->findGroup("XMAX");
    FaceGroup faceymax = mesh()->faceFamily()->findGroup("YMAX");
    FaceGroup facezmax = mesh()->faceFamily()->findGroup("ZMAX");
-   info() << " taille x max " << facexmax.size();
-   info() << " taille y max " << faceymax.size();
-   info() << " taille z max " << facezmax.size();
+   pinfo() << " taille x max " << facexmax.size();
+   pinfo() << " taille y max " << faceymax.size();
+   pinfo() << " taille z max " << facezmax.size();
    
  
    info() << " nombre total de face " << allFaces().size();
    
    info() << " creation des groupes de dimension " << m_dimension;
+   
 } 

@@ -223,7 +223,9 @@ void MahycoModule::
 saveValuesAtN()
 {
   debug() << " Entree dans saveValuesAtN()";
-
+  
+  applyBoundaryConditionForCellVariables();
+  
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
@@ -283,7 +285,7 @@ computeArtificialViscosity()
     ENUMERATE_ENVCELL(ienvcell,env){
       EnvCell ev = *ienvcell;
       Cell cell = ev.globalCell();
-      m_pseudo_viscosity[ev] = 0.;     
+      m_pseudo_viscosity[ev] = 0.;   
       if (m_div_u[cell] < 0.0) {
         m_pseudo_viscosity[ev] = 1. / m_tau_density[ev]
           * (-0.5 * m_caracteristic_length[cell] * m_sound_speed[cell] * m_div_u[cell]
@@ -490,7 +492,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
-  info() << " Entree dans updatePosition()";
+  debug() << " Entree dans updatePosition()";
   Real deltat = m_global_deltat();
   ENUMERATE_NODE(inode, allNodes()){
     Node node = *inode;
@@ -533,6 +535,7 @@ applyBoundaryCondition()
         switch (type){
         case TypesMahyco::VelocityX:
           velocity.x = value;
+          // pinfo() << NomBC << " cellule pos " << m_node_coord[node] << " valeur " << value;
           break;
         case TypesMahyco::VelocityY:
           velocity.y = value;
@@ -542,6 +545,64 @@ applyBoundaryCondition()
           break;
         case TypesMahyco::Unknown:
           break;
+        }
+      }
+    }
+  }
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MahycoModule::
+applyBoundaryConditionForCellVariables()
+{
+  debug() << " Entree dans applyBoundaryConditionForCellVariables()";
+  
+  Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+  
+  for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
+    String NomBC = options()->boundaryCondition[i]->surface;
+    FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
+    Real value = options()->boundaryCondition[i]->value();
+    TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
+
+    // boucle sur les faces de la surface
+    ENUMERATE_FACE(j, face_group){
+      Face face = * j;
+      if (type == TypesMahyco::Density) {
+        Cell cell = face.backCell();
+        if (cell.localId() != -1) 
+        {
+            m_density[cell] = value;
+            m_cell_mass[cell] = m_density[cell] * m_cell_volume[cell];
+            Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
+            for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
+                m_node_mass[inode] += contrib_node_mass; 
+            }
+            // pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la densité " << m_density[cell];
+        }
+        cell = face.frontCell();
+        if (cell.localId() != -1) {
+            m_density[cell] = value;
+            m_cell_mass[cell] = m_density[cell] * m_cell_volume[cell];
+            Real contrib_node_mass = one_over_nbnode * m_cell_mass[cell];
+            for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
+                m_node_mass[inode] += contrib_node_mass; 
+            }
+            //  pinfo() << NomBC << m_cell_coord[cell] << " Cellule front rempli de la densité " << m_density[cell];
+        }
+      }
+      if (type == TypesMahyco::Pressure) {
+        Cell cell = face.backCell();
+        if (cell.localId() != -1) 
+        {
+            m_pressure[cell] = value;
+            pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la pression " << m_pressure[cell];
+        }
+        cell = face.frontCell();
+        if (cell.localId() != -1) {
+            m_pressure[cell] = value;
+            pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la pression " << m_pressure[cell];
         }
       }
     }
@@ -592,7 +653,7 @@ InitGeometricValues()
   }
 }
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
+/*---------------------------------Vitesse Z fixée------------------------------------------*/
 
 void MahycoModule::
 computeGeometricValues()
@@ -716,8 +777,6 @@ computeGeometricValues()
       }
     }
   }
-  
-  info() << my_rank << " : " << " Fin de computeGeometricValues() ";
 }
 /**
  *******************************************************************************
@@ -1049,6 +1108,9 @@ computeDeltaT()
          << " et " << m_global_deltat()
          << " et " << options()->deltatMax();
          
+  
+  applyBoundaryConditionForCellVariables();
+  
   m_global_old_deltat = m_global_deltat;
   m_old_deltat = m_global_old_deltat();
          

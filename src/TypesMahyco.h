@@ -13,6 +13,8 @@ struct TypesMahyco
     VelocityX, //!< Vitesse X fixée
     VelocityY, //!< Vitesse Y fixée
     VelocityZ, //!< Vitesse Z fixée
+    Density, //!< Densité fixée
+    Pressure, //!< Pression fixée
     Unknown //!< Type inconnu
   }; 
 };

@@ -219,7 +219,8 @@ class MahycoModule
    * possède les propriétés suivantes :
    * - un type: trois types sont supportés: contraindre la composante
    * \f$x\f$ du vecteur vitesse, contraindre la composante \f$y\f$ du vecteur
-   * vitesse ou contraindre la composante \f$z\f$ du vecteur vitesse,
+   * vitesse ou contraindre la composante \f$z\f$ du vecteur vitesse, 
+   * contrainte une variable à la maille 
    * - une valeur: il s'agit d'un réel indiquant la valeur de la
    * contrainte,
    * - une surface: il s'agit de la surface sur laquelle s'applique la
@@ -230,6 +231,7 @@ class MahycoModule
    * chaque surface sur laquelle on impose une condition aux limites.
    */		
   virtual void applyBoundaryCondition();
+  virtual void applyBoundaryConditionForCellVariables();
 		
   /**
    * Modifie les coordonnées (\c m_node_coord)

@@ -38,13 +38,17 @@ add_library(ADVECTION casTest/ADVECTION/ADVECTIONService.cc)
 target_include_directories(ADVECTION PUBLIC .)
 target_link_libraries(ADVECTION PUBLIC arcane_core)
 
+add_library(CHOCBULLE casTest/CHOCBULLE/CHOCBULLEService.cc)
+target_include_directories(CHOCBULLE PUBLIC .)
+target_link_libraries(CHOCBULLE PUBLIC arcane_core)
+
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
 
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -52,6 +56,7 @@ arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
 arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
 arcane_target_add_axl(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLE)
 arcane_target_add_axl(ADVECTION casTest/ADVECTION/ADVECTION)
+arcane_target_add_axl(CHOCBULLE casTest/CHOCBULLE/CHOCBULLE)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
