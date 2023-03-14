@@ -365,6 +365,11 @@ updateVelocity()
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
 
+  Real3 g = options()->gravity;
+  ENUMERATE_NODE(inode, allNodes()){
+    Node node = *inode;
+    m_velocity[inode] +=  dt * g;
+  }
   m_velocity.synchronize();  
 }
 /**
@@ -407,9 +412,12 @@ updateVelocityBackward()
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
 
+  Real3 g = options()->gravity;
+  ENUMERATE_NODE(inode, allNodes()){
+    Node node = *inode;
+    m_velocity[inode] +=  dt * g;
+  }
   m_velocity_n.synchronize();
-  
-
 }
 /*******************************************************************************
  * \file updateVelocityForward()
@@ -449,6 +457,12 @@ updateVelocityForward()
     SimdNode snode=*inode;
     out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode]) * in_force[snode];;
   }
+  // Ajout du terme de gravité : TODO à transformer 
+  Real3 g = options()->gravity;
+  ENUMERATE_NODE(inode, allNodes()){
+    Node node = *inode;
+    m_velocity[inode] +=  dt * g;
+  }
   m_velocity.synchronize();
 }
 /**
@@ -477,7 +491,6 @@ updateVelocityWithoutLagrange()
     out_velocity[snode] = in_velocity[snode] * (1. -option_real)
           + option_real * in_velocity[snode] * cos(Pi * m_global_time() * factor);
   }
-
   m_velocity.synchronize();
 }
 /**
@@ -535,7 +548,6 @@ applyBoundaryCondition()
         switch (type){
         case TypesMahyco::VelocityX:
           velocity.x = value;
-          // pinfo() << NomBC << " cellule pos " << m_node_coord[node] << " valeur " << value;
           break;
         case TypesMahyco::VelocityY:
           velocity.y = value;
@@ -579,7 +591,6 @@ applyBoundaryConditionForCellVariables()
             for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
                 m_node_mass[inode] += contrib_node_mass; 
             }
-            // pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la densité " << m_density[cell];
         }
         cell = face.frontCell();
         if (cell.localId() != -1) {
@@ -589,7 +600,6 @@ applyBoundaryConditionForCellVariables()
             for( NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode){
                 m_node_mass[inode] += contrib_node_mass; 
             }
-            //  pinfo() << NomBC << m_cell_coord[cell] << " Cellule front rempli de la densité " << m_density[cell];
         }
       }
       if (type == TypesMahyco::Pressure) {
@@ -597,12 +607,10 @@ applyBoundaryConditionForCellVariables()
         if (cell.localId() != -1) 
         {
             m_pressure[cell] = value;
-            pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la pression " << m_pressure[cell];
         }
         cell = face.frontCell();
         if (cell.localId() != -1) {
             m_pressure[cell] = value;
-            pinfo() << NomBC << m_cell_coord[cell] << " Cellule back rempli de la pression " << m_pressure[cell];
         }
       }
     }

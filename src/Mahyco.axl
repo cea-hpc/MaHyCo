@@ -289,6 +289,10 @@
   <simple name="threshold" type="real" default="1.e-10">
     <description>Définition de la valeur limite des petites fractions et autres </description>
   </simple>
+  <!-- - - - - - gravity - - - - -->
+  <simple name="gravity" type="real3" default="0. 0. 0.">
+    <description>Force de gravité </description>
+  </simple>
    <!-- - - - - sans-lagrange- - - - - -->
   <simple name="sans-lagrange" type="bool" default="false">
     <description> Calcul le schema Lagrange </description>
