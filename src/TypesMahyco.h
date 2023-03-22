@@ -63,6 +63,12 @@ enum Test {
      RiderVortexTimeReverse = 37,
      RiderDeformationTimeReverse = 38,
      BiSodSph = 39,
+     InstaRTX = 40,
+     InstaRTY = 41,
+     InstaRTZ = 42,
+     BiInstaRTX = 43,
+     BiInstaRTY = 44,
+     BiInstaRTZ = 45,
   };
   
   enum limiteur {
