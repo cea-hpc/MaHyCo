@@ -23,7 +23,7 @@ const double Pi = 3.14159265359;
 
 enum Test {
     // cas test
-     UnitTestCase = 0,
+     OneCell = 0,
      Sedov = 1,
      MonoTriplePoint = 2,
      SodCaseX = 3,
@@ -69,6 +69,7 @@ enum Test {
      BiInstaRTX = 43,
      BiInstaRTY = 44,
      BiInstaRTZ = 45,
+     Vortex = 46,
   };
   
   enum limiteur {

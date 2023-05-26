@@ -2,8 +2,27 @@ set(EXAMPLE_NAME Mahyco)
 project(Mahyco LANGUAGES C CXX)
 include(../mahyco.common.cmake)
 
+message(STATUS "SOURCES_SUPLEMENTAIRES=${CINETIQUE_SRC}")
+
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
+
+
+if (IS_DIRECTORY ${CINETIQUE_SRC}) 
+enable_language( Fortran )
+file( GLOB SOURCES  ${CINETIQUE_SRC}/*.f90 )
+add_library(cinetique SHARED ${SOURCES})
+target_link_libraries(cinetique PUBLIC)
+set(CINETIQUE_LIB cinetique)
+
+add_library(Autre eos/autre/AutreEOSService.cc)
+target_include_directories(Autre PUBLIC .)
+target_link_libraries(Autre  PUBLIC   arcane_core ${CINETIQUE_LIB})
+arcane_target_add_axl(Autre eos/autre/AutreEOS)
+set(AUTRE_EOS Autre)
+else()
+set(AUTRE_EOS "")
+endif()
 
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
@@ -30,6 +49,10 @@ add_library(OTHER casTest/OTHER/OTHERService.cc)
 target_include_directories(OTHER PUBLIC .)
 target_link_libraries(OTHER PUBLIC arcane_core)
 
+add_library(ONECELL casTest/ONECELL/ONECELLService.cc)
+target_include_directories(ONECELL PUBLIC .)
+target_link_libraries(ONECELL PUBLIC arcane_core)
+
 add_library(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLEService.cc)
 target_include_directories(POINTTRIPLE PUBLIC .)
 target_link_libraries(POINTTRIPLE PUBLIC arcane_core)
@@ -46,22 +69,28 @@ add_library(INSTART casTest/INSTART/INSTARTService.cc)
 target_include_directories(INSTART PUBLIC .)
 target_link_libraries(INSTART PUBLIC arcane_core)
 
+add_library(VORTEX casTest/VORTEX/VORTEXService.cc)
+target_include_directories(VORTEX PUBLIC .)
+target_link_libraries(VORTEX PUBLIC arcane_core)
+
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
+#include_directories(${MyLib_INCLUDE_DIRS})
 
-
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE INSTART Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas ${AUTRE_EOS} RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
 arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
 arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
+arcane_target_add_axl(ONECELL casTest/ONECELL/ONECELL)
 arcane_target_add_axl(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLE)
 arcane_target_add_axl(ADVECTION casTest/ADVECTION/ADVECTION)
 arcane_target_add_axl(CHOCBULLE casTest/CHOCBULLE/CHOCBULLE)
 arcane_target_add_axl(INSTART casTest/INSTART/INSTART)
+arcane_target_add_axl(VORTEX casTest/VORTEX/VORTEX)
 
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)

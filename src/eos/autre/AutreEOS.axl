@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="PerfectGasEOS" version="1.0" type="caseoption">
+<service name="AutreEOS" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service PerfectGasEOS</description>
+	<description>Jeu de données du service AutreEOS</description>
   <interface name="IEquationOfState" />
 
 	<variables>
@@ -92,8 +92,26 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
-        <!-- TEMPERATURE -->
-        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+    <!-- 	FRAC PHASE 1	 -->
+    <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 2	 -->
+    <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 3	 -->
+    <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 4	 -->
+    <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 5	 -->
+    <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 6	 -->
+    <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />  
+    <!-- TEMPERATURE -->
+    <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	</variables>
 

@@ -137,17 +137,23 @@ void MahycoModule::PrepareFaceGroup() {
   Real3 ex = {1. , 0. , 0.};
   Real3 ey = {0. , 1. , 0.};
   Real3 ez = {0. , 0. , 1.};
-  Real3 maxCoor= {-1. , -1. , -1.};
+  Real3 maxCoor= {0. , 0. , 0.};
+  Real3 minCoor= {100. , 100. , 100.};
   ENUMERATE_NODE(inode, allNodes()){
       maxCoor.x = std::max(maxCoor.x, m_node_coord[inode].x);
       maxCoor.y = std::max(maxCoor.y, m_node_coord[inode].y);
       maxCoor.z = std::max(maxCoor.z, m_node_coord[inode].z);
+      minCoor.x = std::min(minCoor.x, m_node_coord[inode].x);
+      minCoor.y = std::min(minCoor.y, m_node_coord[inode].y);
+      minCoor.z = std::min(minCoor.z, m_node_coord[inode].z);
   }
   maxCoor.x = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.x);
   maxCoor.y = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.y);
   maxCoor.z = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.z);
+  minCoor.x = parallelMng()->reduce(Parallel::ReduceMax, minCoor.x);
+  minCoor.y = parallelMng()->reduce(Parallel::ReduceMax, minCoor.y);
+  minCoor.z = parallelMng()->reduce(Parallel::ReduceMax, minCoor.z);
   
-  info() << " Valeur Max " << maxCoor;
   ENUMERATE_FACE(iface, allFaces()){
      const Face& face = *iface;
      Integer face_local_id = face.localId();
@@ -161,9 +167,9 @@ void MahycoModule::PrepareFaceGroup() {
      bool flag_ymax(true);
      bool flag_zmax(true);
      for (NodeEnumerator inode(face.nodes()); inode.index() < face.nbNode(); ++inode) {
-         if (m_node_coord[inode].x > options()->threshold)  flag_x0 = false;
-         if (m_node_coord[inode].y > options()->threshold)  flag_y0 = false;
-         if (m_node_coord[inode].z > options()->threshold)  flag_z0 = false;
+         if (math::abs(m_node_coord[inode].x - minCoor.x) > options()->threshold)  flag_x0 = false;
+         if (math::abs(m_node_coord[inode].y - minCoor.y) > options()->threshold)  flag_y0 = false;
+         if (math::abs(m_node_coord[inode].z - minCoor.z) > options()->threshold)  flag_z0 = false;
          if (math::abs(m_node_coord[inode].x - maxCoor.x) > options()->threshold) flag_xmax = false;
          if (math::abs(m_node_coord[inode].y - maxCoor.y) > options()->threshold) flag_ymax = false;
          if (math::abs(m_node_coord[inode].z - maxCoor.z) > options()->threshold) flag_zmax = false;

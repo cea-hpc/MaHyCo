@@ -1,4 +1,8 @@
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+# Minimum version for Arcane
+
+project(Mahyco LANGUAGES C CXX VERSION 0.1)
+
 set(BUILD_SHARED_LIBS TRUE)
 if (NOT Arcane_DIR)
   include(ArcaneCompilerConfig.cmake)

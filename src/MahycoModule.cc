@@ -46,7 +46,7 @@ hydroStartInit()
     info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
-  
+//  if ((options()->en
   m_cartesian_mesh = ICartesianMesh::getReference(mesh());
   m_dimension = mesh()->dimension(); 
   m_cartesian_mesh->computeDirections();
@@ -854,6 +854,18 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   debug() << " Rentrée dans updateEnergyAndPressure";
+  if (options()->energyDeposit) {
+    ENUMERATE_ENV(ienv,mm){
+      IMeshEnvironment* env = *ienv;
+      // pour l'instant, on ajoute pas d'autres option, donc  AdiabaticCst
+      Real energy_deposit = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+      ENUMERATE_ENVCELL(ienvcell,env){
+          EnvCell ev = *ienvcell;
+          m_internal_energy[ev] += energy_deposit * m_global_deltat();
+      }
+    }
+  }
+
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
   else

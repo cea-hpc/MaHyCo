@@ -93,6 +93,9 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+        <!-- TEMPERATURE -->
+        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
 	</variables>
 
 	<options>

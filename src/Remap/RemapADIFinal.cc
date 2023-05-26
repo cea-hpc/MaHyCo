@@ -38,7 +38,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         // m_u_lagrange[icell][nb_env + index_env] == 0. && !withDualProjection signifie 
         // masse nulle et cas avec lagrange i.e. pas dans le cas d'une advection pure dans le vide
         cells_to_remove.add(icell.localId());
-        info() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
+        debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
       } else if ((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) > options()->threshold 
           && cells_marker[icell.localId()] == -1) {  
         // verification que le volume normaliseé fournit une fraction de volume au-dessus du threshold             

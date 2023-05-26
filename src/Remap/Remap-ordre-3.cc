@@ -4,9 +4,16 @@
 // fonctions pour l'ordre 3
 // ----------------------------------
 // fonction pour evaluer le gradient
+/* Résumé Chatgpt
+ * La fonction "evaluate_grad" calcule le gradient d'une variable en utilisant une interpolation d'ordre 3 entre trois points de données. 
+ * Elle prend en entrée les valeurs de trois points voisins, ainsi que leurs valeurs de variable respective. 
+ * Elle renvoie le gradient de la variable.
+ */
 Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
                             Real y0, Real yp) {
   Real grad;
+  // Calcul du gradient en utilisant les poids des points voisins 
+ // et en faisant une moyenne pondérée des gradients des deux points voisins
   grad = h0 / (hm + h0 + hp) *
          ((2. * hm + h0) / (h0 + hp) * (yp - y0) +
           (h0 + 2. * hp) / (hm + h0) * (y0 - ym));
@@ -14,6 +21,13 @@ Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
 }
 // ----------------------------------
 // fonction pour évaluer ystar
+/* Résumé Chatgpt
+ * La fonction "evaluate_ystar" calcule une valeur de variable "ystar" 
+ * en utilisant une interpolation d'ordre 3 entre quatre points de données. 
+ * Elle prend en entrée les valeurs de quatre points voisins, leurs valeurs de variable respective, 
+ * ainsi que les gradients calculés à partir de la fonction "evaluate_grad". 
+ * Elle renvoie la valeur de la variable "ystar". 
+ */
 Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
                              Real ymm, Real ym, Real yp, Real ypp,
                              Real gradm, Real gradp) {
@@ -29,6 +43,12 @@ Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
 }
 // ----------------------------------
 // fonction pour évaluer fm
+/* Résumé Chatgpt
+ * La fonction "evaluate_fm" calcule une valeur de variable "fm" en utilisant une formule de remise à l'échelle de données. 
+ * Elle prend en entrée les valeurs de deux points voisins, ainsi que leurs valeurs de variable respective 
+ * et la dérivée de la variable à un point donné. 
+ * Elle renvoie la valeur de la variable "fm".
+ */
 Real RemapADIService::evaluate_fm(Real x, Real dx, Real up, Real du,
                           Real u6) {
   Real fm;
@@ -36,7 +56,15 @@ Real RemapADIService::evaluate_fm(Real x, Real dx, Real up, Real du,
   return fm;
 }
 // ----------------------------------
-// fonction pour évaluer fr
+// fonction pour évaluer fp
+/* Résumé Chatgpt
+ * La fonction "evaluate_fp" calcule une valeur de variable "fp" 
+ * en utilisant une formule de remise à l'échelle de données. 
+ * Elle prend en entrée les valeurs de deux points voisins, 
+ * ainsi que leurs valeurs de variable respective 
+ * et la dérivée de la variable à un point donné. 
+ * Elle renvoie la valeur de la variable "fp".
+ */
 Real RemapADIService::evaluate_fp(Real x, Real dx, Real um, Real du,
                           Real u6) {
   Real fp;
@@ -45,6 +73,12 @@ Real RemapADIService::evaluate_fp(Real x, Real dx, Real um, Real du,
 }
 // ----------------------------------
 // fonction pour initialiser la structure interval
+/* Résumé Chatgpt
+ * La fonction "define_interval" prend en entrée deux nombres réels "a" et "b", 
+ * et renvoie une structure de données appelée "Real2" qui représente un intervalle borné par "a" et "b". 
+ * Plus précisément, cette fonction initialise une structure "Real2" avec les bornes de l'intervalle, 
+ * où la première borne est la plus petite des deux valeurs, et la deuxième borne est la plus grande des deux valeurs.
+ */
 Real2 RemapADIService::define_interval(Real a, Real b) {
   Real2 I;
   I[0] = math::min(a, b);
@@ -53,6 +87,14 @@ Real2 RemapADIService::define_interval(Real a, Real b) {
 }
 // ----------------------------------
 // fonction pour calculer l'intersection entre deux intervals
+/* Résumé Chatgpt
+ * La  fonction "intersection" prend en entrée deux structures "Real2" qui représentent deux intervalles, 
+ * et calcule leur intersection. 
+ * Si les intervalles ne se chevauchent pas, la fonction renvoie un intervalle vide (avec les deux bornes égales à zéro). 
+ * Sinon, la fonction renvoie un intervalle qui représente l'intersection des deux intervalles d'entrée, 
+ * c'est-à-dire un nouvel intervalle borné par la borne maximale des bornes inférieures des deux intervalles d'entrée 
+ * et la borne minimale des bornes supérieures des deux intervalles d'entrée.
+*/
 Real2 RemapADIService::intersection(Real2 I1, Real2 I2) {
   Real2 I;
   if ((I1[1] < I2[0]) || (I2[1] < I1[0])) {
@@ -66,6 +108,18 @@ Real2 RemapADIService::intersection(Real2 I1, Real2 I2) {
 }
 // ----------------------------------
 // fonction pour calculer le flux
+/* Résumé Chatgpt
+ * La fonction calcule le flux à travers une interface de cellule en utilisant la méthode d'ordre 3 
+ * (également connue sous le nom de méthode MUSCL-Hancock). 
+ * Elle prend en entrée les valeurs de la fonction (et leurs dérivées) 
+ * dans les cellules avoisinantes ainsi que les largeurs de ces cellules et le temps de l'étape de discrétisation. 
+ * La fonction commence par calculer les gradients de la fonction en utilisant la méthode MUSCL-Hancock, 
+ * puis elle calcule les valeurs de la fonction aux points intermédiaires "ystar" en utilisant ces gradients. 
+ * Elle calcule ensuite les pentes aux interfaces des cellules et utilise ces pentes 
+ * pour calculer les valeurs des dérivées aux points intermédiaires "ym6" et "yp6". 
+ * Enfin, elle applique une limite TVD pour éviter la formation de discontinuités.
+ * La fonction renvoie le flux à travers l'interface de la cellule.
+ */
 Real RemapADIService::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
                                 Real ypp, Real yppp, Real hmmm,
                                 Real hmm, Real hm, Real hp, Real hpp,
