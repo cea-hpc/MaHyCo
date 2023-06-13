@@ -212,3 +212,38 @@ void MahycoModule::PrepareFaceGroup() {
    info() << " creation des groupes de dimension " << m_dimension;
    
 } 
+/**
+ *******************************************************************************
+ * \file SortieHistory()
+ * \brief Creation des groupes de faces suivant X, Y et Z
+ *******************************************************************************
+ */
+void MahycoModule::SortieHistory() {
+     
+  std::ofstream fichier("time-history.txt", std::ofstream::app );
+  // Integer period=options()->outputHistoryPeriod();
+  Integer period = 3;
+  if (fichier.is_open() && (m_global_iteration()%period)==0) {
+    fichier << " Temps " << m_global_time() << " ";
+    int i(0);
+    ENUMERATE_ENV(ienv,mm){
+      IMeshEnvironment* env = *ienv;
+        ENUMERATE_ENVCELL(ienvcell,env)
+        {
+            EnvCell ev = *ienvcell;   
+            if (i==0) {
+                fichier << m_density[ev] << " ";
+                fichier << m_internal_energy[ev] << " ";
+                fichier << m_pressure[ev] << " ";
+                fichier << m_temperature[ev] << " ";
+                fichier << m_sound_speed[ev] << " ";
+                fichier << m_frac_phase1[ev] << " ";
+                fichier << m_frac_phase2[ev] << " ";
+                fichier << m_frac_phase3[ev] << " ";
+                fichier << std::endl;
+            }
+            i++;
+        }
+    }
+  }
+}

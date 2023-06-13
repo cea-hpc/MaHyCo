@@ -36,22 +36,22 @@ extern "C" {
     
     // lecture du fichier de coef
 extern void  S_LEC_COEF(char* fich);
-extern void  TV2_CINETEST22_COUPLAGE_SINIT(float *rho_std, float *ene_std);
+extern void  TV2_CINETEST22_COUPLAGE_SINIT(double *rho_std, double *ene_std);
 extern void  TV2_S_CALC_CINE_VE(Integer *nbmail,
-                float *dtime,
-                float *rho,
-                float *ene,
-                float *Pres,
-                float *Temp,
-                float *Frac1,
-                float *Frac2,
-                float *Frac3,
-                float *Frac4,
-                float *Frac5,
-                float *Frac6,
-                float *dpde,
-                float *cs2,
-                float *conv);
+                double *dtime,
+                double *rho,
+                double *ene,
+                double *Pres,
+                double *Temp,
+                double *Frac1,
+                double *Frac2,
+                double *Frac3,
+                double *Frac4,
+                double *Frac5,
+                double *Frac6,
+                double *dpde,
+                double *cs2,
+                double *conv);
 #ifdef __cplusplus       
 }  
 #endif
@@ -94,13 +94,16 @@ public:
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env);
-
+  /** 
+   *  Renvoie la chaleur spécifique de l'environnement. 
+   */
+  virtual Real getSpecificHeatCst(IMeshEnvironment* env);
 private:
   // taille des tableaux = nombre de maille de l'environement
   Integer nbmail;
-  float *m_dtime,*m_rho,*m_ene,*m_Pres,*m_Temp;
-  float *m_Frac1,*m_Frac2,*m_Frac3,*m_Frac4,*m_Frac5,*m_Frac6;
-  float *m_pente_dpde,*m_cs2,*m_conv;
+  double *m_dtime,*m_rho,*m_ene,*m_Pres,*m_Temp;
+  double *m_Frac1,*m_Frac2,*m_Frac3,*m_Frac4,*m_Frac5,*m_Frac6;
+  double *m_pente_dpde,*m_cs2,*m_conv;
 
 };
 

@@ -60,6 +60,7 @@ void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 /*---------------------------------------------------------------------------*/
 Real StiffenedGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real StiffenedGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
+Real StiffenedGasEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

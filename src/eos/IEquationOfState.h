@@ -61,6 +61,10 @@ public:
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env) = 0;
+  /** 
+   *  Renvoie la chaleur spécifique de l'environnement. 
+   */
+  virtual Real getSpecificHeatCst(IMeshEnvironment* env) = 0;
   
 };
 

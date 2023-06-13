@@ -53,6 +53,7 @@
     <material>Mat</material>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     </eos-model>
   </environment>
   

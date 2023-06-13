@@ -56,6 +56,7 @@
     <material>ZG_mat</material>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     </eos-model> 
   </environment>
   <environment>
@@ -63,8 +64,10 @@
     <material>ZD_mat</material>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     <!-- <eos-model name="StiffenedGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>

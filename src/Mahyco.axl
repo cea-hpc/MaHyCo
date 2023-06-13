@@ -182,6 +182,7 @@
   <entry-point method-name="computePressionMoyenne" name="ComputePressionMoyenne" where="compute-loop" property="none" />
   <entry-point method-name="remap" name="Remap" where="compute-loop" property="none" />
   <entry-point method-name="computeDeltaT" name="ComputeDeltaT" where="compute-loop" property="none" /> 
+  <entry-point method-name="SortieHistory" name="SortieHistory" where="compute-loop" property="none" /> 
 </entry-points>
 
 <options>
@@ -326,6 +327,10 @@
   <simple name="with-projection" type="bool" default="true">
     <description> Calcul avec projection ADI </description>
   </simple>
+   <!-- - - - - pression-explicite- - - - - -->
+  <simple name="pression-explicite" type="bool" default="false">
+    <description> Calcul de la pression explicite </description>
+  </simple>
   <!-- - - - - - depot energie - - - - -->
   <simple name="energy-deposit" type="bool" default="false">
     <description>Valeur du dépot d'energie </description>
@@ -341,6 +346,7 @@
       <enumvalue genvalue="TypesMahyco::VelocityZ" name="Vz" />
       <enumvalue genvalue="TypesMahyco::Density" name="Density" />
       <enumvalue genvalue="TypesMahyco::Pressure" name="Pressure" />
+      <enumvalue genvalue="TypesMahyco::GeometricPressure" name="GeometricPressure" />
     </enumeration>
 
     <simple name="surface" type="string">
@@ -349,6 +355,21 @@
 
     <simple name="value" type="real">
       <description>Valeur de la composante à fixer</description>
+    </simple>
+    <simple name="dependanceX" type="real" default="0.">
+      <description>Valeur de la dependance à l'absisse </description>
+    </simple>
+    <simple name="dependanceY" type="real" default="0.">
+      <description>Valeur de la dependance à l'ordonée</description>
+    </simple> 
+    <simple name="dependanceZ" type="real" default="0.">
+      <description>Valeur de la dependance à la hauteur</description>
+    </simple>
+    <simple name="dependanceT" type="real" default="0.">
+      <description>Valeur de la dependance au temps</description>
+    </simple>
+    <simple name="cutoffT" type="real" default="0.">
+      <description>Valeur de la fin de la CDL de pression</description>
     </simple>
   </complex>
 		

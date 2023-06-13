@@ -561,6 +561,7 @@ applyBoundaryCondition()
       }
     }
   }
+  applyBoundaryConditionForCellVariables();
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -568,9 +569,11 @@ applyBoundaryCondition()
 void MahycoModule::
 applyBoundaryConditionForCellVariables()
 {
-  debug() << " Entree dans applyBoundaryConditionForCellVariables()";
+  pinfo() << " Entree dans applyBoundaryConditionForCellVariables()";
   
   Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+  
+  const Real dt(0.5 * (m_global_old_deltat() + m_global_deltat()));
   
   for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
     String NomBC = options()->boundaryCondition[i]->surface;
@@ -581,6 +584,8 @@ applyBoundaryConditionForCellVariables()
     // boucle sur les faces de la surface
     ENUMERATE_FACE(j, face_group){
       Face face = * j;
+      Integer nb_node = face.nbNode();
+      
       if (type == TypesMahyco::Density) {
         Cell cell = face.backCell();
         if (cell.localId() != -1) 
@@ -611,6 +616,28 @@ applyBoundaryConditionForCellVariables()
         cell = face.frontCell();
         if (cell.localId() != -1) {
             m_pressure[cell] = value;
+        }
+      }
+      if (type == TypesMahyco::GeometricPressure) {
+        // boucle sur les noeuds de la face
+        for (Integer k = 0; k < nb_node; ++k){
+        Node node = face.node(k);
+        Real3 normale_sortante;
+        Cell cell;
+        value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
+        value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
+        value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
+        value += options()->boundaryCondition[i]->dependanceT * m_global_time();
+        if (m_global_time() > options()->boundaryCondition[i]->cutoffT) value =0.;
+        cell = face.backCell();
+        if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+            / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+        cell = face.frontCell();
+        if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+            / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+        // pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt;
+        m_velocity[node] -= normale_sortante*value/m_node_mass[node] * dt;
+        // pinfo() << " vitesse imposée" << m_velocity[node] << " face " << normale_sortante << " dt " << dt;
         }
       }
     }
@@ -859,18 +886,26 @@ updateEnergyAndPressure()
       IMeshEnvironment* env = *ienv;
       // pour l'instant, on ajoute pas d'autres option, donc  AdiabaticCst
       Real energy_deposit = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+      int i=0;
       ENUMERATE_ENVCELL(ienvcell,env){
           EnvCell ev = *ienvcell;
+          if (i==0) pinfo() << "energie av" << m_internal_energy[ev];
           m_internal_energy[ev] += energy_deposit * m_global_deltat();
+          if (i==0) pinfo() << "energie ap" << m_internal_energy[ev];
+          i++;
       }
+      pinfo() << " Ajout de l'energie" << energy_deposit << " avec dt " <<  m_global_deltat();
     }
   }
-
-  if (options()->withNewton) 
-    updateEnergyAndPressurebyNewton();
-  else
-    updateEnergyAndPressureforGP();  
-    
+  if (options()->pressionExplicite)
+      updateEnergyAndPressureExplicite();
+  else {
+    if (options()->withNewton) 
+        updateEnergyAndPressurebyNewton();
+    else
+        updateEnergyAndPressureforGP();  
+  }
+  
   // maille mixte
   // moyenne sur la maille
   CellToAllEnvCellConverter all_env_cell_converter(mm);
@@ -885,14 +920,32 @@ updateEnergyAndPressure()
       }
     }
   }
-  if (! options()->withProjection) {
+  if (! options()->withProjection ) {
     // Calcul de la Pression si on ne fait pas de projection 
-    for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+    if (! options()->pressionExplicite)
+      for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
         IMeshEnvironment* ienv = mm->environments()[i];
         // Calcul de la pression et de la vitesse du son
         options()->environment[i].eosModel()->applyEOS(ienv);
-    }
+       }
     computePressionMoyenne();
+  }
+}
+/*
+ *******************************************************************************
+*/
+void MahycoModule::updateEnergyAndPressureExplicite()  {  
+    
+  if (options()->sansLagrange) return;
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    ENUMERATE_ENVCELL(ienvcell,env){
+          EnvCell ev = *ienvcell;
+          m_internal_energy[ev] += 
+          - (m_pressure_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]);
+    }
+    // puis on récupere la pression pour toutes les mailles 
+    options()->environment[env->id()].eosModel()->applyEOS(env);
   }
 }
 /*
@@ -901,7 +954,7 @@ updateEnergyAndPressure()
 void MahycoModule::updateEnergyAndPressurebyNewton()  {  
     
   if (options()->sansLagrange) return;
-    debug() << " Entree dans updateEnergyAndPressure()";
+    pinfo() << " Entree dans updateEnergyAndPressure()";
     bool csts = options()->schemaCsts();
     bool pseudo_centree = options()->pseudoCentree();
     // Calcul de l'énergie interne
@@ -931,11 +984,15 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           // les iterations denewton
           double epsilon = options()->threshold;
           double itermax = 50;
-          double enew=0, e=en, p, c, dpde;
+          double enew=0, e=m_internal_energy[ev], p=pn, c, dpde;
           int i = 0;
         
+          pinfo() << " Début du Newton " << ev.globalCell().localId();
+          pinfo() <<  e  << " " << p << " " << dpde << " " << en << " " << qnn1 << " " << pn << " " << rn1 << " " << rn;
+          pinfo() << " fvnr " << fvnr(e, p, dpde, en, qnn1, pn, rn1, rn) << " epsilon " << epsilon;
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
             {
+              pinfo() << " Passage à l'iteration Newton " << i ;
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];

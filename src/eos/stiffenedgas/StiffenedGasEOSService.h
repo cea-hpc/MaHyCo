@@ -64,6 +64,10 @@ class StiffenedGasEOSService
    *  Renvoie la constante tension limit de l'environnement. 
    */
   virtual Real getTensionLimitCst(IMeshEnvironment* env);
+  /** 
+   *  Renvoie la chaleur spécifique de l'environnement. 
+   */
+  virtual Real getSpecificHeatCst(IMeshEnvironment* env);
 };
 
 #endif

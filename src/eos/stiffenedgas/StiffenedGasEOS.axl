@@ -107,5 +107,9 @@
 		<simple name="limit-tension" type="real" default="0.01">
 			<description>Définition de la tension limite</description>
 		</simple>
+		<!-- - - - - - specific heat - - - - -->
+		<simple name="specific-heat" type="real" default="0.0">
+			<description>Définition de la chaleur spécifique</description>
+		</simple>
 	</options>
 </service>

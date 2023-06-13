@@ -15,6 +15,7 @@ struct TypesMahyco
     VelocityZ, //!< Vitesse Z fixée
     Density, //!< Densité fixée
     Pressure, //!< Pression fixée
+    GeometricPressure, //!< Pression fixée
     Unknown //!< Type inconnu
   }; 
 };

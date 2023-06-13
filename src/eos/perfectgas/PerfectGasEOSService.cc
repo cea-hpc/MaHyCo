@@ -10,7 +10,7 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
 {
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeat(env);
+  Real specific_heat = getSpecificHeatCst(env);
   // Initialise l'énergie et la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -35,7 +35,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
 {
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeat(env);
+  Real specific_heat = getSpecificHeatCst(env);
   // Calcul de la pression et de la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -58,7 +58,7 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeat(env);
+  Real specific_heat = getSpecificHeatCst(env);
   // Calcul de la pression,la vitesse du son  et le gradient de pression pour une maille donnée
   Real internal_energy = m_internal_energy[ev];
   Real density = m_density[ev];
@@ -74,6 +74,7 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 /*---------------------------------------------------------------------------*/
 Real PerfectGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real PerfectGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
+Real PerfectGasEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

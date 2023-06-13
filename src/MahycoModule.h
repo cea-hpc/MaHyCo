@@ -54,6 +54,8 @@
 #include "arcane/cea/FaceDirectionMng.h"
 #include "arcane/cea/NodeDirectionMng.h"
 #include "arcane/cea/CartesianConnectivity.h"
+#include "arcane/ITimeHistoryMng.h"
+#include "arcane/CaseOptionService.h"
 // fin ajout au PIF
 
 #include "Mahyco_axl.h"
@@ -278,6 +280,10 @@ class MahycoModule
    * Cacul de l'energie et de la pression par une méthode directe pour les gaz parfait
    **/
   virtual void updateEnergyAndPressureforGP();
+  /*
+   * Cacul de l'energie et de la pression de facon explicite (ordre 1)
+   **/
+  virtual void updateEnergyAndPressureExplicite();  
     /**
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
@@ -293,6 +299,11 @@ class MahycoModule
    *   dans le jeu de données (\c finalTime()).
    */
   virtual void computeDeltaT();
+  
+  /**
+   * effectue des sorties sur les mailles en mode TH
+   * */
+  virtual void SortieHistory();
   
   /**
    * Calcul de quantites aux faces pour la projection :
