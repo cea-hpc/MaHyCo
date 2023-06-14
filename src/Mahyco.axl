@@ -372,6 +372,18 @@
       <description>Valeur de la fin de la CDL de pression</description>
     </simple>
   </complex>
+  <!-- - - - - - sortie time history - - - - -->
+   <complex name="time-history" type="TimeHistory" minOccurs="0" maxOccurs="unbounded">
+    <description>Sortie Time History</description>
+    <!-- - - - - - frequence - - - - -->
+  <simple name="frequence" type="real" default="0.">
+    <description>frequence (en iterations) des sorties </description>
+  </simple>
+    <!-- - - - - - frequence - - - - -->
+  <simple name="periode" type="integer" default="10">
+    <description>periode (en iterations) des sorties </description>
+  </simple>
+  </complex>
 		
   <!-- - - - - - geometry - - - - -->
   <service-instance name="geometry" type="Arcane::Numerics::IGeometryMng" default="Euclidian3Geometry">

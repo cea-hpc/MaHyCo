@@ -88,6 +88,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
   
   Int32UniqueArray mat_indexes[nb_env];
   info() << " Nb environments " << nb_env ;
+  info() << " Nb cells " << allCells().size();
   
   info() << " Trie par environnements  ";
   ENUMERATE_CELL(icell,allCells()){
@@ -97,6 +98,12 @@ void MahycoModule::hydroStartInitEnvAndMat()
     } else if (m_materiau[icell] == 1.) {
       mat_indexes[1].add(icell.itemLocalId());
     } else if (m_materiau[icell] == 2.) {
+      mat_indexes[2].add(icell.itemLocalId());
+    } else if (m_materiau[icell] > 0. && m_materiau[icell] < 1.) {
+      mat_indexes[0].add(icell.itemLocalId());
+      mat_indexes[1].add(icell.itemLocalId());
+    } else if (m_materiau[icell] > 1. && m_materiau[icell] < 2.) {
+      mat_indexes[1].add(icell.itemLocalId());
       mat_indexes[2].add(icell.itemLocalId());
     } else {
       mat_indexes[0].add(icell.itemLocalId());
@@ -219,30 +226,35 @@ void MahycoModule::PrepareFaceGroup() {
  *******************************************************************************
  */
 void MahycoModule::SortieHistory() {
-     
+  if (options()->timeHistory.size() == 0) return;
+  
+  
   std::ofstream fichier("time-history.txt", std::ofstream::app );
-  // Integer period=options()->outputHistoryPeriod();
-  Integer period = 3;
-  if (fichier.is_open() && (m_global_iteration()%period)==0) {
-    fichier << " Temps " << m_global_time() << " ";
-    int i(0);
-    ENUMERATE_ENV(ienv,mm){
-      IMeshEnvironment* env = *ienv;
-        ENUMERATE_ENVCELL(ienvcell,env)
-        {
-            EnvCell ev = *ienvcell;   
-            if (i==0) {
-                fichier << m_density[ev] << " ";
-                fichier << m_internal_energy[ev] << " ";
-                fichier << m_pressure[ev] << " ";
-                fichier << m_temperature[ev] << " ";
-                fichier << m_sound_speed[ev] << " ";
-                fichier << m_frac_phase1[ev] << " ";
-                fichier << m_frac_phase2[ev] << " ";
-                fichier << m_frac_phase3[ev] << " ";
-                fichier << std::endl;
+  for (Integer i = 0, nb = options()->timeHistory.size(); i < nb; ++i){
+    // Integer period=options()->outputHistoryPeriod();
+    Integer period = options()->timeHistory[i]->periode;
+    Real frequence = options()->timeHistory[i]->frequence; // not used yet
+    if (fichier.is_open() && (m_global_iteration()%period ==0)) {
+        fichier << " Temps " << m_global_time() << " ";
+        int i(0);
+        ENUMERATE_ENV(ienv,mm){
+        IMeshEnvironment* env = *ienv;
+            ENUMERATE_ENVCELL(ienvcell,env)
+            {
+                EnvCell ev = *ienvcell;   
+                if (i==0) {
+                    fichier << m_density[ev] << " ";
+                    fichier << m_internal_energy[ev] << " ";
+                    fichier << m_pressure[ev] << " ";
+                    fichier << m_temperature[ev] << " ";
+                    fichier << m_sound_speed[ev] << " ";
+                    fichier << m_frac_phase1[ev] << " ";
+                    fichier << m_frac_phase2[ev] << " ";
+                    fichier << m_frac_phase3[ev] << " ";
+                    fichier << std::endl;
+                }
+                i++;
             }
-            i++;
         }
     }
   }

@@ -14,6 +14,7 @@ void RIDERService::initMat(Integer dim)  {
     initMatMono(dim);
     return;
   } 
+  
   Real3 Xb;
   if (options()->casTest < RiderRotation) 
           Xb = {0.20, 0.20, 0.};
@@ -44,7 +45,7 @@ void RIDERService::initMat(Integer dim)  {
     
     if (rmax < rb) {
       // maille pure de bulle
-    m_materiau[cell] = 1;
+      m_materiau[cell] = 1;
     } else if ((rmax >= rb) && (rmin < rb)) {
       double frac_b = (rb - rmin) / (rmax - rmin);
       m_materiau[cell] = frac_b;
@@ -62,7 +63,6 @@ void RIDERService::initVarMono(Integer dim)  {
   // rayon interne et externe
   double rb(0.15);
         
-  info() << " boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     // pseudo-viscosité 

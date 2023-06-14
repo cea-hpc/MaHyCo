@@ -6,7 +6,6 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>50</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -25,7 +24,7 @@
   <mesh>
     <meshgenerator>
     <cartesian>
-       <nsd>4 1</nsd> 
+       <nsd>1 1</nsd> 
        <origine>0.0 0.0 0.0</origine>
        <lx nx='100' prx='1.0'>1.</lx>
        <ly ny='5' pry='1.0'>.1</ly>

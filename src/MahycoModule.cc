@@ -569,7 +569,7 @@ applyBoundaryCondition()
 void MahycoModule::
 applyBoundaryConditionForCellVariables()
 {
-  pinfo() << " Entree dans applyBoundaryConditionForCellVariables()";
+  debug() << " Entree dans applyBoundaryConditionForCellVariables()";
   
   Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
   
@@ -986,13 +986,9 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double itermax = 50;
           double enew=0, e=m_internal_energy[ev], p=pn, c, dpde;
           int i = 0;
-        
-          pinfo() << " Début du Newton " << ev.globalCell().localId();
-          pinfo() <<  e  << " " << p << " " << dpde << " " << en << " " << qnn1 << " " << pn << " " << rn1 << " " << rn;
-          pinfo() << " fvnr " << fvnr(e, p, dpde, en, qnn1, pn, rn1, rn) << " epsilon " << epsilon;
+          
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
             {
-              pinfo() << " Passage à l'iteration Newton " << i ;
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];

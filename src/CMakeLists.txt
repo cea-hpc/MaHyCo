@@ -108,21 +108,21 @@ set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
 
 set( TEST_NAMES_PARA_4
-                "CAS_2D_Lag_BiSodCaseX"
-     		"CAS_2D_Lag_BiSodCaseY"
+        "CAS_2D_Lag_BiSodCaseX"
+        "CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
 		"CAS_Lag_BiSodCaseZ"
-     		"CAS_Lag_SodCaseX"
-     		"CAS_BiSodCaseY"
+        "CAS_Lag_SodCaseX"
+        "CAS_BiSodCaseY"
 		"CAS_BiSodCaseZ"
 		"CAS_SodCaseY"
-     		"CAS_SodCaseZ"
-     		"CAS_SodCaseX_ordre_3"
-     		"CAS_BiSodCaseX_ordre_3"
-		"CAS_SodCaseY_ordre_3"
-     		"CAS_SodCaseZ_ordre_3"
+        "CAS_SodCaseZ"
+        "CAS_SodCaseX_ordre_3"
+        "CAS_BiSodCaseX_ordre_3"
+        "CAS_SodCaseY_ordre_3"
+        "CAS_SodCaseZ_ordre_3"
 		"CAS_BiSodCaseY_ordre_3"
-     		"CAS_BiSodCaseZ_ordre_3"
+        "CAS_BiSodCaseZ_ordre_3"
 		"CAS_BiSodCaseX_pente_borne_minmod_debar_1"
 		"CAS_BiSodCaseX_pente_borne_minmod_debar_2"
 		"CAS_BiSodCaseX_pente_borne_superbee_debar_2"
@@ -146,10 +146,10 @@ set( TEST_NAMES_PARA_8
 		)
 set( TEST_NAMES
 		"CAS_Lag_BiSodCaseX"
-     		"CAS_2D_Lag_SodCaseZ"
-     		"CAS_Lag_BiSodCaseY"
+        "CAS_2D_Lag_SodCaseZ"
+        "CAS_Lag_BiSodCaseY"
 		"CAS_Lag_SodCaseY"
-     		"CAS_Lag_SodCaseZ"
+        "CAS_Lag_SodCaseZ"
 		"CAS_BiSodCaseX"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderRotation"
@@ -162,8 +162,8 @@ set( TEST_NAMES
 		)
 
 set( TEST_NAMES_PR
-     		"CAS_2D_Lag_SodCaseX"
-     		"CAS_SodCaseX"
+        "CAS_2D_Lag_SodCaseX"
+        "CAS_SodCaseX"
 		"CAS_MonoRiderTx"
 		"CAS_RiderT45"
 		)

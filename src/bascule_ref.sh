@@ -19,32 +19,54 @@ for cas in $(cat list_of_cases_to_change.txt); do
 	echo $test1 > test
 	echo " resulat test1"
 	echo $test1
+    test2=$(grep "2" test)
+    echo " resulat test2"
+    echo $test2
 	if [ "$test1" != "" ]
 	then
-	    test2=$(grep "2" test)
-	    echo " resulat test2"
-	    echo $test2
 	    if [ "$test2" != "" ]
 	    then
-		echo " cas sur 8 procs"
-		mpiexec -n 8 $curent_dir/build/src/Mahyco Donnees.arc
+            echo " cas sur 8 procs"
+            mpiexec -n 8 $curent_dir/build/src/Mahyco Donnees.arc
+            RUN_PROC="cas sur 8 procs"
 	    else
-		echo " cas sur 4 procs"
-		mpiexec -n 4 $curent_dir/build/src/Mahyco Donnees.arc
+            echo " cas sur 4 procs"
+            mpiexec -n 4 $curent_dir/build/src/Mahyco Donnees.arc
+            RUN_PROC="cas sur 4 procs"
 	    fi
 	else
-	    echo " cas sur 1 procs"
-	    $curent_dir/build/src/Mahyco Donnees.arc
+        test3=$(grep "2 2 2" Donnees.arc)
+        echo " resulat test3 "
+        echo $test3
+        if [ "$test3" != "" ]
+	    then
+            echo " cas sur 8 procs"
+            mpiexec -n 8 $curent_dir/build/src/Mahyco Donnees.arc
+            RUN_PROC="cas sur 8 procs"
+		else 
+            test4=$(grep "2 2" test)
+            if [ "$test4" != "" ]
+            then
+                echo " cas sur 4 procs"
+                mpiexec -n 4 $curent_dir/build/src/Mahyco Donnees.arc
+                RUN_PROC="cas sur 4 procs"
+            else
+                echo " cas sur 1 procs"
+                $curent_dir/build/src/Mahyco Donnees.arc
+                RUN_PROC="cas sur 1 proc"
+            fi
+		fi
 	fi
 	#  $curent_dir/build/src/Mahyco -arcane_opt max_iteration 10 Donnees.arc
 	#  reprise
 	#  $curent_dir/build/src/Mahyco -arcane_opt continue Donnees.arc
 	# avec mpiexec -n 4 ou 8
 	
-        paraview $cas_dir/output/depouillement/ensight.case &
+    #paraview $cas_dir/output/depouillement/ensight.case &
 	#paraview output/depouillement/ensight.case &
         #diff output $cas_dir/reference
 	echo $cas
+	echo $RUN_PROC
 	echo "Basculer Yes/No"
 	read reponse
 	if  [[ "$reponse" == "Yes" ]]; then
@@ -53,6 +75,7 @@ for cas in $(cat list_of_cases_to_change.txt); do
 	    rm -rf $cas_dir/output/listing*
 	    rm -rf $cas_dir/output/checkpoint_info.xml
 	    rm -rf $cas_dir/output/protection
+	    rm -rf $cas_dir/output/courbes
 	fi
     fi
 done

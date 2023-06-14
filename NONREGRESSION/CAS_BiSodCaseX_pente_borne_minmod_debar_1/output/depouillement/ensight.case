@@ -16,12 +16,9 @@ scalar per element:    1   Materiau Materiau/Materiau******
 
 TIME
 time set:              1
-number of steps:       4
+number of steps:       1
 filename start number: 0
 filename increment:    1
 time values:
-0.00209347995715074
-0.0261002515692608
-0.124150846232465
-0.199669778233835
+0.199620163810139
 

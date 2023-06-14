@@ -19,7 +19,6 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
     Real density = m_density[ev];
     Cell cell = ev.globalCell();
     // Affiche l'identifiant local de la maille, la pression et la densité
-    info() << " cell localId " << cell.localId() << " pressure " << pressure << " density " << density;
     m_internal_energy[ev] = pressure / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
     // calcul de la temperature en fonction de la chaleur specifique

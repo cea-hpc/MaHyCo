@@ -6,7 +6,7 @@
   </arcane>
 
   <arcane-post-processing>
-    <output-period>50</output-period>
+    <save-init>true</save-init>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
