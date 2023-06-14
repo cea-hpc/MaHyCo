@@ -51,6 +51,7 @@ ARCCORE_HOST_DEVICE inline void compute_pressure_sndspd_PG(Real adiabatic_cst,
 
 void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
 {
+  PROF_ACC_BEGIN(__FUNCTION__);
   Real adiabatic_cst = getAdiabaticCst(env);
   // Calcul de la pression et de la vitesse du son
 #if 0
@@ -137,6 +138,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   queue_pur.barrier();
   queue_mix.barrier();
 #endif
+  PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
