@@ -30,6 +30,10 @@ void prof_acc_end([[maybe_unused]] const char* name) {
   nvtxRangePop();
 }
 
+void prof_acc_mark(const char* name) {
+  nvtxMark(name);
+}
+
 #elif defined(ARCANE_COMPILING_HIP) && defined(PROF_ACC)
 
 #ifdef P4GPU_HAS_WARNING_INFO
@@ -54,6 +58,10 @@ void prof_acc_end([[maybe_unused]] const char* name) {
   roctxRangePop();
 }
 
+void prof_acc_mark(const char* name) {
+  roctxMark(name);
+}
+
 #else
 
 #ifdef P4GPU_HAS_WARNING_INFO
@@ -72,6 +80,10 @@ void prof_acc_begin([[maybe_unused]] const char* name) {
 }
 
 void prof_acc_end([[maybe_unused]] const char* name) {
+  return;
+}
+
+void prof_acc_mark([[maybe_unused]] const char* name) {
   return;
 }
 
