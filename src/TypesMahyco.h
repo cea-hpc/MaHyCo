@@ -3,6 +3,7 @@
 
 #include <arcane/ItemGroup.h>
 #include "eos/IEquationOfState.h"
+#include "elasto/IElasto.h"
 #include "casTest/IInitialisations.h"
 #include "Remap/IRemap.h"
 

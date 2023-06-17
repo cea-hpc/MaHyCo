@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="DefaultModel" version="1.0" type="caseoption">
+
+  <description>Jeu de données du service DefaulModelElasto</description>
+  <interface name="IElasto" />
+
+	<variables>
+		<!-- DENSITY -->
+		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+			
+		<!-- PRESSURE -->
+		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
+		    dim="0" material="true" dump="true" need-sync="true" />
+		    
+		<!-- INTERNAL ENERGY	 -->
+		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+			
+		<!-- 	SOUND SPEED	 -->
+		<variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+			
+        <!-- Temperature -->
+        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+        <!-- CELL MASS -->
+        <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+	    <!-- 	VELOCITY -->
+        <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
+ 	    dim="0" dump="true" need-sync="true" />
+	    
+	    <!-- 	NODE COORD	 -->
+        <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+	    
+        <!-- CELL VOLUME OLD N	 -->
+        <variable field-name="cell_volume_n" name="CellVolumeN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  
+        <!-- CELL VOLUME	 -->
+        <variable field-name="cell_volume" name="CellVolume" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+        <!-- 	CELL CQS	 -->
+        <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
+        
+        <!-- Gradient de vitesse -->
+        <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+	    
+        <!-- Tenseur de rotation -->
+        <variable field-name="spin_rate" name="SpinRate" data-type="real3" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+	    
+        <!-- Deformation Rate -->
+        <variable field-name="deformation_rate" name="DeformationRate" data-type="real3x3" item-kind="cell"
+	    dim="0" material="false" dump="true" need-sync="true" />
+	    
+        <!-- Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+	    <!-- Tenseur (déviateur) des contraintes à N -->
+        <variable field-name="strain_tensor_n" name="StrainTensorN" data-type="real3x3" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    	    	    
+	    <!-- Vitesse de déformation Plastic -->
+        <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+        <!-- Déformation Plastic -->
+        <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+	    <!-- FORCE	 -->
+        <variable field-name="force" name="Force" data-type="real3" item-kind="node"
+	    dim="0" dump="false" need-sync="false" />
+	</variables>
+
+	<options>
+		<!-- - - - - - Module de cisaillment  - - - - -->
+		<simple name="elastic-cst" type="real" default="1.4">
+			<description>Valeur du Module de cisaillement</description>
+		</simple>
+		<!-- - - - - - limit Elastic - - - - -->
+		<simple name="limit-elastic" type="real" default="0.0">
+			<description>Valeur de la limite d'elasticité</description>
+		</simple>
+	</options>
+</service>

@@ -69,6 +69,7 @@ hydroStartInit()
   PrepareFaceGroup();
   
   info() << " Initialisation des variables";
+  
   // Initialises les variables (surcharge l'init d'arcane)
   options()->casModel()->initVar(m_dimension);
   
@@ -77,11 +78,13 @@ hydroStartInit()
         IMeshEnvironment* ienv = mm->environments()[i];
         // Initialise l'énergie et la vitesse du son
         options()->environment[i].eosModel()->initEOS(ienv);
+        // Initialisation des varibles ElastoPlastic (mise à zéro)
+        options()->environment[i].elastoModel()->initElasto(ienv);
     }
 
     CellToAllEnvCellConverter all_env_cell_converter(mm);
 
-    // valeur moyenne
+   // valeur moyenne
     ENUMERATE_CELL(icell, allCells()){
         Cell cell = * icell;
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
@@ -236,6 +239,7 @@ saveValuesAtN()
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
+  m_strain_tensor.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
   
@@ -245,6 +249,7 @@ saveValuesAtN()
     m_pseudo_viscosity_nmoins1[cell] = m_pseudo_viscosity_n[cell];
     m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
     m_pressure_n[cell] = m_pressure[cell];
+    m_strain_tensor_n[cell] =m_strain_tensor[cell];
     m_cell_volume_n[cell] = m_cell_volume[cell];
     m_density_n[cell] = m_density[cell];
     m_internal_energy_n[cell] = m_internal_energy[cell];
@@ -256,6 +261,7 @@ saveValuesAtN()
       m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
       m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
       m_pressure_n[ev] = m_pressure[ev];
+      m_strain_tensor_n[ev] =m_strain_tensor[ev];
       m_cell_volume_n[ev] = m_cell_volume[ev];
       m_density_n[ev] = m_density[ev];
       m_internal_energy_n[ev] = m_internal_energy[ev];
@@ -351,6 +357,14 @@ updateVelocity()
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
      }
   }
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor_n[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs_n[icell] [inode.index()]);
+     }
+  }
   
   VariableNodeReal3InView in_force(viewIn(m_force));
   VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
@@ -398,6 +412,15 @@ updateVelocityBackward()
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
   }
+  
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor_n[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs_n[icell] [inode.index()]);
+     }
+  }
   const Real dt(-0.5 * m_global_old_deltat());  
   
   VariableNodeReal3InView in_force(viewIn(m_force));
@@ -443,6 +466,15 @@ updateVelocityForward()
     Real pressure = m_pressure[icell] + m_pseudo_viscosity[icell];
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs[icell] [inode.index()];
+  }
+  
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs[icell] [inode.index()]);
+     }
   }
   const Real dt(0.5 * m_global_deltat());
   
@@ -867,6 +899,34 @@ updateDensity()
 }
 /**
  *******************************************************************************
+ * \file updateElasticityAndPlasticity
+ *  * \brief Calcul de la contribution elasto-plastique
+ *
+ * \param  
+ *
+ * \return
+ *******************************************************************************
+ */
+void MahycoModule::updateElasticityAndPlasticity()
+{
+  if (options()->sansLagrange) return;
+  // Calcul du gradient de vitesse 
+  options()->environment[0].elastoModel()->ComputeVelocityGradient();
+  // Calcul du tenseur de déformation et de rotation
+  options()->environment[0].elastoModel()->ComputeDeformationAndRotation();
+  
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    //  Calcul du deviateur elasto-plastique 
+    options()->environment[env->id()].elastoModel()->ComputeElasticity(env,m_global_deltat.value(),m_dimension);
+    //  Calcul de la plasticité 
+    options()->environment[env->id()].elastoModel()->ComputePlasticity(env,m_global_deltat.value(),m_dimension);
+    // Calcul du travail elasto-plastique pour energie interne
+    options()->environment[env->id()].elastoModel()->ComputeElastoEnergie(env,m_global_deltat.value());
+  }
+}
+/**
+ *******************************************************************************
  * \file updateEnergy()
  * \brief Calcul de l'energie interne ( cas du gaz parfait ou methode de newton)
  *
@@ -880,6 +940,7 @@ updateDensity()
 void MahycoModule::
 updateEnergyAndPressure()
 {
+  if (options()->sansLagrange) return;
   debug() << " Rentrée dans updateEnergyAndPressure";
   if (options()->energyDeposit) {
     ENUMERATE_ENV(ienv,mm){

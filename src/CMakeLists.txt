@@ -7,7 +7,7 @@ message(STATUS "SOURCES_SUPLEMENTAIRES=${CINETIQUE_SRC}")
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 
-
+# Partie Equation d'état 
 if (IS_DIRECTORY ${CINETIQUE_SRC}) 
 enable_language( Fortran )
 file( GLOB SOURCES  ${CINETIQUE_SRC}/*.f90 )
@@ -24,6 +24,10 @@ else()
 set(AUTRE_EOS "")
 endif()
 
+add_library(MieGruneisen eos/miegruneisen/MieGruneisenEOSService.cc)
+target_include_directories(MieGruneisen PUBLIC .)
+target_link_libraries(MieGruneisen PUBLIC arcane_core)
+
 add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
 target_link_libraries(PerfectGas PUBLIC arcane_core)
@@ -32,7 +36,12 @@ add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
 
+# Partie Elasticité
+add_library(Elasto elasto/DefaultModelService.cc)
+target_include_directories(Elasto PUBLIC .)
+target_link_libraries(Elasto PUBLIC arcane_core)
 
+# Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
 target_link_libraries(RIDER PUBLIC arcane_core)
@@ -73,13 +82,14 @@ add_library(VORTEX casTest/VORTEX/VORTEXService.cc)
 target_include_directories(VORTEX PUBLIC .)
 target_link_libraries(VORTEX PUBLIC arcane_core)
 
+# Partie Cas Remap
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
 target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE PerfectGas StiffenedGas ${AUTRE_EOS} RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -92,8 +102,11 @@ arcane_target_add_axl(CHOCBULLE casTest/CHOCBULLE/CHOCBULLE)
 arcane_target_add_axl(INSTART casTest/INSTART/INSTART)
 arcane_target_add_axl(VORTEX casTest/VORTEX/VORTEX)
 
+arcane_target_add_axl(MieGruneisen eos/miegruneisen/MieGruneisenEOS)
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
+
+arcane_target_add_axl(Elasto elasto/DefaultModel)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)

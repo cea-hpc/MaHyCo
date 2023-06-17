@@ -266,7 +266,10 @@ class MahycoModule
    * divisée par le nouveau volume.
    */
   virtual void updateDensity();
-		
+   /**
+   * Calcule la contribution elasto-plastique 
+   */
+  virtual void updateElasticityAndPlasticity();
   /**
    * Ce point d'entrée calcule l'énergie interne, la pression et la vitesse
    * du son dans la maille en faisant appel au service d'équation d'état.
