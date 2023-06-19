@@ -55,21 +55,21 @@ ARCCORE_HOST_DEVICE inline void compute_pressure_sndspd_PG(Real adiabatic_cst,
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-void add_phy_var(std::vector<PhyVarType>& phy_vars,
+void add_phy_var(std::vector< Ref<PhyVarType> >& phy_vars,
     Arcane::Materials::MaterialVariableCellReal var, 
     const Arcane::Materials::MatCellVectorView* matcell_vector_view) 
 {
   prof_acc_begin(var.name().localstr());
-  phy_vars.emplace_back(var, matcell_vector_view);
+  phy_vars.push_back(makeRef(new PhyVarType(var, matcell_vector_view)));
   prof_acc_end(var.name().localstr());
 }
 
-void phy_var_2_arc_var(const PhyVarType& phy_var,
+void phy_var_2_arc_var(Ref<PhyVarType> phy_var,
     Arcane::Materials::MaterialVariableCellReal var,
     const Arcane::Materials::MatCellVectorView* matcell_vector_view)
 {
   prof_acc_begin(var.name().localstr());
-  phy_var.copyRawDataToVar(var, matcell_vector_view);
+  phy_var->copyRawDataToVar(var, matcell_vector_view);
   prof_acc_end(var.name().localstr());
 }
 
@@ -92,7 +92,7 @@ void StdPerfectGasAcc1EOSService::applyEOS(IMeshEnvironment* env)
 
     // Arcane var => PhyVarTpe
     prof_acc_begin("ArcVar=>PhyVarTpe"); 
-    std::vector<PhyVarType> phy_vars;
+    std::vector< Ref<PhyVarType> > phy_vars;
 
     add_phy_var(phy_vars, m_density        , &matcell_vector_view);
     add_phy_var(phy_vars, m_internal_energy, &matcell_vector_view);
@@ -108,14 +108,14 @@ void StdPerfectGasAcc1EOSService::applyEOS(IMeshEnvironment* env)
     auto queue = m_acc_env->newQueue(); // synchronous queue
     auto command = makeCommand(queue);
 
-    auto nelt = phy_vars[0].raw_data.size();
+    auto nelt = phy_vars[0]->raw_data.size();
 
-    Span<const Real> in_density         (phy_vars[0].raw_data.data(), nelt);
-    Span<const Real> in_internal_energy (phy_vars[1].raw_data.data(), nelt);
+    Span<const Real> in_density         (phy_vars[0]->raw_data.data(), nelt);
+    Span<const Real> in_internal_energy (phy_vars[1]->raw_data.data(), nelt);
 
-    Span<Real>       out_pressure       (phy_vars[2].raw_data.data(), nelt);
-    Span<Real>       out_sound_speed    (phy_vars[3].raw_data.data(), nelt);
-    Span<Real>       out_dpde           (phy_vars[4].raw_data.data(), nelt);
+    Span<Real>       out_pressure       (phy_vars[2]->raw_data.data(), nelt);
+    Span<Real>       out_sound_speed    (phy_vars[3]->raw_data.data(), nelt);
+    Span<Real>       out_dpde           (phy_vars[4]->raw_data.data(), nelt);
 
     command << RUNCOMMAND_LOOP1(iter, nelt)
     {
