@@ -10,6 +10,24 @@
 
 namespace Stdperfectgasacc1 {
 
+#ifdef PHY_VAR_RAW_DATA_IS_STD
+
+//#warning "__raw_data__ is a std::vector<Real>"
+#define RAW_DATA_CTOR(__raw_data__, __size__) __raw_data__(__size__)
+
+#else
+Arccore::MemoryAllocationOptions alloc_opts() {
+  Arcane::IMemoryAllocator* allocator = Arcane::platform::getDefaultDataAllocator();
+  //Arcane::IMemoryAllocator* allocator = Arcane::platform::getDataMemoryRessourceMng()->getAllocator(Arcane::eMemoryRessource::Device);
+  return Arccore::MemoryAllocationOptions(
+      allocator,
+      Arccore::eMemoryLocationHint::MainlyDevice);
+}
+//#warning "__raw_data__ is an Arcane::UniqueArray<Real>"
+#define RAW_DATA_CTOR(__raw_data__, __size__) __raw_data__(alloc_opts(), __size__)
+
+#endif
+
 PhyVarType::
 PhyVarType()
 {
@@ -19,7 +37,7 @@ PhyVarType()
 PhyVarType::
 PhyVarType(Arcane::Materials::MaterialVariableCellReal var, const StdMatCellVector* mat_cell_vector) :
   var_name (var.name()),
-  raw_data (mat_cell_vector->size())
+  RAW_DATA_CTOR (raw_data, mat_cell_vector->size())
 {
   prof_acc_mark("Ctor1");
   // Arcane var => raw_data
@@ -30,7 +48,7 @@ PhyVarType(Arcane::Materials::MaterialVariableCellReal var, const StdMatCellVect
 PhyVarType::
 PhyVarType(Arcane::Materials::MaterialVariableCellReal var, const Arcane::Materials::MatCellVectorView* mat_cell_vector) :
   var_name (var.name()),
-  raw_data (mat_cell_vector->nbItem())
+  RAW_DATA_CTOR (raw_data, mat_cell_vector->nbItem())
 {
   prof_acc_mark("Ctor2");
   // Arcane var => raw_data

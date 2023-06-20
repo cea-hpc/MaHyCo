@@ -7,7 +7,13 @@
 
 namespace Stdperfectgasacc1 {
 
+//#define PHY_VAR_RAW_DATA_IS_STD
+
+#ifdef PHY_VAR_RAW_DATA_IS_STD
 typedef StdRealVector PhyVarRawData;
+#else
+typedef Arcane::UniqueArray<Arcane::Real> PhyVarRawData;
+#endif
 
 struct PhyVarType
 {

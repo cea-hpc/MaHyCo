@@ -3,6 +3,7 @@
 
 #include <arcane/utils/PlatformUtils.h>
 #include <arccore/collections/IMemoryAllocator.h>
+#include <arcane/utils/IMemoryRessourceMng.h>
 #include <arccore/base/FatalErrorException.h>
 #include "accenv/ProfAcc.h"
 
@@ -54,6 +55,7 @@ struct ArcaneMemAllocator {
 
   Arcane::IMemoryAllocator* getAllocator() {
     Arcane::IMemoryAllocator* allocator = Arcane::platform::getDefaultDataAllocator();
+    //Arcane::IMemoryAllocator* allocator = Arcane::platform::getDataMemoryRessourceMng()->getAllocator(Arcane::eMemoryRessource::Device);
     if (!allocator)
       throw Arcane::FatalErrorException(A_FUNCINFO, "getDefaultDataAllocator() inexistant");
     return allocator;
