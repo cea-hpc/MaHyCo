@@ -227,8 +227,6 @@ saveValuesAtN()
 {
   debug() << " Entree dans saveValuesAtN()";
   
-  applyBoundaryConditionForCellVariables();
-  
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
@@ -604,6 +602,7 @@ applyBoundaryConditionForCellVariables()
   debug() << " Entree dans applyBoundaryConditionForCellVariables()";
   
   Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+  Real one_over_nbnodeface = m_dimension == 2 ? .5  : .25 ;
   
   const Real dt(0.5 * (m_global_old_deltat() + m_global_deltat()));
   
@@ -654,22 +653,29 @@ applyBoundaryConditionForCellVariables()
         // boucle sur les noeuds de la face
         for (Integer k = 0; k < nb_node; ++k){
         Node node = face.node(k);
+        Node node2;
+        if (k<nb_node-1) 
+            node2 = face.node(k+1);
+        else 
+            node2 = face.node(0);
         Real3 normale_sortante;
+        Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
         Cell cell;
         value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
         value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
         value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
         value += options()->boundaryCondition[i]->dependanceT * m_global_time();
-        if (m_global_time() > options()->boundaryCondition[i]->cutoffT) value =0.;
+        if (m_global_time() < options()->boundaryCondition[i]->Tdebut) value = 0.;
+        if (m_global_time() > options()->boundaryCondition[i]->Tfin) value = 0.;
         cell = face.backCell();
         if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
             / (m_face_coord[face]-m_cell_coord[cell]).normL2();
         cell = face.frontCell();
         if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
             / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-        // pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt;
-        m_velocity[node] -= normale_sortante*value/m_node_mass[node] * dt;
-        // pinfo() << " vitesse imposée" << m_velocity[node] << " face " << normale_sortante << " dt " << dt;
+        // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
+        m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
+        // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
         }
       }
     }
@@ -917,11 +923,13 @@ void MahycoModule::updateElasticityAndPlasticity()
   
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
+    // Calcul du travail elasto-plastique pour energie interne avec S à n
+    options()->environment[env->id()].elastoModel()->ComputeElastoEnergie(env,m_global_deltat.value());
     //  Calcul du deviateur elasto-plastique 
     options()->environment[env->id()].elastoModel()->ComputeElasticity(env,m_global_deltat.value(),m_dimension);
     //  Calcul de la plasticité 
     options()->environment[env->id()].elastoModel()->ComputePlasticity(env,m_global_deltat.value(),m_dimension);
-    // Calcul du travail elasto-plastique pour energie interne
+    // Calcul du travail elasto-plastique pour energie interne avec S à n+1
     options()->environment[env->id()].elastoModel()->ComputeElastoEnergie(env,m_global_deltat.value());
   }
 }
@@ -1048,8 +1056,11 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double enew=0, e=m_internal_energy[ev], p=pn, c, dpde;
           int i = 0;
           
+          // TODO : sauvegarde des indicateurs de phases à N
+          
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
             {
+              // TODO : reprise des indicateurs de phases à N
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
@@ -1106,8 +1117,12 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double enew=0, e=en, p, c, dpde;
           int i = 0;
         
+          
+          // TODO : sauvegarde des indicateurs de phases à N
+          
           while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1, cdn, cdon, qnm1))>=epsilon)
 	        {
+              // TODO : reprise des indicateurs de phases à N
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
@@ -1241,9 +1256,6 @@ computeDeltaT()
          << " et " << options()->deltatInit()
          << " et " << m_global_deltat()
          << " et " << options()->deltatMax();
-         
-  
-  applyBoundaryConditionForCellVariables();
   
   m_global_old_deltat = m_global_deltat;
   m_old_deltat = m_global_old_deltat();

@@ -17,9 +17,16 @@ void ONECELLService::initVarMono(Integer dim)  {
   info() << " Initialisation ONECELL : boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    m_density[cell] = 7286.62;
+    // données etain
+    //m_density[cell] = 7286.62;
+    //m_pressure[cell] = 1.e5;
+    //m_internal_energy[cell] = 7.6961184899;
+    
+    // données AL
+    // m_density[cell] = 2710.;
+    m_density[cell] = 2785.;
     m_pressure[cell] = 1.e5;
-    m_internal_energy[cell] = 7.6961184899;
+    m_internal_energy[cell] = 0.;
     // pseudo-viscosité 
     m_pseudo_viscosity[cell] = 0.;
     m_fracvol[cell] = 1.;

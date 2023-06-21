@@ -111,19 +111,19 @@
 			<description>Définition de la chaleur spécifique</description>
 		</simple>
 		<!-- - - - - - Densité standard - - - - -->
-		<simple name="rho_0" type="real" default="0.0">
+		<simple name="rho0" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
 		</simple>
-		<!-- - - - - - Densité standard - - - - -->
-		<simple name="C" type="real" default="0.0">
+		<!-- - - - - - Parametre C - - - - -->
+		<simple name="c-cst" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
 		</simple>
-		<!-- - - - - - Densité standard - - - - -->
-		<simple name="D" type="real" default="0.0">
+		<!-- - - - - - Parametre D - - - - -->
+		<simple name="d-cst" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
 		</simple>
-		<!-- - - - - - Densité standard - - - - -->
-		<simple name="S" type="real" default="0.0">
+		<!-- - - - - - Parametre S - - - - -->
+		<simple name="s-cst" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
 		</simple>
 	</options>

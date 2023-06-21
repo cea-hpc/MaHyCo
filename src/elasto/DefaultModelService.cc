@@ -75,14 +75,17 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
   {
     EnvCell ev = *ienvcell;   
     Cell cell = ev.globalCell();
+    // if (cell.localId() == 0) pinfo() << " on a  calcul " << m_strain_tensor[ev].x.x << " et " << m_strain_tensor[ev].y.y << " et " << m_strain_tensor[ev].z.z ;
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     // calcul du nouveau tenseur
-    m_strain_tensor[ev] += 2*mu*m_deformation_rate[cell] * delta_t;
+    m_strain_tensor[ev] = m_strain_tensor_n[ev] + 2*mu*m_deformation_rate[cell] * delta_t;
     // trace
     trace = m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z;
+    // if (cell.localId() == 0) pinfo() << " on a  avant retrait trace " << m_strain_tensor[ev].x.x << " et " << m_strain_tensor[ev].y.y << " et " << m_strain_tensor[ev].z.z ;
     // on retire la trace sur les élément diagonaux
-    m_strain_tensor[ev] -= trace * identity;
+    m_strain_tensor[ev] -= trace * identity /3.;
+    // if (cell.localId() == 0) pinfo() << " on a  avant roration " << m_strain_tensor[ev].x.x << " et " << m_strain_tensor[ev].y.y << " et " << m_strain_tensor[ev].z.z ;
     // rotation
     if (dim == 2) {
         // utilisation poduit tensoriel ?
@@ -119,17 +122,18 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
 {
  // yield strength
  Real mu = getElasticCst(env);
- Real yield_strength = math::pow(getLimitElasticCst(env),2.)/3.;
+ Real yield_strength = getLimitElasticCst(env);
  ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
+    Cell cell = ev.globalCell();
     // coeff retour radial
     Real coeff(1.);
     Real intensite_deviateur(0.);
     if (dim == 2) {
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.y,2.);
-        intensite_deviateur += math::pow(m_strain_tensor[ev].z.z,2.);
+        intensite_deviateur += m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
         intensite_deviateur += math::pow(m_strain_tensor[ev].x.y,2.);
     } else {
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
@@ -140,14 +144,18 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.z,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].z.x,2.);
     }
-    if ( intensite_deviateur > yield_strength) coeff = math::sqrt(yield_strength / intensite_deviateur); 
-    // retour radial
-    m_strain_tensor[ev] *= coeff;
-    // vitesse de déformation plastique
-    // mu non nul car EPP
-    m_plastic_deformation_velocity[ev] = (1.-coeff)/mu*math::sqrt(intensite_deviateur/3.)/delta_t;
-    // deformation plastique
-    m_plastic_deformation[ev] += m_plastic_deformation_velocity[ev];
+    if ( intensite_deviateur > 2.*math::pow(yield_strength,2.)/3.) {
+     coeff = yield_strength/math::sqrt(3.*intensite_deviateur/2.); 
+        // retour radial
+        m_strain_tensor[ev] *= coeff;
+        // vitesse de déformation plastique
+        // mu non nul car EPP
+        m_plastic_deformation_velocity[ev] = (1.-coeff)*yield_strength/(3.*mu*coeff*delta_t);
+        // deformation plastique
+        m_plastic_deformation[ev] += m_plastic_deformation_velocity[ev];
+    }
+    // pour les sorties
+    m_strain_tensor_xx[cell] = - m_strain_tensor[ev].x.x;
   }
 }
 /*---------------------------------------------------------------------------*/
