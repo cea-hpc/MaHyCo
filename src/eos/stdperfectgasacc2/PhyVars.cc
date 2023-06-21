@@ -40,9 +40,9 @@ class ImplPhyVars {
     prof_acc_end(var.name().localstr());
   }
   
-  void copyFromAllArcVars()
+  void asyncCopyFromAllArcVars(Arcane::Ref<ax::RunQueue> async_queue)
   {
-    prof_acc_begin("copyFromAllArcVars");
+    prof_acc_begin("asyncCopyFromAllArcVars");
     // On décompte toutes les variables pour pré-allouer
     m_buffer->setNbRank(m_phy_vars.size());
     for(Arcane::Int32 i = 0 ; i<m_phy_vars.size() ; ++i) {
@@ -57,9 +57,9 @@ class ImplPhyVars {
 
     // On remplit les rawData()
     for(Arcane::Int32 i = 0 ; i<m_phy_vars.size() ; ++i) {
-      m_phy_vars[i]->phy_var_data->copyVarToRawData();
+      m_phy_vars[i]->phy_var_data->asyncCopyVarToRawData(async_queue);
     }
-    prof_acc_end("copyFromAllArcVars");
+    prof_acc_end("asyncCopyFromAllArcVars");
   }
 
   Arcane::Span<Arcane::Real> rawData(Arcane::Int32 i)
@@ -67,11 +67,11 @@ class ImplPhyVars {
     return m_phy_vars[i]->phy_var_data->rawData();
   }
 
-  void copyIntoArcVar(Arcane::Int32 i) const
+  void asyncCopyIntoArcVar(Arcane::Ref<ax::RunQueue> async_queue, Arcane::Int32 i) const
   {
     auto phy_var_data = m_phy_vars[i]->phy_var_data;
     prof_acc_begin(phy_var_data->name().localstr());
-    phy_var_data->copyRawDataToVar();
+    phy_var_data->asyncCopyRawDataToVar(async_queue);
     prof_acc_end(phy_var_data->name().localstr());
   }
 
@@ -110,9 +110,9 @@ void PhyVars::addPhyVar(Arcane::Materials::MaterialVariableCellReal var, const A
   get_ImplPhyVars_ptr(m_impl)->addPhyVar(var, mat_cell_vector);
 }
 
-void PhyVars::copyFromAllArcVars() 
+void PhyVars::asyncCopyFromAllArcVars(Arcane::Ref<ax::RunQueue> async_queue) 
 {
-  get_ImplPhyVars_ptr(m_impl)->copyFromAllArcVars();
+  get_ImplPhyVars_ptr(m_impl)->asyncCopyFromAllArcVars(async_queue);
 }
 
 Arcane::Span<Arcane::Real> PhyVars::rawData(Arcane::Int32 i) 
@@ -120,9 +120,9 @@ Arcane::Span<Arcane::Real> PhyVars::rawData(Arcane::Int32 i)
   return get_ImplPhyVars_ptr(m_impl)->rawData(i);
 }
 
-void PhyVars::copyIntoArcVar(Arcane::Int32 i) const 
+void PhyVars::asyncCopyIntoArcVar(Arcane::Ref<ax::RunQueue> async_queue, Arcane::Int32 i) const 
 {
-  get_ImplPhyVars_ptr(m_impl)->copyIntoArcVar(i);
+  get_ImplPhyVars_ptr(m_impl)->asyncCopyIntoArcVar(async_queue, i);
 }
 
 void PhyVars::clear() 

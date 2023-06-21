@@ -62,6 +62,8 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
   {
     IMeshMaterial* mat = *mat_i;
 
+    auto async_queue = m_acc_env->refQueueAsync();
+
     // std_matcell_vector construction
     prof_acc_begin("matcell_vector_view"); 
     Arcane::Materials::MatCellVectorView matcell_vector_view(mat->matView());
@@ -77,14 +79,13 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
     prof_acc_end("ArcVar=>PhyVarTpe");
 
     //
-    m_phy_vars.copyFromAllArcVars();
+    m_phy_vars.asyncCopyFromAllArcVars(async_queue);
 
     // The EOS itself
     prof_acc_begin("EOS_PG"); 
     Real adiabatic_cst = getAdiabaticCst(env);
 
-    auto queue = m_acc_env->newQueue(); // synchronous queue
-    auto command = makeCommand(queue);
+    auto command = makeCommand(async_queue.get());
 
     auto nelt = m_phy_vars.rawData(0).size();
 
@@ -106,10 +107,12 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
 
     // PhyVarType => Arcane var
     prof_acc_begin("PhyVarTpe=>ArcVar"); 
-    m_phy_vars.copyIntoArcVar(2);
-    m_phy_vars.copyIntoArcVar(3);
-    m_phy_vars.copyIntoArcVar(4);
+    m_phy_vars.asyncCopyIntoArcVar(async_queue, 2);
+    m_phy_vars.asyncCopyIntoArcVar(async_queue, 3);
+    m_phy_vars.asyncCopyIntoArcVar(async_queue, 4);
     prof_acc_end("PhyVarTpe=>ArcVar");
+
+    async_queue->barrier();
 
     m_phy_vars.clear();
   }
