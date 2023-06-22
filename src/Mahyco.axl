@@ -255,7 +255,7 @@
     minOccurs = "1" maxOccurs = "unbounded" >
     <description>Nom du materiau</description>
    </simple>
-   <!--
+   
    <simple name="densite-initiale" type="real">
     <description> Valeur de la densité initiale</description>
    </simple>
@@ -263,13 +263,16 @@
    <simple name="pression-initiale" type="real">
     <description> Valeur de la pression initiale</description>
    </simple>
-   -->
+   
+   <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
+    <description> Valeur de la vitesse initiale</description>
+   </simple>
 
    <service-instance name="eos-model" type="IEquationOfState">
     <description>Service d'equation d'état</description>
    </service-instance>
 
-   <service-instance name="elasto-model" type="IElasto" default="DefaultModel">
+   <service-instance name="elasto-model" type="IElasto" default="NoModel">
     <description>Service d'élasto-plasticité</description>
    </service-instance>
 

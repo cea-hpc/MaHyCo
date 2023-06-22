@@ -8,11 +8,8 @@ void INSTARTService::initMatMono(Integer dim)  {
   }
 }
 
-void INSTARTService::initVarMono(Integer dim)  {
-    
-  // mise à zero puis initialisation des fractions de masses et volumes
-  m_mass_fraction.fill(0.0);
-  m_fracvol.fill(0.0);
+void INSTARTService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
   Real a0 = 0.01;
   Real rhoH = 2.0;
   Real rhoL = 1.0;
@@ -79,8 +76,6 @@ void INSTARTService::initVarMono(Integer dim)  {
     // }
     m_density[cell] = rhoInitH*fracv + rhoInitL*(1.-fracv);
     m_pressure[cell] = pInitH*fracv + pInitL*(1.-fracv);
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
     /* 
      if ((Ylim < Ymax) && (Ylim > Ymin)) {
         pinfo() << "Y " << Y << " et Ylim " << Ylim << " avec Ymin " << Ymin << " et Ymax " << Ymax ;
@@ -127,22 +122,20 @@ void INSTARTService::initMat(Integer dim)  {
   }
 }
 
-void INSTARTService::initVar(Integer dim)  {
+void INSTARTService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
     
     
  if (options()->casTest == InstaRTX ||
        options()->casTest == InstaRTY ||
        options()->casTest == InstaRTZ) {
-        initVarMono(dim);
+        initVarMono(dim, densite_initiale, pression_initiale, vitesse_initiale);
         return;
  }
  
  Real rhoH = 2.0;
  Real rhoL = 1.0;
  Real a0 = 0.01;
- // mise à zero puis initialisation des fractions de masses et volumes
- m_mass_fraction.fill(0.0);
- m_fracvol.fill(0.0);
  CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
  ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -208,8 +201,6 @@ void INSTARTService::initVar(Integer dim)  {
     // }
     m_density[cell] = rhoInitH*fracv + rhoInitL*(1.-fracv);
     m_pressure[cell] = pInitH*fracv + pInitL*(1.-fracv);
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
     if (all_env_cell.nbEnvironment() !=1) {
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
             EnvCell ev = *ienvcell;  

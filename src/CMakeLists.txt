@@ -37,7 +37,7 @@ target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
 
 # Partie Elasticité
-add_library(Elasto elasto/DefaultModelService.cc)
+add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc)
 target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
@@ -107,6 +107,7 @@ arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Elasto elasto/DefaultModel)
+arcane_target_add_axl(Elasto elasto/NoModel)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
@@ -124,16 +125,19 @@ set( TEST_NAMES_PARA_4
         "CAS_2D_Lag_BiSodCaseX"
         "CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
+		"CAS_bitriplepoint_minmod"
 		"CAS_Lag_BiSodCaseZ"
         "CAS_Lag_SodCaseX"
         "CAS_BiSodCaseY"
 		"CAS_BiSodCaseZ"
 		"CAS_SodCaseY"
         "CAS_SodCaseZ"
+        "CAS_MonoPointtriple_pb_mixte_superbeeG_superbeeG"
         "CAS_SodCaseX_ordre_3"
         "CAS_BiSodCaseX_ordre_3"
         "CAS_SodCaseY_ordre_3"
         "CAS_SodCaseZ_ordre_3"
+        "CAS_MonoPointtriple_pb_sp_mixte_superbeeG_superbeeG"
 		"CAS_BiSodCaseY_ordre_3"
         "CAS_BiSodCaseZ_ordre_3"
 		"CAS_BiSodCaseX_pente_borne_minmod_debar_1"

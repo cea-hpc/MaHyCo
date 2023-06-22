@@ -19,9 +19,11 @@ void OTHERService::initMat(Integer dim)  {
     } 
   }
 }
-void OTHERService::initVarMono(Integer dim)  {
+void OTHERService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
 }
-void OTHERService::initVar(Integer dim)  {
+void OTHERService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
 
   // rayon interne et externe
   double rb(0.5);
@@ -29,10 +31,6 @@ void OTHERService::initVar(Integer dim)  {
   info() << " boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
-    // parametres maille
- 
     // Air partout
     m_density[cell] = 0.1;
     m_pressure[cell] = 1.;
@@ -44,8 +42,6 @@ void OTHERService::initVar(Integer dim)  {
       // maille pure de bulle
       m_density[cell] = 1.;
     } 
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
   }
   info() << " boucle sur les noeuds";
   ENUMERATE_NODE(inode, allNodes()){

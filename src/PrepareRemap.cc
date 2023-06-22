@@ -191,7 +191,7 @@ void MahycoModule::remap() {
     options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
     // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees
-    // pour les nouveaux envirronements crees dans les mailles mixtes par la projection
+    // pour les nouveaux environements crees dans les mailles mixtes par la projection
     m_pseudo_viscosity_n.fill(0.0);
     m_internal_energy_n.fill(0.0);
     m_cell_volume_n.fill(0.0);

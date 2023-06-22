@@ -63,7 +63,8 @@ void ADVECTIONService::initMat(Integer dim)  {
     } 
   }
 }
-void ADVECTIONService::initVarMono(Integer dim)  {
+void ADVECTIONService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale )  {
     
   Real3 Xb;
   if (options()->casTest < MonoAdvectionRotation) 
@@ -76,8 +77,6 @@ void ADVECTIONService::initVarMono(Integer dim)  {
   // info() << " boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     Real rminx(10.), rmaxx(0.);
@@ -100,8 +99,8 @@ void ADVECTIONService::initVarMono(Integer dim)  {
       rmaxy = std::max(rmaxy, rnodey);
     }
     // Air partout
-    m_density[cell] = 0.;
-    m_pressure[cell] = 0.;
+    m_density[cell] = densite_initiale[0];
+    m_pressure[cell] = pression_initiale[0];
     // bulle surchargera l'aire
     // centre de la bulle
     double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
@@ -113,16 +112,13 @@ void ADVECTIONService::initVarMono(Integer dim)  {
 
     if ((rx < rb) && (ry < rb)) {
         // maille pure de carré
-        m_density[cell] = 1.;
-        m_pressure[cell] = 0.;
+        m_density[cell] = densite_initiale[1];
+        m_pressure[cell] = pression_initiale[1];
     } /* else if (((rmaxx >= rb) && (rminx < rb))  ((rmaxx >= rb) && (rminx < rb))) {
       double frac_b = (rb - rminx) / (rmaxx - rminx);
       m_density[cell] = frac_b;
       m_pressure[cell] = 0.;
     } */
-
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
   }
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
@@ -141,10 +137,11 @@ void ADVECTIONService::initVarMono(Integer dim)  {
     m_velocity_n[inode] = m_velocity[inode];
   }
 }
-void ADVECTIONService::initVar(Integer dim)  {
+void ADVECTIONService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
 
   if (options()->casTest >= MonoAdvectionTx && options()->casTest <= MonoAdvectionRotation)  {
-    initVarMono(dim);
+    initVarMono(dim, densite_initiale,pression_initiale, vitesse_initiale);
     return;
   } 
   Real3 Xb;
@@ -159,8 +156,6 @@ void ADVECTIONService::initVar(Integer dim)  {
   double rb(0.25);              
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     Real rminx(10.), rmaxx(0.);
@@ -185,10 +180,8 @@ void ADVECTIONService::initVar(Integer dim)  {
       rmaxy = std::max(rmaxy, rnodey);
     }
     // Air partout
-    m_density[cell] = 0.;
-    m_pressure[cell] = 0.;
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
+    m_density[cell] = densite_initiale[0];
+    m_pressure[cell] = pression_initiale[0];
     // bulle surchargera l'aire
     // centre de la bulle
     double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
@@ -199,10 +192,8 @@ void ADVECTIONService::initVar(Integer dim)  {
     double ry = math::abs(m_cell_coord[cell][1] - Xb[1]);
     if ((rx < rb) && (ry < rb)) {
       // maille pure de bulle
-      m_density[cell] = 1.;
-      m_pressure[cell] = 0.;
-      m_fracvol[cell] = 1.;
-      m_mass_fraction[cell] = 1.;
+      m_density[cell] = densite_initiale[1];
+      m_pressure[cell] = pression_initiale[1];
     } /* else if (((rmaxx >= rb) && (rminx < rb)) || ((rmaxx >= rb) && (rminx < rb))) {
       // cas des cellules mailles mixtes
       double frac_b = (rb - rminx) / (rmaxx - rminx);
@@ -213,13 +204,11 @@ void ADVECTIONService::initVar(Integer dim)  {
           m_density[ev] = 1.;
           m_fracvol[ev] = frac_b;
           m_mass_fraction[ev] = frac_b;
-          m_pseudo_viscosity[ev] = 0.;
         }
         if (ev.environmentId() == 1) {
           m_density[ev] = 0.;
           m_fracvol[ev] = 1-frac_b;
           m_mass_fraction[ev] = 1-frac_b;
-          m_pseudo_viscosity[ev] = 0.;
         }
         m_pressure[ev] = 0.;
       }

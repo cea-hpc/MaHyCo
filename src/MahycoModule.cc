@@ -69,9 +69,26 @@ hydroStartInit()
   PrepareFaceGroup();
   
   info() << " Initialisation des variables";
+  Real3 densite_initiale;
+  Real3 pression_initiale;
+  Real3x3 vitesse_initiale;
+  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+    densite_initiale[i] = options()->environment[i].densiteInitiale;
+    pression_initiale[i] = options()->environment[i].pressionInitiale;
+    vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
+    info() << " L'environnement " << options()->environment()[i]->name() << " est initialisé à ";
+    info() << " Densité = " << densite_initiale[i];
+    info() << " Pression = " << pression_initiale[i];
+  }
+  // on considère par défaut que tous les mailles sont pures à l'init
+  // cela peut etre surcharger suivant les "casModel" dans initVar
+  m_fracvol.fill(1.0);    
+  m_mass_fraction.fill(1.0);
+  // initialisation de la pseudo à 0.
+  m_pseudo_viscosity.fill(0.0);
   
   // Initialises les variables (surcharge l'init d'arcane)
-  options()->casModel()->initVar(m_dimension);
+  options()->casModel()->initVar(m_dimension, densite_initiale, pression_initiale, vitesse_initiale);
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -94,6 +111,8 @@ hydroStartInit()
                 EnvCell ev = *ienvcell;        
                 m_internal_energy[cell] += m_internal_energy[ev] * m_mass_fraction[ev];
                 m_sound_speed[cell] = std::max(m_sound_speed[ev], m_sound_speed[cell]);
+                m_density[cell] += m_density[ev] * m_fracvol[ev];
+                m_pressure[cell] += m_pressure[ev] * m_fracvol[ev];
             }
         }
     }
@@ -142,7 +161,7 @@ hydroStartInit()
  * \file computeCellMass()
  * \brief Calcul de la masse des mailles
  *
- * \param  m_cell_volume, m_density, m_mass_fraction_env
+ * \param  m_cell_volume, m_density, m_mass_fraction_ev
  * \return m_cell_mass, m_cell_mass_env
  *******************************************************************************
  */
@@ -915,6 +934,7 @@ updateDensity()
  */
 void MahycoModule::updateElasticityAndPlasticity()
 {
+  debug() << "rentrée updateElasticityAndPlasticity ";
   if (options()->sansLagrange) return;
   // Calcul du gradient de vitesse 
   options()->environment[0].elastoModel()->ComputeVelocityGradient();

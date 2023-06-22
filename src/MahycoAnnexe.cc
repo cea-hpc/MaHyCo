@@ -157,9 +157,9 @@ void MahycoModule::PrepareFaceGroup() {
   maxCoor.x = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.x);
   maxCoor.y = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.y);
   maxCoor.z = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.z);
-  minCoor.x = parallelMng()->reduce(Parallel::ReduceMax, minCoor.x);
-  minCoor.y = parallelMng()->reduce(Parallel::ReduceMax, minCoor.y);
-  minCoor.z = parallelMng()->reduce(Parallel::ReduceMax, minCoor.z);
+  minCoor.x = parallelMng()->reduce(Parallel::ReduceMin, minCoor.x);
+  minCoor.y = parallelMng()->reduce(Parallel::ReduceMin, minCoor.y);
+  minCoor.z = parallelMng()->reduce(Parallel::ReduceMin, minCoor.z);
   
   ENUMERATE_FACE(iface, allFaces()){
      const Face& face = *iface;

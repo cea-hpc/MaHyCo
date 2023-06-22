@@ -174,7 +174,6 @@ class MahycoModule
    *  Sauvegarde des variables à l'instant n 
    */
   virtual void saveValuesAtN();
-
    /** 
    * Calcule la masse des mailles
    */
