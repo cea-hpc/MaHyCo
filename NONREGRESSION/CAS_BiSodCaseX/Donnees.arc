@@ -53,6 +53,8 @@
   <environment>
     <name>ZG</name>
     <material>ZG_mat</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>1.</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
       <specific-heat>2.4</specific-heat>
@@ -61,6 +63,8 @@
   <environment>
     <name>ZD</name>
     <material>ZD_mat</material>
+    <densite-initiale>.125</densite-initiale>
+    <pression-initiale>.1</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
       <specific-heat>2.4</specific-heat>

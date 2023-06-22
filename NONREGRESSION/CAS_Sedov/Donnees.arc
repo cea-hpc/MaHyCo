@@ -48,19 +48,13 @@
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
-  <material><name>Init</name></material>
   <material><name>Air</name></material>
-  <environment>
-    <name>ZoneInit</name>
-    <material>Init</material>
-    <eos-model name="PerfectGas">
-      <adiabatic-cst>1.4</adiabatic-cst>
-      <specific-heat>2.4</specific-heat>
-    </eos-model> 
-  </environment>
+  <material><name>Init</name></material>
   <environment>
     <name>ZoneAir</name>
     <material>Air</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>0.0979264e-5</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
       <specific-heat>2.4</specific-heat>
@@ -70,6 +64,17 @@
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>
+  <environment>
+    <name>ZoneInit</name>
+    <material>Init</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>1.</pression-initiale>
+    <eos-model name="PerfectGas">
+      <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
+    </eos-model> 
+  </environment>
+
    
   
    <cas-model name="SEDOV">
