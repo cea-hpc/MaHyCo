@@ -8,16 +8,18 @@ namespace Stdperfectgasacc2 {
 class PhyVars
 {
  public:
-  PhyVars();
+  PhyVars(ax::Runner& runner);
   ~PhyVars();
 
   void addPhyVar(Arcane::Materials::MaterialVariableCellReal var, const Arcane::Materials::MatCellVectorView* mat_cell_vector);
   
-  void asyncCopyFromAllArcVars(Arcane::Ref<ax::RunQueue> async_queue);
+  void asyncCopyFromAllArcVars(ax::RunQueue* async_queue);
 
   Arcane::Span<Arcane::Real> rawData(Arcane::Int32 i);
 
-  void asyncCopyIntoArcVar(Arcane::Ref<ax::RunQueue> async_queue, Arcane::Int32 i) const;
+  void asyncCopyIntoArcVar(ax::RunQueue* async_queue, Arcane::Int32 i) const;
+
+  void asyncCopyIntoArcVarList(ax::RunQueue* async_queue, std::initializer_list<Arcane::Int32> li);
 
   void clear();
 

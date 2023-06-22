@@ -68,11 +68,11 @@ setBuffer(Arcane::Span<Arcane::Byte> span_byte) {
 
 // Arcane var => raw_data, implem GPU API
 void PhyMatVarData::
-asyncCopyVarToRawData(Arcane::Ref<ax::RunQueue> async_queue) 
+asyncCopyVarToRawData(ax::RunQueue* async_queue) 
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  auto command = ax::makeCommand(async_queue.get());
+  auto command = ax::makeCommand(async_queue);
   auto in_var = ax::viewIn(command, m_var);
   Arcane::Span<Arcane::Real> out_raw_data(m_raw_data);
   MatCellContainer mat_cell_cont(*m_mat_cell_vector);
@@ -92,11 +92,11 @@ asyncCopyVarToRawData(Arcane::Ref<ax::RunQueue> async_queue)
 
 // raw_data => Arcane var, implem GPU API
 void PhyMatVarData::
-asyncCopyRawDataToVar(Arcane::Ref<ax::RunQueue> async_queue) 
+asyncCopyRawDataToVar(ax::RunQueue* async_queue) 
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  auto command = ax::makeCommand(async_queue.get());
+  auto command = ax::makeCommand(async_queue);
   auto out_var = ax::viewOut(command, m_var);
   Arcane::Span<const Arcane::Real> in_raw_data(m_raw_data);
   MatCellContainer mat_cell_cont(*m_mat_cell_vector);

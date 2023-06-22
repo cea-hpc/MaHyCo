@@ -21,8 +21,8 @@ class IPhyVarData
   virtual Arcane::String name() const = 0;
   virtual Arcane::Int32 sizeInBytes() const = 0;
   virtual void setBuffer(Arcane::Span<Arcane::Byte> span_byte) = 0;
-  virtual void asyncCopyVarToRawData(Arcane::Ref<ax::RunQueue> async_queue) = 0;
-  virtual void asyncCopyRawDataToVar(Arcane::Ref<ax::RunQueue> async_queue) = 0;
+  virtual void asyncCopyVarToRawData(ax::RunQueue* async_queue) = 0;
+  virtual void asyncCopyRawDataToVar(ax::RunQueue* async_queue) = 0;
   virtual PhyVarRawData rawData() = 0;
 };
 
@@ -36,8 +36,8 @@ class PhyMatVarData : public IPhyVarData
   Arcane::String name() const override;
   Arcane::Int32 sizeInBytes() const override;
   void setBuffer(Arcane::Span<Arcane::Byte> span_byte) override;
-  void asyncCopyVarToRawData(Arcane::Ref<ax::RunQueue> async_queue) override;
-  void asyncCopyRawDataToVar(Arcane::Ref<ax::RunQueue> async_queue) override;
+  void asyncCopyVarToRawData(ax::RunQueue* async_queue) override;
+  void asyncCopyRawDataToVar(ax::RunQueue* async_queue) override;
   PhyVarRawData rawData() override;
 
  protected:

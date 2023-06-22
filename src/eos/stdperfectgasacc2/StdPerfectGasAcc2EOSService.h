@@ -43,7 +43,7 @@ public:
   StdPerfectGasAcc2EOSService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
-  virtual ~StdPerfectGasAcc2EOSService() {};
+  virtual ~StdPerfectGasAcc2EOSService();
 
 public:
   /** 
@@ -75,7 +75,7 @@ private:
   IAccEnv* m_acc_env=nullptr;
 
   //! Liste permanente des variables physiques pour ne pas réallouer buffer
-  PhyVars m_phy_vars;
+  PhyVars* m_phy_vars=nullptr;
 };
 
 } // Stdperfectgasacc2

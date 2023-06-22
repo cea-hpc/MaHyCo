@@ -4,6 +4,7 @@
 #include "arcane/ServiceBuilder.h"
 #include "arcane/IItemFamily.h"
 #include "arcane/ItemVector.h"
+#include <arcane/accelerator/core/IAcceleratorMng.h>
 
 #include <accenv/IAccEnv.h>
 #include <eos/stdperfectgasacc2/EosTypes.h>
@@ -15,8 +16,17 @@ namespace Stdperfectgasacc2 {
 /* Constructeur de la classe                                                 */
 /*---------------------------------------------------------------------------*/
 StdPerfectGasAcc2EOSService::StdPerfectGasAcc2EOSService(const ServiceBuildInfo & sbi)
-  : ArcaneStdPerfectGasAcc2EOSObject(sbi) {
+  : ArcaneStdPerfectGasAcc2EOSObject(sbi)
+{
   m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
+}
+
+/*---------------------------------------------------------------------------*/
+/* Destructeur de la classe                                                  */
+/*---------------------------------------------------------------------------*/
+StdPerfectGasAcc2EOSService::~StdPerfectGasAcc2EOSService()
+{
+  delete m_phy_vars;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -24,6 +34,10 @@ StdPerfectGasAcc2EOSService::StdPerfectGasAcc2EOSService(const ServiceBuildInfo 
 
 void StdPerfectGasAcc2EOSService::initEOS(IMeshEnvironment* env)
 {
+  if (!m_phy_vars) {
+    m_phy_vars = new PhyVars(m_acc_env->runner());
+  }
+
   Real adiabatic_cst = getAdiabaticCst(env);
   // Initialise l'énergie et la vitesse du son
   ENUMERATE_ENVCELL(ienvcell,env)
@@ -71,15 +85,15 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
 
     // Arcane var => PhyVarTpe
     prof_acc_begin("ArcVar=>PhyVarTpe"); 
-    m_phy_vars.addPhyVar(m_density        , &matcell_vector_view);
-    m_phy_vars.addPhyVar(m_internal_energy, &matcell_vector_view);
-    m_phy_vars.addPhyVar(m_pressure       , &matcell_vector_view);
-    m_phy_vars.addPhyVar(m_sound_speed    , &matcell_vector_view);
-    m_phy_vars.addPhyVar(m_dpde           , &matcell_vector_view);
+    m_phy_vars->addPhyVar(m_density        , &matcell_vector_view);
+    m_phy_vars->addPhyVar(m_internal_energy, &matcell_vector_view);
+    m_phy_vars->addPhyVar(m_pressure       , &matcell_vector_view);
+    m_phy_vars->addPhyVar(m_sound_speed    , &matcell_vector_view);
+    m_phy_vars->addPhyVar(m_dpde           , &matcell_vector_view);
     prof_acc_end("ArcVar=>PhyVarTpe");
 
     //
-    m_phy_vars.asyncCopyFromAllArcVars(async_queue);
+    m_phy_vars->asyncCopyFromAllArcVars(async_queue.get());
 
     // The EOS itself
     prof_acc_begin("EOS_PG"); 
@@ -87,13 +101,13 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
 
     auto command = makeCommand(async_queue.get());
 
-    auto nelt = m_phy_vars.rawData(0).size();
+    auto nelt = m_phy_vars->rawData(0).size();
 
-    Span<const Real> in_density         (m_phy_vars.rawData(0));
-    Span<const Real> in_internal_energy (m_phy_vars.rawData(1));
-    Span<Real>       out_pressure       (m_phy_vars.rawData(2));
-    Span<Real>       out_sound_speed    (m_phy_vars.rawData(3));
-    Span<Real>       out_dpde           (m_phy_vars.rawData(4));
+    Span<const Real> in_density         (m_phy_vars->rawData(0));
+    Span<const Real> in_internal_energy (m_phy_vars->rawData(1));
+    Span<Real>       out_pressure       (m_phy_vars->rawData(2));
+    Span<Real>       out_sound_speed    (m_phy_vars->rawData(3));
+    Span<Real>       out_dpde           (m_phy_vars->rawData(4));
 
     command << RUNCOMMAND_LOOP1(iter, nelt)
     {
@@ -106,15 +120,13 @@ void StdPerfectGasAcc2EOSService::applyEOS(IMeshEnvironment* env)
     prof_acc_end("EOS_PG");
 
     // PhyVarType => Arcane var
-    prof_acc_begin("PhyVarTpe=>ArcVar"); 
-    m_phy_vars.asyncCopyIntoArcVar(async_queue, 2);
-    m_phy_vars.asyncCopyIntoArcVar(async_queue, 3);
-    m_phy_vars.asyncCopyIntoArcVar(async_queue, 4);
+    prof_acc_begin("PhyVarTpe=>ArcVar");
+    m_phy_vars->asyncCopyIntoArcVarList(async_queue.get(), {2, 3, 4});
     prof_acc_end("PhyVarTpe=>ArcVar");
 
     async_queue->barrier();
 
-    m_phy_vars.clear();
+    m_phy_vars->clear();
   }
 
   prof_acc_end(__FUNCTION__);

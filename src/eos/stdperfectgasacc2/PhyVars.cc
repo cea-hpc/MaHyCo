@@ -10,10 +10,12 @@
 #include <accenv/IAccEnv.h>
 
 #include "accenv/AcceleratorUtils.h"
+#include "accenv/SingletonIAccEnv.h"
 #include "accenv/ProfAcc.h"
 
 #include <arcane/accelerator/RunCommandMaterialEnumerate.h>
 #include <arcane/accelerator/MaterialVariableViews.h>
+#include <arcane/accelerator/AsyncRunQueuePool.h>
 #include <arcane/accelerator/core/IAcceleratorMng.h>
 #include <arcane/core/MeshVariableScalarRef.h>
 #include <arcane/core/ISubDomain.h>
@@ -25,9 +27,12 @@ namespace Stdperfectgasacc2 {
 
 class ImplPhyVars {
  public:
-  ImplPhyVars() 
+  ImplPhyVars(ax::Runner& runner) :
+    m_runner (runner),
+    m_async_queue_pool (runner)
   {
     m_buffer = Arcane::Materials::impl::makeOneBufferMeshMaterialSynchronizeBufferRef(eMemoryRessource::UnifiedMemory);
+    m_main_event = ax::makeEventRef(m_runner);
   }
 
   ~ImplPhyVars() {}
@@ -40,7 +45,7 @@ class ImplPhyVars {
     prof_acc_end(var.name().localstr());
   }
   
-  void asyncCopyFromAllArcVars(Arcane::Ref<ax::RunQueue> async_queue)
+  void asyncCopyFromAllArcVars(ax::RunQueue* async_queue)
   {
     prof_acc_begin("asyncCopyFromAllArcVars");
     // On décompte toutes les variables pour pré-allouer
@@ -56,8 +61,20 @@ class ImplPhyVars {
     }
 
     // On remplit les rawData()
-    for(Arcane::Int32 i = 0 ; i<m_phy_vars.size() ; ++i) {
-      m_phy_vars[i]->phy_var_data->asyncCopyVarToRawData(async_queue);
+
+    // On pré-construit les évenements manquants si nécessaire
+    for(Arcane::Int32 i = m_event.size() ; i<m_phy_vars.size() ; ++i) {
+      m_event.add(ax::makeEventRef(m_runner));
+    }
+
+    for(Arcane::Int32 i = 0 ; i<m_phy_vars.size() ; ++i) 
+    {
+      m_phy_vars[i]->phy_var_data->asyncCopyVarToRawData(m_async_queue_pool[i]);
+    }
+    for(Arcane::Int32 i = 0 ; i<m_phy_vars.size() ; ++i) 
+    {
+      m_async_queue_pool[i]->recordEvent(m_event[i]); // m_event[i] = événement de fin de copie sur m_async_queue_pool[i]
+      async_queue->waitEvent(m_event[i]); // la queue principale async_queue doit se synchroniser avec m_event[i]
     }
     prof_acc_end("asyncCopyFromAllArcVars");
   }
@@ -67,12 +84,32 @@ class ImplPhyVars {
     return m_phy_vars[i]->phy_var_data->rawData();
   }
 
-  void asyncCopyIntoArcVar(Arcane::Ref<ax::RunQueue> async_queue, Arcane::Int32 i) const
+  void asyncCopyIntoArcVar(ax::RunQueue* async_queue, Arcane::Int32 i) const
   {
     auto phy_var_data = m_phy_vars[i]->phy_var_data;
     prof_acc_begin(phy_var_data->name().localstr());
     phy_var_data->asyncCopyRawDataToVar(async_queue);
     prof_acc_end(phy_var_data->name().localstr());
+  }
+
+  void asyncCopyIntoArcVarList(ax::RunQueue* async_queue, std::initializer_list<Arcane::Int32> li) 
+  {
+    prof_acc_begin("asyncCopyIntoArcVarList");
+
+    async_queue->recordEvent(m_main_event); // événement de toutes les calculs précédents sur async_queue
+    for(Arcane::Int32 i : li) 
+    {
+      m_async_queue_pool[i]->waitEvent(m_main_event); // permet à m_async_queue_pool[i] de se synchroniser avec async_queue
+
+      m_phy_vars[i]->phy_var_data->asyncCopyRawDataToVar(m_async_queue_pool[i]);
+    }
+    for(Arcane::Int32 i : li) 
+    {
+      m_async_queue_pool[i]->recordEvent(m_event[i]); // m_event[i] = événement de fin de copie sur m_async_queue_pool[i]
+      async_queue->waitEvent(m_event[i]); // la queue principale async_queue doit se synchroniser avec m_event[i]
+    }
+
+    prof_acc_end("asyncCopyIntoArcVarList");
   }
 
   void clear()
@@ -81,16 +118,20 @@ class ImplPhyVars {
   }
 
  protected:
+  ax::Runner& m_runner;
   std::vector< Arcane::Ref<PhyVarType> > m_phy_vars;
   Arcane::Ref<Arcane::Materials::IMeshMaterialSynchronizeBuffer> m_buffer;
+  ax::AsyncRunQueuePool m_async_queue_pool;
+  Arcane::UniqueArray<Arcane::Ref<ax::RunQueueEvent> > m_event;
+  Arcane::Ref<ax::RunQueueEvent> m_main_event;
 };
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-PhyVars::PhyVars() 
+PhyVars::PhyVars(ax::Runner& runner) 
 {
-  ImplPhyVars* impl_phy_vars = new ImplPhyVars();
+  ImplPhyVars* impl_phy_vars = new ImplPhyVars(runner);
   m_impl = static_cast<void*>(impl_phy_vars);
 }
 
@@ -110,7 +151,7 @@ void PhyVars::addPhyVar(Arcane::Materials::MaterialVariableCellReal var, const A
   get_ImplPhyVars_ptr(m_impl)->addPhyVar(var, mat_cell_vector);
 }
 
-void PhyVars::asyncCopyFromAllArcVars(Arcane::Ref<ax::RunQueue> async_queue) 
+void PhyVars::asyncCopyFromAllArcVars(ax::RunQueue* async_queue) 
 {
   get_ImplPhyVars_ptr(m_impl)->asyncCopyFromAllArcVars(async_queue);
 }
@@ -120,9 +161,14 @@ Arcane::Span<Arcane::Real> PhyVars::rawData(Arcane::Int32 i)
   return get_ImplPhyVars_ptr(m_impl)->rawData(i);
 }
 
-void PhyVars::asyncCopyIntoArcVar(Arcane::Ref<ax::RunQueue> async_queue, Arcane::Int32 i) const 
+void PhyVars::asyncCopyIntoArcVar(ax::RunQueue* async_queue, Arcane::Int32 i) const 
 {
   get_ImplPhyVars_ptr(m_impl)->asyncCopyIntoArcVar(async_queue, i);
+}
+
+void PhyVars::asyncCopyIntoArcVarList(ax::RunQueue* async_queue, std::initializer_list<Arcane::Int32> li)  
+{
+  get_ImplPhyVars_ptr(m_impl)->asyncCopyIntoArcVarList(async_queue, li);
 }
 
 void PhyVars::clear() 
