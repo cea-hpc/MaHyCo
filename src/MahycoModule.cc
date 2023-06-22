@@ -69,19 +69,39 @@ hydroStartInit()
   PrepareFaceGroup();
   
   info() << " Initialisation des variables";
+  Real3 densite_initiale;
+  Real3 pression_initiale;
+  Real3x3 vitesse_initiale;
+  for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+    densite_initiale[i] = options()->environment[i].densiteInitiale;
+    pression_initiale[i] = options()->environment[i].pressionInitiale;
+    vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
+    info() << " L'environnement " << options()->environment()[i]->name() << " est initialisé à ";
+    info() << " Densité = " << densite_initiale[i];
+    info() << " Pression = " << pression_initiale[i];
+  }
+  // on considère par défaut que tous les mailles sont pures à l'init
+  // cela peut etre surcharger suivant les "casModel" dans initVar
+  m_fracvol.fill(1.0);    
+  m_mass_fraction.fill(1.0);
+  // initialisation de la pseudo à 0.
+  m_pseudo_viscosity.fill(0.0);
+  
   // Initialises les variables (surcharge l'init d'arcane)
-  options()->casModel()->initVar(m_dimension);
+  options()->casModel()->initVar(m_dimension, densite_initiale, pression_initiale, vitesse_initiale);
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
         IMeshEnvironment* ienv = mm->environments()[i];
         // Initialise l'énergie et la vitesse du son
         options()->environment[i].eosModel()->initEOS(ienv);
+        // Initialisation des varibles ElastoPlastic (mise à zéro)
+        options()->environment[i].elastoModel()->initElasto(ienv);
     }
 
     CellToAllEnvCellConverter all_env_cell_converter(mm);
 
-    // valeur moyenne
+   // valeur moyenne
     ENUMERATE_CELL(icell, allCells()){
         Cell cell = * icell;
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
@@ -91,6 +111,8 @@ hydroStartInit()
                 EnvCell ev = *ienvcell;        
                 m_internal_energy[cell] += m_internal_energy[ev] * m_mass_fraction[ev];
                 m_sound_speed[cell] = std::max(m_sound_speed[ev], m_sound_speed[cell]);
+                m_density[cell] += m_density[ev] * m_fracvol[ev];
+                m_pressure[cell] += m_pressure[ev] * m_fracvol[ev];
             }
         }
     }
@@ -139,7 +161,7 @@ hydroStartInit()
  * \file computeCellMass()
  * \brief Calcul de la masse des mailles
  *
- * \param  m_cell_volume, m_density, m_mass_fraction_env
+ * \param  m_cell_volume, m_density, m_mass_fraction_ev
  * \return m_cell_mass, m_cell_mass_env
  *******************************************************************************
  */
@@ -224,8 +246,6 @@ saveValuesAtN()
 {
   debug() << " Entree dans saveValuesAtN()";
   
-  applyBoundaryConditionForCellVariables();
-  
   // le pas de temps a été mis a jour a la fin dunpas de temps precedent et arcanne met dans m_global_old_deltat ce pas de temps ?
   // donc nous ont remet le bon old pas de temps
   m_global_old_deltat = m_old_deltat;
@@ -236,6 +256,7 @@ saveValuesAtN()
   m_internal_energy.synchronize();
   m_cell_volume.synchronize();
   m_pressure.synchronize();
+  m_strain_tensor.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
   
@@ -245,6 +266,7 @@ saveValuesAtN()
     m_pseudo_viscosity_nmoins1[cell] = m_pseudo_viscosity_n[cell];
     m_pseudo_viscosity_n[cell] = m_pseudo_viscosity[cell];
     m_pressure_n[cell] = m_pressure[cell];
+    m_strain_tensor_n[cell] =m_strain_tensor[cell];
     m_cell_volume_n[cell] = m_cell_volume[cell];
     m_density_n[cell] = m_density[cell];
     m_internal_energy_n[cell] = m_internal_energy[cell];
@@ -256,6 +278,7 @@ saveValuesAtN()
       m_pseudo_viscosity_nmoins1[ev] = m_pseudo_viscosity_n[ev];
       m_pseudo_viscosity_n[ev] = m_pseudo_viscosity[ev];
       m_pressure_n[ev] = m_pressure[ev];
+      m_strain_tensor_n[ev] =m_strain_tensor[ev];
       m_cell_volume_n[ev] = m_cell_volume[ev];
       m_density_n[ev] = m_density[ev];
       m_internal_energy_n[ev] = m_internal_energy[ev];
@@ -351,6 +374,14 @@ updateVelocity()
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
      }
   }
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor_n[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs_n[icell] [inode.index()]);
+     }
+  }
   
   VariableNodeReal3InView in_force(viewIn(m_force));
   VariableNodeReal3InView in_velocity(viewIn(m_velocity_n));
@@ -398,6 +429,15 @@ updateVelocityBackward()
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs_n[icell] [inode.index()];
   }
+  
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor_n[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs_n[icell] [inode.index()]);
+     }
+  }
   const Real dt(-0.5 * m_global_old_deltat());  
   
   VariableNodeReal3InView in_force(viewIn(m_force));
@@ -443,6 +483,15 @@ updateVelocityForward()
     Real pressure = m_pressure[icell] + m_pseudo_viscosity[icell];
     for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode)
       m_force[inode] += pressure * m_cell_cqs[icell] [inode.index()];
+  }
+  
+  // Calcul de la force Elasto-plastique
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    Real3x3 force_tensor = -  m_strain_tensor[icell];
+    for (NodeEnumerator inode(cell.nodes()); inode.hasNext(); ++inode) {
+      m_force[inode] += math::prodTensVec( force_tensor, m_cell_cqs[icell] [inode.index()]);
+     }
   }
   const Real dt(0.5 * m_global_deltat());
   
@@ -572,6 +621,7 @@ applyBoundaryConditionForCellVariables()
   debug() << " Entree dans applyBoundaryConditionForCellVariables()";
   
   Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+  Real one_over_nbnodeface = m_dimension == 2 ? .5  : .25 ;
   
   const Real dt(0.5 * (m_global_old_deltat() + m_global_deltat()));
   
@@ -622,22 +672,29 @@ applyBoundaryConditionForCellVariables()
         // boucle sur les noeuds de la face
         for (Integer k = 0; k < nb_node; ++k){
         Node node = face.node(k);
+        Node node2;
+        if (k<nb_node-1) 
+            node2 = face.node(k+1);
+        else 
+            node2 = face.node(0);
         Real3 normale_sortante;
+        Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
         Cell cell;
         value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
         value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
         value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
         value += options()->boundaryCondition[i]->dependanceT * m_global_time();
-        if (m_global_time() > options()->boundaryCondition[i]->cutoffT) value =0.;
+        if (m_global_time() < options()->boundaryCondition[i]->Tdebut) value = 0.;
+        if (m_global_time() > options()->boundaryCondition[i]->Tfin) value = 0.;
         cell = face.backCell();
         if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
             / (m_face_coord[face]-m_cell_coord[cell]).normL2();
         cell = face.frontCell();
         if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
             / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-        // pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt;
-        m_velocity[node] -= normale_sortante*value/m_node_mass[node] * dt;
-        // pinfo() << " vitesse imposée" << m_velocity[node] << " face " << normale_sortante << " dt " << dt;
+        // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
+        m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
+        // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
         }
       }
     }
@@ -867,6 +924,37 @@ updateDensity()
 }
 /**
  *******************************************************************************
+ * \file updateElasticityAndPlasticity
+ *  * \brief Calcul de la contribution elasto-plastique
+ *
+ * \param  
+ *
+ * \return
+ *******************************************************************************
+ */
+void MahycoModule::updateElasticityAndPlasticity()
+{
+  debug() << "rentrée updateElasticityAndPlasticity ";
+  if (options()->sansLagrange) return;
+  // Calcul du gradient de vitesse 
+  options()->environment[0].elastoModel()->ComputeVelocityGradient();
+  // Calcul du tenseur de déformation et de rotation
+  options()->environment[0].elastoModel()->ComputeDeformationAndRotation();
+  
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    // Calcul du travail elasto-plastique pour energie interne avec S à n
+    options()->environment[env->id()].elastoModel()->ComputeElastoEnergie(env,m_global_deltat.value());
+    //  Calcul du deviateur elasto-plastique 
+    options()->environment[env->id()].elastoModel()->ComputeElasticity(env,m_global_deltat.value(),m_dimension);
+    //  Calcul de la plasticité 
+    options()->environment[env->id()].elastoModel()->ComputePlasticity(env,m_global_deltat.value(),m_dimension);
+    // Calcul du travail elasto-plastique pour energie interne avec S à n+1
+    options()->environment[env->id()].elastoModel()->ComputeElastoEnergie(env,m_global_deltat.value());
+  }
+}
+/**
+ *******************************************************************************
  * \file updateEnergy()
  * \brief Calcul de l'energie interne ( cas du gaz parfait ou methode de newton)
  *
@@ -880,6 +968,7 @@ updateDensity()
 void MahycoModule::
 updateEnergyAndPressure()
 {
+  if (options()->sansLagrange) return;
   debug() << " Rentrée dans updateEnergyAndPressure";
   if (options()->energyDeposit) {
     ENUMERATE_ENV(ienv,mm){
@@ -987,8 +1076,11 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double enew=0, e=m_internal_energy[ev], p=pn, c, dpde;
           int i = 0;
           
+          // TODO : sauvegarde des indicateurs de phases à N
+          
           while(i<itermax && abs(fvnr(e, p, dpde, en, qnn1, pn, rn1, rn))>=epsilon)
             {
+              // TODO : reprise des indicateurs de phases à N
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
@@ -1045,8 +1137,12 @@ void MahycoModule::updateEnergyAndPressurebyNewton()  {
           double enew=0, e=en, p, c, dpde;
           int i = 0;
         
+          
+          // TODO : sauvegarde des indicateurs de phases à N
+          
           while(i<itermax && abs(f(e, p, dpde, en, qn, pn, cn1, cn, m, qn1, cdn, cdon, qnm1))>=epsilon)
 	        {
+              // TODO : reprise des indicateurs de phases à N
               m_internal_energy[ev] = e;
               options()->environment[env->id()].eosModel()->applyOneCellEOS(env, ev);
               p = m_pressure[ev];
@@ -1180,9 +1276,6 @@ computeDeltaT()
          << " et " << options()->deltatInit()
          << " et " << m_global_deltat()
          << " et " << options()->deltatMax();
-         
-  
-  applyBoundaryConditionForCellVariables();
   
   m_global_old_deltat = m_global_deltat;
   m_old_deltat = m_global_old_deltat();

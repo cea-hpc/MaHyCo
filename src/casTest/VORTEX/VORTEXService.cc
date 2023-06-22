@@ -15,7 +15,8 @@ void VORTEXService::initMat(Integer dim)  {
     return;
   } 
 }
-void VORTEXService::initVarMono(Integer dim)  {
+void VORTEXService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
     
   Real3 Xb = {5.0, 0.0, 0.};
   Real beta = 5.;
@@ -24,13 +25,9 @@ void VORTEXService::initVarMono(Integer dim)  {
         
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
 
     // Air partout
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
     // Rayon
     r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
                         (m_cell_coord[cell][0] - Xb[0]) +
@@ -57,10 +54,11 @@ void VORTEXService::initVarMono(Integer dim)  {
     if (m_node_coord[inode].y < 0.) pinfo() << "vit Y " << m_velocity[inode].y ;
   }
 }
-void VORTEXService::initVar(Integer dim)  {
+void VORTEXService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+                                   Real3x3 vitesse_initiale)  {
 
   if (options()->casTest == Vortex)  {
-    initVarMono(dim);
+    initVarMono(dim, densite_initiale, pression_initiale, vitesse_initiale);
     return;
   } 
  

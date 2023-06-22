@@ -100,10 +100,10 @@
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
-  <!-- 	CELL CQS	 -->
+  <!-- 	CELL OLD CQS	 -->
   <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-  <!-- 	CELL OLD CQS	 -->
+  <!-- 	CELL CQS	 -->
   <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" /> 
   <!-- 	FACE COORD	 -->
@@ -162,6 +162,39 @@
     <!-- 	FRAC PHASE 6	 -->
     <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+    
+    <!-- Gradient de vitesse -->
+    <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
+    dim="0" material="false" dump="true" need-sync="true" />
+    
+    <!-- Tenseur de rotation -->
+    <variable field-name="spin_rate" name="SpinRate" data-type="real3" item-kind="cell"
+    dim="0" material="false" dump="true" need-sync="true" />
+    
+    <!-- Deformation Rate -->
+    <variable field-name="deformation_rate" name="DeformationRate" data-type="real3x3" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    <!-- Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+	    
+    <!-- Tenseur (déviateur) des contraintes à N -->
+    <variable field-name="strain_tensor_n" name="StrainTensorN" data-type="real3x3" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    <!-- Vitesse de déformation Plastic -->
+    <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
+    dim="0" material="false" dump="true" need-sync="true" />
+	    
+    <!-- Déformation Plastic -->
+    <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
+    dim="0" material="false" dump="true" need-sync="true" />
+	    
   </variables>
 
 
@@ -178,6 +211,7 @@
   <entry-point method-name="computeGeometricValues" name="ComputeGeometricValues" where="compute-loop" property="none" />
   <entry-point method-name="updateDensity" name="UpdateDensity" where="compute-loop" property="none" />
   <entry-point method-name="computeArtificialViscosity" name="ComputeArtificialViscosity" where="compute-loop" property="none" />
+  <entry-point method-name="updateElasticityAndPlasticity" name="UpdateElasticityAndPlasticity" where="compute-loop" property="none" />
   <entry-point method-name="updateEnergyAndPressure" name="UpdateEnergyAndPressure" where="compute-loop" property="none" />
   <entry-point method-name="computePressionMoyenne" name="ComputePressionMoyenne" where="compute-loop" property="none" />
   <entry-point method-name="remap" name="Remap" where="compute-loop" property="none" />
@@ -213,24 +247,33 @@
   >
    <description>Milieu</description>
 
-   <simple
-    name = "name"
-    type = "string"
-   >
+   <simple name = "name" type = "string">
     <description>Nom du milieu</description>
    </simple>
 
-   <simple
-    name = "material"
-    type = "string"
-    minOccurs = "1"
-    maxOccurs = "unbounded"
-   >
+   <simple name = "material" type = "string"
+    minOccurs = "1" maxOccurs = "unbounded" >
     <description>Nom du materiau</description>
+   </simple>
+   
+   <simple name="densite-initiale" type="real">
+    <description> Valeur de la densité initiale</description>
+   </simple>
+   
+   <simple name="pression-initiale" type="real">
+    <description> Valeur de la pression initiale</description>
+   </simple>
+   
+   <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
+    <description> Valeur de la vitesse initiale</description>
    </simple>
 
    <service-instance name="eos-model" type="IEquationOfState">
     <description>Service d'equation d'état</description>
+   </service-instance>
+
+   <service-instance name="elasto-model" type="IElasto" default="NoModel">
+    <description>Service d'élasto-plasticité</description>
    </service-instance>
 
   </complex>
@@ -368,7 +411,10 @@
     <simple name="dependanceT" type="real" default="0.">
       <description>Valeur de la dependance au temps</description>
     </simple>
-    <simple name="cutoffT" type="real" default="0.">
+    <simple name="Tdebut" type="real" default="0.">
+      <description>Valeur du debut de la CDL de pression</description>
+    </simple>
+    <simple name="Tfin" type="real" default="0.">
       <description>Valeur de la fin de la CDL de pression</description>
     </simple>
   </complex>

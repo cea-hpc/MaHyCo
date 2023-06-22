@@ -61,11 +61,11 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     
     if (!cells_to_add.empty()) {
-      pinfo() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
+      debug() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size();
       env_cells.addItems(cells_to_add);
     }
     if (!cells_to_remove.empty()){
-      pinfo() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
+      debug() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
       env_cells.removeItems(cells_to_remove);
     }
     
