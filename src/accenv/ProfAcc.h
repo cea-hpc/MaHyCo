@@ -5,6 +5,7 @@ void prof_acc_start_capture();
 void prof_acc_stop_capture();
 void prof_acc_begin(const char* name);
 void prof_acc_end(const char* name);
+void prof_acc_mark(const char* name);
 
 #endif
 
