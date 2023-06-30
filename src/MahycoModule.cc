@@ -68,13 +68,27 @@ hydroStartInit()
   info() << " Initialisation des groupes de faces";
   PrepareFaceGroup();
   
+  for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
+    if (options()->boundaryCondition[i]->type() == TypesMahyco::GeometricPressure) {
+        if (options()->boundaryCondition[i]->value() < 0.) {
+            String fichier =  options()->boundaryCondition[i]->fichier();
+            if (fichier != "RIEN")  {
+                const std::string& fichier = "Pression.data";
+                if (fichier != "RIEN") lireFichierCDL(fichier);
+            }
+        }
+    }
+  } 
+  
   info() << " Initialisation des variables";
   Real3 densite_initiale;
   Real3 pression_initiale;
+  Real3 energie_initiale;
   Real3x3 vitesse_initiale;
   for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
     densite_initiale[i] = options()->environment[i].densiteInitiale;
     pression_initiale[i] = options()->environment[i].pressionInitiale;
+    energie_initiale[i] = options()->environment[i].energieInitiale;
     vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
     info() << " L'environnement " << options()->environment()[i]->name() << " est initialisé à ";
     info() << " Densité = " << densite_initiale[i];
@@ -84,11 +98,21 @@ hydroStartInit()
   // cela peut etre surcharger suivant les "casModel" dans initVar
   m_fracvol.fill(1.0);    
   m_mass_fraction.fill(1.0);
+  // fraction des phases
+  m_frac_phase1.fill(1.0);
+  m_frac_phase2.fill(1.0);
+  m_frac_phase3.fill(1.0);
+  m_frac_phase4.fill(1.0);
+  m_frac_phase5.fill(1.0);
+  m_frac_phase6.fill(1.0);
   // initialisation de la pseudo à 0.
   m_pseudo_viscosity.fill(0.0);
   
+  // initialisation du time-history
+  if (options()->timeHistory.size() >0) initTH();
+  
   // Initialises les variables (surcharge l'init d'arcane)
-  options()->casModel()->initVar(m_dimension, densite_initiale, pression_initiale, vitesse_initiale);
+  options()->casModel()->initVar(m_dimension, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
   
   if (!options()->sansLagrange) {
     for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
@@ -222,7 +246,7 @@ hydroContinueInit()
 {
   if (subDomain()->isContinue()) {
     
-    debug() << " Entree dans hydroContinueInit()";
+    info() << " Entree dans hydroContinueInit()";
     // en reprise 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     m_dimension = mesh()->dimension(); 
@@ -237,6 +261,17 @@ hydroContinueInit()
     m_global_old_deltat = m_old_deltat;
     // mise a jour nombre iteration 
     m_global_iteration = m_global_iteration() +1;
+    
+    if (!options()->sansLagrange) {
+        
+      info() << " Nombre Mailles en reprise " << allCells().size();
+      
+      for( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+        IMeshEnvironment* ienv = mm->environments()[i];
+        // Re-Initialise certains parametres pour l'EOS
+        options()->environment[i].eosModel()->ReinitEOS(ienv);
+      }
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -669,32 +704,76 @@ applyBoundaryConditionForCellVariables()
         }
       }
       if (type == TypesMahyco::GeometricPressure) {
-        // boucle sur les noeuds de la face
-        for (Integer k = 0; k < nb_node; ++k){
-        Node node = face.node(k);
-        Node node2;
-        if (k<nb_node-1) 
-            node2 = face.node(k+1);
-        else 
-            node2 = face.node(0);
-        Real3 normale_sortante;
-        Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
-        Cell cell;
-        value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
-        value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
-        value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
-        value += options()->boundaryCondition[i]->dependanceT * m_global_time();
-        if (m_global_time() < options()->boundaryCondition[i]->Tdebut) value = 0.;
-        if (m_global_time() > options()->boundaryCondition[i]->Tfin) value = 0.;
-        cell = face.backCell();
-        if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
-            / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-        cell = face.frontCell();
-        if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
-            / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-        // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
-        m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
-        // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
+        if (value > 0.) {
+            // boucle sur les noeuds de la face
+            for (Integer k = 0; k < nb_node; ++k){
+                Node node = face.node(k);
+                Node node2;
+                if (k<nb_node-1) 
+                    node2 = face.node(k+1);
+                else 
+                    node2 = face.node(0);
+                Real3 normale_sortante;
+                Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
+                Cell cell;
+                value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
+                value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
+                value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
+                value += options()->boundaryCondition[i]->dependanceT * m_global_time();
+                if (m_global_time() < options()->boundaryCondition[i]->Tdebut) value = 0.;
+                if (m_global_time() > options()->boundaryCondition[i]->Tfin) value = 0.;
+                cell = face.backCell();
+                if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+                cell = face.frontCell();
+                if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+                // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
+                m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
+                // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
+            }   
+        } else {
+         Real alpha(0.);
+         value =0.;
+         // info() << " on cherche la CDL de pression " << m_table_temps[0] << " " << m_table_temps[1] << " " << m_table_temps[2];
+         Integer it(-1);
+         // valeur de la pression lue dans un fichier et interpoler
+         for (Integer i = 0; i < m_taille_table; ++i){
+             // si je trouve un temps plus grand que le temps courant
+             if (m_global_time() < m_table_temps[i]) {
+                 it = i;
+                 break;
+             } 
+             // sinon value reste 0.
+         }
+         if (it>0) {
+            alpha =  (m_global_time() - m_table_temps[it-1] ) / (m_table_temps[it] - m_table_temps[it-1]);
+            alpha = math::min(alpha, 1.);
+            alpha = math::max(alpha, 0.);
+            value = m_table_pression[it-1] + alpha * (m_table_pression[it] - m_table_pression[it-1]);
+         }
+         
+         // boucle sur les noeuds de la face
+         for (Integer k = 0; k < nb_node; ++k){
+            Node node = face.node(k);
+            Node node2;
+            if (k<nb_node-1) 
+                node2 = face.node(k+1);
+            else 
+                node2 = face.node(0);
+            Real3 normale_sortante;
+            Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
+            Cell cell;
+            cell = face.backCell();
+            if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+            cell = face.frontCell();
+            if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+            // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
+            m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
+            // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
+         }
         }
       }
     }
@@ -1030,8 +1109,8 @@ void MahycoModule::updateEnergyAndPressureExplicite()  {
     IMeshEnvironment* env = *ienv;
     ENUMERATE_ENVCELL(ienvcell,env){
           EnvCell ev = *ienvcell;
-          m_internal_energy[ev] += 
-          - (m_pressure_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]);
+          m_internal_energy[ev] -= 
+          (m_pressure_n[ev] + m_pseudo_viscosity[ev]) * (1.0 / m_density[ev] - 1.0 / m_density_n[ev]);
     }
     // puis on récupere la pression pour toutes les mailles 
     options()->environment[env->id()].eosModel()->applyEOS(env);

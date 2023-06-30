@@ -53,10 +53,11 @@ void MahycoModule::hydroStartInitEnvAndMat()
   Integer nb_cell = allCells().size();
   Integer nb_env = m_block1->nbEnvironment();
   m_nb_env = nb_env;
-  m_nb_vars_to_project = 3 * nb_env + 3 + 1 + 1;
+  m_nb_vars_to_project = 3 * nb_env + 3 + 1 + 1 + 6 * nb_env;
   m_sens_projection = 0;
-  // (volumes, ma;sses, energies internes) * nbmatmax
-  // + vitesses + energie cinétique + pseudo*
+  // (volumes, masses, energies internes) * nbmatmax
+  // + vitesses + energie cinétique + pseudo
+  // + 6 phases * nbmatmax
   //
   // on redimensionne les tableaux de la projection en fonction
   // du nombre total d'environnements
@@ -234,15 +235,18 @@ void MahycoModule::SortieHistory() {
     // Integer period=options()->outputHistoryPeriod();
     Integer period = options()->timeHistory[i]->periode;
     Real frequence = options()->timeHistory[i]->frequence; // not used yet
-    if (fichier.is_open() && (m_global_iteration()%period ==0)) {
+    if (fichier.is_open() && (m_global_iteration()%period ==0)) { 
         fichier << " Temps " << m_global_time() << " ";
-        int i(0);
         ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
             ENUMERATE_ENVCELL(ienvcell,env)
             {
                 EnvCell ev = *ienvcell;   
-                if (i==0) {
+                Cell cell = ev.globalCell();
+                
+                if ( m_maille_th() == cell.localId()) {
+                    fichier << m_maille_th() << " ";
+                    // fichier << m_cell_coord[cell] << " ";
                     fichier << m_density[ev] << " ";
                     fichier << m_internal_energy[ev] << " ";
                     fichier << m_pressure[ev] << " ";
@@ -253,9 +257,65 @@ void MahycoModule::SortieHistory() {
                     fichier << m_frac_phase3[ev] << " ";
                     fichier << std::endl;
                 }
-                i++;
             }
         }
+    }
+  }
+}
+/**
+ *******************************************************************************
+ * \file lireFichierPourCDL()
+ * \brief 
+ *******************************************************************************
+ */
+void MahycoModule::lireFichierCDL(const std::string& nomFichier)
+{
+    std::ifstream fichier(nomFichier); // Ouverture du fichier en lecture
+    pinfo() << "Ouverture de " << nomFichier;
+    
+    if (fichier)
+    {
+        
+        int compteur = 0;
+        Real x(-1),y(-1);
+
+        while (fichier >> x >> y)
+        {
+            compteur++;
+            pinfo() << x << " " << y;
+            m_table_temps.push_back(x);
+            m_table_pression.push_back(y);
+        }
+        m_taille_table = compteur;
+        
+        pinfo() << " Taille de la table de marche des CDL de pression" << m_taille_table;
+        fichier.close(); // Fermeture du fichier
+    }
+    else
+    {
+        std::cout << "Erreur lors de l'ouverture du fichier." << std::endl;
+    }
+}
+/**
+ *******************************************************************************
+ * \file InitTH()
+ * \brief 
+ *******************************************************************************
+ */
+void MahycoModule::initTH()
+{
+  // pour l'instant : options()->timeHistory.size() est de taille 1
+  for (Integer i = 0, nb = options()->timeHistory.size(); i < nb; ++i){
+    Real3 borneSup = options()->timeHistory[i]->borneSup; 
+    Real3 borneInf = options()->timeHistory[i]->borneInf; 
+    // Sortie Time History
+    m_maille_th = 0;
+    ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;
+      if ((borneInf.x < m_cell_coord[cell].x) && (m_cell_coord[cell].x < borneSup.x) 
+        && (borneInf.y < m_cell_coord[cell].y) && (m_cell_coord[cell].y < borneSup.y)) {
+        m_maille_th = cell.localId();
+      }
     }
   }
 }

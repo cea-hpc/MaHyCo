@@ -348,9 +348,19 @@ class MahycoModule
    * point d'entree pour la phase de projection
    **/
   virtual void remap();
+  /**
+   * Initialisation Time History
+   **/
+  virtual void initTH();
+  
+  /** lecture du fichier de pression(temps) pour les CDL */
+  virtual void  lireFichierCDL( const std::string& nomFichier);
+
  
   /** Retourne le numéro de version du module */
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
+  
+  
   
  private:
   
@@ -392,7 +402,6 @@ class MahycoModule
    /** */
    inline double fderiv(double e, double p, double dpde, double cn1, double m)
      {return 1.+0.5*dpde*cn1/m;}; 
-
   
   /* variables membre */
   ICartesianMesh* m_cartesian_mesh;
@@ -401,6 +410,9 @@ class MahycoModule
   Integer m_nb_env;
   Integer my_rank;
   Integer m_dimension;
+  Integer m_taille_table;
+  std::vector<Real>  m_table_pression;
+  std::vector<Real>  m_table_temps;
  
 };
 

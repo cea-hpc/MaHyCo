@@ -194,7 +194,10 @@
     <!-- Déformation Plastic -->
     <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
     dim="0" material="false" dump="true" need-sync="true" />
-	    
+    
+    <!-- Numero Maille pour time-History --> 
+    <variable field-name="maille_th" name="MailleTh" data-type="integer" dim="0" dump="true" />    
+ 	    
   </variables>
 
 
@@ -260,9 +263,13 @@
     <description> Valeur de la densité initiale</description>
    </simple>
    
-   <simple name="pression-initiale" type="real">
+   <simple name="pression-initiale" type="real" default="1.e5">
     <description> Valeur de la pression initiale</description>
    </simple>
+    
+    <simple name="energie-initiale" type="real" default="0.">
+    <description> Valeur de la pression initiale</description>
+    </simple>
    
    <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
     <description> Valeur de la vitesse initiale</description>
@@ -417,6 +424,10 @@
     <simple name="Tfin" type="real" default="0.">
       <description>Valeur de la fin de la CDL de pression</description>
     </simple>
+    
+    <simple name="fichier" type="string" default="RIEN">
+      <description>Fichier des valeurs de pressions en fonction du temps</description>
+    </simple>
   </complex>
   <!-- - - - - - sortie time history - - - - -->
    <complex name="time-history" type="TimeHistory" minOccurs="0" maxOccurs="unbounded">
@@ -428,6 +439,14 @@
     <!-- - - - - - frequence - - - - -->
   <simple name="periode" type="integer" default="10">
     <description>periode (en iterations) des sorties </description>
+  </simple>
+  <!-- - - - - - borne sup - - - - -->
+  <simple name="borne-sup" type="real3" default="0. 0. 0.">
+    <description>coord supérieur </description>
+  </simple>
+  <!-- - - - - - borne sup - - - - -->
+  <simple name="borne-inf" type="real3" default="0. 0. 0.">
+    <description>coord inférieur </description>
   </simple>
   </complex>
 		
