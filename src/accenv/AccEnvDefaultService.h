@@ -22,8 +22,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
  public:
   void initAcc() override;
 
-  ax::Runner& runner() override { return m_runner; }
-  ax::RunQueue newQueue() override { return makeQueue(m_runner); }
+  ax::Runner& runner() override { return *m_runner_ptr; }
+  ax::RunQueue newQueue() override { return makeQueue(*m_runner_ptr); }
   Ref<ax::RunQueue> refQueueAsync(eQueuePriority qp=QP_default) override;
 
   AccMemAdviser* accMemAdv() override { return m_acc_mem_adv; }
@@ -48,7 +48,8 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
   void _computeNodeIndexInCells();
 
  protected:
-  ax::Runner m_runner;
+  ax::Runner m_host_runner;
+  ax::Runner* m_runner_ptr=nullptr;
   AccMemAdviser* m_acc_mem_adv=nullptr;
   UnstructuredMeshConnectivityView m_connectivity_view;
 

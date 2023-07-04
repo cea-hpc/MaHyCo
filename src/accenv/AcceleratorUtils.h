@@ -114,30 +114,6 @@ class AcceleratorUtils {
     return ax::impl::isAcceleratorPolicy(runner.executionPolicy());
   }
 
-  static Integer deviceCount() {
-#if defined(ARCANE_COMPILING_CUDA)
-    Integer device_count=0;
-    cudaGetDeviceCount(&device_count);
-    return device_count;
-#elif defined(ARCANE_COMPILING_HIP)
-    Integer device_count=0;
-    auto err = hipGetDeviceCount(&device_count);
-    return device_count;
-#else
-    return 0;
-#endif
-  }
-
-  static void setDevice([[maybe_unused]] Integer device) {
-#if defined(ARCANE_COMPILING_CUDA)
-    cudaSetDevice(device);
-#elif defined(ARCANE_COMPILING_HIP)
-    auto err = hipSetDevice(device);
-#else
-    return ;
-#endif
-  }
-
   /*---------------------------------------------------------------------------*/
   /* Référence sur une queue asynchrone créée avec un niveau de priorité       */
   /*---------------------------------------------------------------------------*/
