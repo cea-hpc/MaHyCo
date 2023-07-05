@@ -1,6 +1,10 @@
 #ifndef _EOS_STDPERFECTGASACC1_MALLOCATOR_H
 #define _EOS_STDPERFECTGASACC1_MALLOCATOR_H
 
+#ifdef MAHYCO_HAS_BOOST
+#include <boost/core/noinit_adaptor.hpp>
+#endif
+
 #include <arcane/utils/PlatformUtils.h>
 #include <arccore/collections/IMemoryAllocator.h>
 #include <arcane/utils/IMemoryRessourceMng.h>
@@ -72,7 +76,15 @@ bool operator!=(const ArcaneMemAllocator <T>&, const ArcaneMemAllocator <U>&) { 
 #ifdef MALLOCATOR_IS_STD_ALLOC
 template<typename T> using Mallocator = std::allocator<T>;
 #else
+
+#ifdef MAHYCO_HAS_BOOST
+//#warning "MAHYCO_HAS_BOOST : boost::noinit_adaptor"
+template<typename T> using Mallocator = boost::noinit_adaptor< ArcaneMemAllocator<T> >;
+#else
+//#warning "MAHYCO_HAS_BOOST NON DEFINI"
 template<typename T> using Mallocator = ArcaneMemAllocator<T>;
+#endif
+
 #endif
 
 } // Stdperfectgasacc1

@@ -43,6 +43,11 @@ IEquationOfState.h)
 target_include_directories(StdPerfectGasAcc1 PRIVATE ..)
 target_link_libraries(StdPerfectGasAcc1 PUBLIC Arcane::arcane_core)
 target_link_libraries(StdPerfectGasAcc1 PRIVATE mahyco_config)
+find_package(Boost)
+if(Boost_FOUND)
+  target_compile_definitions(StdPerfectGasAcc1 PRIVATE MAHYCO_HAS_BOOST)
+  target_link_libraries(StdPerfectGasAcc1 PRIVATE Boost::headers)
+endif()
 install(TARGETS StdPerfectGasAcc1 EXPORT ${MAHYCO_EXPORT_TARGET})
 
 add_library(StdPerfectGasAcc2
