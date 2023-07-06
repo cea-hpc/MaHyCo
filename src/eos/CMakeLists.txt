@@ -65,6 +65,20 @@ target_link_libraries(StdPerfectGasAcc2 PUBLIC Arcane::arcane_core)
 target_link_libraries(StdPerfectGasAcc2 PRIVATE mahyco_config)
 install(TARGETS StdPerfectGasAcc2 EXPORT ${MAHYCO_EXPORT_TARGET})
 
+add_library(QnewtStdPerfectGas
+qnewt_stdperfectgas/QnewtStdPerfectGasEOSService.cc
+qnewt_stdperfectgas/QnewtStdPerfectGasEOSService.h
+qnewt_stdperfectgas/PhyVarType.cc
+qnewt_stdperfectgas/PhyVarType.h
+qnewt_stdperfectgas/EosTypes.h
+qnewt_stdperfectgas/Utils.h
+IEquationOfState.h)
+
+target_include_directories(QnewtStdPerfectGas PRIVATE ..)
+target_link_libraries(QnewtStdPerfectGas PUBLIC Arcane::arcane_core)
+target_link_libraries(QnewtStdPerfectGas PRIVATE mahyco_config)
+install(TARGETS QnewtStdPerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
+
 arcane_accelerator_enable()
 
 arcane_accelerator_add_source_files(perfectgas/PerfectGasEOSService.cc)
@@ -80,17 +94,22 @@ arcane_accelerator_add_source_files(stdperfectgasacc2/StdPerfectGasAcc2EOSServic
 arcane_accelerator_add_source_files(stdperfectgasacc2/PhyVarType.cc)
 arcane_accelerator_add_source_files(stdperfectgasacc2/PhyVars.cc)
 
+#arcane_accelerator_add_source_files(qnewt_stdperfectgas/QnewtStdPerfectGasEOSService.cc)
+#arcane_accelerator_add_source_files(qnewt_stdperfectgas/PhyVarType.cc)
+
 arcane_accelerator_add_to_target(PerfectGas)
 arcane_accelerator_add_to_target(StiffenedGas)
 #arcane_accelerator_add_to_target(StdPerfectGas)
 arcane_accelerator_add_to_target(StdPerfectGasAcc1)
 arcane_accelerator_add_to_target(StdPerfectGasAcc2)
+#arcane_accelerator_add_to_target(QnewtStdPerfectGas)
 
 arcane_target_add_axl(PerfectGas perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas stiffenedgas/StiffenedGasEOS)
 arcane_target_add_axl(StdPerfectGas stdperfectgas/StdPerfectGasEOS)
 arcane_target_add_axl(StdPerfectGasAcc1 stdperfectgasacc1/StdPerfectGasAcc1EOS)
 arcane_target_add_axl(StdPerfectGasAcc2 stdperfectgasacc2/StdPerfectGasAcc2EOS)
+arcane_target_add_axl(QnewtStdPerfectGas qnewt_stdperfectgas/QnewtStdPerfectGasEOS)
 
 add_library(eos INTERFACE)
 target_link_libraries(eos INTERFACE 
@@ -98,4 +117,6 @@ target_link_libraries(eos INTERFACE
     StiffenedGas 
     StdPerfectGas
     StdPerfectGasAcc1
-    StdPerfectGasAcc2)
+    StdPerfectGasAcc2
+    QnewtStdPerfectGas
+    )
