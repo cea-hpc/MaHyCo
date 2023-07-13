@@ -53,11 +53,10 @@ void MahycoModule::hydroStartInitEnvAndMat()
   Integer nb_cell = allCells().size();
   Integer nb_env = m_block1->nbEnvironment();
   m_nb_env = nb_env;
-  m_nb_vars_to_project = 3 * nb_env + 3 + 1 + 1 + 6 * nb_env;
+  m_nb_vars_to_project = 7 * nb_env + 3 + 1 + 1 ;
   m_sens_projection = 0;
-  // (volumes, masses, energies internes) * nbmatmax
+  // (volumes, masses, energies internes, phases 1,2,3) * nbmatmax
   // + vitesses + energie cinétique + pseudo
-  // + 6 phases * nbmatmax
   //
   // on redimensionne les tableaux de la projection en fonction
   // du nombre total d'environnements
@@ -231,12 +230,13 @@ void MahycoModule::SortieHistory() {
   
   
   std::ofstream fichier("time-history.txt", std::ofstream::app );
+  std::ofstream fichier_noeud("time-history_noeud.txt", std::ofstream::app );
   for (Integer i = 0, nb = options()->timeHistory.size(); i < nb; ++i){
     // Integer period=options()->outputHistoryPeriod();
     Integer period = options()->timeHistory[i]->periode;
     Real frequence = options()->timeHistory[i]->frequence; // not used yet
-    if (fichier.is_open() && (m_global_iteration()%period ==0)) { 
-        fichier << " Temps " << m_global_time() << " ";
+    if ((m_global_iteration()%period ==0)) { 
+      if (fichier.is_open()) { 
         ENUMERATE_ENV(ienv,mm){
         IMeshEnvironment* env = *ienv;
             ENUMERATE_ENVCELL(ienvcell,env)
@@ -245,6 +245,7 @@ void MahycoModule::SortieHistory() {
                 Cell cell = ev.globalCell();
                 
                 if ( m_maille_th() == cell.localId()) {
+                    fichier << " Temps " << m_global_time() << " ";
                     fichier << m_maille_th() << " ";
                     // fichier << m_cell_coord[cell] << " ";
                     fichier << m_density[ev] << " ";
@@ -255,10 +256,33 @@ void MahycoModule::SortieHistory() {
                     fichier << m_frac_phase1[ev] << " ";
                     fichier << m_frac_phase2[ev] << " ";
                     fichier << m_frac_phase3[ev] << " ";
+                    fichier << m_strain_norm[ev] << " ";
+                    fichier << m_strain_tensor_xx[ev] << " ";
+                    fichier << m_strain_tensor_yy[ev] << " ";
+                    fichier << m_strain_tensor_xy[ev] << " ";
+                    fichier << m_strain_tensor_yz[ev] << " ";
+                    fichier << m_strain_tensor_xz[ev] << " ";
                     fichier << std::endl;
                 }
+             }
+          }
+      }
+      if (fichier_noeud.is_open()) { 
+        ENUMERATE_NODE(inode, allNodes()){
+            Node node = *inode;
+            if ( m_noeud_th() == node.localId()) {
+                fichier_noeud << " Temps " << m_global_time() << " ";
+                fichier_noeud << m_noeud_th() << " ";
+                fichier_noeud << m_node_coord[node].x << " ";
+                fichier_noeud << m_node_coord[node].y << " ";
+                fichier_noeud << m_node_coord[node].z << " ";
+                fichier_noeud << m_velocity[node].x << " ";
+                fichier_noeud << m_velocity[node].y << " ";
+                fichier_noeud << m_velocity[node].z << " ";
+                fichier_noeud << std::endl;
             }
         }
+      }
     }
   }
 }
@@ -309,13 +333,43 @@ void MahycoModule::initTH()
     Real3 borneSup = options()->timeHistory[i]->borneSup; 
     Real3 borneInf = options()->timeHistory[i]->borneInf; 
     // Sortie Time History
-    m_maille_th = 0;
+    m_maille_th = -1;
+    bool trouve = false;
     ENUMERATE_CELL(icell, allCells()){
       Cell cell = * icell;
       if ((borneInf.x < m_cell_coord[cell].x) && (m_cell_coord[cell].x < borneSup.x) 
-        && (borneInf.y < m_cell_coord[cell].y) && (m_cell_coord[cell].y < borneSup.y)) {
+        && (borneInf.y < m_cell_coord[cell].y) && (m_cell_coord[cell].y < borneSup.y)
+        && (borneInf.z < m_cell_coord[cell].z) && (m_cell_coord[cell].z < borneSup.z)
+        && cell.isOwn() ) {
         m_maille_th = cell.localId();
+        trouve = true;
       }
     }
+    if (!trouve) {
+        std::cout << "Pas de maille trouvé pour le time history dans ce sous-domaine ( m_maille_th = " << m_maille_th() << " )" << std::endl;
+    } else {
+        std::cout << " Maille " << m_maille_th() << " trouvé dans le sous-domaine " << my_rank << std::endl;
+    }
+    Real3 borneSupNoeud = options()->timeHistory[i]->borneSupNoeud; 
+    Real3 borneInfNoeud = options()->timeHistory[i]->borneInfNoeud; 
+    // Sortie Time History pour les noeuds
+    m_noeud_th = -1;
+    ENUMERATE_NODE(inode, allNodes()){
+        Node node = *inode;
+         if ((borneInfNoeud.x < m_node_coord[node].x) && (m_node_coord[node].x < borneSupNoeud.x) 
+        && (borneInfNoeud.y < m_node_coord[node].y) && (m_node_coord[node].y < borneSupNoeud.y)
+        && (borneInfNoeud.z < m_node_coord[node].z) && (m_node_coord[node].z < borneSupNoeud.z)
+        && node.isOwn() ) {
+        m_noeud_th = node.localId();
+        trouve = true;
+      }
+    }
+    if (!trouve) {
+        std::cout << "Pas de noeud trouvé pour le time history dans ce sous-domaine ( m_noeud_th = " << m_noeud_th() << " )" << std::endl;
+    } else {
+        std::cout << " Noeud " << m_noeud_th() << " trouvé dans le sous-domaine " << my_rank << std::endl;
+    }
+    
+    
   }
 }

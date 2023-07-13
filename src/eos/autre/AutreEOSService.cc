@@ -191,18 +191,18 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
-  //pinfo() << " Appel à la fonction " ;
-  //pinfo() << " Valeurs envoyé à l'EOS ";
-  //pinfo() << "  rho = " << m_rho[ip];
-  //pinfo() << "  ene = " << m_ene[ip];
-  //pinfo() << "  pres = " << m_Pres[ip];
-  //pinfo() << "  Temp = " << m_Temp[ip];
-  //pinfo() << "   DT " << m_dtime[ip]; 
-  //pinfo() << "  Frac1 = " << m_Frac1[ip];
-  //pinfo() << "  Frac2 = " << m_Frac2[ip];
-  //pinfo() << "  Frac3 = " << m_Frac3[ip];
-  //pinfo() << "  Frac4 = " << m_Frac4[ip];
-  //pinfo() << "  Frac5 = " << m_Frac5[ip];
+  pinfo() << " Appel à la fonction " << " nombre de maille " << imail ;
+  pinfo() << " Valeurs envoyé à l'EOS ";
+  pinfo() << "  rho = " << m_rho[ip];
+  pinfo() << "  ene = " << m_ene[ip];
+  pinfo() << "  pres = " << m_Pres[ip];
+  pinfo() << "  Temp = " << m_Temp[ip];
+  pinfo() << "   DT " << m_dtime[ip]; 
+  pinfo() << "  Frac1 = " << m_Frac1[ip];
+  pinfo() << "  Frac2 = " << m_Frac2[ip];
+  pinfo() << "  Frac3 = " << m_Frac3[ip];
+  pinfo() << "  Frac4 = " << m_Frac4[ip];
+  pinfo() << "  Frac5 = " << m_Frac5[ip];
   
   TV2_S_CALC_CINE_VE( &nbmail,
                  m_dtime,
@@ -280,6 +280,7 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
     m_Frac4[imail] = m_frac_phase4[ev];
     m_Frac5[imail] = m_frac_phase5[ev];
     m_Frac6[imail] = m_frac_phase6[ev];
+    m_conv[imail] = 0.;
     if (m_Temp[imail] < 100.) ip = imail;
     // sortie m_dpde,m_cs2,m_conv;
     imail++;

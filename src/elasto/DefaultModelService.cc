@@ -145,7 +145,7 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
         intensite_deviateur += math::pow(m_strain_tensor[ev].z.x,2.);
     }
     if ( intensite_deviateur > 2.*math::pow(yield_strength,2.)/3.) {
-     coeff = yield_strength/math::sqrt(3.*intensite_deviateur/2.); 
+        coeff = yield_strength/math::sqrt(3.*intensite_deviateur/2.); 
         // retour radial
         m_strain_tensor[ev] *= coeff;
         // vitesse de déformation plastique
@@ -153,9 +153,16 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
         m_plastic_deformation_velocity[ev] = (1.-coeff)*yield_strength/(3.*mu*coeff*delta_t);
         // deformation plastique
         m_plastic_deformation[ev] += m_plastic_deformation_velocity[ev];
+        
+        intensite_deviateur = 2.*math::pow(yield_strength,2.)/3.;
     }
     // pour les sorties
     m_strain_tensor_xx[cell] = - m_strain_tensor[ev].x.x;
+    m_strain_tensor_yy[cell] = - m_strain_tensor[ev].y.y;
+    m_strain_tensor_xy[cell] = - m_strain_tensor[ev].x.y;
+    m_strain_tensor_xz[cell] = - m_strain_tensor[ev].x.z;
+    m_strain_tensor_yz[cell] = - m_strain_tensor[ev].y.z;
+    m_strain_norm[cell] = math::sqrt(intensite_deviateur);
   }
 }
 /*---------------------------------------------------------------------------*/

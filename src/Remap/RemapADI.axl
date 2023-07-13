@@ -118,6 +118,24 @@
 	    dim="0" dump="true" need-sync="true" /> 
     <variable field-name="front_flux_mass" name="FrontFluxMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" /> 
+    <!-- 	FRAC PHASE 1	 -->
+    <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 2	 -->
+    <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 3	 -->
+    <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 4	 -->
+    <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 5	 -->
+    <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 6	 -->
+    <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
 </variables>
 
 <options>

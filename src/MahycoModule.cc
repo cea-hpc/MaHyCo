@@ -69,14 +69,10 @@ hydroStartInit()
   PrepareFaceGroup();
   
   for (Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i){
-    if (options()->boundaryCondition[i]->type() == TypesMahyco::GeometricPressure) {
-        if (options()->boundaryCondition[i]->value() < 0.) {
-            String fichier =  options()->boundaryCondition[i]->fichier();
-            if (fichier != "RIEN")  {
-                const std::string& fichier = "Pression.data";
-                if (fichier != "RIEN") lireFichierCDL(fichier);
-            }
-        }
+    if (options()->boundaryCondition[i]->type() == TypesMahyco::OnFilePressure) {
+        // String fichier =  options()->boundaryCondition[i]->fichier();
+        const std::string& fichier = "Pression.data";
+        if (fichier != "RIEN") lireFichierCDL(fichier);
     }
   } 
   
@@ -294,6 +290,20 @@ saveValuesAtN()
   m_strain_tensor.synchronize();
   m_cell_cqs.synchronize();
   m_velocity.synchronize();
+  // avec Elasto
+  m_strain_tensor.synchronize();
+  m_spin_rate.synchronize();
+  m_deformation_rate.synchronize();
+  m_velocity_gradient.synchronize();
+  m_plastic_deformation_velocity.synchronize();
+  m_plastic_deformation.synchronize();
+  // pour les phases
+  m_frac_phase1.synchronize();
+  m_frac_phase2.synchronize();
+  m_frac_phase3.synchronize();
+  m_frac_phase4.synchronize();
+  m_frac_phase5.synchronize();
+  m_frac_phase6.synchronize();
   
   
   ENUMERATE_CELL(icell, allCells()){
@@ -340,14 +350,16 @@ computeArtificialViscosity()
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
     Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+    Real a1 = options()->environment[env->id()].linearPseudoCoeff();
+    Real a2 = options()->environment[env->id()].quadraticPseudoCoeff();
     ENUMERATE_ENVCELL(ienvcell,env){
       EnvCell ev = *ienvcell;
       Cell cell = ev.globalCell();
       m_pseudo_viscosity[ev] = 0.;   
       if (m_div_u[cell] < 0.0) {
         m_pseudo_viscosity[ev] = 1. / m_tau_density[ev]
-          * (-0.5 * m_caracteristic_length[cell] * m_sound_speed[cell] * m_div_u[cell]
-             + (adiabatic_cst + 1) / 2.0 * m_caracteristic_length[cell] * m_caracteristic_length[cell]
+          * (- a1 * m_caracteristic_length[cell] * m_sound_speed[cell] * m_div_u[cell]
+             + a2 * m_caracteristic_length[cell] * m_caracteristic_length[cell]
              * m_div_u[cell] * m_div_u[cell]);
       }
     }
@@ -618,30 +630,37 @@ applyBoundaryCondition()
     FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
     Real value = options()->boundaryCondition[i]->value();
     TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
+    
+    bool Novalue = false;
+    
+    if (m_global_time() < options()->boundaryCondition[i]->Tdebut) Novalue=true;
+    if (m_global_time() > options()->boundaryCondition[i]->Tfin) Novalue=true;
 
-    // boucle sur les faces de la surface
-    ENUMERATE_FACE(j, face_group){
-      Face face = * j;
-      Integer nb_node = face.nbNode();
+    if (Novalue == false) {
+      // boucle sur les faces de la surface
+      ENUMERATE_FACE(j, face_group){
+        Face face = * j;
+        Integer nb_node = face.nbNode();
 
-      // boucle sur les noeuds de la face
-      for (Integer k = 0; k < nb_node; ++k){
-        Node node = face.node(k);
-        Real3& velocity = m_velocity[node];
+        // boucle sur les noeuds de la face
+        for (Integer k = 0; k < nb_node; ++k){
+          Node node = face.node(k);
+          Real3& velocity = m_velocity[node];
 
-        switch (type){
-        case TypesMahyco::VelocityX:
-          velocity.x = value;
-          break;
-        case TypesMahyco::VelocityY:
-          velocity.y = value;
-          break;
-        case TypesMahyco::VelocityZ:
-          velocity.z = value;
-          break;
-        case TypesMahyco::Unknown:
-          break;
-        }
+          switch (type){
+          case TypesMahyco::VelocityX:
+            velocity.x = value;
+            break;
+          case TypesMahyco::VelocityY:
+            velocity.y = value;
+            break;
+          case TypesMahyco::VelocityZ:
+            velocity.z = value;
+            break;
+          case TypesMahyco::Unknown:
+           break;
+         }
+       }
       }
     }
   }
@@ -665,6 +684,7 @@ applyBoundaryConditionForCellVariables()
     FaceGroup face_group = mesh()->faceFamily()->findGroup(NomBC);
     Real value = options()->boundaryCondition[i]->value();
     TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
+    
 
     // boucle sur les faces de la surface
     ENUMERATE_FACE(j, face_group){
@@ -703,36 +723,81 @@ applyBoundaryConditionForCellVariables()
             m_pressure[cell] = value;
         }
       }
-      if (type == TypesMahyco::GeometricPressure) {
-        if (value > 0.) {
+      if (type == TypesMahyco::GeometricPressure || 
+          type == TypesMahyco::LinearPressure || 
+          type == TypesMahyco::OnFilePressure ||
+          type == TypesMahyco::SuperGaussianPressure ||
+          type == TypesMahyco::ContactHerzPressure) {
+          
+        if (type != TypesMahyco::OnFilePressure) {
             // boucle sur les noeuds de la face
             for (Integer k = 0; k < nb_node; ++k){
+                value = options()->boundaryCondition[i]->value();
                 Node node = face.node(k);
-                Node node2;
-                if (k<nb_node-1) 
-                    node2 = face.node(k+1);
-                else 
-                    node2 = face.node(0);
                 Real3 normale_sortante;
-                Real surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
-                Cell cell;
-                value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
-                value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
-                value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
-                value += options()->boundaryCondition[i]->dependanceT * m_global_time();
+                Real surface(0.);
+                if (m_dimension == 2) {
+                    Node node2;
+                    if (k<nb_node-1) 
+                        node2 = face.node(k+1);
+                    else 
+                        node2 = face.node(0);
+                    surface = (m_node_coord[node2] - m_node_coord[node]).normL2(); 
+                } else { // if (m_dimension == 3) {
+                  Real3 face_vec1 = m_node_coord[face.node(2)] - m_node_coord[face.node(0)]; 
+                  Real3 face_vec2 = m_node_coord[face.node(3)] - m_node_coord[face.node(1)];
+                    surface = 0.5 * produit(face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x); // pour CDL Z
+                    // surface = produit(face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y); // pour CDL X
+                    // surface = - produit(face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x); // pour CDL Y
+                }
+                Cell cell, cellok;
+                cell = face.backCell();
+                if (cell.localId() != -1) {
+                    normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+                    cellok = cell;
+                }
+                cell = face.frontCell();
+                if (cell.localId() != -1) {
+                    normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
+                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
+                    cellok = cell;
+                }
+                
+                if (type == TypesMahyco::LinearPressure) {
+                // Fonction lineaire en X, Y ou Z et T
+                 value += options()->boundaryCondition[i]->dependanceX * m_node_coord[node].x;
+                 value += options()->boundaryCondition[i]->dependanceY * m_node_coord[node].y;
+                 value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
+                 value += options()->boundaryCondition[i]->dependanceT * m_global_time();
+                } else if (type == TypesMahyco::SuperGaussianPressure ) {
+                // Fonction super Gaussienne
+                 Real ay= m_node_coord[node].y * options()->boundaryCondition[i]->dependanceY;
+                 value *= math::exp(-math::pow(ay,4.));
+                } else if (type == TypesMahyco::ContactHerzPressure) {
+                    // Fonction Contact de Herz sur ZMAX
+                    Real a2 = options()->boundaryCondition[i]->dependanceX;
+                    Real b2 = options()->boundaryCondition[i]->dependanceY;
+                    Real x2 = m_cell_coord[cellok].x * m_cell_coord[cellok].x;
+                    Real y2 = m_cell_coord[cellok].y * m_cell_coord[cellok].y; // pour CDL Z
+                    // Real r2 = m_cell_coord[cellok].y * m_cell_coord[cellok].y + m_cell_coord[cellok].z * m_cell_coord[cellok].z;// pour CDL X
+                    // Real r2 = m_cell_coord[cellok].x * m_cell_coord[cellok].x + m_cell_coord[cellok].z * m_cell_coord[cellok].z;// pour CDL Y
+                    if ( x2/a2 + y2/b2 < 1.) {
+                        value *= math::sqrt(1-x2/a2-y2/b2 );
+                    } else {
+                        value = 0.;
+                    }
+                }
                 if (m_global_time() < options()->boundaryCondition[i]->Tdebut) value = 0.;
                 if (m_global_time() > options()->boundaryCondition[i]->Tfin) value = 0.;
-                cell = face.backCell();
-                if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
-                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-                cell = face.frontCell();
-                if (cell.localId() != -1) normale_sortante = (m_face_coord[face]-m_cell_coord[cell]) 
-                    / (m_face_coord[face]-m_cell_coord[cell]).normL2();
-                // if (cell.localId() == 0)  pinfo() << " vitesse avant" << m_velocity[node]<< " face " << normale_sortante << " dt " << dt << " et value " << value;
+                
+                // if (value != 0.) pinfo() << cellok.localId()  << " coord " << m_cell_coord[cellok] << " Pression " <<  r2 << " face " << normale_sortante << " dt " << dt << " et value " << value;
+                // pinfo() << face_group.size() << " face Id " << face.localId() ;
                 m_velocity[node] -= dt*one_over_nbnodeface*normale_sortante*value*surface/m_node_mass[node];
-                // if (cell.localId() == 0) pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
+                // pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
             }   
         } else {
+            
          Real alpha(0.);
          value =0.;
          // info() << " on cherche la CDL de pression " << m_table_temps[0] << " " << m_table_temps[1] << " " << m_table_temps[2];
@@ -1049,18 +1114,18 @@ updateEnergyAndPressure()
 {
   if (options()->sansLagrange) return;
   debug() << " Rentrée dans updateEnergyAndPressure";
-  if (options()->energyDeposit) {
-    ENUMERATE_ENV(ienv,mm){
-      IMeshEnvironment* env = *ienv;
-      // pour l'instant, on ajoute pas d'autres option, donc  AdiabaticCst
-      Real energy_deposit = options()->environment[env->id()].eosModel()->getAdiabaticCst(env);
+  ENUMERATE_ENV(ienv,mm){
+    IMeshEnvironment* env = *ienv;
+    // pour l'instant, on ajoute pas d'autres option, donc  AdiabaticCst
+    Real energy_deposit = options()->environment[env->id()].valeurSourceEnergie();
+    if (energy_deposit !=0.) {
       int i=0;
-      ENUMERATE_ENVCELL(ienvcell,env){
-          EnvCell ev = *ienvcell;
-          if (i==0) pinfo() << "energie av" << m_internal_energy[ev];
-          m_internal_energy[ev] += energy_deposit * m_global_deltat();
-          if (i==0) pinfo() << "energie ap" << m_internal_energy[ev];
-          i++;
+      ENUMERATE_ENVCELL(ienvcell,env) {
+        EnvCell ev = *ienvcell;
+        if (i==0) pinfo() << "energie av" << m_internal_energy[ev];
+        m_internal_energy[ev] += energy_deposit * m_global_deltat();
+        if (i==0) pinfo() << "energie ap" << m_internal_energy[ev];
+        i++;
       }
       pinfo() << " Ajout de l'energie" << energy_deposit << " avec dt " <<  m_global_deltat();
     }
