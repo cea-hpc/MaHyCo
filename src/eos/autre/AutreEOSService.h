@@ -31,13 +31,13 @@ extern "C" {
 #endif
 
 #define S_LEC_COEF __m_lec_MOD_s_lec_coeff
-#define TV2_CINETEST22_COUPLAGE_SINIT  __tv2_sinit_MOD_tv2_cinetest22_couplage_sinit
-#define TV2_S_CALC_CINE_VE __tv2_scalc_MOD_tv2_s_calc_cine_ve
+#define CINETEST22_COUPLAGE_SINIT  __sinit_MOD_cinetest22_couplage_sinit
+#define S_CALC_CINE_VE __scalc_MOD_s_calc_cine_ve
     
     // lecture du fichier de coef
 extern void  S_LEC_COEF(char* fich);
-extern void  TV2_CINETEST22_COUPLAGE_SINIT(double *rho_std, double *ene_std);
-extern void  TV2_S_CALC_CINE_VE(Integer *nbmail,
+extern void  CINETEST22_COUPLAGE_SINIT(double *rho_std, double *ene_std);
+extern void  S_CALC_CINE_VE(Integer *nbmail,
                 double *dtime,
                 double *rho,
                 double *ene,

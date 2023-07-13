@@ -2,15 +2,13 @@ set(EXAMPLE_NAME Mahyco)
 project(Mahyco LANGUAGES C CXX)
 include(../mahyco.common.cmake)
 
-message(STATUS "SOURCES_SUPLEMENTAIRES=${CINETIQUE_SRC}")
 
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 
-# Partie Equation d'état 
-if (IS_DIRECTORY ${CINETIQUE_SRC}) 
+# Partie Equation d'état Cinetique
 enable_language( Fortran )
-file( GLOB SOURCES  ${CINETIQUE_SRC}/*.f90 )
+file( GLOB SOURCES  Cinetique_chgt_phase/*.f90 )
 add_library(cinetique SHARED ${SOURCES})
 target_link_libraries(cinetique PUBLIC)
 set(CINETIQUE_LIB cinetique)
@@ -20,9 +18,6 @@ target_include_directories(Autre PUBLIC .)
 target_link_libraries(Autre  PUBLIC   arcane_core ${CINETIQUE_LIB})
 arcane_target_add_axl(Autre eos/autre/AutreEOS)
 set(AUTRE_EOS Autre)
-else()
-set(AUTRE_EOS "")
-endif()
 
 add_library(MieGruneisen eos/miegruneisen/MieGruneisenEOSService.cc)
 target_include_directories(MieGruneisen PUBLIC .)
@@ -147,6 +142,7 @@ set( TEST_NAMES_PARA_4
 		"CAS_BiSodCaseY_pente_borne_superbee_debar_2"
 		)
 set( TEST_NAMES_PARA_8		
+        "CAS_lag_ChocPlaque3D"
 		"CAS_MonoRiderDeformationTimeReverse"
 		"CAS_MonoRiderVortexTimeReverse"
 		"CAS_MonoRiderVortex"
@@ -162,11 +158,14 @@ set( TEST_NAMES_PARA_8
 		"CAS_Sedov"
 		)
 set( TEST_NAMES
+		"CAS_lag_Chauffage_isochore"
 		"CAS_Lag_BiSodCaseX"
         "CAS_2D_Lag_SodCaseZ"
         "CAS_Lag_BiSodCaseY"
 		"CAS_Lag_SodCaseY"
         "CAS_Lag_SodCaseZ"
+		"CAS_lag_ChocPlaque1D"
+		"CAS_lag_ChocPlaque1D_3phases"
 		"CAS_BiSodCaseX"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderRotation"
@@ -196,6 +195,11 @@ set(MPI_LAUNCHER mpiexec CACHE STRING "Définit le launcher MPI" )
 # Pour définir la base du répertoire temporaire d'exécution des tests de non-regression
 set(BASETMPDIR_NONREG "/tmp" CACHE PATH "Définit la base du répertoire temporaire d'exécution des tests de non-regression" )
 
+# sequentiel
+foreach( TEST_NAME ${TEST_NAMES} )
+ add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+
 # protection-reprise
 foreach( TEST_NAME ${TEST_NAMES_PR} )
  add_test(NAME "${SEQPR}_${TEST_NAME}" COMMAND ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQPR} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
@@ -209,10 +213,5 @@ endforeach()
 # sur 8 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_8} )
  add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
-endforeach()
-
-# sequentiel
-foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 

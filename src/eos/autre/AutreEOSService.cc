@@ -22,7 +22,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
   double rho_std(0.),ene_std(0.);
   //pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
   
-  TV2_CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
+  CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
   
   //pinfo() << "Etat Std :" ;
   //pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
@@ -80,7 +80,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
   //pinfo() << "  pres = " << m_Pres[0];
   //pinfo() << "  Temp = " << m_Temp[0];
   
-  TV2_S_CALC_CINE_VE( &nbmail,
+  S_CALC_CINE_VE( &nbmail,
                  m_dtime,
                  m_rho,
                  m_ene,
@@ -144,7 +144,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
   //  pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
   
   
-  TV2_CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
+  CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
   
   
   //  pinfo() << "Etat Std :" ;
@@ -204,7 +204,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
   pinfo() << "  Frac4 = " << m_Frac4[ip];
   pinfo() << "  Frac5 = " << m_Frac5[ip];
   
-  TV2_S_CALC_CINE_VE( &nbmail,
+  S_CALC_CINE_VE( &nbmail,
                  m_dtime,
                  m_rho,
                  m_ene,
@@ -292,7 +292,7 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
   // pinfo() << "  pres = " << m_Pres[ip];
   // pinfo() << "  Temp = " << m_Temp[ip];
   
-  TV2_S_CALC_CINE_VE( &nbmail,
+  S_CALC_CINE_VE( &nbmail,
                  m_dtime,
                  m_rho,
                  m_ene,
@@ -352,7 +352,7 @@ void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_Frac5[0] = m_frac_phase5[ev];
   m_Frac6[0] = m_frac_phase6[ev];
   
-  TV2_S_CALC_CINE_VE( &nbmail,
+  S_CALC_CINE_VE( &nbmail,
                  m_dtime,
                  m_rho,
                  m_ene,

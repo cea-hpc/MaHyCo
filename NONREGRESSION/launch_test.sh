@@ -137,6 +137,20 @@ function main {
   echo "This directory contains the output of the test under ${test_dir}" > README.txt
   pwd
   echo ${type}
+  
+  if [ -f $test_dir/*.coeff ]; then
+    echo "fichier de coeff dans le cas"
+    cp $test_dir/*.coeff . 2>/dev/null
+  else
+    echo "pas fichier de coeff dans le cas"
+  fi
+  if [ -f $test_dir/*.data ]; then
+    echo "fichier de data dans le cas"
+    cp $test_dir/*.data . 2>/dev/null
+  else
+    echo "pas fichier de data dans le cas"
+  fi
+  
   if [ ${type}  = "para_8" ]
   then
       echo " lancement parallele sur 8 coeurs" 
