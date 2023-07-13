@@ -12,7 +12,7 @@ void ONECELLService::initMat(Integer dim)  {
     m_materiau[cell] = 0;
   }
 }
-void ONECELLService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void ONECELLService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
     
   info() << " Initialisation ONECELL : boucle sur les mailles";
@@ -20,6 +20,7 @@ void ONECELLService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pres
     Cell cell = *icell;
     m_density[cell] = densite_initiale[0];
     m_pressure[cell] = pression_initiale[0];
+    m_internal_energy[cell] = energie_initiale[0];
     m_frac_phase1[cell] = 1.;
     m_frac_phase2[cell] = 0.;
     m_frac_phase3[cell] = 0.;
@@ -27,11 +28,10 @@ void ONECELLService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pres
     m_frac_phase5[cell] = 0.;
     m_frac_phase6[cell] = 0.;
   }
-    
 }
-void ONECELLService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void ONECELLService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
-  initVarMono(dim, densite_initiale,pression_initiale, vitesse_initiale);
+  initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
 }
 
 /*---------------------------------------------------------------------------*/

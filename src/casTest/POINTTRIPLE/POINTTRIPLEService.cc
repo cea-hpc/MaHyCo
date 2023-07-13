@@ -8,7 +8,7 @@ void POINTTRIPLEService::initMatMono(Integer dim)  {
   }
 }
 
-void POINTTRIPLEService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void POINTTRIPLEService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
     
   ENUMERATE_CELL(icell, allCells()) {
@@ -55,11 +55,11 @@ void POINTTRIPLEService::initMat(Integer dim)  {
   }
 }
 
-void POINTTRIPLEService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void POINTTRIPLEService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
     
  if (options()->casTest == MonoTriplePoint) {  
-   initVarMono(dim, densite_initiale,pression_initiale, vitesse_initiale);
+   initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
    return;
  }
  

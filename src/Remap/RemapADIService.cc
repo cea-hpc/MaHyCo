@@ -473,13 +473,6 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
           m_phi_lagrange[cell][nbmat + imat] = 0.;
         somme_masse += m_u_lagrange[cell][nbmat + imat];
         }
-        if (somme_masse!=0) {
-          // Phi Vitesse
-          m_phi_lagrange[cell][3 * nbmat] =
-                m_u_lagrange[cell][3 * nbmat] / somme_masse;
-          m_phi_lagrange[cell][3 * nbmat + 1] =
-                m_u_lagrange[cell][3 * nbmat + 1] / somme_masse;
-        }
         // Phi energie
         for (int imat = 0; imat < nbmat; imat++) {
         if (m_u_lagrange[cell][nbmat + imat] != 0.)
@@ -489,11 +482,33 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
         else
             m_phi_lagrange[cell][2 * nbmat + imat] = 0.;
         }
-        // Phi energie cinétique
-        if (options()->conservationEnergieTotale == 1)
-          m_phi_lagrange[cell][3 * nbmat + 2] =
-            m_u_lagrange[cell][3 * nbmat + 2] / somme_masse;
-
+        // Phi-Phase1
+        for (int imat = 0; imat < nbmat; imat++) {
+        if (m_u_lagrange[cell][nbmat + imat] != 0.)
+            m_phi_lagrange[cell][3 * nbmat + imat] =
+                m_u_lagrange[cell][3 * nbmat + imat] /
+                m_u_lagrange[cell][nbmat + imat];
+        else
+            m_phi_lagrange[cell][3 * nbmat + imat] = 0.;
+        }
+        // Phi-Phase2
+        for (int imat = 0; imat < nbmat; imat++) {
+        if (m_u_lagrange[cell][nbmat + imat] != 0.)
+            m_phi_lagrange[cell][4 * nbmat + imat] =
+                m_u_lagrange[cell][4 * nbmat + imat] /
+                m_u_lagrange[cell][nbmat + imat];
+        else
+            m_phi_lagrange[cell][4 * nbmat + imat] = 0.;
+        }
+        // Phi-Phase3
+        for (int imat = 0; imat < nbmat; imat++) {
+        if (m_u_lagrange[cell][nbmat + imat] != 0.)
+            m_phi_lagrange[cell][5 * nbmat + imat] =
+                m_u_lagrange[cell][5 * nbmat + imat] /
+                m_u_lagrange[cell][nbmat + imat];
+        else
+            m_phi_lagrange[cell][5 * nbmat + imat] = 0.;
+        }
     } else {
         // somme_volume doit etre égale à m_cell_volume[cell]
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {

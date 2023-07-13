@@ -81,7 +81,11 @@
         <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    
-	    <!-- FORCE	 -->
+	    <!-- Norme du Tenseur (déviateur) des contraintes-->
+        <variable field-name="strain_norm" name="strainNorm" data-type="real" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+	    
+        <!-- FORCE	 -->
         <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
 	</variables>

@@ -12,7 +12,7 @@ cd build
 #export CXX CC
 
 # Build with makefiles in parallel
-cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/" -DCINETIQUE_SRC="/home/perlatj/Workspace/2022_10_27_cinetique_src"
+cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/"
 #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/"
 #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane_cuda/"
 cmake --build . -- -j16 

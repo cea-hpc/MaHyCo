@@ -46,6 +46,10 @@ class StiffenedGasEOSService
    *  et calcule la vitesse du son et l'énergie interne. 
    */
   virtual void initEOS(IMeshEnvironment* env);
+   /** 
+   *  Initialise de certains elements de l'équation d'état en reprise. 
+   */
+  virtual void ReinitEOS(IMeshEnvironment* env);
   /** 
    *  Applique l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et la pression. 

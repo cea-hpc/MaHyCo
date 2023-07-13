@@ -187,6 +187,25 @@
     <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
     dim="0" material="true" dump="true" need-sync="true" />
     
+    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor_yy" name="StrainTensorYY" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    
+    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor_xy" name="StrainTensorXY" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    
+    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor_xz" name="StrainTensorXZ" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    
+    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor_yz" name="StrainTensorYZ" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
     <!-- Vitesse de déformation Plastic -->
     <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
     dim="0" material="false" dump="true" need-sync="true" />
@@ -194,7 +213,19 @@
     <!-- Déformation Plastic -->
     <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
     dim="0" material="false" dump="true" need-sync="true" />
-	    
+    
+    
+    <!-- Norme du Tenseur (déviateur) des contraintes-->
+    <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
+    
+    <!-- Numero Maille pour time-History --> 
+    <variable field-name="maille_th" name="MailleTh" data-type="integer" dim="0" dump="true" />   
+    
+    <!-- Numero Noeud pour time-History --> 
+    <variable field-name="noeud_th" name="NoeudTh" data-type="integer" dim="0" dump="true" />    
+ 	    
+ 	    
   </variables>
 
 
@@ -260,9 +291,13 @@
     <description> Valeur de la densité initiale</description>
    </simple>
    
-   <simple name="pression-initiale" type="real">
+   <simple name="pression-initiale" type="real" default="1.e5">
     <description> Valeur de la pression initiale</description>
    </simple>
+    
+    <simple name="energie-initiale" type="real" default="0.">
+    <description> Valeur de la pression initiale</description>
+    </simple>
    
    <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
     <description> Valeur de la vitesse initiale</description>
@@ -274,8 +309,27 @@
 
    <service-instance name="elasto-model" type="IElasto" default="NoModel">
     <description>Service d'élasto-plasticité</description>
-   </service-instance>
+   </service-instance>  
 
+   <!-- - - - - -linear-pseudo-coeff - - - - -->
+   <simple name="linear-pseudo-coeff" type="real" default="0.5">
+    <description>
+      Valeur du coefficient lineaire de pseudo
+    </description>
+   </simple>
+  
+   <!-- - - - - -quadratic-pseudo-coeff - - - - -->
+   <simple name="quadratic-pseudo-coeff" type="real" default="1.2">
+    <description>
+      Valeur du coefficient quadratique de pseudo
+    </description>
+   </simple>
+
+  <!-- - - - - - AdiabaticCst - - - - -->
+  <simple name="valeur-source-energie" type="real" default="0.">
+    <description>Définition de la constante adiabatique</description>
+  </simple>
+  
   </complex>
   
   <service-instance name="cas-model" type="IInitialisations">
@@ -308,6 +362,7 @@
      Type de longueur caracteristique
     </description>
   </simple>
+  
 
   <!-- - - - - - deltat-min - - - - -->
   <simple name="deltat-min" type="real">
@@ -374,10 +429,6 @@
   <simple name="pression-explicite" type="bool" default="false">
     <description> Calcul de la pression explicite </description>
   </simple>
-  <!-- - - - - - depot energie - - - - -->
-  <simple name="energy-deposit" type="bool" default="false">
-    <description>Valeur du dépot d'energie </description>
-  </simple>
   <!-- - - - - - boundary-condition - - - - -->
   <complex name="boundary-condition" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded">
     <description>Condition aux limites</description>
@@ -390,6 +441,10 @@
       <enumvalue genvalue="TypesMahyco::Density" name="Density" />
       <enumvalue genvalue="TypesMahyco::Pressure" name="Pressure" />
       <enumvalue genvalue="TypesMahyco::GeometricPressure" name="GeometricPressure" />
+      <enumvalue genvalue="TypesMahyco::LinearPressure" name="LinearPressure" />
+      <enumvalue genvalue="TypesMahyco::OnFilePressure" name="OnFilePressure" />
+      <enumvalue genvalue="TypesMahyco::SuperGaussianPressure" name="SuperGaussianPressure" />
+      <enumvalue genvalue="TypesMahyco::ContactHerzPressure" name="ContactHerzPressure" />
     </enumeration>
 
     <simple name="surface" type="string">
@@ -414,8 +469,11 @@
     <simple name="Tdebut" type="real" default="0.">
       <description>Valeur du debut de la CDL de pression</description>
     </simple>
-    <simple name="Tfin" type="real" default="0.">
+    <simple name="Tfin" type="real" default="1000.">
       <description>Valeur de la fin de la CDL de pression</description>
+    </simple>
+    <simple name="fichier" type="string" default="RIEN">
+      <description>Fichier des valeurs de pressions en fonction du temps</description>
     </simple>
   </complex>
   <!-- - - - - - sortie time history - - - - -->
@@ -428,6 +486,22 @@
     <!-- - - - - - frequence - - - - -->
   <simple name="periode" type="integer" default="10">
     <description>periode (en iterations) des sorties </description>
+  </simple>
+  <!-- - - - - - borne sup - - - - -->
+  <simple name="borne-sup" type="real3" default="0. 0. 0.">
+    <description>coord supérieur </description>
+  </simple>
+  <!-- - - - - - borne sup - - - - -->
+  <simple name="borne-inf" type="real3" default="0. 0. 0.">
+    <description>coord inférieur </description>
+  </simple>
+  <!-- - - - - - borne sup noeud- - - - -->
+  <simple name="borne-sup-noeud" type="real3" default="0. 0. 0.">
+    <description>coord supérieur pour les noeuds</description>
+  </simple>
+  <!-- - - - - - borne sup - - - - -->
+  <simple name="borne-inf-noeud" type="real3" default="0. 0. 0.">
+    <description>coord inférieur pour les noeuds </description>
   </simple>
   </complex>
 		

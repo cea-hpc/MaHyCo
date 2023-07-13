@@ -8,7 +8,7 @@ void SODService::initMatMono(Integer dim)  {
   }
 }
 
-void SODService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void SODService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
     
   ENUMERATE_CELL(icell, allCells()) {
@@ -64,14 +64,14 @@ void SODService::initMat(Integer dim)  {
   }
 }
 
-void SODService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void SODService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
     
     
  if (options()->casTest == SodCaseX ||
        options()->casTest == SodCaseY ||
        options()->casTest == SodCaseZ) {
-        initVarMono(dim, densite_initiale,pression_initiale, vitesse_initiale);
+        initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
         return;
  }
  info() << " on rentre ici"; 

@@ -185,6 +185,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_env + index_env] != 0.) {
         internal_energy_env_nplus1[index_env] =
           m_u_lagrange[cell][2 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+         /* indice de phase 
+          m_frac_phase1[ev] = m_u_lagrange[cell][3 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          m_frac_phase2[ev] = m_u_lagrange[cell][4 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          m_frac_phase3[ev] = m_u_lagrange[cell][5 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; */
       }
     }
     // mise à jour des valeurs moyennes aux allCells
@@ -200,7 +204,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       m_cell_mass[ev] = m_mass_fraction[ev] * m_cell_mass[cell];
       // recuperation de la pseudo projetee
       // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
-      m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] * unsurvol;
+      m_pseudo_viscosity[ev] = m_u_lagrange[cell][7 * nb_env ] * unsurvol;
       // recuperation de la densite
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie

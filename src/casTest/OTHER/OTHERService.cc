@@ -19,10 +19,10 @@ void OTHERService::initMat(Integer dim)  {
     } 
   }
 }
-void OTHERService::initVarMono(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void OTHERService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
 }
-void OTHERService::initVar(Integer dim, Real3 densite_initiale, Real3 pression_initiale, 
+void OTHERService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
                                    Real3x3 vitesse_initiale)  {
 
   // rayon interne et externe

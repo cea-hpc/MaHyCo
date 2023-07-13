@@ -21,7 +21,12 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
     m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
   }
 }
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
 
+void StiffenedGasEOSService::ReinitEOS(IMeshEnvironment* env)
+{
+}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

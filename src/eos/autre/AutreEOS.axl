@@ -128,5 +128,9 @@
 		<simple name="specific-heat" type="real" default="0.0">
 			<description>Définition de la chaleur spécifique</description>
 		</simple>
+		<!-- - - - - -  fichier_de_coeff - - - - -->
+		 <simple name="fichier-coeff" type="string" default=""> 
+		     <description>Nom du fichier de coefficient</description> 
+		 </simple>
 	</options>
 </service>

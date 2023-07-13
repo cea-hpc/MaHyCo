@@ -17,6 +17,10 @@ struct TypesMahyco
     Density, //!< Densité fixée
     Pressure, //!< Pression fixée
     GeometricPressure, //!< Pression fixée
+    LinearPressure, //!< Pression linaire suivant X,Y,Z et t
+    OnFilePressure, //!< Pression dans un fichier en fonction du temps
+    SuperGaussianPressure, //!< Pression en supergaussienne suivant X,Y,Z
+    ContactHerzPressure, //!< Pression contact de Herz (loi pression sqrt(1-r2))
     Unknown //!< Type inconnu
   }; 
 };

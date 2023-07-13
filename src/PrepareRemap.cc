@@ -109,16 +109,19 @@ void MahycoModule::computeVariablesForRemap()
       // // energies matériels (partiels)
       m_u_lagrange[cell][2 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy[ev];
       // // Quantites de mouvement centrees
-      m_u_lagrange[cell][3 * nb_total_env + 0] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 1] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 2] = 0.;
+      //m_u_lagrange[cell][3 * nb_total_env + 0] = 0.;
+      //m_u_lagrange[cell][3 * nb_total_env + 1] = 0.;
+      //m_u_lagrange[cell][3 * nb_total_env + 2] = 0.;
       // // energie cinetique centree
-      m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
+      //m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
       // // Pseudo partiel pour la quantité de mouvement
-      // m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
-      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
+      //m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
+      m_u_lagrange[cell][7 * nb_total_env ] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
+      /* Indice de phases
+      m_u_lagrange[cell][3 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase1[ev];
+      m_u_lagrange[cell][4 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase2[ev];
+      m_u_lagrange[cell][5 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase3[ev]; */
         
-//            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
         // Cell cell = ev.globalCell();
@@ -126,13 +129,17 @@ void MahycoModule::computeVariablesForRemap()
         m_phi_lagrange[cell][nb_total_env + index_env] = m_density[ev];
         m_phi_lagrange[cell][2 * nb_total_env + index_env] = m_internal_energy[ev];
         // les phi sur la vitesse et energie cinétique n'existent pas en VnR
-        m_phi_lagrange[cell][3 * nb_total_env + 0] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 1] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
+        //m_phi_lagrange[cell][3 * nb_total_env + 0] = 0.;
+        //m_phi_lagrange[cell][3 * nb_total_env + 1] = 0.;
+        //m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
+        //m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
         
         // m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
-        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[cell];
+        m_phi_lagrange[cell][7 * nb_total_env ] = m_pseudo_viscosity[cell];
+        /* Indice de phases
+        m_phi_lagrange[cell][3 * nb_total_env + index_env] = m_frac_phase1[ev];
+        m_phi_lagrange[cell][4 * nb_total_env + index_env] = m_frac_phase2[ev];
+        m_phi_lagrange[cell][5 * nb_total_env + index_env] = m_frac_phase3[ev]; */
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
