@@ -117,6 +117,7 @@ set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
 
 set( TEST_NAMES_PARA_4
+        "CAS_Lag_ContactHerz3D"
         "CAS_2D_Lag_BiSodCaseX"
         "CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
@@ -175,6 +176,7 @@ set( TEST_NAMES
 		"CAS_2D_Sedov"
 		"CAS_2D_ALE_Sedov_euler"
 		"CAS_2D_ALE_BiSedov_euler"
+		"CAS_lag_tache_focale"
 		)
 
 set( TEST_NAMES_PR

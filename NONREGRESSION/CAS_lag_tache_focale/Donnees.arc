@@ -7,7 +7,6 @@
 
   <arcane-post-processing>
   <save-init>true</save-init>
-    <output-period>50</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -37,10 +36,10 @@
     <meshgenerator>
     <cartesian>
        <nsd>1 1</nsd> 
-       <origine>0.0 0.0</origine>
-       <lx nx='500' prx='1.0'>500.e-6</lx>
+       <origine>0.0 -2.0e-3</origine>
+       <lx nx='10' prx='1.0'>500.e-6</lx>
 
-       <ly ny='10' pry='1.0'>10.e-6</ly>
+       <ly ny='50' pry='1.0'>4.e-3</ly>
      </cartesian>
      </meshgenerator>
     <initialisation>
@@ -69,9 +68,7 @@
     <elasto-model name="NoModel">
         <elastic-cst>3.e10</elastic-cst>
         <limit-elastic>1.e9</limit-elastic>
-    </elasto-model>
-    <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
-    <quadratic-pseudo-coeff>1.</quadratic-pseudo-coeff>
+    </elasto-model> 
   </environment>
   
    
@@ -89,22 +86,21 @@
      <deltat-max>1.e-11</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
-    <final-time>1.e-7</final-time>
-    <!--<final-time>2.e-10</final-time>-->
+    <final-time>1.e-9</final-time>
     
     <time-history>
     <periode>50</periode>
-    <borne-inf>90.e-6 5.e-6 0.</borne-inf>
     <borne-sup>91.e-6 6.e-6 0.</borne-sup>
-    <borne-inf-noeud>499e-6 -1 -1.</borne-inf-noeud>
-    <borne-sup-noeud>501e-6 1. 1.</borne-sup-noeud>
+    <borne-inf>90.e-6 5.e-6 0.</borne-inf>
     </time-history>
     
     <boundary-condition>
       <surface>XMIN</surface>
-      <type>OnFilePressure</type>
-      <value>-1.</value>
-      <fichier>Pression.data</fichier>
+      <type>SuperGaussianPressure</type>
+      <value>12.e9</value>
+      <dependanceY>.25e3</dependanceY> 
+      <Tdebut>1.e-11</Tdebut>   
+      <Tfin>49.01e-9</Tfin>   
     </boundary-condition>
     <boundary-condition>
       <surface>XMAX</surface>
