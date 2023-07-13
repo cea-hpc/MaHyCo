@@ -103,7 +103,7 @@
     
     <boundary-condition>
       <surface>XMIN</surface>
-      <type>GeometricPressure</type>
+      <type>OnFilePressure</type>
       <value>-1.</value>
       <fichier>Pression.data</fichier>
     </boundary-condition>

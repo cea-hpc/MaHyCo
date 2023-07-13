@@ -36,11 +36,11 @@
   <mesh>
     <meshgenerator>
     <cartesian>
-       <nsd>1 1</nsd> 
-       <origine>0.0 0.0</origine>
-       <lx nx='100' prx='1.0'>100.e-6</lx>
+       <nsd>2 2</nsd> 
+       <origine>0.0 -2.0e-3</origine>
+       <lx nx='200' prx='1.0'>500.e-6</lx>
 
-       <ly ny='50' pry='1.0'>50.e-6</ly>
+       <ly ny='200' pry='1.0'>4.e-3</ly>
      </cartesian>
      </meshgenerator>
     <initialisation>
@@ -103,18 +103,11 @@
     
     <boundary-condition>
       <surface>XMIN</surface>
-      <type>GeometricPressure</type>
-      <value>10.e9</value>
-      <dependanceY>2.e12</dependanceY> <!-- Y varie de 0.e-6 à 50e-6 donc pression de 10e9 à 20e9 -->
+      <type>SuperGaussianPressure</type>
+      <value>12.e9</value>
+      <dependanceY>.25e3</dependanceY>
       <Tdebut>1.e-11</Tdebut>   
-      <Tfin>9.01e-9</Tfin>   
-    </boundary-condition>
-    <boundary-condition>
-      <surface>XMIN</surface>
-      <type>GeometricPressure</type>
-      <value>1.e5</value>
-      <Tdebut>10.e-9</Tdebut>   
-      <Tfin>100.e-9</Tfin>      
+      <Tfin>49.01e-9</Tfin>   
     </boundary-condition>
     <boundary-condition>
       <surface>XMAX</surface>
