@@ -43,16 +43,18 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
   // Calcul de la pression et de la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
-    EnvCell ev = *ienvcell;   
-    Real internal_energy = m_internal_energy[ev];
-    Real density = m_density[ev];
-    if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
-    Real pressure = (adiabatic_cst - 1.) * density * internal_energy;
-    m_pressure[ev] = pressure;
-    m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
-    m_dpde[ev] = (adiabatic_cst - 1.) * density;
-    // calcul de la temperature en fonction de la chaleur specifique
-    m_temperature[ev] = internal_energy / specific_heat;
+    EnvCell ev = *ienvcell;  
+    if (m_maille_endo[ev] == 0) { 
+        Real internal_energy = m_internal_energy[ev];
+        Real density = m_density[ev];
+        if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
+        Real pressure = (adiabatic_cst - 1.) * density * internal_energy;
+        m_pressure[ev] = pressure;
+        m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
+        m_dpde[ev] = (adiabatic_cst - 1.) * density;
+        // calcul de la temperature en fonction de la chaleur specifique
+        m_temperature[ev] = internal_energy / specific_heat;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -60,6 +62,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
 
 void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
+  if (m_maille_endo[ev] == 1) return;
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
@@ -73,6 +76,34 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_dpde[ev] = (adiabatic_cst - 1.) * density;
   // calcul de la temperature en fonction de la chaleur specifique
   m_temperature[ev] = internal_energy / specific_heat;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void PerfectGasEOSService::Endommagement(IMeshEnvironment* env)
+{
+  Real damage_thresold = options()->damageThresold();
+  ENUMERATE_ENVCELL(ienvcell,env)
+  {
+    EnvCell ev = *ienvcell;   
+    if (m_maille_endo[ev] == 0) {
+        // Maille saine : verification des seuils 
+        if (m_pressure[ev] < damage_thresold) {
+            // maille devient endommagée
+            m_maille_endo[ev] = 1;
+            m_density_fracture[ev] = m_density[ev];
+            m_internal_energy_fracture[ev] = m_internal_energy[ev];
+            m_pressure[ev] = 0.;
+        }
+    } else { 
+        // Maille endo : on verifie si elle ne s'est pas recompactée
+        if (m_density[ev] > m_density_fracture[ev]) {
+            // c'est le cas : on la déclare saine
+            m_maille_endo[ev] = 0;
+            m_internal_energy[ev] = m_internal_energy_fracture[ev];
+        }
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

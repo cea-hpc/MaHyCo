@@ -58,6 +58,11 @@ public:
    */
   virtual void applyOneCellEOS(IMeshEnvironment* env, EnvCell ev) = 0;
   /** 
+   *  Applique un endommagement dans la maille (pression nulle)
+   *  si la maille est endessous de la tension limite. 
+   */
+  virtual void Endommagement(IMeshEnvironment* env) = 0;
+  /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
   virtual Real getAdiabaticCst(IMeshEnvironment* env) = 0;

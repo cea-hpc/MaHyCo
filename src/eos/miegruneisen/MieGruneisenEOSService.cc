@@ -24,7 +24,6 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
     m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
     // calcul de la temperature en fonction de la chaleur specifique
     m_temperature[ev] = m_internal_energy[ev] / specific_heat;
-    
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -45,15 +44,18 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
-    Real internal_energy = m_internal_energy[ev];
-    Real density = m_density[ev];
-    if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
-    Real J = options()->rho0 / density ;
-    Real mu = 1./J -1.;
-    m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
-    m_temperature[ev] = internal_energy / specific_heat;
-    m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
-    m_dpde[ev] = adiabatic_cst * density;
+    
+    if (m_maille_endo[ev] == 0) {
+        Real internal_energy = m_internal_energy[ev];
+        Real density = m_density[ev];
+        if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
+        Real J = options()->rho0 / density ;
+        Real mu = 1./J -1.;
+        m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
+        m_temperature[ev] = internal_energy / specific_heat;
+        m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
+        m_dpde[ev] = adiabatic_cst * density;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -61,6 +63,7 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
 
 void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
+  if (m_maille_endo[ev] == 1) return;
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
@@ -75,6 +78,34 @@ void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
     // calcul de la temperature en fonction de la chaleur specifique
     m_temperature[ev] = internal_energy / specific_heat;
     m_dpde[ev] = adiabatic_cst * density;
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
+{
+  Real damage_thresold = options()->damageThresold();
+  ENUMERATE_ENVCELL(ienvcell,env)
+  {
+    EnvCell ev = *ienvcell;   
+    if (m_maille_endo[ev] == 0) {
+        // Maille saine : verification des seuils 
+        if (m_pressure[ev] < damage_thresold) {
+            // maille devient endommagée
+            m_maille_endo[ev] = 1;
+            m_density_fracture[ev] = m_density[ev];
+            m_internal_energy_fracture[ev] = m_internal_energy[ev];
+            m_pressure[ev] = 0.;
+        }
+    } else { 
+        // Maille endo : on verifie si elle ne s'est pas recompactée
+        if (m_density[ev] > m_density_fracture[ev]) {
+            // c'est le cas : on la déclare saine
+            m_maille_endo[ev] = 0;
+            m_internal_energy[ev] = m_internal_energy_fracture[ev];
+        }
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
