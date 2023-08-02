@@ -91,10 +91,47 @@
 			dim="0"
 			material="true" 
 			dump="true"
+			need-sync="true" />			
+		<!-- 	CV	 -->
+		<variable
+			field-name="cv"
+			name="Cv"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
 			need-sync="true" />
+			
         <!-- TEMPERATURE -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+        <!-- 	Indicateur Maille Endommagée	 -->
+        <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        
+       <!-- DENSITY DE FRACTURATION-->
+		<variable
+			field-name="density_fracture"
+			name="Density"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />   
+			
+		<!-- INTERNAL ENERGY DE FRACTURATION -->
+		<variable
+			field-name="internal_energy_fracture"
+			name="InternalEnergyFracture"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />	 
 	</variables>
 
 	<options>
@@ -125,6 +162,10 @@
 		<!-- - - - - - Parametre S - - - - -->
 		<simple name="s-cst" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
+		</simple>
+		<!-- - - - - - damage thresold - - - - -->
+		<simple name="damage-thresold" type="real" default="-1.e12">
+			<description>Définition de pression minimal avant endommagement</description>
 		</simple>
 	</options>
 </service>

@@ -177,6 +177,7 @@ set( TEST_NAMES
 		"CAS_2D_ALE_Sedov_euler"
 		"CAS_2D_ALE_BiSedov_euler"
 		"CAS_lag_tache_focale"
+		"CAS_Compression_isotherme_ALU_monodimX"
 		)
 
 set( TEST_NAMES_PR

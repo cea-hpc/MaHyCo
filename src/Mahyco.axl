@@ -52,6 +52,16 @@
   <!-- DPDE -->
   <variable field-name="dpde" name="DpDe" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	CV	 -->
+		<variable
+			field-name="cv"
+			name="Cv"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
   <!-- FRACVOL -->
   <variable field-name="fracvol" name="FracVol" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
@@ -224,7 +234,32 @@
     
     <!-- Numero Noeud pour time-History --> 
     <variable field-name="noeud_th" name="NoeudTh" data-type="integer" dim="0" dump="true" />    
+    
+    <!-- 	Indicateur Maille Endommagée	 -->
+    <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
+    dim="0" material="true" dump="true" need-sync="true" />
  	    
+    <!-- DENSITY DE FRACTURATION-->
+		<variable
+			field-name="density_fracture"
+			name="Density"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />   
+			
+		<!-- INTERNAL ENERGY DE FRACTURATION -->
+		<variable
+			field-name="internal_energy_fracture"
+			name="InternalEnergyFracture"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />	 
  	    
   </variables>
 

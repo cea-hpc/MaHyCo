@@ -4,7 +4,7 @@ CONTAINS
 SUBROUTINE S_CALC_CINE_VE(nb,dtime_in,rho,ene,&
 							 Pres,Temp,&
                              frac_1,frac_2,frac_3,frac_4,frac_5,frac_6,&
-			                 dpde,cs2,conv)
+			                 dpde,cv,cs2,conv)
 
 USE M_CST_TABLE_EE,       ONLY : TAB_APPEL_EE  ! type pour les propriétés thermo d'entree
 USE M_CST_TABLE_EE,       ONLY : Thermo_Newton ! type pour les propriétés thermo de sortie 
@@ -46,8 +46,8 @@ REAL*8     :: frac_6(nb)
 
 REAL*8 	 :: dpde(nb)
 REAL*8 	 :: cs2(nb)
+REAL*8 	 :: cv(nb)
 REAL*8 	 :: conv(nb)
-
 
 
 !.... OUTPUT:
@@ -75,6 +75,7 @@ REAL*8 	 :: dP_dv_s(nb)
 
 REAL*8	 :: dpde_o(nb)
 REAL*8	 :: cs2_o(nb)
+REAL*8	 :: cv_o(nb)
 REAL*8	 :: conv_o(nb)
 
 
@@ -259,6 +260,7 @@ do kk=1,nb
 	dpde_o(kk) = dP_de_v(kk)
 	!dtde_o(kk)=1./de_dT_v(kk)
 	cs2_o(kk)  =-dP_dv_s(kk)/(Thermo_ou(kk)%rho*Thermo_ou(kk)%rho)
+    cv_o(kk) = de_dT_v(kk)
 
 	!   Qq verif et ajout de grandeurs 
 	if (Temp_o(kk).lt.NPAR_TEMP_MIN)  conv_o(kk)=-40
@@ -287,6 +289,7 @@ Temp(1:nb)=Temp_o(1:nb)
 dpde(1:nb)=dpde_o(1:nb)
 !dtde(1:nb)=dtde_o(1:nb)
 cs2(1:nb) =cs2_o(1:nb)
+cv(1:nb) = cv_o(1:nb)
 conv(1:nb)=conv_o(1:nb)
 
 

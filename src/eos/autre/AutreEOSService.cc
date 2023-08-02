@@ -47,8 +47,10 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_Frac5 = (double *)malloc(sizeof(double) * nbmail);
     m_Frac6 = (double *)malloc(sizeof(double) * nbmail);
     m_pente_dpde  = (double *)malloc(sizeof(double) * nbmail);
+    m_Cv    = (double *)malloc(sizeof(double) * nbmail);
     m_cs2   = (double *)malloc(sizeof(double) * nbmail);
     m_conv  = (double *)malloc(sizeof(double) * nbmail);
+    
     //pinfo() << " Allocations terminées : " << nbmail;
   }
   Integer imail = 0;
@@ -63,13 +65,14 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
     // sortie m_Pres[i] et m_Temp[i];
     m_Temp[imail] = m_temperature[ev] * CONVERSION_TEMPERATURE;
-    m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION ;
+    m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION;
     m_Frac1[imail] = m_frac_phase1[ev];
     m_Frac2[imail] = m_frac_phase2[ev];
     m_Frac3[imail] = m_frac_phase3[ev];
     m_Frac4[imail] = m_frac_phase4[ev];
     m_Frac5[imail] = m_frac_phase5[ev];
     m_Frac6[imail] = m_frac_phase6[ev];
+    m_Cv[imail] = m_cv[ev] * CONVERSION_ENERGIE/CONVERSION_TEMPERATURE;
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
@@ -93,6 +96,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
                  m_Frac5,
                  m_Frac6,
                  m_pente_dpde,
+                 m_Cv,
                  m_cs2,
                  m_conv);
   imail = 0;
@@ -107,6 +111,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_frac_phase5[ev] = m_Frac5[imail];
     m_frac_phase6[ev] = m_Frac6[imail];
     m_dpde[ev] = m_pente_dpde[imail] / (CONVERSION_PRESSION/CONVERSION_ENERGIE);
+    m_cv[ev] = m_Cv[imail] / (CONVERSION_ENERGIE/CONVERSION_TEMPERATURE);
     m_sound_speed[ev] = sqrt(m_cs2[imail] / CONVERSION_VITSON);
     m_temperature[ev] = m_Temp[imail] / CONVERSION_TEMPERATURE;
     m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
@@ -166,6 +171,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
     m_Frac5 = (double *)malloc(sizeof(double) * nbmail);
     m_Frac6 = (double *)malloc(sizeof(double) * nbmail);
     m_pente_dpde  = (double *)malloc(sizeof(double) * nbmail);
+    m_Cv    = (double *)malloc(sizeof(double) * nbmail);
     m_cs2   = (double *)malloc(sizeof(double) * nbmail);
     m_conv  = (double *)malloc(sizeof(double) * nbmail);
     
@@ -174,20 +180,19 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
-    Cell cell = ev.globalCell();
-
     m_dtime[imail] = m_global_deltat() * CONVERSION_DT ;
     m_rho[imail] = m_density[ev] * CONVERSION_DENSITE;
     m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
     // sortie m_Pres[i] et m_Temp[i];
     m_Temp[imail] = m_temperature[ev] * CONVERSION_TEMPERATURE;
-    m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION ;
+    m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION;
     m_Frac1[imail] = m_frac_phase1[ev];
     m_Frac2[imail] = m_frac_phase2[ev];
     m_Frac3[imail] = m_frac_phase3[ev];
     m_Frac4[imail] = m_frac_phase4[ev];
     m_Frac5[imail] = m_frac_phase5[ev];
     m_Frac6[imail] = m_frac_phase6[ev];
+    m_Cv[imail] = m_cv[ev] * CONVERSION_ENERGIE/CONVERSION_TEMPERATURE;
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
@@ -217,6 +222,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
                  m_Frac5,
                  m_Frac6,
                  m_pente_dpde,
+                 m_Cv,
                  m_cs2,
                  m_conv);
   
@@ -232,6 +238,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
     m_frac_phase5[ev] = m_Frac5[imail];
     m_frac_phase6[ev] = m_Frac6[imail];
     m_dpde[ev] = m_pente_dpde[imail] / (CONVERSION_PRESSION/CONVERSION_ENERGIE);
+    m_cv[ev] = m_Cv[imail] / (CONVERSION_ENERGIE/CONVERSION_TEMPERATURE);
     m_sound_speed[ev] = sqrt(m_cs2[imail] / CONVERSION_VITSON);
     m_temperature[ev] = m_Temp[imail] / CONVERSION_TEMPERATURE;
     m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
@@ -267,23 +274,25 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
   {
     EnvCell ev = *ienvcell;   
     Cell cell = ev.globalCell();
-
-    m_dtime[imail] = m_global_deltat() * CONVERSION_DT ;
-    m_rho[imail] = m_density[ev] * CONVERSION_DENSITE;
-    m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
-    // sortie m_Pres[i] et m_Temp[i];
-    m_Temp[imail] = m_temperature[ev] * CONVERSION_TEMPERATURE;
-    m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION ;
-    m_Frac1[imail] = m_frac_phase1[ev];
-    m_Frac2[imail] = m_frac_phase2[ev];
-    m_Frac3[imail] = m_frac_phase3[ev];
-    m_Frac4[imail] = m_frac_phase4[ev];
-    m_Frac5[imail] = m_frac_phase5[ev];
-    m_Frac6[imail] = m_frac_phase6[ev];
-    m_conv[imail] = 0.;
-    if (m_Temp[imail] < 100.) ip = imail;
-    // sortie m_dpde,m_cs2,m_conv;
-    imail++;
+    if (m_maille_endo[ev.globalCell()] == 0) {
+        m_dtime[imail] = m_global_deltat() * CONVERSION_DT ;
+        m_rho[imail] = m_density[ev] * CONVERSION_DENSITE;
+        m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
+        // sortie m_Pres[i] et m_Temp[i];
+        m_Temp[imail] = m_temperature[ev] * CONVERSION_TEMPERATURE;
+        m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION ;
+        m_Frac1[imail] = m_frac_phase1[ev];
+        m_Frac2[imail] = m_frac_phase2[ev];
+        m_Frac3[imail] = m_frac_phase3[ev];
+        m_Frac4[imail] = m_frac_phase4[ev];
+        m_Frac5[imail] = m_frac_phase5[ev];
+        m_Frac6[imail] = m_frac_phase6[ev];
+        m_Cv[imail] = m_cv[ev] * CONVERSION_ENERGIE/CONVERSION_TEMPERATURE;
+        m_conv[imail] = 0.;
+        if (m_Temp[imail] < 100.) ip = imail;
+        // sortie m_dpde,m_cs2,m_conv;
+        imail++;
+    }
   }
   // pinfo() << " Appel à la fonction " ;
   // pinfo() << " Valeurs envoyé à l'EOS ";
@@ -305,24 +314,28 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
                  m_Frac5,
                  m_Frac6,
                  m_pente_dpde,
+                 m_Cv,
                  m_cs2,
                  m_conv);
   imail = 0;
   // Retour Pression et vitesse du son
   ENUMERATE_ENVCELL(ienvcell,env)
   {
-    EnvCell ev = *ienvcell;   
-    m_frac_phase1[ev] = m_Frac1[imail];
-    m_frac_phase2[ev] = m_Frac2[imail];
-    m_frac_phase3[ev] = m_Frac3[imail];
-    m_frac_phase4[ev] = m_Frac4[imail];
-    m_frac_phase5[ev] = m_Frac5[imail];
-    m_frac_phase6[ev] = m_Frac6[imail];
-    m_dpde[ev] = m_pente_dpde[imail] / (CONVERSION_PRESSION/CONVERSION_ENERGIE);
-    m_sound_speed[ev] = sqrt(m_cs2[imail] / CONVERSION_VITSON);
-    m_temperature[ev] = m_Temp[imail] / CONVERSION_TEMPERATURE;
-    m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
-    imail++;
+    EnvCell ev = *ienvcell; 
+    if (m_maille_endo[ev.globalCell()] == 0) {
+        m_frac_phase1[ev] = m_Frac1[imail];
+        m_frac_phase2[ev] = m_Frac2[imail];
+        m_frac_phase3[ev] = m_Frac3[imail];
+        m_frac_phase4[ev] = m_Frac4[imail];
+        m_frac_phase5[ev] = m_Frac5[imail];
+        m_frac_phase6[ev] = m_Frac6[imail];
+        m_dpde[ev] = m_pente_dpde[imail] / (CONVERSION_PRESSION/CONVERSION_ENERGIE);
+        m_cv[ev] = m_Cv[imail] / (CONVERSION_ENERGIE/CONVERSION_TEMPERATURE);
+        m_sound_speed[ev] = sqrt(m_cs2[imail] / CONVERSION_VITSON);
+        m_temperature[ev] = m_Temp[imail] / CONVERSION_TEMPERATURE;
+        m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
+        imail++;
+    }
   }
   // pinfo() << " FIN DE  la fonction " ;
   // pinfo() << " Valeurs renvoyé par l'EOS pour la maille " << ip;
@@ -340,6 +353,7 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
 
 void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
+  if (m_maille_endo[ev.globalCell()] == 1) return;
   nbmail =1;
   m_dtime[0] = m_global_deltat()* CONVERSION_DT ;
   m_rho[0] = m_density[ev] * CONVERSION_DENSITE;
@@ -365,6 +379,7 @@ void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
                  m_Frac5,
                  m_Frac6,
                  m_pente_dpde,
+                 m_Cv,
                  m_cs2,
                  m_conv);
   
@@ -376,10 +391,40 @@ void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_frac_phase5[ev] = m_Frac5[0];
   m_frac_phase6[ev] = m_Frac6[0];
   m_dpde[ev] = m_pente_dpde[0];
+  m_cv[ev] = m_Cv[0] / (CONVERSION_ENERGIE/CONVERSION_TEMPERATURE);
   m_sound_speed[ev] = sqrt(m_cs2[0] / CONVERSION_VITSON) ;
   m_temperature[ev] = m_Temp[0] / CONVERSION_TEMPERATURE;
   m_pressure[ev] = m_Pres[0] / CONVERSION_PRESSION;
   
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void AutreEOSService::Endommagement(IMeshEnvironment* env)
+{
+  Real damage_thresold = options()->damageThresold();
+  ENUMERATE_ENVCELL(ienvcell,env)
+  {
+    EnvCell ev = *ienvcell;  
+    Cell cell = ev.globalCell(); 
+    if (m_maille_endo[ev.globalCell()] == 0) {
+        // Maille saine : verification des seuils 
+        if (m_pressure[ev] < damage_thresold) {
+            // maille devient endommagée
+            m_maille_endo[ev] = 1;
+            m_density_fracture[ev] = m_density[ev];
+            m_internal_energy_fracture[ev] = m_internal_energy[ev];
+            m_pressure[ev] = 0.;
+        }
+    } else { 
+        // Maille endo : on verifie si elle ne s'est pas recompactée
+        if (m_density[ev] > m_density_fracture[ev]) {
+            // c'est le cas : on la déclare saine
+            m_maille_endo[ev] = 0;
+            m_internal_energy[ev] = m_internal_energy_fracture[ev];
+        }
+    }
+  }
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
