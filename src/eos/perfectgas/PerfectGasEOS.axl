@@ -92,13 +92,24 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- 	CV	 -->
+		<variable
+			field-name="cv"
+			name="Cv"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+			
         <!-- TEMPERATURE -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    
         <!-- 	Indicateur Maille Endommagée	 -->
         <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
+        dim="0" material="true" dump="true" need-sync="true" />
             
        <!-- DENSITY DE FRACTURATION-->
 		<variable
@@ -120,7 +131,8 @@
 			dim="0"
 			material="true" 
 			dump="true"
-			need-sync="true" />	
+			need-sync="true" />
+			
 	</variables>
 
 	<options>

@@ -92,6 +92,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- 	CV	 -->
+		<variable
+			field-name="cv"
+			name="Cv"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 			
         <!-- 	FRAC PHASE 1	 -->
         <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"

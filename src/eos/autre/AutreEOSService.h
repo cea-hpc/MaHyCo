@@ -50,6 +50,7 @@ extern void  S_CALC_CINE_VE(Integer *nbmail,
                 double *Frac5,
                 double *Frac6,
                 double *dpde,
+                double *cv,
                 double *cs2,
                 double *conv);
 #ifdef __cplusplus       
@@ -112,7 +113,7 @@ private:
   Integer nbmail;
   double *m_dtime,*m_rho,*m_ene,*m_Pres,*m_Temp;
   double *m_Frac1,*m_Frac2,*m_Frac3,*m_Frac4,*m_Frac5,*m_Frac6;
-  double *m_pente_dpde,*m_cs2,*m_conv;
+  double *m_pente_dpde,*m_Cv, *m_cs2,*m_conv;
 
 };
 

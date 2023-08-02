@@ -45,7 +45,7 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
   {
     EnvCell ev = *ienvcell;   
     
-    if (m_maille_endo[ev] == 0) {
+    if (m_maille_endo[ev.globalCell()] == 0) {
         Real internal_energy = m_internal_energy[ev];
         Real density = m_density[ev];
         if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
@@ -63,7 +63,7 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
 
 void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
-  if (m_maille_endo[ev] == 1) return;
+  if (m_maille_endo[ev.globalCell()] == 1) return;
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
@@ -88,7 +88,7 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
-    if (m_maille_endo[ev] == 0) {
+    if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
         if (m_pressure[ev] < damage_thresold) {
             // maille devient endommagée
