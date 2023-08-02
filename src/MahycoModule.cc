@@ -1020,6 +1020,18 @@ computeGeometricValues()
                 m_caracteristic_length[icell] = dx_numerator / dx_denominator;
             } else if ( options()->longueurCaracteristique() == "racine-cubique-volume" ) {
                 m_caracteristic_length[icell] = std::pow ( m_cell_volume[icell], racine );
+            } else if ( options()->longueurCaracteristique() == "monodimX" ) {
+                Real x1=m_node_coord[cell.node (0)].x;
+                Real x2=m_node_coord[cell.node (2)].x;
+                m_caracteristic_length[icell] = math::abs(x2-x1);
+            } else if ( options()->longueurCaracteristique() == "monodimY" ) {
+                Real y1=m_node_coord[cell.node (0)].y;
+                Real y2=m_node_coord[cell.node (2)].y;
+                m_caracteristic_length[icell] = math::abs(y2-y1);
+            } else if ( options()->longueurCaracteristique() == "monodimZ" ) {
+                Real z1=m_node_coord[cell.node (0)].z;
+                Real z2=m_node_coord[cell.node (2)].z;
+                m_caracteristic_length[icell] = math::abs(z2-z1);
             } else {
                 info() << " pas de longeur caractéritique definie dans le .arc " << options()->longueurCaracteristique();
                 subDomain()->timeLoopMng()->stopComputeLoop ( true );
