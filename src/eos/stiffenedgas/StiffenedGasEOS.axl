@@ -107,7 +107,9 @@
         <!-- TEMPERATURE -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-	    
+	    <!-- DENSITY 0 -->
+        <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
         <!-- 	Indicateur Maille Endommagée	 -->
         <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
@@ -150,8 +152,12 @@
 			<description>Définition de la chaleur spécifique</description>
 		</simple>
 		<!-- - - - - - damage thresold - - - - -->
-		<simple name="damage-thresold" type="real" default="-1.e12">
-			<description>Définition de pression minimal avant endommagement</description>
+		<simple name="tension-damage-thresold" type="real" default="-1.e12">
+			<description>Définition de la pression minimal avant endommagement</description>
+		</simple>
+		<!-- - - - - - density-damage thresold - - - - -->
+		<simple name="density-damage-thresold" type="real" default="0.">
+			<description>Définition du rapport de densité minimal avant endommagement</description>
 		</simple>
 	</options>
 </service>
