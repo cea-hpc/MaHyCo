@@ -23,6 +23,7 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
     // calcul de la temperature en fonction de la chaleur specifique
     m_temperature[ev] = m_internal_energy[ev] / specific_heat;
+    m_density_0[ev] = m_density[ev];
     
   }
 }
@@ -82,13 +83,15 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 
 void PerfectGasEOSService::Endommagement(IMeshEnvironment* env)
 {
-  Real damage_thresold = options()->damageThresold();
+  Real damage_thresold = options()->tensionDamageThresold();
+  Real density_thresold = options()->densityDamageThresold();
   ENUMERATE_ENVCELL(ienvcell,env)
   {
-    EnvCell ev = *ienvcell;   
+    EnvCell ev = *ienvcell; 
+    Cell cell = ev.globalCell();   
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[ev] < damage_thresold) {
+        if (m_pressure[cell] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];

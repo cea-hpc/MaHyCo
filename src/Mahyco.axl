@@ -16,6 +16,9 @@
   <!-- DENSITY OLD N -->
   <variable field-name="density_n" name="DensityN" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- DENSITY 0 -->
+  <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- DENSITY -->
   <variable field-name="density" name="Density" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
@@ -496,6 +499,15 @@
       <description>Valeur de la dependance à l'ordonée</description>
     </simple> 
     <simple name="dependanceZ" type="real" default="0.">
+      <description>Valeur de la dependance à la hauteur</description>
+    </simple>
+    <simple name="cutoffX" type="real" default="1000.">
+      <description>Valeur de la dependance à l'absisse </description>
+    </simple>
+    <simple name="cutoffY" type="real" default="1000.">
+      <description>Valeur de la dependance à l'ordonée</description>
+    </simple> 
+    <simple name="cutoffZ" type="real" default="1000.">
       <description>Valeur de la dependance à la hauteur</description>
     </simple>
     <simple name="dependanceT" type="real" default="0.">

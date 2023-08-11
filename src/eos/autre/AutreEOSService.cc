@@ -1,6 +1,8 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "AutreEOSService.h"
 
+#include <string> 
+
 using namespace Arcane;
 using namespace Arcane::Materials;
 /*---------------------------------------------------------------------------*/
@@ -15,18 +17,18 @@ using namespace Arcane::Materials;
 
 void AutreEOSService::initEOS(IMeshEnvironment* env)
 {
-  char* fichier="ee.CineTest22#.Sn.00#.coeff";
-  S_LEC_COEF(fichier);
+  bool impression = true;
+  String fichier_string = options()->fichierCoeff();
+  const char* fichier= fichier_string.localstr();;
+  S_LEC_COEF((char*) fichier);
    
   // initialisation rho_std,ene_std
   double rho_std(0.),ene_std(0.);
-  //pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
+  if (impression) 
+    pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
   
   CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
   
-  //pinfo() << "Etat Std :" ;
-  //pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
-  //pinfo() << "Nombre de maille pour allocations " << nbmail;
   
   if (nbmail == 0) {
     // premier et seul passage 
@@ -50,10 +52,8 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_Cv    = (double *)malloc(sizeof(double) * nbmail);
     m_cs2   = (double *)malloc(sizeof(double) * nbmail);
     m_conv  = (double *)malloc(sizeof(double) * nbmail);
-    
-    //pinfo() << " Allocations terminées : " << nbmail;
   }
-  Integer imail = 0;
+  Integer ip(0),imail(0);
   // copie dans des tableaux Theia
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -61,6 +61,8 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     Cell cell = ev.globalCell();
 
     m_dtime[imail] = m_global_deltat() * CONVERSION_DT ;
+    // solution esther : 
+    m_dtime[imail] = 1. * CONVERSION_DT ;
     m_rho[imail] = m_density[ev] * CONVERSION_DENSITE;
     m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
     // sortie m_Pres[i] et m_Temp[i];
@@ -76,12 +78,12 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
-  //pinfo() << " Appel à la fonction " ;
-  //pinfo() << " Valeurs envoyé à l'EOS ";
-  //pinfo() << "  rho = " << m_rho[0];
-  //pinfo() << "  ene = " << m_ene[0];
-  //pinfo() << "  pres = " << m_Pres[0];
-  //pinfo() << "  Temp = " << m_Temp[0];
+  pinfo() << " Appel à la fonction " ;
+  pinfo() << " Valeurs envoyé à l'EOS ";
+  pinfo() << "  rho = " << m_rho[0];
+  pinfo() << "  ene = " << m_ene[0];
+  pinfo() << "  pres = " << m_Pres[0];
+  pinfo() << "  Temp = " << m_Temp[0];
   
   S_CALC_CINE_VE( &nbmail,
                  m_dtime,
@@ -116,44 +118,43 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_temperature[ev] = m_Temp[imail] / CONVERSION_TEMPERATURE;
     m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
     m_internal_energy[ev] = m_ene[imail] / CONVERSION_ENERGIE;
+    m_density_0[ev] = m_density[ev];
     imail++;
   }
-  //pinfo() << " FIN DE  la fonction " ;
-  //pinfo() << " Valeurs renvoyé par l'EOS ";
-  //pinfo() << "  rho = " << m_rho[0];
-  //pinfo() << "  ene = " << m_ene[0];
-  //pinfo() << "  pres = " << m_Pres[0];
-  //pinfo() << "  Temp = " << m_Temp[0];
-  //pinfo() << "  Vitson = " << m_cs2[0];
-  /* ENUMERATE_ENVCELL(ienvcell,env)
-  {
-    EnvCell ev = *ienvcell;   
-   pinfo() << "  rho = " << m_density[ev] ;
-   pinfo() << "  ene = " << m_internal_energy[ev] ;
-   pinfo() << "  pres = " << m_pressure[ev] ;
-   pinfo() << "  Temp = " << m_temperature[ev];
-   pinfo() << "  Vitson = " << m_sound_speed[ev];
-  }*/
+  
+  if (impression) {
+    pinfo() << " FIN de l'init " ;
+    pinfo() << " -------------- " ;
+    pinfo() << " Valeurs renvoyé par l'EOS ";
+    pinfo() << "  Densité          = " << m_rho[0];
+    pinfo() << "  Energie Interne  = " << m_ene[0];
+    pinfo() << "  Pression         = " << m_Pres[0];
+    pinfo() << "  Température      = " << m_Temp[0];
+    pinfo() << "  Vitesse du son   = " << m_cs2[0];
+    pinfo() << "  Fraction de la phase 1 (Beta)    = " << m_Frac1[0];
+    pinfo() << "  Fraction de la phase 2 (Gamma)   = " << m_Frac2[0];
+    pinfo() << "  Fraction de la phase 3 (Liquide) = " << m_Frac3[0];
+    pinfo() << " ------------------------------------------------- " ;
+  }
+    
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
 {
-  char* fichier="ee.CineTest22#.Sn.00#.coeff";
-  
-  S_LEC_COEF(fichier);
+  bool impression = false;
+  String fichier_string = options()->fichierCoeff();
+  const char* fichier= fichier_string.localstr();;
+  S_LEC_COEF((char*) fichier);
    
   // initialisation rho_std,ene_std
   double rho_std(0.),ene_std(0.);
-  //  pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
+  if (impression) 
+    pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
   
   
   CINETEST22_COUPLAGE_SINIT(&rho_std,&ene_std);
-  
-  
-  //  pinfo() << "Etat Std :" ;
-  //  pinfo() << "rho_std=" << rho_std << "  ene_std=" << ene_std;
   
   // au lieu taille des tableaux = nombre de maille de l'environement
   // on fait au plus simple
@@ -196,18 +197,21 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
-  pinfo() << " Appel à la fonction " << " nombre de maille " << imail ;
-  pinfo() << " Valeurs envoyé à l'EOS ";
-  pinfo() << "  rho = " << m_rho[ip];
-  pinfo() << "  ene = " << m_ene[ip];
-  pinfo() << "  pres = " << m_Pres[ip];
-  pinfo() << "  Temp = " << m_Temp[ip];
-  pinfo() << "   DT " << m_dtime[ip]; 
-  pinfo() << "  Frac1 = " << m_Frac1[ip];
-  pinfo() << "  Frac2 = " << m_Frac2[ip];
-  pinfo() << "  Frac3 = " << m_Frac3[ip];
-  pinfo() << "  Frac4 = " << m_Frac4[ip];
-  pinfo() << "  Frac5 = " << m_Frac5[ip];
+  
+  if (impression) { 
+    pinfo() << " FIN de la Re-init " ;
+    pinfo() << " -------------- " ;
+    pinfo() << " Valeurs renvoyé par l'EOS ";
+    pinfo() << "  Densité          = " << m_rho[0];
+    pinfo() << "  Energie Interne  = " << m_ene[0];
+    pinfo() << "  Pression         = " << m_Pres[0];
+    pinfo() << "  Température      = " << m_Temp[0];
+    pinfo() << "  Vitesse du son   = " << m_cs2[0];
+    pinfo() << "  Fraction de la phase 1 (Beta)    = " << m_Frac1[0];
+    pinfo() << "  Fraction de la phase 2 (Gamma)   = " << m_Frac2[0];
+    pinfo() << "  Fraction de la phase 3 (Liquide) = " << m_Frac3[0];
+    pinfo() << " ------------------------------------------------- " ;
+  }
   
   S_CALC_CINE_VE( &nbmail,
                  m_dtime,
@@ -245,29 +249,13 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
     m_internal_energy[ev] = m_ene[imail] / CONVERSION_ENERGIE;
     imail++;
   }
-  //pinfo() << " FIN DE  la fonction " ;
-  //pinfo() << " Valeurs renvoyé par^ l'EOS ";
-  //pinfo() << "  rho = " << m_rho[ip];
-  //pinfo() << "  ene = " << m_ene[ip];
-  //pinfo() << "  pres = " << m_Pres[ip];
-  //pinfo() << "  Temp = " << m_Temp[ip];
-  //pinfo() << "  Vitson = " << m_cs2[ip];
-  /* ENUMERATE_ENVCELL(ienvcell,env)
-  {
-    EnvCell ev = *ienvcell;   
-   pinfo() << "  rho = " << m_density[ev] ;
-   pinfo() << "  ene = " << m_internal_energy[ev] ;
-   pinfo() << "  pres = " << m_pressure[ev] ;
-   pinfo() << "  Temp = " << m_temperature[ev];
-   pinfo() << "  Vitson = " << m_sound_speed[ev];
-  }
-  */
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void AutreEOSService::applyEOS(IMeshEnvironment* env)
 {
+  bool impression = true;
   Integer ip(0), imail(0);
   // copie dans des tableaux Theia
   ENUMERATE_ENVCELL(ienvcell,env)
@@ -278,10 +266,12 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
         m_dtime[imail] = m_global_deltat() * CONVERSION_DT ;
         m_rho[imail] = m_density[ev] * CONVERSION_DENSITE;
         m_ene[imail] = m_internal_energy[ev] * CONVERSION_ENERGIE;
-        // sortie m_Pres[i] et m_Temp[i];
+        // sortie m_Pres[imail] et m_Temp[imail]  mais on les envoie à S_CALC_CINE_VE
+        // pour initialiser le newton plus proprement
         m_Temp[imail] = m_temperature[ev] * CONVERSION_TEMPERATURE;
+        // m_Pres[imail] = std::max(10. , m_pressure[ev] * CONVERSION_PRESSION) ;pour les forts Bij voir avec Greg
         m_Pres[imail] = m_pressure[ev] * CONVERSION_PRESSION ;
-        m_Frac1[imail] = m_frac_phase1[ev];
+        m_Frac1[imail] = m_frac_phase1[ev]; 
         m_Frac2[imail] = m_frac_phase2[ev];
         m_Frac3[imail] = m_frac_phase3[ev];
         m_Frac4[imail] = m_frac_phase4[ev];
@@ -294,12 +284,19 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
         imail++;
     }
   }
-  // pinfo() << " Appel à la fonction " ;
-  // pinfo() << " Valeurs envoyé à l'EOS ";
-  // pinfo() << "  rho = " << m_rho[ip];
-  // pinfo() << "  ene = " << m_ene[ip];
-  // pinfo() << "  pres = " << m_Pres[ip];
-  // pinfo() << "  Temp = " << m_Temp[ip];
+  if (impression) { 
+    pinfo() << " Appel à la fonction " ;
+    pinfo() << " Valeurs envoyé à l'EOS ";
+    pinfo() << " Frac 1 = " << m_Frac1[ip];
+    pinfo() << " Frac 2 = " << m_Frac2[ip];
+    pinfo() << " Frac 3 = " << m_Frac3[ip];
+    pinfo() << "  Energie Interne  = " << m_ene[ip];
+    pinfo() << "  Pression         = " << m_Pres[ip];
+    pinfo() << "  Température      = " << m_Temp[ip]; 
+    pinfo() << "  Densité          = "  << m_rho[ip];
+    pinfo() << "  Pas de Temps     = " << m_dtime[ip];
+    pinfo() << "  ------------------------------- " ;
+  }
   
   S_CALC_CINE_VE( &nbmail,
                  m_dtime,
@@ -317,6 +314,20 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
                  m_Cv,
                  m_cs2,
                  m_conv);
+  
+  
+  if (impression) { 
+    pinfo() << " Valeurs renvoyé à l'EOS ";
+    pinfo() << " Frac 1 = " << m_Frac1[ip];
+    pinfo() << " Frac 2 = " << m_Frac2[ip];
+    pinfo() << " Frac 3 = " << m_Frac3[ip];
+    pinfo() << "  Energie Interne  = " << m_ene[ip];
+    pinfo() << "  Pression         = " << m_Pres[ip];
+    pinfo() << "  Température      = " << m_Temp[ip];
+    pinfo() << "  Densité          = "  << m_rho[ip];
+    pinfo() << "  ------------------------------- " ;
+  }
+  
   imail = 0;
   // Retour Pression et vitesse du son
   ENUMERATE_ENVCELL(ienvcell,env)
@@ -337,19 +348,9 @@ void AutreEOSService::applyEOS(IMeshEnvironment* env)
         imail++;
     }
   }
-  // pinfo() << " FIN DE  la fonction " ;
-  // pinfo() << " Valeurs renvoyé par l'EOS pour la maille " << ip;
-  // pinfo() << "  rho = " << m_rho[ip];
-  // pinfo() << "  ene = " << m_ene[ip];
-  // pinfo() << "  pres = " << m_Pres[ip];
-  // pinfo() << "  Temp = " << m_Temp[ip];
-  // pinfo() << "  Vitson = " << m_cs2[ip];
-  // pinfo() << " Conversion vers les envcell ";
-  
- 
 }
 /*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/  
 
 void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
@@ -358,7 +359,11 @@ void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_dtime[0] = m_global_deltat()* CONVERSION_DT ;
   m_rho[0] = m_density[ev] * CONVERSION_DENSITE;
   m_ene[0] = m_internal_energy[ev] * CONVERSION_ENERGIE; 
-  // sortie m_Pres[i] et m_Temp[i];
+  // sortie m_Pres[0] et m_Temp[0] mais on les envoie à S_CALC_CINE_VE
+  // pour initialiser le newton plus proprement
+  m_Temp[0] = m_temperature[ev] * CONVERSION_TEMPERATURE;
+  // m_Pres[0] = std::max(10. , m_pressure[ev] * CONVERSION_PRESSION) ; pour les forts Bij voir avec Greg
+  m_Pres[0] = m_pressure[ev] * CONVERSION_PRESSION ;
   m_Frac1[0] = m_frac_phase1[ev];
   m_Frac2[0] = m_frac_phase2[ev];
   m_Frac3[0] = m_frac_phase3[ev];
@@ -402,14 +407,15 @@ void AutreEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 
 void AutreEOSService::Endommagement(IMeshEnvironment* env)
 {
-  Real damage_thresold = options()->damageThresold();
+  Real damage_thresold = options()->tensionDamageThresold();
+  Real density_thresold = options()->densityDamageThresold();
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;  
     Cell cell = ev.globalCell(); 
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[ev] < damage_thresold) {
+        if (m_pressure[ev] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];

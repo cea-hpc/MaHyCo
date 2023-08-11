@@ -19,6 +19,7 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
     Real density = m_density[ev];
     m_internal_energy[ev] = (pressure + (adiabatic_cst * limit_tension)) / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
+    m_density_0[ev] = m_density[ev];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -70,13 +71,15 @@ void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 
 void StiffenedGasEOSService::Endommagement(IMeshEnvironment* env)
 {
-  Real damage_thresold = options()->damageThresold();
+  Real damage_thresold = options()->tensionDamageThresold();
+  Real density_thresold = options()->densityDamageThresold();
   ENUMERATE_ENVCELL(ienvcell,env)
   {
-    EnvCell ev = *ienvcell;   
+    EnvCell ev = *ienvcell;  
+    Cell cell = ev.globalCell();  
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[ev] < damage_thresold) {
+        if (m_pressure[cell] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];
