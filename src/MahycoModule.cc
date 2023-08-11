@@ -797,9 +797,10 @@ applyBoundaryConditionForCellVariables()
                             value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
                             value += options()->boundaryCondition[i]->dependanceT * m_global_time();
                         } else if ( type == TypesMahyco::SuperGaussianPressure ) {
-                            // Fonction super Gaussienne
+                            // Fonction super Gaussienne limitée en taille (seule la dependance en Y est codé pour l'instant)
                             Real ay= m_node_coord[node].y * options()->boundaryCondition[i]->dependanceY;
                             value *= math::exp ( -math::pow ( ay,4. ) );
+                            if (math::abs(m_node_coord[node].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
                         } else if ( type == TypesMahyco::ContactHerzPressure ) {
                             // Fonction Contact de Herz sur ZMAX
                             Real a2 = options()->boundaryCondition[i]->dependanceX;
@@ -827,7 +828,6 @@ applyBoundaryConditionForCellVariables()
                         // pinfo() << " vitesse imposée" << m_velocity[node] << " m_node_mass " << m_node_mass[node] << " dt " << dt << " surface " << surface;
                     }
                 } else {
-
                     Real alpha ( 0. );
                     value =0.;
                     // info() << " on cherche la CDL de pression " << m_table_temps[0] << " " << m_table_temps[1] << " " << m_table_temps[2];
