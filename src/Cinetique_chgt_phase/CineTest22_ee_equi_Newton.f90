@@ -362,7 +362,7 @@ SUBROUTINE S_SEARCH_NEWTON_ISOPT(nb,nip,Prop_ni,Prop_no,Fra_in,icalc)
 			    ! La méthode proposée par Cranfill suppose un volume et une énergie constante
 			    CALL S_rescall(vol_ref,vloc,vi_j)
 			    CALL S_rescall(ene_ref,eloc,ei_j)
-			    dprec_v(1)=abs(vol_ref-vloc) ! /vol_ref     ! erreur relative modif 
+			    dprec_v(1)=abs(vol_ref-vloc) ! /vol_ref      ! erreur relative modif 
 			    dprec_e(1)=abs(ene_ref-eloc) ! /ene_ref      ! erreur relative modif 
 			endif
 		endif
