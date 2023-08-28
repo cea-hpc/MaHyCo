@@ -12,8 +12,8 @@ cd build
 #export CXX CC
 
 # Build with makefiles in parallel
-#cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/" -DCINETIQUE_SRC="/home/perlatj/Workspace/MaHyCo/src/Cinetique_chgt_phase/"
-cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/"
+cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/" -DCINETIQUE_SRC="/home/perlatj/Workspace/Cinetique_chgt_phase/"
+#cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane/"
 #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/home/perlatj/Workspace/arcane_cuda/"
 cmake --build . -- -j16 
 
