@@ -121,7 +121,6 @@ set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
 
 set( TEST_NAMES_PARA_4
-        "CAS_Lag_ContactHerz3D"
         "CAS_2D_Lag_BiSodCaseX"
         "CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
@@ -146,8 +145,9 @@ set( TEST_NAMES_PARA_4
 		"CAS_BiSodCaseY_pente_borne_minmod_debar_2"
 		"CAS_BiSodCaseY_pente_borne_superbee_debar_2"
 		)
+
+
 set( TEST_NAMES_PARA_8		
-        "CAS_lag_ChocPlaque3D"
 		"CAS_MonoRiderDeformationTimeReverse"
 		"CAS_MonoRiderVortexTimeReverse"
 		"CAS_MonoRiderVortex"
@@ -163,14 +163,11 @@ set( TEST_NAMES_PARA_8
 		"CAS_Sedov"
 		)
 set( TEST_NAMES
-		"CAS_lag_Chauffage_isochore"
 		"CAS_Lag_BiSodCaseX"
         "CAS_2D_Lag_SodCaseZ"
         "CAS_Lag_BiSodCaseY"
 		"CAS_Lag_SodCaseY"
         "CAS_Lag_SodCaseZ"
-		"CAS_lag_ChocPlaque1D"
-		"CAS_lag_ChocPlaque1D_3phases"
 		"CAS_BiSodCaseX"
 		"CAS_MonoRiderDeformation"
 		"CAS_MonoRiderRotation"
@@ -180,7 +177,6 @@ set( TEST_NAMES
 		"CAS_2D_Sedov"
 		"CAS_2D_ALE_Sedov_euler"
 		"CAS_2D_ALE_BiSedov_euler"
-		"CAS_lag_tache_focale"
 		"CAS_Compression_isotherme_ALU_monodimX"
 		)
 
@@ -190,6 +186,22 @@ set( TEST_NAMES_PR
 		"CAS_MonoRiderTx"
 		"CAS_RiderT45"
 		)
+
+if (IS_DIRECTORY ${CINETIQUE_SRC})
+set( TEST_NAMES_PARA_4_CIN
+        "CAS_Lag_ContactHerz3D"		
+        )
+set( TEST_NAMES_PARA_8_CIN		
+        "CAS_lag_ChocPlaque3D"
+        )
+set( TEST_NAMES_CIN
+        "CAS_lag_Chauffage_isochore"
+		"CAS_lag_ChocPlaque1D"
+		"CAS_lag_ChocPlaque1D_3phases"
+		"CAS_lag_tache_focale"
+)
+endif()
+		
 		
 set( PARA4 "para_4")
 set( PARA8 "para_8")
@@ -222,3 +234,14 @@ foreach( TEST_NAME ${TEST_NAMES_PARA_8} )
  add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
+if (IS_DIRECTORY ${CINETIQUE_SRC})
+foreach( TEST_NAME ${TEST_NAMES_CIN} )
+ add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+foreach( TEST_NAME ${TEST_NAMES_PARA_4_CIN} )
+ add_test(NAME "${PARA4}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+foreach( TEST_NAME ${TEST_NAMES_PARA_8_CIN} )
+ add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+endforeach()
+endif()
