@@ -86,6 +86,9 @@
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL CQS	 -->
+  <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
   <!-- 	FACE COORD	 -->
   <variable field-name="deltax_lagrange" name="DeltaxLagrange" data-type="real" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />

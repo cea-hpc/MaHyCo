@@ -16,12 +16,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     mm = IMeshMaterialMng::getReference(mesh());
   
-    if (! options()->getIsEulerScheme()) {
-      debug() << "Creation liste des noeuds à relaxer";
-      ComputeNodeGroupToRelax();
-      debug() << "Deplacement des noeuds : lissage";
-      computeLissage();
-    } else { 
+    if (options()->getIsEulerScheme()) {
       // sauvegarde de l'ancien maillage 
       m_node_coord_l.copy(m_node_coord);
       

@@ -5,7 +5,8 @@
  * \file computeFaceQuantitesForRemap()
  * \brief Calcul de quantites aux faces pour la projection :
  *    DxLagrange, du milieu, de la longueur des faces et de leur vitesse normale
- *
+ *    avec les coordonées du maillage issues du lagrange
+ * 
  * \param  m_cell_coord, m_node_coord, m_face_normal
  *         m_velocity
  * \return m_face_coord, m_face_length_lagrange,
@@ -16,6 +17,12 @@ void MahycoModule::
 computeFaceQuantitesForRemap()
 {
   debug() << " Entree dans computeFaceQuantitesForRemap()";
+  
+  // calcul su le maillage lagrange de  
+  // - la vitesse normale à la face : m_face_normal_velocity
+  // - la longueur d'une face : m_face_length_lagrange
+  // - les coordonnées de la face de reception : m_face_coord
+  
   bool csts = options()->schemaCsts();  
   Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
   if (m_dimension == 3) {
@@ -53,6 +60,51 @@ computeFaceQuantitesForRemap()
   }
   m_face_length_lagrange.synchronize();
   m_face_normal_velocity.synchronize();
+  
+  if (! options()->remap()->isEuler()) {
+    // calcul comme dans InitGeometricValues de 
+    // - la normale à la face :  m_face_normal[face] utilisée dans computeGradPhiFace
+    // - les coordonnees de la face : m_face_coord 
+    // - la normale sortante d'une cellule par une face :  m_outer_face_normal[cell][indexbackface]
+    // sur le maillage lissé (m_node_coord_0)
+    Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
+    if ( m_dimension == 3 ) {
+        ENUMERATE_FACE ( iFace, allFaces() ) {
+            Face face = *iFace;
+            Real3 face_vec1 = m_node_coord_0[face.node ( 2 )] - m_node_coord_0[face.node ( 0 )];
+            Real3 face_vec2 = m_node_coord_0[face.node ( 3 )] - m_node_coord_0[face.node ( 1 )];
+            m_face_normal[iFace].x = produit ( face_vec1.y, face_vec2.z, face_vec1.z, face_vec2.y );
+            m_face_normal[iFace].y = - produit ( face_vec2.x, face_vec1.z, face_vec2.z, face_vec1.x );
+            m_face_normal[iFace].z = produit ( face_vec1.x, face_vec2.y, face_vec1.y, face_vec2.x );
+            m_face_normal[iFace] /= m_face_normal[iFace].normL2();
+        }
+    } else {
+        ENUMERATE_FACE ( iFace, allFaces() ) {
+            Face face = *iFace;
+            m_face_normal[iFace].x = ( m_node_coord_0[face.node ( 1 )].y - m_node_coord_0[face.node ( 0 )].y );
+            m_face_normal[iFace].y = ( m_node_coord_0[face.node ( 1 )].x - m_node_coord_0[face.node ( 0 )].x );
+            m_face_normal[iFace] /= m_face_normal[iFace].normL2();
+        }
+    }
+    ENUMERATE_FACE ( iFace, allFaces() ) {
+        Face face = *iFace;
+        m_face_coord[face] = 0.;
+        for ( Integer inode = 0; inode < face.nbNode(); ++inode ) {
+            m_face_coord[face] +=  one_over_nbnode * m_node_coord_0[face.node ( inode )];
+        }
+    }
+    ENUMERATE_CELL ( icell,allCells() ) {
+        ENUMERATE_FACE ( iface, ( *icell ).faces() ) {
+            const Face& face = *iface;
+            Integer index = iface.index();
+            m_outer_face_normal[icell][index] = ( m_face_coord[face]-m_cell_coord_0[icell] )
+                                                / ( m_face_coord[face]-m_cell_coord_0[icell] ).normL2();
+        }
+    }
+    m_face_normal.synchronize();
+    m_face_coord.synchronize();
+    m_outer_face_normal.synchronize();
+  }
 }
 /**
  *******************************************************************************
@@ -191,6 +243,37 @@ void MahycoModule::remap() {
     // passage des vitesse de n+1/2 à n+1 pour la projection
     if (options()->schemaCsts()) updateVelocityForward();
     if (!options()->sansLagrange) withDualProjection = 1;
+    
+    
+    if (! options()->remap()->isEuler()) {
+        // lissage du maillage
+        info() << "Creation liste des noeuds à relaxer";
+        options()->remap()->ComputeNodeGroupToRelax();
+        info() << "Deplacement des noeuds : lissage";
+        options()->remap()->computeLissage();
+        info() << "calcul des volumes du maillage lissé";
+        options()->remap()->computeVolumes();
+        // TODO à harmoniser 
+        // maintenant en ALE
+        // - m_node_coord_l contient les coordonnées lagrange - maillage de départ
+        // - m_node_coord contient les coordonées du maillage d'arrivée (lissé)
+        // en ADI (version euler ou non) 
+        // - m_node_coord contient les coordonnées lagrange - maillage de départ
+        // - m_node_coord_0 contient les coordonées du maillage d'arrivée (lissé)
+        // - m_euler_volume contient le volume des mailles du maillage d'arrivée (lissé)
+        
+        // pour la projection ADI 
+        // calcul des différents termes associées au maillage d'arrivée
+        // tels que :
+        // - la normale à la face :  m_face_normal[face] utilisée dans computeGradPhiFace
+        // - la normale sortante d'une cellule par une face :  m_outer_face_normal[cell][indexbackface]
+        // - dirproj (1,0,0) puis (0,1,0) puis (0,0,1) en cartésien 
+        // - la vitesse normale à la face : m_face_normal_velocity
+        // - la longueur d'une face
+        // - les coordonnées de la face de reception : m_face_coord
+        
+        //  ce sera fait dans computeFaceQuantitesForRemap si options()->getIsEulerScheme() = false
+    } 
     
     computeVariablesForRemap();
     computeFaceQuantitesForRemap();

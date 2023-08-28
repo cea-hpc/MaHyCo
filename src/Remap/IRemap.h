@@ -62,6 +62,11 @@ public:
    * fonction final de la projection
    **/
   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env)  = 0;
+  
+  
+  virtual  void ComputeNodeGroupToRelax() = 0;
+  virtual  void computeLissage() = 0;
+  virtual  void computeVolumes() = 0;
 };
 
 #endif

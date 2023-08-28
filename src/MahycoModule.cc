@@ -178,7 +178,7 @@ hydroStartInit()
         Real volume = 0.0;
         for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
             volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
-            m_node_volume[cell.node ( inode )] += volume;
+            // m_node_volume[cell.node ( inode )] += volume;
         }
         volume /= m_dimension;
         m_cell_volume[icell] = volume;
@@ -983,7 +983,7 @@ computeGeometricValues()
             for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
                 volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
                 // pinfo() << cell.localId() << " coor " << m_node_coord[cell.node(inode)] << " et " << m_cell_cqs[icell] [inode];
-                m_node_volume[cell.node ( inode )] += volume;
+                // m_node_volume[cell.node ( inode )] += volume;
             }
             volume /= m_dimension;
 

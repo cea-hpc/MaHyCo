@@ -17,7 +17,7 @@ using namespace Arcane::Materials;
 
 void AutreEOSService::initEOS(IMeshEnvironment* env)
 {
-  bool impression = true;
+  bool impression = false;
   String fichier_string = options()->fichierCoeff();
   const char* fichier= fichier_string.localstr();;
   S_LEC_COEF((char*) fichier);
@@ -255,7 +255,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
 
 void AutreEOSService::applyEOS(IMeshEnvironment* env)
 {
-  bool impression = true;
+  bool impression = false;
   Integer ip(0), imail(0);
   // copie dans des tableaux Theia
   ENUMERATE_ENVCELL(ienvcell,env)

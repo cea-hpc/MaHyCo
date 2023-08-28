@@ -1,6 +1,220 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
+void RemapADIService::ComputeNodeGroupToRelax(){
+    
+  Int32UniqueArray node_list_lid;
+  node_list_lid.clear();
+  Integer jj, jp, jm;
+  Real3 vecjjp, vecjjm;
+  ENUMERATE_NODE(inode, allNodes()) {
+    Node node = *inode; 
+    if (inode.localId() == 62) pinfo() << " noeud " << inode.localId() << " : " << m_node_coord[inode];
+    Real aircell, sincell, airmax(0.), airmin(1.e10), sinmin(1.);
+    ENUMERATE_CELL(icell, node.cells()) {
+        Cell cell = * icell;
+        for (Integer ii = 0; ii < 4; ++ii) {
+            if (cell.node(ii) == node) {
+                jj = ii;
+                jp = math::abs((jj+1)%4);
+                jm = math::abs((jj+3)%4);
+            }
+        }
+        vecjjp = m_node_coord[cell.node(jp)] - m_node_coord[cell.node(jj)];
+        vecjjm = m_node_coord[cell.node(jm)] - m_node_coord[cell.node(jj)];
+        aircell = math::vecMul2D(vecjjp, vecjjm);
+        sincell = aircell / (vecjjp.normL2() * vecjjm.normL2());
+        airmin = ( aircell < airmin ? aircell : airmin );
+        airmax = ( aircell > airmax ? aircell : airmax );
+        sinmin = ( sincell < sinmin ? sincell : sinmin );
+    }
+    // pinfo() << node.localId() << " " << airmin/airmax << " " <<  options()->volumCriteria;
+    // pinfo() << node.localId() << " " << sinmin << " " <<  options()->angleCriteria;
+    if ((airmin/airmax) < options()->volumCriteria) node_list_lid.add(node.localId());
+    if (sinmin < options()->angleCriteria) node_list_lid.add(node.localId());
+  }
+  mesh()->nodeFamily()->createGroup("NodeToRelax", node_list_lid, true);
+}
+/**
+ *******************************************************************************
+ * \file computeLissage
+ * \brief Lissage du maillage avec une methode de winslow 
+ *        utilisation du maillage structuré
+ * \param  
+ * \return m_node_coord_0
+ *******************************************************************************
+ */
+void RemapADIService::computeLissage(){
+    
+    
+  pinfo() << " Rentrée dans le lissage";
+  NodeGroup Nodes_to_relax = mesh()->nodeFamily()->findGroup("NodeToRelax");
+  pinfo() << " nombre de noeuds à relaxer " << Nodes_to_relax.size();
+  if (Nodes_to_relax.size() == 0) return;
+  NodeDirectionMng ndmx(m_cartesian_mesh->nodeDirection(0));
+  NodeDirectionMng ndmy(m_cartesian_mesh->nodeDirection(1));
+  Real3 coordphi, coordpsi, delta;
+  Real jacob;
+  Real alpha, beta, gamma, weight, dplmax, dplmin;
+  Real tauxdlp = 0.00025;
+  Real3 cc = {0.5, 0.5, 0.};
+  
+  // copie du maillage lagrange 
+  m_node_coord_0.copy(m_node_coord);
+  
+  // puis lissage
 
+  for( Integer iter=0; iter< options()->nbIterationWinslow ; ++iter){
+    ENUMERATE_NODE(inode, Nodes_to_relax){
+        Node n1 = *inode;
+        if (n1.nbCell() == 4) {
+        if (iter == 0) pinfo() << "Relaxation du noeud " <<   inode.localId();  
+        DirNode dir_nodex(ndmx[inode]);
+        Node n6 = dir_nodex.previous();
+        Node n2 = dir_nodex.next(); 
+        
+        DirNode dir_nodey(ndmy[inode]);
+        Node n8 = dir_nodey.previous();
+        Node n4 = dir_nodey.next();    
+        
+        DirNode dir_nodexy(ndmy[n2]);
+        Node n9 = dir_nodexy.previous();
+        Node n3 = dir_nodexy.next();
+        
+        DirNode dir_nodeyx(ndmy[n6]);
+        Node n7 = dir_nodeyx.previous();
+        Node n5 = dir_nodeyx.next();
+        
+       if (inode.localId() == 62 && iter == 0) pinfo() << inode.localId() << " précédent " <<  n6.localId() << " suivant " << n2.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n8.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n4.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n9.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n3.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n7.localId() ;
+       if (inode.localId() == 62 && iter == 0) pinfo() << " et " << n5.localId() ;
+        
+        coordphi = 0.5*(m_node_coord_0[n2] - m_node_coord_0[n6]);
+        coordpsi = 0.5*(m_node_coord_0[n4] - m_node_coord_0[n8]);
+        jacob = coordphi.x * coordpsi.y - coordpsi.x * coordphi.y;
+            
+        if (inode.localId() == 62 && iter == 0) pinfo() << " coordphi " << coordphi ;
+        if (inode.localId() == 62 && iter == 0) pinfo() << " coordpsi " << coordpsi ;
+        
+        alpha = coordpsi.squareNormL2();
+        beta = 0.5*(coordphi.x * coordpsi.x + coordphi.y * coordpsi.y);
+        gamma = coordphi.squareNormL2();
+        weight = 2.*(alpha+gamma);
+        if (math::abs(jacob) > 1.e-8 && weight != 0.) {
+            delta = (alpha * (m_node_coord_0[n4] + m_node_coord_0[n8]) 
+                    + gamma * (m_node_coord_0[n2] + m_node_coord_0[n6])
+            - beta * (m_node_coord_0[n3] - m_node_coord_0[n5] + m_node_coord_0[n7] - m_node_coord_0[n9]) 
+            ) / weight - m_node_coord_0[n1];
+                
+            dplmax = tauxdlp*math::min(math::sqrt(alpha),sqrt(gamma));
+            dplmin = dplmax/10.;
+            
+            if ((math::abs(delta.x) > dplmin) || (math::abs(delta.y) > dplmin) || iter ==1) {
+                
+                delta.x = math::max(delta.x, dplmax);
+                delta.x = math::min(delta.x, - dplmax);
+                delta.y = math::max(delta.y, dplmax);
+                delta.y = math::min(delta.y, - dplmax);
+                
+                
+                m_node_coord_0[n1] += delta;
+            }
+        }
+      }
+      if (iter == 0) pinfo() << " avant " << inode.localId() << " = " << m_node_coord_0[n1];
+      
+      if (iter == options()->nbIterationWinslow -1) pinfo() << " après " << inode.localId() << " = " << m_node_coord_0[n1];
+    }
+  }
+  Real one_over_nbnode = .25 ; // m_dimension == 2 ? .25  : .125 ;
+    ENUMERATE_CELL ( icell, allCells() ) {
+        Cell cell = * icell;
+        Real3 somme = {0., 0., 0.};
+        for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+            somme += m_node_coord_0[inode];
+        }
+        m_cell_coord_0[cell] = one_over_nbnode * somme;
+    }
+}
+/**
+ *******************************************************************************
+ * \file computeVolume
+ * \brief calcul des volumes du maillage lissée (d'arrivée) dont 
+ *        les coordonnées sont dans m_node_coord_0
+ * \param  
+ * \return m_cell_cqs m_euler_volume
+ *******************************************************************************
+ */
+void RemapADIService::computeVolumes(){
+      
+    // Copie locale des coordonnées des sommets d'une maille
+    Real3 coord[8];
+    // Coordonnées des centres des faces
+    Real3 face_coord[6];
+
+    if ( mesh()->dimension() == 3 ) {
+        ENUMERATE_CELL ( icell, allCells() ) {
+            Cell cell = * icell;
+            // Recopie les coordonnées locales (pour le cache)
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < 8; ++inode ) {
+                coord[inode.index()] = m_node_coord_0[inode];
+            }
+            // Calcul les coordonnées des centres des faces
+            face_coord[0] = 0.25 * ( coord[0] + coord[3] + coord[2] + coord[1] );
+            face_coord[1] = 0.25 * ( coord[0] + coord[4] + coord[7] + coord[3] );
+            face_coord[2] = 0.25 * ( coord[0] + coord[1] + coord[5] + coord[4] );
+            face_coord[3] = 0.25 * ( coord[4] + coord[5] + coord[6] + coord[7] );
+            face_coord[4] = 0.25 * ( coord[1] + coord[2] + coord[6] + coord[5] );
+            face_coord[5] = 0.25 * ( coord[2] + coord[3] + coord[7] + coord[6] );
+
+            // Calcule les résultantes aux sommets
+            computeCQs ( coord, face_coord, cell );
+        }
+    } else {
+        Real3 npc[5];
+        ENUMERATE_CELL ( icell, allCells() ) {
+            Cell cell = * icell;
+            // Recopie les coordonnées locales (pour le cache)
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < cell.nbNode(); ++inode ) {
+                coord[inode.index()] = m_node_coord_0[inode];
+            }
+            coord[4] = coord[0];
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < cell.nbNode(); ++inode ) {
+                npc[inode.index()+1].x = 0.5 * ( coord[inode.index()+1].y -  coord[inode.index()].y );
+                npc[inode.index()+1].y = 0.5 * ( coord[inode.index()].x -  coord[inode.index()+1].x );
+                // npc[inode.index()+1] = npc[inode.index()+1] / npc[inode.index()+1].normL2();
+            }
+            npc[0] = npc[4];
+            for ( Integer ii = 0; ii < 4; ++ii ) {
+                m_cell_cqs[icell][ii] = npc[ii+1] + npc[ii];
+            }
+        }
+    }
+    m_cell_cqs.synchronize();
+
+    ENUMERATE_CELL ( icell, allCells() ) {
+        Cell cell = * icell;
+        // Calcule le volume de la maille
+        {
+            Real volume = 0.;
+
+            for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
+                volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
+            }
+            volume /= mesh()->dimension();
+
+            m_euler_volume[cell] = volume;
+
+            if ( volume < 0. ) {
+                info() << cell.localId() << " : " << " calcul du volume=" << volume;
+            }
+        }
+    }
+    m_euler_volume.synchronize();
+}
 /**
  *******************************************************************************
  * \file computeDualVerticalGradPhi
@@ -857,4 +1071,70 @@ Real RemapADIService::computeRemapFlux(
     // phi_face)
     return (math::dot(outer_face_normal, exy) * face_length * phi_face);
   }
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+inline void RemapADIService::
+computeCQs ( Real3 node_coord[8], Real3 face_coord[6], const Cell & cell )
+{
+    const Real3 c0 = face_coord[0];
+    const Real3 c1 = face_coord[1];
+    const Real3 c2 = face_coord[2];
+    const Real3 c3 = face_coord[3];
+    const Real3 c4 = face_coord[4];
+    const Real3 c5 = face_coord[5];
+
+    // Calcul des normales face 1 :
+    const Real3 n1a04 = 0.5 * math::vecMul ( node_coord[0] - c0, node_coord[3] - c0 );
+    const Real3 n1a03 = 0.5 * math::vecMul ( node_coord[3] - c0, node_coord[2] - c0 );
+    const Real3 n1a02 = 0.5 * math::vecMul ( node_coord[2] - c0, node_coord[1] - c0 );
+    const Real3 n1a01 = 0.5 * math::vecMul ( node_coord[1] - c0, node_coord[0] - c0 );
+
+    // Calcul des normales face 2 :
+    const Real3 n2a05 = 0.5 * math::vecMul ( node_coord[0] - c1, node_coord[4] - c1 );
+    const Real3 n2a12 = 0.5 * math::vecMul ( node_coord[4] - c1, node_coord[7] - c1 );
+    const Real3 n2a08 = 0.5 * math::vecMul ( node_coord[7] - c1, node_coord[3] - c1 );
+    const Real3 n2a04 = 0.5 * math::vecMul ( node_coord[3] - c1, node_coord[0] - c1 );
+
+    // Calcul des normales face 3 :
+    const Real3 n3a01 = 0.5 * math::vecMul ( node_coord[0] - c2, node_coord[1] - c2 );
+    const Real3 n3a06 = 0.5 * math::vecMul ( node_coord[1] - c2, node_coord[5] - c2 );
+    const Real3 n3a09 = 0.5 * math::vecMul ( node_coord[5] - c2, node_coord[4] - c2 );
+    const Real3 n3a05 = 0.5 * math::vecMul ( node_coord[4] - c2, node_coord[0] - c2 );
+
+    // Calcul des normales face 4 :
+    const Real3 n4a09 = 0.5 * math::vecMul ( node_coord[4] - c3, node_coord[5] - c3 );
+    const Real3 n4a10 = 0.5 * math::vecMul ( node_coord[5] - c3, node_coord[6] - c3 );
+    const Real3 n4a11 = 0.5 * math::vecMul ( node_coord[6] - c3, node_coord[7] - c3 );
+    const Real3 n4a12 = 0.5 * math::vecMul ( node_coord[7] - c3, node_coord[4] - c3 );
+
+    // Calcul des normales face 5 :
+    const Real3 n5a02 = 0.5 * math::vecMul ( node_coord[1] - c4, node_coord[2] - c4 );
+    const Real3 n5a07 = 0.5 * math::vecMul ( node_coord[2] - c4, node_coord[6] - c4 );
+    const Real3 n5a10 = 0.5 * math::vecMul ( node_coord[6] - c4, node_coord[5] - c4 );
+    const Real3 n5a06 = 0.5 * math::vecMul ( node_coord[5] - c4, node_coord[1] - c4 );
+
+    // Calcul des normales face 6 :
+    const Real3 n6a03 = 0.5 * math::vecMul ( node_coord[2] - c5, node_coord[3] - c5 );
+    const Real3 n6a08 = 0.5 * math::vecMul ( node_coord[3] - c5, node_coord[7] - c5 );
+    const Real3 n6a11 = 0.5 * math::vecMul ( node_coord[7] - c5, node_coord[6] - c5 );
+    const Real3 n6a07 = 0.5 * math::vecMul ( node_coord[6] - c5, node_coord[2] - c5 );
+
+    // Calcul des résultantes aux sommets :
+    m_cell_cqs[cell] [0] = ( 5. * ( n1a01 + n1a04 + n2a04 + n2a05 + n3a05 + n3a01 ) +
+                             ( n1a02 + n1a03 + n2a08 + n2a12 + n3a06 + n3a09 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [1] = ( 5. * ( n1a01 + n1a02 + n3a01 + n3a06 + n5a06 + n5a02 ) +
+                             ( n1a04 + n1a03 + n3a09 + n3a05 + n5a10 + n5a07 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [2] = ( 5. * ( n1a02 + n1a03 + n5a07 + n5a02 + n6a07 + n6a03 ) +
+                             ( n1a01 + n1a04 + n5a06 + n5a10 + n6a11 + n6a08 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [3] = ( 5. * ( n1a03 + n1a04 + n2a08 + n2a04 + n6a08 + n6a03 ) +
+                             ( n1a01 + n1a02 + n2a05 + n2a12 + n6a07 + n6a11 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [4] = ( 5. * ( n2a05 + n2a12 + n3a05 + n3a09 + n4a09 + n4a12 ) +
+                             ( n2a08 + n2a04 + n3a01 + n3a06 + n4a10 + n4a11 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [5] = ( 5. * ( n3a06 + n3a09 + n4a09 + n4a10 + n5a10 + n5a06 ) +
+                             ( n3a01 + n3a05 + n4a12 + n4a11 + n5a07 + n5a02 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [6] = ( 5. * ( n4a11 + n4a10 + n5a10 + n5a07 + n6a07 + n6a11 ) +
+                             ( n4a12 + n4a09 + n5a06 + n5a02 + n6a03 + n6a08 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [7] = ( 5. * ( n2a08 + n2a12 + n4a12 + n4a11 + n6a11 + n6a08 ) +
+                             ( n2a04 + n2a05 + n4a09 + n4a10 + n6a07 + n6a03 ) ) * ( 1. / 12. );
 }

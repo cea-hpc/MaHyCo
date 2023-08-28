@@ -113,6 +113,9 @@
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL COORD	 -->
+  <variable field-name="cell_coord_0" name="CellCoord0" data-type="real3" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
   <!-- 	CELL OLD CQS	 -->
   <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />

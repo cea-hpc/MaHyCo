@@ -43,10 +43,19 @@
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE COORD_0	 -->
   <variable field-name="node_coord_0" name="NodeCoord0" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" /> 
+  <!-- 	NODE COORD LAGRANGE -->
+  <variable field-name="node_coord_l" name="NodeCoordLagrange" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL COORD	 -->
+  <variable field-name="cell_coord_0" name="CellCoord0" data-type="real3" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL CQS	 -->
+  <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
   <!-- 	FACE COORD	 -->
   <variable field-name="deltax_lagrange" name="DeltaxLagrange" data-type="real" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
@@ -143,6 +152,18 @@
   <!-- - - - - - thresold - - - - -->
   <simple name="threshold" type="real" default="1.e-10">
     <description>Définition de la valeur limite des petites fractions et autres </description>
+  </simple>  
+  <!-- - - - - - critere de remaillage en volume - - - - -->
+  <simple name="volum-criteria" type="real" default="1.">
+    <description>Critere de remaillage d'un noeud sur le rapport du volume min et max des elements entourant ce noeud </description>
+  </simple>
+  <!-- - - - - - critere de remaillage en angle - - - - -->
+  <simple name="angle-criteria" type="real" default="-1.">
+    <description>Critere de remaillage d'un noeud sur le sinus des angles de l'élément </description>
+  </simple>
+  <!-- - - - - - nombre d'iteration de winslow - - - - -->
+  <simple name="nb-iteration-winslow" type="integer" default="3">
+    <description>Nombre d'itération de lissage du maillage</description>
   </simple>
   <!-- - - - - projection-Euler - - - - -->
   <simple name="is-euler-scheme" type="bool" default="true">

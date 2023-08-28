@@ -72,20 +72,28 @@ public:
   virtual void synchronizeUremap();
   
   
+ 
+    /**
+   * fonction final de la projection
+   **/
+   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
+   
+   
+   
+  void ComputeNodeGroupToRelax();
+  void computeLissage();
+  void computeVolumes();
+  
   virtual Integer getOrdreProjection();
   virtual bool hasProjectionPenteBorne();
   virtual bool hasProjectionSimplePente();    
   virtual bool hasConservationEnergieTotale();   
   virtual bool isEuler();
   
-    /**
-   * fonction final de la projection
-   **/
-   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
-   
 private:
     
- 
+  /* a merger avec celle du module MaHyCo */
+  inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],const Cell& cell);
   /**
    * calcul des gradients aux faces
    **/

@@ -15,6 +15,8 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     
     Integer idir(-1);
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
+    mm = IMeshMaterialMng::getReference(mesh());
+    
     
     for( Integer i=0; i< mesh()->dimension(); ++i){
       

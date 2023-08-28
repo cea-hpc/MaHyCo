@@ -285,10 +285,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     }
   } 
-  if (isEuler()) {
+  // if (isEuler()) {
       // info() << " recopie des valeurs initiales pour les sorties ";
       m_node_coord.copy(m_node_coord_0);
-  }
+  // }
   m_node_mass.synchronize();
   // conservation energie totale lors du remap
   if (hasConservationEnergieTotale()) {

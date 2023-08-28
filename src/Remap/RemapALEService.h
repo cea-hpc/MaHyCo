@@ -80,11 +80,12 @@ public:
   
   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
   
-private:
-    
   void ComputeNodeGroupToRelax();
   void computeLissage();
   void computeVolumes();
+  
+private:
+    
   void computeNewEnvCells(Integer index_env);
   void computeFlux();
   void computeApproPhi(Integer index_env, VariableCellArrayReal, VariableCellArrayReal);
