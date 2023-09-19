@@ -2,7 +2,6 @@
 #include "RemapArcaneService.h"
 #include "accenv/AcceleratorUtils.h"
 #include "accenv/IAccEnv.h"
-#include "cartesian/FactCartDirectionMng.h"
 
 
 /**
@@ -24,6 +23,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
+#if 0
   Real deltat = m_global_deltat();
   
   auto queue = m_acc_env->newQueue();
@@ -683,7 +683,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   
 
 #endif
-
+#endif
   PROF_ACC_END;
 }
 /*
@@ -725,7 +725,7 @@ template<typename LimType>
 void RemapArcaneService::
 computeDualGradPhi_LimC(Integer idir) {
   PROF_ACC_BEGIN(__FUNCTION__);
-  
+#if 0 
   Cartesian::FactCartDirectionMng fact_cart(mesh());
   
   auto queue = m_acc_env->newQueue();
@@ -851,5 +851,6 @@ computeDualGradPhi_LimC(Integer idir) {
 //                   m_dual_grad_phi[node][ivar] += 0.5 * LimType::fluxLimiter( grad_back[ivar] / grad_front[ivar] ) * grad_front[ivar];
 //     }
 //   }
+#endif
   PROF_ACC_END;
 }

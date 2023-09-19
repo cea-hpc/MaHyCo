@@ -85,7 +85,7 @@ initCartesianMesh()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
 
-  m_cartesian_mesh = _initCartMesh();
+  //m_cartesian_mesh = _initCartMesh();
   m_dimension = mesh()->dimension(); 
 
   PROF_ACC_END;
