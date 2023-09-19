@@ -104,8 +104,8 @@ class ARCANE_CEA_EXPORT ICartesianMesh
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-extern "C++" ARCANE_CEA_EXPORT ICartesianMesh*
-arcaneCreateCartesianMesh(IMesh* mesh);
+//extern "C++" ARCANE_CEA_EXPORT ICartesianMesh*
+//arcaneCreateCartesianMesh(IMesh* mesh);
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

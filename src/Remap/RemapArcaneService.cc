@@ -26,6 +26,7 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
     
     Integer idir(-1);
     m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
+    m_arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh(), false);
     
     for( Integer i=0; i< mesh()->dimension(); ++i){
       

@@ -34,6 +34,8 @@
 #include "cartesian/interface/ICartesianMesh.h"
 #include "cartesian/interface/NodeDirectionMng.h"
 
+#include "arcane/cartesianmesh/ICartesianMesh.h"
+
 class IAccEnv;
 
 using namespace Arcane;
@@ -56,6 +58,7 @@ public:
     double inf, sup;
   };
   CartesianInterface::ICartesianMesh* m_cartesian_mesh;
+  Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:

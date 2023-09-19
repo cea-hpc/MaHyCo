@@ -565,7 +565,7 @@ getReference(IMesh* mesh,bool create)
   }
   AutoDestroyUserData<ICartesianMesh>* adud = dynamic_cast<AutoDestroyUserData<ICartesianMesh>*>(ud);
   if (!adud)
-    throw FatalErrorException(A_FUNCINFO,"Can not cast to ICartesianMesh*");
+    throw FatalErrorException(A_FUNCINFO,"MAHYCO : Can not cast to ICartesianMesh*");
   return adud->data();
 }
 
