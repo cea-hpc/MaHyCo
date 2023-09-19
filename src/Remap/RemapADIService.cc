@@ -337,7 +337,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
   
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
 #if 0
     info() << "options()->ordreProjection > 1";
@@ -558,8 +558,8 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
   
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
-  CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
+  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
   Integer order2 = options()->ordreProjection - 1;
   ENUMERATE_FACE(iface, fdm.innerFaces()) {

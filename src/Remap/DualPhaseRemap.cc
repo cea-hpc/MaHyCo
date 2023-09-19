@@ -44,7 +44,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     }
     else { // (options()->projectionLimiteurId > minmodG) PAS SUR GPU
       m_dual_grad_phi.fill(0.0);
-      NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
+      Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
         DirNode dir_node(ndm[inode]);
