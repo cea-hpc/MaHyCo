@@ -146,6 +146,7 @@
 
   <entry-point method-name="checkOptions" name="CheckOptions" where="start-init" property="none" />
   <entry-point method-name="initCartesianMesh" name="InitCartesianMesh" where="init" property="none" />
+  <entry-point method-name="initArcaneCartesianMesh" name="InitArcaneCartesianMesh" where="init" property="none" />
   <entry-point method-name="allocCqs" name="AllocCqs" where="start-init" property="none" />
   <entry-point method-name="initDtIni" name="InitDtIni" where="start-init" property="none" />
   <entry-point method-name="hydroStartInitEnvAndMat" name="HydroStartInitEnvAndMat" where="start-init" property="none" />
