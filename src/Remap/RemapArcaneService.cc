@@ -462,18 +462,12 @@ void RemapArcaneService::
 computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell_PBorn0_LimC()";
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
 
   auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
     
-    auto cart_cdm = fact_cart.cellDirection(idir);
-#if 0
-    auto c2cid_stm = cart_cdm.cell2CellIdStencil();
-#endif
-    auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
-    auto cell_group = cart_cdm.allCells();
+    Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
 
     auto in_grad_phi_face = ax::viewIn(command, m_grad_phi_face);
     auto out_grad_phi = ax::viewOut(command, m_grad_phi);
@@ -481,28 +475,14 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
     auto out_delta_phi_face_av = ax::viewOut(command, m_delta_phi_face_av);
     auto out_delta_phi_face_ar = ax::viewOut(command, m_delta_phi_face_ar);
 
-    command << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
-      auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
-
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, cdm.allCells()) {
+      
       // Acces faces gauche/droite qui existent forcement
-      auto c2fid = c2fid_stm.cellFace(cid, idx);
-      FaceLocalId backFid(c2fid.previousId()); // back face
-      FaceLocalId frontFid(c2fid.nextId()); // front face
+      DirCellFaceLocalId cf(cdm.dirCellFaceId(cid));
+      FaceLocalId backFid  = cf.previousId(); // back face
+      FaceLocalId frontFid = cf.nextId(); // front face
 
-#if 0
-      // Acces mailles gauche/droite
-      auto c2cid = c2cid_stm.cell(cid, idx);
-      CellLocalId backCid(c2cid.previous()); // back cell
-      CellLocalId frontCid(c2cid.next()); // front cell
-
-      // Si maille voisine n'existe pas (bord), alors on prend maille centrale
-      if (ItemId::null(backCid))
-        backCid = cid;
-      if (ItemId::null(frontCid))
-        frontCid = cid;
-#endif
-
-      // calcul de m_grad_phi[cell]
+      // calcul de m_grad_phi[cid]
       // Spécialisation de computeAndLimitGradPhi 
       // pour options()->projectionLimiteurId < minmodG (limiteur classique)
       // info() << " Passage gradient limite Classique ";
