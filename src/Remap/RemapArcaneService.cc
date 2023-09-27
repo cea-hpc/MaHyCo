@@ -4,6 +4,7 @@
 #include <arcane/ServiceBuilder.h>
 #include "cartesian/FactCartDirectionMng.h"
 #include <accenv/IAccEnv.h>
+#include "arcane/cea/CellDirectionMng.h"
 #include "arcane/cea/FaceDirectionMng.h"
 
 /** Constructeur de la classe */
@@ -555,7 +556,8 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
   
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
-  CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
+  //CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
+  Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
   //CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
@@ -595,20 +597,20 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
         Cell cellbbb = cellb;
         Cell cellff = cellf;
         Cell cellfff = cellf;
-        DirCell ccb(cdm.cell(cellb));
+        Arcane::DirCell ccb(cdm.cell(cellb));
         if (ccb.previous().localId() != -1) {
           cellbb = ccb.previous();
           cellbbb = cellbb;
-          DirCell ccbb(cdm.cell(cellbb));
+          Arcane::DirCell ccbb(cdm.cell(cellbb));
           if (ccbb.previous().localId() != -1) {
             cellbbb = ccbb.previous();
           }
         }
-        DirCell ccf(cdm.cell(cellf));
+        Arcane::DirCell ccf(cdm.cell(cellf));
         if (ccf.next().localId() != -1) {
           cellff = ccf.next();
           cellfff = cellff;
-          DirCell ccff(cdm.cell(cellff));
+          Arcane::DirCell ccff(cdm.cell(cellff));
           if (ccff.next().localId() != -1) {
             cellfff = ccff.next();   
           }
