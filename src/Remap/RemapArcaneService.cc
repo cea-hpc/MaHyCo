@@ -4,6 +4,7 @@
 #include <arcane/ServiceBuilder.h>
 #include "cartesian/FactCartDirectionMng.h"
 #include <accenv/IAccEnv.h>
+#include "arcane/cea/FaceDirectionMng.h"
 
 /** Constructeur de la classe */
 RemapArcaneService::RemapArcaneService(const ServiceBuildInfo & sbi)
@@ -335,7 +336,8 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
   
-  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  //CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
 #if 0
     info() << "options()->ordreProjection > 1";
@@ -359,7 +361,7 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
         const Face& face = *iface;
         
         if ( m_is_dir_face[face][idir] == true) {
-          DirFace dir_face = fdm[face];
+          Arcane::DirFace dir_face = fdm[face];
           if (dir_face.previousCell() == cell) {
           frontFace = face;
           indexfrontface = iface.index(); 
@@ -554,12 +556,13 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
   CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
-  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  //CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
   Integer order2 = options()->ordreProjection - 1;
   ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
-      DirFace dir_face = fdm[face];
+      Arcane::DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
       Cell cellf = dir_face.nextCell();
       
