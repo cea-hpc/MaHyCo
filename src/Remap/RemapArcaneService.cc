@@ -33,7 +33,7 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
+      if (m_arcane_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
