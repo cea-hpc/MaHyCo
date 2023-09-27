@@ -552,7 +552,7 @@ ICartesianMesh* ICartesianMesh::
 getReference(IMesh* mesh,bool create)
 {
   //TODO: faire lock pour multi-thread
-  const char* name = "CartesianMesh";
+  const char* name = "CartCartesianMesh";
   IUserDataList* udlist = mesh->userDataList();
 
   IUserData* ud = udlist->data(name,true);
