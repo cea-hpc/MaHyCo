@@ -2,7 +2,7 @@
 #include "RemapArcaneService.h"
 #include "accenv/AcceleratorUtils.h"
 #include <arcane/ServiceBuilder.h>
-
+#include "cartesian/FactCartDirectionMng.h"
 #include <accenv/IAccEnv.h>
 
 /** Constructeur de la classe */
@@ -25,15 +25,13 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
     
     Integer idir(-1);
     m_arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
-    
-    Integer my_nb_patch = m_arcane_cartesian_mesh->nbPatch();
-    debug() << "my_nb_patch = " << my_nb_patch;
-    
+    m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
+
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      //if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
+      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
@@ -95,7 +93,6 @@ void RemapArcaneService::resizeRemapVariables(Integer nb_vars_to_project, Intege
 void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
-#if 0 
 #if 0
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
@@ -281,7 +278,6 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
   auto queue_synchronize = m_acc_env->refQueueAsync();
   m_acc_env->vsyncMng()->synchronize(mvsl, queue_synchronize);
 #endif
-#endif
   PROF_ACC_END;
 }
 /**
@@ -299,7 +295,6 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell()";
-#if 0
   // il faut initialiser m_grad_phi = 0 pour le cas ordre 1 (CPU ou GPU). On passe par un RUNCOMMAND_ENUMERATE 
   // pour couvrir les cas GPU et CPU plutot qu'un fill qui conduirait à des transferts lors d'un run GPU.
 //   m_grad_phi.fill(0.0);
@@ -446,7 +441,6 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
       }
     }     
   }
-#endif
   PROF_ACC_END;
 }
 
@@ -465,7 +459,6 @@ void RemapArcaneService::
 computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell_PBorn0_LimC()";
-#if 0
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
   auto queue = m_acc_env->newQueue();
@@ -528,7 +521,6 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
       }
     };
   }
-#endif
   PROF_ACC_END;
 }
 
@@ -546,7 +538,6 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
 void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   PROF_ACC_BEGIN(__FUNCTION__);
-#if 0
 #if 0
   info() << "options()->ordreProjection : " << options()->ordreProjection;
   info() << "options()->projectionPenteBorne : " << options()->projectionPenteBorne;
@@ -659,7 +650,6 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
      }
   }
   m_phi_face.synchronize();      
-#endif
   PROF_ACC_END;
 }
 /**
@@ -677,7 +667,6 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 {
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection_PBorn0_O2()";
   PROF_ACC_BEGIN(__FUNCTION__);
-#if 0
   Cartesian::FactCartDirectionMng fact_cart(mesh());
 
   auto ref_queue = m_acc_env->refQueueAsync();
@@ -737,7 +726,6 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 #else
   // ref_queue va être synchronisée dans globalSynchronize
   m_acc_env->vsyncMng()->globalSynchronize(ref_queue, m_phi_face);
-#endif
 #endif
   PROF_ACC_END;
 }

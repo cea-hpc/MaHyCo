@@ -28,6 +28,11 @@
 #include "arcane/materials/ComponentSimd.h"
 
 #include "RemapArcane_axl.h"
+#include "cartesian/interface/CartesianConnectivity.h"
+#include "cartesian/interface/CellDirectionMng.h"
+#include "cartesian/interface/FaceDirectionMng.h"
+#include "cartesian/interface/ICartesianMesh.h"
+#include "cartesian/interface/NodeDirectionMng.h"
 
 #include "arcane/cartesianmesh/ICartesianMesh.h"
 
@@ -53,6 +58,7 @@ public:
     double inf, sup;
   };
   Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
+  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:
