@@ -126,20 +126,16 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
 #else
 
   Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
 
   auto queue_dfac = m_acc_env->newQueue();
   queue_dfac.setAsync(true);
   {
     auto command = makeCommand(queue_dfac);
 
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.allFaces();
-
     auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
 
-    command.addKernelName("is_dir_face") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    command.addKernelName("is_dir_face") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.allFaces()) {
 
       out_is_dir_face[fid][idir] = true;
     };
@@ -151,10 +147,6 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
     {
       auto command_f = makeCommand(queue_gphi);
 
-      auto cart_fdm = fact_cart.faceDirection(idir);
-      auto f2cid_stm = cart_fdm.face2CellIdStencil();
-      auto face_group = cart_fdm.innerFaces();
-
       auto in_face_normal  = ax::viewIn(command_f, m_face_normal);
       auto in_cell_coord   = ax::viewIn(command_f, m_cell_coord);
       auto in_phi_lagrange = ax::viewIn(command_f, m_phi_lagrange);
@@ -163,13 +155,12 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
 
       auto out_grad_phi_face = ax::viewOut(command_f, m_grad_phi_face);
 
-      command_f.addKernelName("gphi") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      command_f.addKernelName("gphi") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
         // Acces mailles gauche/droite 
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId pcid(f2cid.previousCell());
-        CellLocalId ncid(f2cid.nextCell());
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId pcid = dir_face.previousCell();
+        CellLocalId ncid = dir_face.nextCell();
 
         inout_deltax_lagrange[fid] = math::dot(
             (in_cell_coord[ncid] -  in_cell_coord[pcid]), in_face_normal[fid]);
@@ -229,31 +220,30 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
     {
       auto command_c = makeCommand(queue_hcell);
 
-      auto cart_cdm = fact_cart.cellDirection(idir);
-      auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
-      auto cell_group = cart_cdm.allCells();
-
-      // Nb de mailles-1 dans la direction idir
-      const Integer ncell_m1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
-
       auto in_face_coord   = ax::viewIn(command_c, m_face_coord);
       auto in_cell_coord   = ax::viewIn(command_c, m_cell_coord);
       auto out_h_cell_lagrange = ax::viewOut(command_c, m_h_cell_lagrange);
 
+      Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
+
       // Parcours de toutes les mailles en excluant les contribs des faces de bord
-      command_c.addKernelName("hcell") << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
-        auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
+      command_c.addKernelName("hcell") << RUNCOMMAND_ENUMERATE(Cell, cid, cdm.allCells()) {
         
+        // Acces cell gauche/droite qui n'existent pas forcement
+	DirCellLocalId dir_cell(cdm.dirCellId(cid));
+        CellLocalId prev_cell = dir_cell.previous();
+        CellLocalId next_cell = dir_cell.next();
+
         // Acces faces gauche/droite qui existent forcement
-        auto c2fid = c2fid_stm.cellFace(cid, idx);
-        FaceLocalId pfid(c2fid.previousId());
-        FaceLocalId nfid(c2fid.nextId());
+        DirCellFaceLocalId cf(cdm.dirCellFaceId(cid));
+        FaceLocalId nfid = cf.nextId();
+        FaceLocalId pfid = cf.previousId();
 
         // somme des distances entre le milieu de la maille et les milieux des faces adjacentes dans idir
         Real hcell = 0;
-        if (idx[idir]>0) // Si maille bord gauche, on exclut la contrib de la face sur le bord gauche
+	if (!prev_cell.isNull()) // Si maille bord gauche, on exclut la contrib de la face sur le bord gauche
           hcell +=  (in_face_coord[pfid] - in_cell_coord[cid]).normL2();
-        if (idx[idir]<ncell_m1) // Si maille bord droit, on exclut la contrib de la face sur le bord droit
+	if (!next_cell.isNull()) // Si maille bord droit, on exclut la contrib de la face sur le bord droit
           hcell +=  (in_face_coord[nfid] - in_cell_coord[cid]).normL2();
 
         // Plus besoin d'appeler m_h_cell_lagrange.fill(0.0). On boucle ici sur toutes les mailles

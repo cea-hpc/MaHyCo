@@ -49,7 +49,7 @@ _initArcaneCartMesh() {
     
   // On force l'implémentation Arcane::
   info() << "Maillage Arcane cartésien";
-  arcane_cartesian_mesh = Arcane::arcaneCreateCartesianMesh(mesh());
+  arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
   arcane_cartesian_mesh->computeDirections();
 
   PROF_ACC_END;
