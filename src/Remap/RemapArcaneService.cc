@@ -642,7 +642,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 {
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection_PBorn0_O2()";
   PROF_ACC_BEGIN(__FUNCTION__);
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
 
   auto ref_queue = m_acc_env->refQueueAsync();
   // Init 0, pour simplifier sur toutes les faces
@@ -662,10 +662,6 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
     
     auto command = makeCommand(ref_queue.get());
 
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.innerFaces();
-
     auto in_deltax_lagrange      = ax::viewIn(command, m_deltax_lagrange);
     auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
     auto in_phi_lagrange         = ax::viewIn(command, m_phi_lagrange);
@@ -676,14 +672,13 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 
     auto out_phi_face = ax::viewOut(command, m_phi_face);
     
-    command << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    command << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
       // Acces mailles gauche/droite
-      auto f2cid = f2cid_stm.face(fid, idx);
-      CellLocalId bCid(f2cid.previousCell());
-      CellLocalId fCid(f2cid.nextCell());
-
+      DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+      CellLocalId bCid = dir_face.previousCell();
+      CellLocalId fCid = dir_face.nextCell();
+      
       // Maille upwind
       CellLocalId upwCid = (in_face_normal_velocity[fid] * in_deltax_lagrange[fid] > 0.0 ? bCid : fCid);
 
