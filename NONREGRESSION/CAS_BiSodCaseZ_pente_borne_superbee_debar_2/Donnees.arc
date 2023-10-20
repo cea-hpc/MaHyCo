@@ -1,7 +1,7 @@
 <?xml version='1.0'?>
 <case codeversion="1.0" codename="Mahyco" xml:lang="en">
   <arcane>
-    <title>Exemple Arcane d'un module Hydro tres simplifie</title>
+    <title>CAS_BiSodCaseZ_pente_borne_superbee_debar_2</title>
     <timeloop>MahycoLoop</timeloop>
   </arcane>
 
