@@ -46,11 +46,13 @@ hydroStartInit()
         info() << " ----------------------------- fin du calcul à la fin de l'init ---------------------------------------------";
         subDomain()->timeLoopMng()->stopComputeLoop ( true );
     }
-//  if ((options()->en
-    m_cartesian_mesh = ICartesianMesh::getReference ( mesh() );
     m_dimension = mesh()->dimension();
-    m_cartesian_mesh->computeDirections();
-
+    
+    if (options()->withProjection == true ) {
+        m_cartesian_mesh = ICartesianMesh::getReference ( mesh() );
+        m_cartesian_mesh->computeDirections();
+    } 
+    
     // Dimensionne les variables tableaux
     m_cell_cqs.resize ( 4* ( m_dimension-1 ) );
     m_cell_cqs_n.resize ( 4* ( m_dimension-1 ) );
@@ -61,10 +63,10 @@ hydroStartInit()
 
     info() << " Initialisation des environnements";
     hydroStartInitEnvAndMat();
-
-    // Initialise les données géométriques: volume, cqs, longueurs caractéristiques
+    
+    info() << "Initialise les données géométriques: volume, cqs, longueurs caractéristiques";
     computeGeometricValues();
-
+    
     info() << " Initialisation des groupes de faces";
     PrepareFaceGroup();
 
@@ -77,21 +79,7 @@ hydroStartInit()
             }
         }
     }
-
-    info() << " Initialisation des variables";
-    Real3 densite_initiale;
-    Real3 pression_initiale;
-    Real3 energie_initiale;
-    Real3x3 vitesse_initiale;
-    for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
-        densite_initiale[i] = options()->environment[i].densiteInitiale;
-        pression_initiale[i] = options()->environment[i].pressionInitiale;
-        energie_initiale[i] = options()->environment[i].energieInitiale;
-        vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
-        info() << " L'environnement " << options()->environment() [i]->name() << " est initialisé à ";
-        info() << " Densité = " << densite_initiale[i];
-        info() << " Pression = " << pression_initiale[i];
-    }
+    
     // on considère par défaut que tous les mailles sont pures à l'init
     // cela peut etre surcharger suivant les "casModel" dans initVar
     m_fracvol.fill ( 1.0 );
@@ -110,14 +98,41 @@ hydroStartInit()
     m_density_fracture.fill ( 0.0 );
     m_internal_energy_fracture.fill ( 0.0 );
     
+    
+    if (options()->casModel()->isInternalModel() == true) { 
+        info() << " Initialisation des variables pour les cas test internes";
+        Real3 densite_initiale;
+        Real3 pression_initiale;
+        Real3 energie_initiale;
+        Real3x3 vitesse_initiale;
+        for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+            densite_initiale[i] = options()->environment[i].densiteInitiale;
+            pression_initiale[i] = options()->environment[i].pressionInitiale;
+            energie_initiale[i] = options()->environment[i].energieInitiale;
+            vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
+            info() << " L'environnement " << options()->environment() [i]->name() << " est initialisé à ";
+            info() << " Densité = " << densite_initiale[i];
+            info() << " Pression = " << pression_initiale[i];
+        }
+        
+        // Initialises les variables (surcharge l'init d'arcane)
+        options()->casModel()->initVar ( m_dimension, densite_initiale, energie_initiale, 
+                                        pression_initiale, vitesse_initiale );
+    } else {
+        for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) { 
+            if (options()->environment[i].initialisationUtilisateur) {
+                // Initialises les variables par programme (surcharge l'init d'arcane)
+                options()->casModel()->initUtilisateur();
+            }
+        }
+    }
+
     // initialisation du time-history
     if ( options()->timeHistory.size() >0 ) {
         initTH();
     }
-
-    // Initialises les variables (surcharge l'init d'arcane)
-    options()->casModel()->initVar ( m_dimension, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale );
-
+      
+    info() << " appel aux eos ";
     if ( !options()->sansLagrange ) {
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
             IMeshEnvironment* ienv = mm->environments() [i];
@@ -251,7 +266,7 @@ hydroContinueInit()
 {
     if ( subDomain()->isContinue() ) {
 
-        info() << " Entree dans hydroContinueInit()";
+        debug() << " Entree dans hydroContinueInit()";
         // en reprise
         m_cartesian_mesh = ICartesianMesh::getReference ( mesh() );
         m_dimension = mesh()->dimension();
@@ -269,7 +284,7 @@ hydroContinueInit()
 
         if ( !options()->sansLagrange ) {
 
-            info() << " Nombre Mailles en reprise " << allCells().size();
+            debug() << " Nombre Mailles en reprise " << allCells().size();
 
             for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
                 IMeshEnvironment* ienv = mm->environments() [i];
@@ -423,7 +438,7 @@ updateVelocity()
     }
 
 
-    debug() << " Entree dans updateVelocity()";
+    debug() << my_rank << " : " << " Entree dans updateVelocity()";
     // Remise à zéro du vecteur des forces.
     m_force.fill ( Real3::zero() );
 
@@ -444,26 +459,35 @@ updateVelocity()
             m_force[inode] += math::prodTensVec ( force_tensor, m_cell_cqs_n[icell] [inode.index()] );
         }
     }
-
-    VariableNodeReal3InView in_force ( viewIn ( m_force ) );
-    VariableNodeReal3InView in_velocity ( viewIn ( m_velocity_n ) );
-    VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
-    VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity ) );
-
+    
     const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
-    // Calcule l'impulsion aux noeuds
-    PRAGMA_IVDEP
-    ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
-        SimdNode snode=*inode;
-        out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+    
+//     VariableNodeReal3InView in_force ( viewIn ( m_force ) );
+//     VariableNodeReal3InView in_velocity ( viewIn ( m_velocity_n ) );
+//     VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
+//     VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity ) );
+// 
+//     Calcul l'impulsion aux noeuds
+//     PRAGMA_IVDEP
+//     ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
+//         SimdNode snode=*inode;
+//         out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+//     }
+    
+    // Calcul l'impulsion aux noeuds
+    ENUMERATE_NODE ( inode, allNodes() ) {
+        Node node = *inode;
+        m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
     }
-
+     
     Real3 g = options()->gravity;
     ENUMERATE_NODE ( inode, allNodes() ) {
         Node node = *inode;
         m_velocity[inode] +=  dt * g;
     }
     m_velocity.synchronize();
+    
+    debug() << my_rank << " : " << " Fin dans updateVelocity()";
 }
 /**
  *******************************************************************************
@@ -505,18 +529,24 @@ updateVelocityBackward()
     }
     const Real dt ( -0.5 * m_global_old_deltat() );
 
-    VariableNodeReal3InView in_force ( viewIn ( m_force ) );
-    VariableNodeReal3InView in_velocity ( viewIn ( m_velocity_n ) );
-    VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
-    VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity_n ) );
-
-    // Calcule l'impulsion aux noeuds
-    PRAGMA_IVDEP
-    ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
-        SimdNode snode=*inode;
-        out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+//     VariableNodeReal3InView in_force ( viewIn ( m_force ) );
+//     VariableNodeReal3InView in_velocity ( viewIn ( m_velocity_n ) );
+//     VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
+//     VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity_n ) );
+// 
+//     Calcule l'impulsion aux noeuds
+//     PRAGMA_IVDEP
+//     ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
+//         SimdNode snode=*inode;
+//         out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+//     }
+    
+    // Calcul l'impulsion aux noeuds
+    ENUMERATE_NODE ( inode, allNodes() ) {
+        Node node = *inode;
+        m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
     }
-
+     
     Real3 g = options()->gravity;
     ENUMERATE_NODE ( inode, allNodes() ) {
         Node node = *inode;
@@ -563,17 +593,24 @@ updateVelocityForward()
     }
     const Real dt ( 0.5 * m_global_deltat() );
 
-    VariableNodeReal3InView in_force ( viewIn ( m_force ) );
-    VariableNodeReal3InView in_velocity ( viewIn ( m_velocity ) );
-    VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
-    VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity ) );
-
-    // Calcule l'impulsion aux noeuds
-    PRAGMA_IVDEP
-    ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
-        SimdNode snode=*inode;
-        out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+//     VariableNodeReal3InView in_force ( viewIn ( m_force ) );
+//     VariableNodeReal3InView in_velocity ( viewIn ( m_velocity ) );
+//     VariableNodeRealInView  in_mass ( viewIn ( m_node_mass ) );
+//     VariableNodeReal3OutView out_velocity ( viewOut ( m_velocity ) );
+// 
+//     Calcule l'impulsion aux noeuds
+//     PRAGMA_IVDEP
+//     ENUMERATE_SIMD_NODE ( inode, allNodes() ) {
+//         SimdNode snode=*inode;
+//         out_velocity[snode] = in_velocity[snode] + ( dt / in_mass[snode] ) * in_force[snode];;
+//     }
+    
+    // Calcul l'impulsion aux noeuds
+    ENUMERATE_NODE ( inode, allNodes() ) {
+        Node node = *inode;
+        m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
     }
+    
     // Ajout du terme de gravité : TODO à transformer
     Real3 g = options()->gravity;
     ENUMERATE_NODE ( inode, allNodes() ) {
@@ -622,7 +659,7 @@ updateVelocityWithoutLagrange()
 void MahycoModule::
 updatePosition()
 {
-    debug() << " Entree dans updatePosition()";
+    debug() << my_rank << " : " << " Entree dans updatePosition()";
     Real deltat = m_global_deltat();
     ENUMERATE_NODE ( inode, allNodes() ) {
         Node node = *inode;
@@ -647,7 +684,7 @@ updatePosition()
 void MahycoModule::
 applyBoundaryCondition()
 {
-    debug() << " Entree dans applyBoundaryCondition()";
+    debug() << my_rank << " : " << " Entree dans applyBoundaryCondition()";
     for ( Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i ) {
         String NomBC = options()->boundaryCondition[i]->surface;
         FaceGroup face_group = mesh()->faceFamily()->findGroup ( NomBC );
@@ -673,7 +710,7 @@ applyBoundaryCondition()
                 for ( Integer k = 0; k < nb_node; ++k ) {
                     Node node = face.node ( k );
                     Real3& velocity = m_velocity[node];
-
+                    Real3& coord = m_node_coord[node];
                     switch ( type ) {
                     case TypesMahyco::VelocityX:
                         velocity.x = value;
@@ -684,6 +721,9 @@ applyBoundaryCondition()
                     case TypesMahyco::VelocityZ:
                         velocity.z = value;
                         break;
+                    case TypesMahyco::OnFileVelocity:
+                        velocity.x = - coord.x / coord.normL2() ;
+                        velocity.y = - coord.y / coord.normL2() ;
                     case TypesMahyco::Unknown:
                         break;
                     }
@@ -699,7 +739,7 @@ applyBoundaryCondition()
 void MahycoModule::
 applyBoundaryConditionForCellVariables()
 {
-    debug() << " Entree dans applyBoundaryConditionForCellVariables()";
+    debug() << my_rank << " : " << " Entree dans applyBoundaryConditionForCellVariables()";
 
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
     Real one_over_nbnodeface = m_dimension == 2 ? .5  : .25 ;
@@ -886,6 +926,9 @@ InitGeometricValues()
         m_node_coord_0[inode] = m_node_coord[inode];
     }
     Real one_over_nbnode = m_dimension == 2 ? .5  : .25 ;
+    Real3 dirx = {1,0,0};
+    Real3 diry = {0,1,0};
+    Real3 dirz = {0,0,1};
     if ( m_dimension == 3 ) {
         ENUMERATE_FACE ( iFace, allFaces() ) {
             Face face = *iFace;
@@ -910,6 +953,14 @@ InitGeometricValues()
         for ( Integer inode = 0; inode < face.nbNode(); ++inode ) {
             m_face_coord[face] +=  one_over_nbnode * m_node_coord[face.node ( inode )];
         }
+        // Calcul d'orientation des faces (initiale sur cartesien)
+        if (std::fabs(math::dot(m_face_normal[face], dirx)) >= 1.0E-10) {                                   
+            m_face_orientation[face] = 0;
+        } else if (std::fabs(math::dot(m_face_normal[face], diry)) >= 1.0E-10) {                                   
+            m_face_orientation[face] = 1;
+        } else if (std::fabs(math::dot(m_face_normal[face], dirz)) >= 1.0E-10) {                                   
+            m_face_orientation[face] = 2;
+        }
     }
     ENUMERATE_CELL ( icell,allCells() ) {
         ENUMERATE_FACE ( iface, ( *icell ).faces() ) {
@@ -917,7 +968,7 @@ InitGeometricValues()
             Integer index = iface.index();
             m_outer_face_normal[icell][index] = ( m_face_coord[face]-m_cell_coord[icell] )
                                                 / ( m_face_coord[face]-m_cell_coord[icell] ).normL2();
-        }
+        } 
     }
 }
 /*---------------------------------------------------------------------------*/
@@ -983,7 +1034,7 @@ computeGeometricValues()
             for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
                 volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
                 // pinfo() << cell.localId() << " coor " << m_node_coord[cell.node(inode)] << " et " << m_cell_cqs[icell] [inode];
-                m_node_volume[cell.node ( inode )] += volume;
+                // m_node_volume[cell.node ( inode )] += volume;
             }
             volume /= m_dimension;
 
@@ -1088,9 +1139,10 @@ updateDensity()
             // volume specifique de l'environnement au temps n+1/2
             m_tau_density[ev] =
                 0.5 * ( 1.0 / m_density_n[ev] + 1.0 / m_density[ev] );
-
         }
     }
+
+    
     ENUMERATE_CELL ( icell,allCells() ) {
         Cell cell = * icell;
         Real new_density = m_cell_mass[icell] / m_cell_volume[icell];
@@ -1174,15 +1226,15 @@ updateEnergyAndPressure()
             ENUMERATE_ENVCELL ( ienvcell,env ) {
                 EnvCell ev = *ienvcell;
                 if ( i==0 ) {
-                    pinfo() << "energie av" << m_internal_energy[ev];
+                    debug() << "energie av" << m_internal_energy[ev];
                 }
                 m_internal_energy[ev] += energy_deposit * m_global_deltat();
                 if ( i==0 ) {
-                    pinfo() << "energie ap" << m_internal_energy[ev];
+                    debug() << "energie ap" << m_internal_energy[ev];
                 }
                 i++;
             }
-            pinfo() << " Ajout de l'energie" << energy_deposit << " avec dt " <<  m_global_deltat();
+            debug() << " Ajout de l'energie" << energy_deposit << " avec dt " <<  m_global_deltat();
         }
     }
     
@@ -1257,7 +1309,7 @@ void MahycoModule::updateEnergyAndPressurebyNewton()
     if ( options()->sansLagrange ) {
         return;
     }
-    pinfo() << " Entree dans updateEnergyAndPressure()";
+    debug() << " Entree dans updateEnergyAndPressure()";
     bool csts = options()->schemaCsts();
     bool pseudo_centree = options()->pseudoCentree();
     // Calcul de l'énergie interne

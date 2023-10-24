@@ -14,6 +14,7 @@ struct TypesMahyco
     VelocityX, //!< Vitesse X fixée
     VelocityY, //!< Vitesse Y fixée
     VelocityZ, //!< Vitesse Z fixée
+    OnFileVelocity, //!< Vitesse analytique
     Density, //!< Densité fixée
     Pressure, //!< Pression fixée
     GeometricPressure, //!< Pression fixée

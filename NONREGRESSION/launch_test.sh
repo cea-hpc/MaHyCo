@@ -150,6 +150,12 @@ function main {
   else
     echo "pas fichier de data dans le cas"
   fi
+  if [ -f $test_dir/*.msh ]; then
+    echo "fichier de maillage dans le cas"
+    cp $test_dir/*.msh . 2>/dev/null
+  else
+    echo "pas fichier de maillage dans le cas"
+  fi
   
   if [ ${type}  = "para_8" ]
   then

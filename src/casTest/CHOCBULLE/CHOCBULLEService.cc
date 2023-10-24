@@ -102,7 +102,8 @@ void CHOCBULLEService::initVar(Integer dim, Real3 densite_initiale, Real3 energi
 
 bool CHOCBULLEService::hasReverseOption() { return options()->reverseOption;}
 Real CHOCBULLEService::getReverseParameter() { return options()->parametre;}
-
+bool CHOCBULLEService::isInternalModel() { return true; }
+void CHOCBULLEService::initUtilisateur() { }
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_CHOCBULLE(CHOCBULLE, CHOCBULLEService);

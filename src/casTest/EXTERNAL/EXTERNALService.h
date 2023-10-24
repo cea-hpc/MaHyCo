@@ -1,10 +1,10 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#ifndef OTHERSERVICE_H
-#define OTHERSERVICE_H
+#ifndef EXTERNALSERVICE_H
+#define EXTERNALSERVICE_H
 
 #include "TypesMahyco.h"
 #include "casTest/IInitialisations.h"
-#include "casTest/OTHER/OTHER_axl.h"
+#include "casTest/EXTERNAL/EXTERNAL_axl.h"
 #include "arcane/materials/IMeshMaterialMng.h"
 #include "arcane/materials/IMeshMaterial.h"
 #include "arcane/materials/IMeshEnvironment.h"
@@ -30,16 +30,16 @@ using namespace Arcane::Materials;
 /**
  * Clase liée au cas test unitaire
  */
-class OTHERService 
-: public ArcaneOTHERObject
+class EXTERNALService 
+: public ArcaneEXTERNALObject
 {
 public:
   /** Constructeur de la classe */
-  OTHERService(const ServiceBuildInfo & sbi)
-    : ArcaneOTHERObject(sbi) {}
+  EXTERNALService(const ServiceBuildInfo & sbi)
+    : ArcaneEXTERNALObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~OTHERService() {};
+  virtual ~EXTERNALService() {};
 
 public:
   virtual void initMatMono(Integer dim);
@@ -50,6 +50,9 @@ public:
                        Real3 pression_initiale, Real3x3 vitesse_initiale);
   virtual bool hasReverseOption();
   virtual Real getReverseParameter();
+  virtual bool isInternalModel();
+  virtual void initUtilisateur();
+  
 };
 
 #endif

@@ -235,5 +235,7 @@ void RIDERService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_in
 
 bool RIDERService::hasReverseOption() { return options()->reverseOption;}
 Real RIDERService::getReverseParameter() { return options()->parametre;}
+bool RIDERService::isInternalModel() { return true; }
+void RIDERService::initUtilisateur() { }
 
 ARCANE_REGISTER_SERVICE_RIDER(RIDER, RIDERService);

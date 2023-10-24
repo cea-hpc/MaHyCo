@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "MahycoModule.h"
 
 
@@ -42,8 +42,7 @@ void MahycoModule::hydroStartInitEnvAndMat()
       mbbi.addEnvironment(env);
     }
   }
-  
-  
+
   info() << " Rangement des mailles  ";
   
   IMeshBlock* m_block1 = mm->createBlock(mbbi);
@@ -76,10 +75,11 @@ void MahycoModule::hydroStartInitEnvAndMat()
   
   IMeshMaterial* m_mat[nb_env];
   IMeshEnvironment* m_env[nb_env];
-  info() << " Initialisation du cas test";
+  if (options()->casModel()->isInternalModel() == true) { 
+    info() << " Initialisation du cas test interne au code ";
+    options()->casModel()->initMat(m_dimension);
+  }
   
-  options()->casModel()->initMat(m_dimension);
-      
   for (Integer i= 0 ; i <  nb_env; ++i) {
     m_mat[i] = mm->environments()[i]->materials()[0];
     m_env[i] = mm->environments()[0];
@@ -114,8 +114,6 @@ void MahycoModule::hydroStartInitEnvAndMat()
   }
 
   info() << " Ajout de mailles mixtes " ;
- 
-  
   info() << " fin de la boucle sur les mailles  ";
   Materials::MeshMaterialModifier modifier(mm);
   for (Integer i= 0 ; i <  nb_env; ++i) {
@@ -135,89 +133,91 @@ void MahycoModule::hydroStartInitEnvAndMat()
  *******************************************************************************
  */
 void MahycoModule::PrepareFaceGroup() {
-  Int32UniqueArray face_x0_lid;
-  Int32UniqueArray face_y0_lid;
-  Int32UniqueArray face_z0_lid;
-  Int32UniqueArray face_xmax_lid;
-  Int32UniqueArray face_ymax_lid;
-  Int32UniqueArray face_zmax_lid;
-  Real3 ex = {1. , 0. , 0.};
-  Real3 ey = {0. , 1. , 0.};
-  Real3 ez = {0. , 0. , 1.};
-  Real3 maxCoor= {0. , 0. , 0.};
-  Real3 minCoor= {100. , 100. , 100.};
-  ENUMERATE_NODE(inode, allNodes()){
-      maxCoor.x = std::max(maxCoor.x, m_node_coord[inode].x);
-      maxCoor.y = std::max(maxCoor.y, m_node_coord[inode].y);
-      maxCoor.z = std::max(maxCoor.z, m_node_coord[inode].z);
-      minCoor.x = std::min(minCoor.x, m_node_coord[inode].x);
-      minCoor.y = std::min(minCoor.y, m_node_coord[inode].y);
-      minCoor.z = std::min(minCoor.z, m_node_coord[inode].z);
-  }
-  maxCoor.x = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.x);
-  maxCoor.y = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.y);
-  maxCoor.z = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.z);
-  minCoor.x = parallelMng()->reduce(Parallel::ReduceMin, minCoor.x);
-  minCoor.y = parallelMng()->reduce(Parallel::ReduceMin, minCoor.y);
-  minCoor.z = parallelMng()->reduce(Parallel::ReduceMin, minCoor.z);
-  
-  ENUMERATE_FACE(iface, allFaces()){
-     const Face& face = *iface;
-     Integer face_local_id = face.localId();
-     for (Integer idir = 0 ; idir <  mesh()->dimension() ; ++idir) {
-         m_is_dir_face[face][idir] = false;
-     }
-     bool flag_x0(true);
-     bool flag_y0(true);
-     bool flag_z0(true);
-     bool flag_xmax(true);
-     bool flag_ymax(true);
-     bool flag_zmax(true);
-     for (NodeEnumerator inode(face.nodes()); inode.index() < face.nbNode(); ++inode) {
-         if (math::abs(m_node_coord[inode].x - minCoor.x) > options()->threshold)  flag_x0 = false;
-         if (math::abs(m_node_coord[inode].y - minCoor.y) > options()->threshold)  flag_y0 = false;
-         if (math::abs(m_node_coord[inode].z - minCoor.z) > options()->threshold)  flag_z0 = false;
-         if (math::abs(m_node_coord[inode].x - maxCoor.x) > options()->threshold) flag_xmax = false;
-         if (math::abs(m_node_coord[inode].y - maxCoor.y) > options()->threshold) flag_ymax = false;
-         if (math::abs(m_node_coord[inode].z - maxCoor.z) > options()->threshold) flag_zmax = false;
-         //if (maxCoor.x > m_node_coord[inode].x) flag_xmax = false;
-         //if (maxCoor.y > m_node_coord[inode].y) flag_ymax = false;
-         //if (maxCoor.z > m_node_coord[inode].z) flag_zmax = false;
-     }
-     if (flag_x0 == true) face_x0_lid.add(face_local_id);
-     if (flag_y0 == true) face_y0_lid.add(face_local_id);
-     if (flag_z0 == true) face_z0_lid.add(face_local_id);
-     if (flag_xmax == true) face_xmax_lid.add(face_local_id);
-     if (flag_ymax == true) face_ymax_lid.add(face_local_id);
-     if (flag_zmax == true) face_zmax_lid.add(face_local_id);
-   }
-   
-   mesh()->faceFamily()->createGroup("XMIN", face_x0_lid,true);
-   mesh()->faceFamily()->createGroup("YMIN", face_y0_lid,true);
-   mesh()->faceFamily()->createGroup("ZMIN", face_z0_lid,true);
-   FaceGroup facexmin = mesh()->faceFamily()->findGroup("XMIN");
-   FaceGroup faceymin = mesh()->faceFamily()->findGroup("YMIN");
-   FaceGroup facezmin = mesh()->faceFamily()->findGroup("ZMIN");
-   pinfo() << " taille x 0 " << facexmin.size();
-   pinfo() << " taille y 0 " << faceymin.size();
-   pinfo() << " taille z 0 " << facezmin.size();
-   pinfo() << " thresold " << options()->threshold;
-   
-   mesh()->faceFamily()->createGroup("XMAX", face_xmax_lid,true);
-   mesh()->faceFamily()->createGroup("YMAX", face_ymax_lid,true);
-   mesh()->faceFamily()->createGroup("ZMAX", face_zmax_lid,true);
-   FaceGroup facexmax = mesh()->faceFamily()->findGroup("XMAX");
-   FaceGroup faceymax = mesh()->faceFamily()->findGroup("YMAX");
-   FaceGroup facezmax = mesh()->faceFamily()->findGroup("ZMAX");
-   pinfo() << " taille x max " << facexmax.size();
-   pinfo() << " taille y max " << faceymax.size();
-   pinfo() << " taille z max " << facezmax.size();
-   
- 
-   info() << " nombre total de face " << allFaces().size();
-   
-   info() << " creation des groupes de dimension " << m_dimension;
-   
+    
+  if (options()->casModel()->isInternalModel() == true) { 
+    Int32UniqueArray face_x0_lid;
+    Int32UniqueArray face_y0_lid;
+    Int32UniqueArray face_z0_lid;
+    Int32UniqueArray face_xmax_lid;
+    Int32UniqueArray face_ymax_lid;
+    Int32UniqueArray face_zmax_lid;
+    Real3 ex = {1. , 0. , 0.};
+    Real3 ey = {0. , 1. , 0.};
+    Real3 ez = {0. , 0. , 1.};
+    Real3 maxCoor= {0. , 0. , 0.};
+    Real3 minCoor= {100. , 100. , 100.};
+    ENUMERATE_NODE(inode, allNodes()){
+        maxCoor.x = std::max(maxCoor.x, m_node_coord[inode].x);
+        maxCoor.y = std::max(maxCoor.y, m_node_coord[inode].y);
+        maxCoor.z = std::max(maxCoor.z, m_node_coord[inode].z);
+        minCoor.x = std::min(minCoor.x, m_node_coord[inode].x);
+        minCoor.y = std::min(minCoor.y, m_node_coord[inode].y);
+        minCoor.z = std::min(minCoor.z, m_node_coord[inode].z);
+    }
+    maxCoor.x = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.x);
+    maxCoor.y = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.y);
+    maxCoor.z = parallelMng()->reduce(Parallel::ReduceMax, maxCoor.z);
+    minCoor.x = parallelMng()->reduce(Parallel::ReduceMin, minCoor.x);
+    minCoor.y = parallelMng()->reduce(Parallel::ReduceMin, minCoor.y);
+    minCoor.z = parallelMng()->reduce(Parallel::ReduceMin, minCoor.z);
+    
+    ENUMERATE_FACE(iface, allFaces()){
+        const Face& face = *iface;
+        Integer face_local_id = face.localId();
+        for (Integer idir = 0 ; idir <  mesh()->dimension() ; ++idir) {
+            m_is_dir_face[face][idir] = false;
+        }
+        bool flag_x0(true);
+        bool flag_y0(true);
+        bool flag_z0(true);
+        bool flag_xmax(true);
+        bool flag_ymax(true);
+        bool flag_zmax(true);
+        for (NodeEnumerator inode(face.nodes()); inode.index() < face.nbNode(); ++inode) {
+            if (math::abs(m_node_coord[inode].x - minCoor.x) > options()->threshold)  flag_x0 = false;
+            if (math::abs(m_node_coord[inode].y - minCoor.y) > options()->threshold)  flag_y0 = false;
+            if (math::abs(m_node_coord[inode].z - minCoor.z) > options()->threshold)  flag_z0 = false;
+            if (math::abs(m_node_coord[inode].x - maxCoor.x) > options()->threshold) flag_xmax = false;
+            if (math::abs(m_node_coord[inode].y - maxCoor.y) > options()->threshold) flag_ymax = false;
+            if (math::abs(m_node_coord[inode].z - maxCoor.z) > options()->threshold) flag_zmax = false;
+            //if (maxCoor.x > m_node_coord[inode].x) flag_xmax = false;
+            //if (maxCoor.y > m_node_coord[inode].y) flag_ymax = false;
+            //if (maxCoor.z > m_node_coord[inode].z) flag_zmax = false;
+        }
+        if (flag_x0 == true) face_x0_lid.add(face_local_id);
+        if (flag_y0 == true) face_y0_lid.add(face_local_id);
+        if (flag_z0 == true) face_z0_lid.add(face_local_id);
+        if (flag_xmax == true) face_xmax_lid.add(face_local_id);
+        if (flag_ymax == true) face_ymax_lid.add(face_local_id);
+        if (flag_zmax == true) face_zmax_lid.add(face_local_id);
+    }
+    
+    mesh()->faceFamily()->createGroup("XMIN", face_x0_lid,true);
+    mesh()->faceFamily()->createGroup("YMIN", face_y0_lid,true);
+    mesh()->faceFamily()->createGroup("ZMIN", face_z0_lid,true);
+    FaceGroup facexmin = mesh()->faceFamily()->findGroup("XMIN");
+    FaceGroup faceymin = mesh()->faceFamily()->findGroup("YMIN");
+    FaceGroup facezmin = mesh()->faceFamily()->findGroup("ZMIN");
+    pinfo() << " taille x 0 " << facexmin.size();
+    pinfo() << " taille y 0 " << faceymin.size();
+    pinfo() << " taille z 0 " << facezmin.size();
+    pinfo() << " thresold " << options()->threshold;
+    
+    mesh()->faceFamily()->createGroup("XMAX", face_xmax_lid,true);
+    mesh()->faceFamily()->createGroup("YMAX", face_ymax_lid,true);
+    mesh()->faceFamily()->createGroup("ZMAX", face_zmax_lid,true);
+    FaceGroup facexmax = mesh()->faceFamily()->findGroup("XMAX");
+    FaceGroup faceymax = mesh()->faceFamily()->findGroup("YMAX");
+    FaceGroup facezmax = mesh()->faceFamily()->findGroup("ZMAX");
+    pinfo() << " taille x max " << facexmax.size();
+    pinfo() << " taille y max " << faceymax.size();
+    pinfo() << " taille z max " << facezmax.size();
+    
+    
+    info() << " nombre total de face " << allFaces().size();
+    
+    info() << " creation des groupes de dimension " << m_dimension;
+  } 
 } 
 /**
  *******************************************************************************
