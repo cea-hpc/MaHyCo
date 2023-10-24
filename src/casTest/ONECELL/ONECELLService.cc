@@ -38,5 +38,7 @@ void ONECELLService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_
 
 bool ONECELLService::hasReverseOption() { return options()->reverseOption;}
 Real ONECELLService::getReverseParameter() { return options()->parametre;}
+bool ONECELLService::isInternalModel() { return true;}
+void ONECELLService::initUtilisateur() { }
 
 ARCANE_REGISTER_SERVICE_ONECELL(ONECELL, ONECELLService); 

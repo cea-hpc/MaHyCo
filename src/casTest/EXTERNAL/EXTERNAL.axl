@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="OTHER" version="1.0" type="caseoption">
+<service name="EXTERNAL" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service OTHER</description>
+	<description>Jeu de données du service EXTERNAL</description>
   <interface name="IInitialisations" />
 
 	<variables>
@@ -129,11 +129,20 @@
 			dim="0"
 			dump="true"
 			need-sync="true" />
+		<!-- 	NODE COORD	 -->
+		<variable
+			field-name="node_coord"
+			name="NodeCoord"
+			data-type="real3"
+			item-kind="node"
+			dim="0"
+			dump="true"
+			need-sync="true" />
 	</variables>
 
 <options>
    <!-- - - - - - cas test - - - - -->
-  <simple name="cas-test" type="integer" >
+  <simple name="cas-test" type="integer" default="-1">
     <description>Numéro du cas test</description>
   </simple>
   

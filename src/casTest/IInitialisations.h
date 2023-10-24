@@ -49,6 +49,8 @@ public:
                        Real3 pression_initiale, Real3x3 vitesse_initiale) = 0;
   virtual bool hasReverseOption() = 0;
   virtual Real getReverseParameter() = 0;
+  virtual bool isInternalModel() = 0;
+  virtual void initUtilisateur() = 0;
 };
 
 #endif

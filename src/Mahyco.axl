@@ -56,15 +56,8 @@
   <variable field-name="dpde" name="DpDe" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- 	CV	 -->
-		<variable
-			field-name="cv"
-			name="Cv"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />
+  <variable field-name="cv" name="Cv" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
   <!-- FRACVOL -->
   <variable field-name="fracvol" name="FracVol" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
@@ -86,8 +79,8 @@
   <!-- FORCE	 -->
   <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
-    <!-- NODEVOLUME	 -->
-    <variable field-name="node_volume" name="NodeVolum" data-type="real" item-kind="node"
+  <!-- NODEVOLUME	 -->
+  <variable field-name="node_volume" name="NodeVolum" data-type="real" item-kind="node"
 	      dim="0" dump="false" need-sync="false" />
   <!-- 	VELOCITY OLD N	 -->
   <variable field-name="velocity_n" name="VelocityN" data-type="real3" item-kind="node"
@@ -113,6 +106,9 @@
   <!-- 	CELL COORD	 -->
   <variable field-name="cell_coord" name="CellCoord" data-type="real3" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	CELL COORD	 -->
+  <variable field-name="cell_coord_0" name="CellCoord0" data-type="real3" item-kind="cell"
+	    dim="0" dump="true" need-sync="true" />
   <!-- 	CELL OLD CQS	 -->
   <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
@@ -125,6 +121,9 @@
   <!-- 	FACE NORMAL	 -->
   <variable field-name="face_normal" name="FaceNormal" data-type="real3" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
+  <!-- 	FACE ORIENTATION -->
+  <variable field-name="face_orientation" name="FaceOrientation" data-type="real" item-kind="face"
+	    dim="0" dump="true" need-sync="true" />
   <!-- 	FACE NORMAL VELOCITY	 -->
   <variable field-name="face_normal_velocity" name="FaceNormalVelocity" data-type="real" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
@@ -132,138 +131,102 @@
   <variable field-name="face_length_lagrange" name="FaceLenghtLagrange" data-type="real3" item-kind="face"
 	    dim="0" dump="true" need-sync="true" />
   <!-- 	U LAGRANGE	 -->
-    <variable field-name="u_lagrange" name="ULagrange" data-type="real" item-kind="cell"
+  <variable field-name="u_lagrange" name="ULagrange" data-type="real" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
   <!-- 	U DUAL LAGRANGE	 -->
-    <variable field-name="u_dual_lagrange" name="UDualLagrange" data-type="real" item-kind="node"
+  <variable field-name="u_dual_lagrange" name="UDualLagrange" data-type="real" item-kind="node"
 	    dim="1" dump="true" need-sync="true" />
   <!-- 	PHI LAGRANGE	 -->
-    <variable field-name="phi_lagrange" name="PhiLagrange" data-type="real" item-kind="cell"
+  <variable field-name="phi_lagrange" name="PhiLagrange" data-type="real" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" />
-   <!-- 	PHI DUAL LAGRANGE	 -->
-    <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
-	      dim="1" dump="true" need-sync="true" />
-    <!-- 	GRAD PHI DUAL LAGRANGE	pour les vitesses -->
-    <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real" item-kind="node"
-	      dim="1" dump="true" need-sync="true" />
-    <!-- MIXTE	 -->
-    <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
-	    dim="0" material="false" dump="true" need-sync="true" />
-    <!-- PURE	 -->
-    <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
-	    dim="0" material="false" dump="true" need-sync="true" />
-    <!-- 	isDirFace	 -->
-    <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
-	    dim="1" dump="true" need-sync="true" /><!-- 	U REMAP2	 -->
-    <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 1	 -->
-    <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 2	 -->
-    <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 3	 -->
-    <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 4	 -->
-    <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 5	 -->
-    <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    <!-- 	FRAC PHASE 6	 -->
-    <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Gradient de vitesse -->
-    <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
-    dim="0" material="false" dump="true" need-sync="true" />
-    
-    <!-- Tenseur de rotation -->
-    <variable field-name="spin_rate" name="SpinRate" data-type="real3" item-kind="cell"
-    dim="0" material="false" dump="true" need-sync="true" />
-    
-    <!-- Deformation Rate -->
-    <variable field-name="deformation_rate" name="DeformationRate" data-type="real3x3" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-	    
-    <!-- Tenseur (déviateur) des contraintes à N -->
-    <variable field-name="strain_tensor_n" name="StrainTensorN" data-type="real3x3" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor_yy" name="StrainTensorYY" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    
-    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor_xy" name="StrainTensorXY" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    
-    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor_xz" name="StrainTensorXZ" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    
-    <!-- Composante XX du Tenseur (déviateur) des contraintes -->
-    <variable field-name="strain_tensor_yz" name="StrainTensorYZ" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Vitesse de déformation Plastic -->
-    <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
-    dim="0" material="false" dump="true" need-sync="true" />
-	    
-    <!-- Déformation Plastic -->
-    <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
-    dim="0" material="false" dump="true" need-sync="true" />
-    
-    
-    <!-- Norme du Tenseur (déviateur) des contraintes-->
-    <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
-    
-    <!-- Numero Maille pour time-History --> 
-    <variable field-name="maille_th" name="MailleTh" data-type="integer" dim="0" dump="true" />   
-    
-    <!-- Numero Noeud pour time-History --> 
-    <variable field-name="noeud_th" name="NoeudTh" data-type="integer" dim="0" dump="true" />    
-    
-    <!-- 	Indicateur Maille Endommagée	 -->
-    <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
-    dim="0" material="true" dump="true" need-sync="true" />
- 	    
-    <!-- DENSITY DE FRACTURATION-->
-		<variable
-			field-name="density_fracture"
-			name="Density"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />   
-			
-		<!-- INTERNAL ENERGY DE FRACTURATION -->
-		<variable
-			field-name="internal_energy_fracture"
-			name="InternalEnergyFracture"
-			data-type="real"
-			item-kind="cell"
-			dim="0"
-			material="true" 
-			dump="true"
-			need-sync="true" />	 
- 	    
+  <!-- 	PHI DUAL LAGRANGE	 -->
+  <variable field-name="phi_dual_lagrange" name="PhiDualLagrange" data-type="real" item-kind="node"
+        dim="1" dump="true" need-sync="true" />
+  <!-- 	GRAD PHI DUAL LAGRANGE	pour les vitesses -->
+  <variable field-name="dual_grad_phi" name="DualGradPhi" data-type="real" item-kind="node"
+        dim="1" dump="true" need-sync="true" />
+  <!-- MIXTE	 -->
+  <variable field-name="est_mixte" name="EstMixte" data-type="integer" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- PURE	 -->
+  <variable field-name="est_pure" name="EstPure" data-type="integer" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- 	isDirFace	 -->
+  <variable field-name="is_dir_face" name="IsDirFace" data-type="bool" item-kind="face"
+        dim="1" dump="true" need-sync="true" />
+  <!-- 	U REMAP2	 -->
+  <variable field-name="outer_face_normal" name="OuterFaceNormal" data-type="real3" item-kind="cell"
+        dim="1" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 1	 -->
+  <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 2	 -->
+  <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 3	 -->
+  <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 4	 -->
+  <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 5	 -->
+  <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- 	FRAC PHASE 6	 -->
+  <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Gradient de vitesse -->
+  <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- Tenseur de rotation -->
+  <variable field-name="spin_rate" name="SpinRate" data-type="real3" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- Deformation Rate --> 
+  <variable field-name="deformation_rate" name="DeformationRate" data-type="real3x3" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Tenseur (déviateur) des contraintes à N -->
+  <variable field-name="strain_tensor_n" name="StrainTensorN" data-type="real3x3" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor_yy" name="StrainTensorYY" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor_xy" name="StrainTensorXY" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor_xz" name="StrainTensorXZ" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+  <variable field-name="strain_tensor_yz" name="StrainTensorYZ" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Vitesse de déformation Plastic -->
+  <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- Déformation Plastic -->
+  <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+  <!-- Norme du Tenseur (déviateur) des contraintes-->
+  <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- Numero Maille pour time-History --> 
+  <variable field-name="maille_th" name="MailleTh" data-type="integer" dim="0" dump="true" />   
+  <!-- Numero Noeud pour time-History --> 
+  <variable field-name="noeud_th" name="NoeudTh" data-type="integer" dim="0" dump="true" />    
+  <!-- 	Indicateur Maille Endommagée	 -->
+  <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+  <!-- DENSITY DE FRACTURATION--> 
+  <variable field-name="density_fracture" name="FractureDensity" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />   
+  <!-- INTERNAL ENERGY DE FRACTURATION -->
+  <variable field-name="internal_energy_fracture" name="InternalEnergyFracture" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />	 
   </variables>
 
 
@@ -272,7 +235,6 @@
   <entry-point method-name="hydroContinueInit" name="HydroContinueInit" where="continue-init" property="none" />
   <entry-point method-name="computeCellMass" name="ComputeCellMass" where="start-init" property="none" />
   <entry-point method-name="computeNodeMass" name="ComputeNodeMass" where="start-init" property="none" />
-  <entry-point method-name="PrepareFaceGroup" name="PrepareFaceGroup" where="start-init" property="none" />
   <entry-point method-name="saveValuesAtN" name="SaveValuesAtN" where="compute-loop" property="none" />
   <entry-point method-name="updateVelocity" name="UpdateVelocity" where="compute-loop" property="none" />
   <entry-point method-name="applyBoundaryCondition" name="ApplyBoundaryCondition" where="compute-loop" property="none" />
@@ -290,30 +252,17 @@
 
 <options>
   <!-- Infos sur les materiaux -->
-  <complex
-   name = "material"
-   type = "Material"
-    minOccurs = "1"
-    maxOccurs = "unbounded"
-  >
-   <description>Materiaux</description>
-
-   <simple
-    name = "name"
-    type = "string"
-   >
+  <complex name = "material" type = "Material" minOccurs = "1" maxOccurs = "unbounded">
+    <description>Materiaux</description>
+   
+    <simple name = "name" type = "string">
     <description>Nom du materiau</description>
-   </simple>
+    </simple>
 
   </complex>
 
   <!-- Liste des milieux et composition des materiaux -->
-  <complex
-   name = "environment"
-   type = "Environment"
-    minOccurs = "1"
-    maxOccurs = "unbounded"
-  >
+  <complex name = "environment" type = "Environment" minOccurs = "1" maxOccurs = "unbounded">
    <description>Milieu</description>
 
    <simple name = "name" type = "string">
@@ -325,7 +274,7 @@
     <description>Nom du materiau</description>
    </simple>
    
-   <simple name="densite-initiale" type="real">
+   <simple name="densite-initiale" type="real" default="0.">
     <description> Valeur de la densité initiale</description>
    </simple>
    
@@ -339,6 +288,12 @@
    
    <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
     <description> Valeur de la vitesse initiale</description>
+   </simple>
+   
+   <simple name="initialisation-utilisateur" type="bool" default="false">
+    <description>
+     Initialisation des quantités physiques par l'utilisateur 
+    </description>
    </simple>
 
    <service-instance name="eos-model" type="IEquationOfState">
@@ -363,14 +318,14 @@
     </description>
    </simple>
 
-  <!-- - - - - - AdiabaticCst - - - - -->
-  <simple name="valeur-source-energie" type="real" default="0.">
-    <description>Définition de la constante adiabatique</description>
-  </simple>
+   <!-- - - - - - AdiabaticCst - - - - -->
+   <simple name="valeur-source-energie" type="real" default="0.">
+     <description>Définition de la constante adiabatique</description>
+   </simple>
   
   </complex>
   
-  <service-instance name="cas-model" type="IInitialisations">
+  <service-instance name="cas-model" type="IInitialisations" default="EXTERNAL">
   <description>Service d'initialisation du cas test</description>
   </service-instance>
   
@@ -381,51 +336,40 @@
   </service-instance>
 
    <!-- - - - schema csts - - - - -->
-  <simple name="schema-csts" type="bool">
-    <description>
-     schema CSTS 
-    </description>
+  <simple name="schema-csts" type="bool"> 
+    <description>schema CSTS </description>
   </simple>
 
   <!-- - - - options pseudo-centree - - - - -->
   <simple name="pseudo-centree" type="bool">
-    <description>
-     Option pseudo-centree 
-    </description>
+    <description>Option pseudo-centree </description>
   </simple>
   
   <!-- - - - options longueur caracteristic - - - - -->
   <simple name="longueur-caracteristique" type="string">
-    <description>
-     Type de longueur caracteristique
-    </description>
+    <description>Type de longueur caracteristique </description>
   </simple>
   
 
   <!-- - - - - - deltat-min - - - - -->
   <simple name="deltat-min" type="real">
     <description>
-      Valeur minimale que peut prendre le
-      <em>deltat</em>
-      entre deux itérations.
+      Valeur minimale que peut prendre le <em>deltat</em> entre deux itérations.
     </description>
   </simple>
 
   <!-- - - - - - deltat-max - - - - -->
   <simple name="deltat-max" type="real">
     <description>
-      Valeur maximale que peut prendre le
-      <em>deltat</em>
-      entre deux itérations. Si le deltat calculé est supérieur à cette valeur, il est ramené à cette valeur.
+      Valeur maximale que peut prendre le <em>deltat</em> entre deux itérations. 
+      Si le deltat calculé est supérieur à cette valeur, il est ramené à cette valeur.
     </description>
   </simple>
 
   <!-- - - - - - deltat-init - - - - -->
   <simple name="deltat-init" type="real">
     <description>
-      Valeur du
-      <em>deltat</em>
-      au moment du démarrage.
+      Valeur du <em>deltat</em> au moment du démarrage.
     </description>
   </simple>
 
@@ -434,8 +378,7 @@
     <name lang="fr">temps-final</name>
     <description>
       Temps auquel on stoppe la simulation. Le code s'arrête dès que le temps courant est
-      <strong>strictement</strong>
-      supérieur à ce temps.
+      <strong>strictement</strong> supérieur à ce temps.
     </description>
   </simple>
 
@@ -467,6 +410,7 @@
   <simple name="pression-explicite" type="bool" default="false">
     <description> Calcul de la pression explicite </description>
   </simple>
+  
   <!-- - - - - - boundary-condition - - - - -->
   <complex name="boundary-condition" type="BoundaryCondition" minOccurs="0" maxOccurs="unbounded">
     <description>Condition aux limites</description>
@@ -476,6 +420,7 @@
       <enumvalue genvalue="TypesMahyco::VelocityX" name="Vx" />
       <enumvalue genvalue="TypesMahyco::VelocityY" name="Vy" />
       <enumvalue genvalue="TypesMahyco::VelocityZ" name="Vz" />
+      <enumvalue genvalue="TypesMahyco::OnFileVelocity" name="OFV" />
       <enumvalue genvalue="TypesMahyco::Density" name="Density" />
       <enumvalue genvalue="TypesMahyco::Pressure" name="Pressure" />
       <enumvalue genvalue="TypesMahyco::GeometricPressure" name="GeometricPressure" />
@@ -523,33 +468,34 @@
       <description>Fichier des valeurs de pressions en fonction du temps</description>
     </simple>
   </complex>
+  
   <!-- - - - - - sortie time history - - - - -->
-   <complex name="time-history" type="TimeHistory" minOccurs="0" maxOccurs="unbounded">
+  <complex name="time-history" type="TimeHistory" minOccurs="0" maxOccurs="unbounded">
     <description>Sortie Time History</description>
     <!-- - - - - - frequence - - - - -->
-  <simple name="frequence" type="real" default="0.">
-    <description>frequence (en iterations) des sorties </description>
-  </simple>
-    <!-- - - - - - frequence - - - - -->
-  <simple name="periode" type="integer" default="10">
-    <description>periode (en iterations) des sorties </description>
-  </simple>
-  <!-- - - - - - borne sup - - - - -->
-  <simple name="borne-sup" type="real3" default="0. 0. 0.">
-    <description>coord supérieur </description>
-  </simple>
-  <!-- - - - - - borne sup - - - - -->
-  <simple name="borne-inf" type="real3" default="0. 0. 0.">
-    <description>coord inférieur </description>
-  </simple>
-  <!-- - - - - - borne sup noeud- - - - -->
-  <simple name="borne-sup-noeud" type="real3" default="0. 0. 0.">
-    <description>coord supérieur pour les noeuds</description>
-  </simple>
-  <!-- - - - - - borne sup - - - - -->
-  <simple name="borne-inf-noeud" type="real3" default="0. 0. 0.">
-    <description>coord inférieur pour les noeuds </description>
-  </simple>
+    <simple name="frequence" type="real" default="0.">
+        <description>frequence (en iterations) des sorties </description>
+    </simple>
+        <!-- - - - - - frequence - - - - -->
+    <simple name="periode" type="integer" default="10">
+        <description>periode (en iterations) des sorties </description>
+    </simple>
+    <!-- - - - - - borne sup - - - - -->
+    <simple name="borne-sup" type="real3" default="0. 0. 0.">
+        <description>coord supérieur </description>
+    </simple>
+    <!-- - - - - - borne sup - - - - -->
+    <simple name="borne-inf" type="real3" default="0. 0. 0.">
+        <description>coord inférieur </description>
+    </simple>
+    <!-- - - - - - borne sup noeud- - - - -->
+    <simple name="borne-sup-noeud" type="real3" default="0. 0. 0.">
+        <description>coord supérieur pour les noeuds</description>
+    </simple>
+    <!-- - - - - - borne sup - - - - -->
+    <simple name="borne-inf-noeud" type="real3" default="0. 0. 0.">
+        <description>coord inférieur pour les noeuds </description>
+    </simple>
   </complex>
 		
   <!-- - - - - - geometry - - - - -->

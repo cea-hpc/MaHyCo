@@ -142,7 +142,7 @@
 
 <options>
    <!-- - - - - - cas test - - - - -->
-  <simple name="cas-test" type="integer" >
+  <simple name="cas-test" type="integer" default="-1">
     <description>Numéro du cas test</description>
   </simple>
   

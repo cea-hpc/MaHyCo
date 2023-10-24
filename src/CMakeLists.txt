@@ -53,9 +53,9 @@ add_library(SEDOV casTest/SEDOV/SEDOVService.cc)
 target_include_directories(SEDOV PUBLIC .)
 target_link_libraries(SEDOV PUBLIC arcane_core)
 
-add_library(OTHER casTest/OTHER/OTHERService.cc)
-target_include_directories(OTHER PUBLIC .)
-target_link_libraries(OTHER PUBLIC arcane_core)
+add_library(EXTERNAL casTest/EXTERNAL/EXTERNALService.cc)
+target_include_directories(EXTERNAL PUBLIC .)
+target_link_libraries(EXTERNAL PUBLIC arcane_core)
 
 add_library(ONECELL casTest/ONECELL/ONECELLService.cc)
 target_include_directories(ONECELL PUBLIC .)
@@ -88,12 +88,12 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV OTHER CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
 arcane_target_add_axl(SEDOV casTest/SEDOV/SEDOV)
-arcane_target_add_axl(OTHER casTest/OTHER/OTHER)
+arcane_target_add_axl(EXTERNAL casTest/EXTERNAL/EXTERNAL)
 arcane_target_add_axl(ONECELL casTest/ONECELL/ONECELL)
 arcane_target_add_axl(POINTTRIPLE casTest/POINTTRIPLE/POINTTRIPLE)
 arcane_target_add_axl(ADVECTION casTest/ADVECTION/ADVECTION)
@@ -121,6 +121,7 @@ set( TEST_DIR "${CMAKE_CURRENT_LIST_DIR}" )
 
 
 set( TEST_NAMES_PARA_4
+        "CAS_2D_Lag_SodCaseX_msh"
         "CAS_2D_Lag_BiSodCaseX"
         "CAS_2D_Lag_BiSodCaseY"
 		"CAS_2D_Lag_SodCaseY"
@@ -163,6 +164,7 @@ set( TEST_NAMES_PARA_8
 		"CAS_Sedov"
 		)
 set( TEST_NAMES
+        "CAS_2D_Lag_NOH"
 		"CAS_Lag_BiSodCaseX"
         "CAS_2D_Lag_SodCaseZ"
         "CAS_Lag_BiSodCaseY"

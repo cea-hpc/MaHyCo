@@ -230,7 +230,8 @@ void INSTARTService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_
 
 bool INSTARTService::hasReverseOption() { return options()->reverseOption;}
 Real INSTARTService::getReverseParameter() { return options()->parametre;}
-
+bool INSTARTService::isInternalModel() { return true; }
+void INSTARTService::initUtilisateur() { }
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_INSTART(INSTART, INSTARTService);

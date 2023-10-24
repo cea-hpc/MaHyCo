@@ -82,17 +82,7 @@ void SODService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_init
     AllEnvCell all_env_cell = all_env_cell_converter[cell]; 
     double r(0.);
     double eInit;
-    if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
-    if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
-    if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
-    if (options()->casTest == BiSodSph) 
-    {
-      const Real x = m_cell_coord[cell].x;
-      const Real y = m_cell_coord[cell].y;
-      const Real z = m_cell_coord[cell].z;
-      r = std::sqrt(x*x + y*y + z*z);
-    }
-    if (r < 0.5) {
+    if (m_materiau[cell] == 0) {
       m_density[cell] = densite_initiale[0];
       m_pressure[cell] = pression_initiale[0];
       if (all_env_cell.nbEnvironment() !=1) {
@@ -126,6 +116,8 @@ void SODService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_init
 
 bool SODService::hasReverseOption() { return options()->reverseOption;}
 Real SODService::getReverseParameter() { return options()->parametre;}
+bool SODService::isInternalModel() { return true; }
+void SODService::initUtilisateur() {}
 
 /*---------------------------------------------------------------------------*/
 

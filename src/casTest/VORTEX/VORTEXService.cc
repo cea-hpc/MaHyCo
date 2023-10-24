@@ -68,5 +68,7 @@ void VORTEXService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_i
 
 bool VORTEXService::hasReverseOption() { return options()->reverseOption;}
 Real VORTEXService::getReverseParameter() { return options()->parametre;}
+bool VORTEXService::isInternalModel() { return true; }
+void VORTEXService::initUtilisateur() {}
 
 ARCANE_REGISTER_SERVICE_VORTEX(VORTEX, VORTEXService);
