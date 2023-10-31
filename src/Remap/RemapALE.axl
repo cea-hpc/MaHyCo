@@ -128,8 +128,8 @@
     <description>Nombre d'itération de lissage du maillage</description>
   </simple>
   <!-- - - - - projection-Euler - - - - -->
-  <simple name="is-euler-scheme" type="bool" default="false">
-    <description> projection type Euler (retour sur maillage initial </description>
+  <simple name="is-euler-scheme" type="string" default="NON">
+    <description> projection type Euler (retour sur maillage initial) </description>
   </simple>
   <!-- - - - - - ordre de la projection - - - - -->
   <simple name="ordre-projection" type="integer" default="2">

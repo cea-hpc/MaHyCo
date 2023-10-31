@@ -54,8 +54,17 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
         Real mu = 1./J -1.;
         m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
         m_temperature[ev] = internal_energy / specific_heat;
-        m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
-        m_dpde[ev] = adiabatic_cst * density;
+        m_dpde[ev] = adiabatic_cst * density;  
+        // vitesse du son 
+        J = options()->rho0 / (density - 1.e-7);
+        mu = 1./J -1.;
+        Real pres1  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
+        J = options()->rho0 / (density + 1.e-7);
+        mu = 1./J -1.;
+        Real pres2  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;        
+        if ((pres2 -  pres1) > 0.) {
+            m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
+        } else m_sound_speed[ev] = 1.e4;
     }
   }
 }
@@ -75,10 +84,19 @@ void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   Real J = options()->rho0 / density ;
     Real mu = 1./J -1.;
     m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
-    m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
     // calcul de la temperature en fonction de la chaleur specifique
     m_temperature[ev] = internal_energy / specific_heat;
     m_dpde[ev] = adiabatic_cst * density;
+    // vitesse du son 
+    J = options()->rho0 / (density - 1.e-7);
+    mu = 1./J -1.;
+    Real pres1  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
+    J = options()->rho0 / (density + 1.e-7);
+    mu = 1./J -1.;
+    Real pres2  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;        
+    if ((pres2 -  pres1) > 0.) {
+        m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
+    } else m_sound_speed[ev] = 1.e4;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
