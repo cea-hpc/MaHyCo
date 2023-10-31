@@ -77,9 +77,7 @@
    <cas-test>1</cas-test>
    </cas-model>
    <remap name="RemapALE">
-    <is-euler-scheme>true</is-euler-scheme>
-    <!-- <volum-criteria>0.8</volum-criteria>
-    <nb-iteration-winslow>10</nb-iteration-winslow> -->
+    <is-euler-scheme>Full</is-euler-scheme>
     <ordre-projection>2</ordre-projection>
    </remap>
        <!--<with-projection>false</with-projection>-->
