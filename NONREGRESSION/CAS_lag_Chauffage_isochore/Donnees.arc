@@ -69,7 +69,10 @@
     <eos-model name="Autre">
       <fichier-coeff>ee.CineTest22#.Sn.00#.coeff</fichier-coeff>
     </eos-model>
+    <energy-depot>
+    <type>DepotConstant</type>
     <valeur-source-energie>13.2e14</valeur-source-energie>
+    </energy-depot>
   </environment>
   
    

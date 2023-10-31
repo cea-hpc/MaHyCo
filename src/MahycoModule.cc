@@ -359,10 +359,11 @@ saveValuesAtN()
     if ( !options()->sansLagrange ) {
         m_velocity_n.copy ( m_velocity );
     }
-    if ( options()->withProjection && options()->remap()->isEuler() ) {
-        // info() << " recopie des valeurs initiales ";
-        m_node_coord.copy ( m_node_coord_0 );
-    }
+//    FAIT en fin de projection
+//    if ( options()->withProjection && options()->remap()->isEuler() != "NON" ) {
+//        // info() << " recopie des valeurs initiales ";
+//        m_node_coord.copy ( m_node_coord_0 );
+//    }
 
 }
 /*---------------------------------------------------------------------------*/
@@ -751,7 +752,12 @@ applyBoundaryConditionForCellVariables()
         FaceGroup face_group = mesh()->faceFamily()->findGroup ( NomBC );
         Real value = options()->boundaryCondition[i]->value();
         TypesMahyco::eBoundaryCondition type = options()->boundaryCondition[i]->type();
-
+        if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
+            value = 0.;
+        }
+        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+            value = 0.;
+        }
 
         // boucle sur les faces de la surface
         ENUMERATE_FACE ( j, face_group ) {
@@ -778,6 +784,47 @@ applyBoundaryConditionForCellVariables()
                     }
                 }
             }
+            if ( type == TypesMahyco::Energy ) {
+                value = options()->boundaryCondition[i]->value();
+                Cell cell = face.backCell();
+                if ( cell.localId() != -1 ) {
+                    // pinfo() << " cell coor " <<  m_cell_coord[cell] << "  " << value << " cut " << options()->boundaryCondition[i]->cutoffY;
+                    if (math::abs(m_cell_coord[cell].x)  > options()->boundaryCondition[i]->cutoffX) value=0.;
+                    if (math::abs(m_cell_coord[cell].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
+                    // pinfo() << " cell coor " <<  m_cell_coord[cell] << "  " << value << " cut " << options()->boundaryCondition[i]->cutoffY;
+                    m_internal_energy[cell] += value;
+                }
+                cell = face.frontCell();
+                if ( cell.localId() != -1 ) {
+                    // pinfo() << " cell coor " <<  m_cell_coord[cell] << "  " << value << " cut " << options()->boundaryCondition[i]->cutoffY;
+                    if (math::abs(m_cell_coord[cell].x)  > options()->boundaryCondition[i]->cutoffX) value=0.;
+                    if (math::abs(m_cell_coord[cell].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
+                    // pinfo() << " cell coor " <<  m_cell_coord[cell] << "  " << value << " cut " << options()->boundaryCondition[i]->cutoffY;
+                    m_internal_energy[cell] += value;
+                }
+            }
+            if ( type == TypesMahyco::SuperGaussianEnergy ) {
+                value = options()->boundaryCondition[i]->value();
+                Cell cell = face.backCell();
+                if ( cell.localId() != -1 ) {
+                    // Fonction super Gaussienne limitée en taille (seule la dependance en Y est codé pour l'instant)
+                    Real ay= m_cell_coord[cell].y * options()->boundaryCondition[i]->dependanceY;
+                    value *= math::exp ( -math::pow ( ay,4. ) );
+                    if (math::abs(m_cell_coord[cell].x)  > options()->boundaryCondition[i]->cutoffX) value=0.;
+                    if (math::abs(m_cell_coord[cell].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
+                    m_internal_energy[cell] += value;
+                }
+                cell = face.frontCell(); 
+                if ( cell.localId() != -1 ) {
+                    // Fonction super Gaussienne limitée en taille (seule la dependance en Y est codé pour l'instant)
+                    Real ay= m_cell_coord[cell].y * options()->boundaryCondition[i]->dependanceY;
+                    if (math::abs(m_cell_coord[cell].x)  > options()->boundaryCondition[i]->cutoffX) value=0.;
+                    if (math::abs(m_cell_coord[cell].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
+                    value *= math::exp ( -math::pow ( ay,4. ) );
+                    m_internal_energy[cell] += value;
+                }
+            }
+            
             if ( type == TypesMahyco::Pressure ) {
                 Cell cell = face.backCell();
                 if ( cell.localId() != -1 ) {
@@ -837,9 +884,11 @@ applyBoundaryConditionForCellVariables()
                             value += options()->boundaryCondition[i]->dependanceZ * m_node_coord[node].z;
                             value += options()->boundaryCondition[i]->dependanceT * m_global_time();
                         } else if ( type == TypesMahyco::SuperGaussianPressure ) {
-                            // Fonction super Gaussienne limitée en taille (seule la dependance en Y est codé pour l'instant)
+                            Real power = options()->boundaryCondition[i]->power;
                             Real ay= m_node_coord[node].y * options()->boundaryCondition[i]->dependanceY;
-                            value *= math::exp ( -math::pow ( ay,4. ) );
+                            value *= math::exp ( -math::pow ( ay,power ) );
+                            Real ax= m_node_coord[node].x * options()->boundaryCondition[i]->dependanceX;
+                            value *= math::exp ( -math::pow ( ax,power ) );
                             if (math::abs(m_node_coord[node].y)  > options()->boundaryCondition[i]->cutoffY) value=0.;
                         } else if ( type == TypesMahyco::ContactHerzPressure ) {
                             // Fonction Contact de Herz sur ZMAX
@@ -1041,7 +1090,10 @@ computeGeometricValues()
             m_cell_volume[cell] = volume;
 
             if ( volume < 0. ) {
-                info() << cell.localId() << " : " << " calcul du volume=" << volume;
+                pinfo() << " Volume Négatif";
+                pinfo() << cell.localId() << " : " << " calcul du volume=" << volume;
+                pinfo() << "de coordonnées : "  << m_cell_coord[cell];
+                exit(1);
             }
         }
         // Calcule la longueur caractéristique de la maille.
@@ -1200,6 +1252,69 @@ void MahycoModule::updateElasticityAndPlasticity()
 }
 /**
  *******************************************************************************
+ * \file DepotEnergy(IMeshEnvironment* env) 
+ *  * \brief Calcul du dépot d'énergie
+ *
+ * \param
+ *
+ * \return
+ *******************************************************************************
+ */
+void MahycoModule::DepotEnergy(IMeshEnvironment* env) 
+{
+    // energyDepot EnDepot = options()->environment[env->id()]->energyDepot[0];
+    Real value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
+    TypesMahyco::eEnergyDepot type = options()->environment[env->id()]->energyDepot[0]->type();
+    int i=0;
+    if (type == TypesMahyco::DepotConstant) {
+        ENUMERATE_ENVCELL ( ienvcell,env ) {
+          EnvCell ev = *ienvcell;
+          Cell cell = ev.globalCell();
+          value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
+          if (m_global_time() < options()->environment[env->id()]->energyDepot[0]->Tdebut ) value = 0.;
+          if (m_global_time() > options()->environment[env->id()]->energyDepot[0]->Tfin ) value = 0.;
+          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          m_internal_energy[ev] += value * m_global_deltat();
+        }
+    } else if (type == TypesMahyco::DepotLineaire) {
+        ENUMERATE_ENVCELL ( ienvcell,env ) {
+          EnvCell ev = *ienvcell;
+          Cell cell = ev.globalCell();
+          value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
+          if (m_global_time() < options()->environment[env->id()]->energyDepot[0]->Tdebut ) value = 0.;
+          if (m_global_time() > options()->environment[env->id()]->energyDepot[0]->Tfin ) value = 0.;
+          // E + DE/DX * X 
+          value += options()->environment[env->id()]->energyDepot[0]->dependanceX * m_cell_coord[cell].x;
+          value += options()->environment[env->id()]->energyDepot[0]->dependanceY * m_cell_coord[cell].y;
+          value += options()->environment[env->id()]->energyDepot[0]->dependanceZ * m_cell_coord[cell].z;
+          // E + DE/DT * T 
+          value += options()->environment[env->id()]->energyDepot[0]->dependanceT * m_global_time();
+          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          m_internal_energy[ev] += value * m_global_deltat();
+        }
+    }  else if (type == TypesMahyco::DepotSuperGaussian) {
+        Real power = options()->environment[env->id()]->energyDepot[0]->power;
+        ENUMERATE_ENVCELL ( ienvcell,env ) {
+          EnvCell ev = *ienvcell;
+          Cell cell = ev.globalCell();
+          value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
+          if (m_global_time() < options()->environment[env->id()]->energyDepot[0]->Tdebut ) value = 0.;
+          if (m_global_time() > options()->environment[env->id()]->energyDepot[0]->Tfin ) value = 0.;
+          Real ay= m_cell_coord[cell].y * options()->environment[env->id()]->energyDepot[0]->dependanceY;
+          value *= math::exp ( -math::pow ( ay, power) );
+          Real ax= m_cell_coord[cell].x * options()->environment[env->id()]->energyDepot[0]->dependanceX;
+          value *= math::exp ( -math::pow ( ax, power) );
+          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          m_internal_energy[ev] += value * m_global_deltat();
+
+        }
+    }
+}
+/**
+ *******************************************************************************
  * \file updateEnergy()
  * \brief Calcul de l'energie interne ( cas du gaz parfait ou methode de newton)
  *
@@ -1219,25 +1334,8 @@ updateEnergyAndPressure()
     debug() << " Rentrée dans updateEnergyAndPressure";
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
-        // pour l'instant, on ajoute pas d'autres option, donc  AdiabaticCst
-        Real energy_deposit = options()->environment[env->id()].valeurSourceEnergie();
-        if ( energy_deposit !=0. ) {
-            int i=0;
-            ENUMERATE_ENVCELL ( ienvcell,env ) {
-                EnvCell ev = *ienvcell;
-                if ( i==0 ) {
-                    debug() << "energie av" << m_internal_energy[ev];
-                }
-                m_internal_energy[ev] += energy_deposit * m_global_deltat();
-                if ( i==0 ) {
-                    debug() << "energie ap" << m_internal_energy[ev];
-                }
-                i++;
-            }
-            debug() << " Ajout de l'energie" << energy_deposit << " avec dt " <<  m_global_deltat();
-        }
+        if (options()->environment[env->id()]->energyDepot.size() != 0.) DepotEnergy(env);
     }
-    
     if ( options()->pressionExplicite ) {
         updateEnergyAndPressureExplicite();
     } else {
@@ -1553,10 +1651,9 @@ computeDeltaT()
     m_old_deltat = m_global_old_deltat();
 
     Real new_dt = FloatInfo < Real >::maxValue();
-    if ( options()->sansLagrange ) {
+    if ( options()->sansLagrange || options()->deltatConstant) {
         // on garde le meme pas de temps
         new_dt = options()->deltatInit();
-
     } else {
         CellToAllEnvCellConverter all_env_cell_converter ( mm );
 
@@ -1564,13 +1661,14 @@ computeDeltaT()
         Real minimum_aux = FloatInfo < Real >::maxValue();
         Integer cell_id ( -1 ), nbenvcell ( -1 );
         Real cc ( 0. ), ll ( 0. );
+        Real3 coord;
 
         ENUMERATE_CELL ( icell, allCells() ) {
             Cell cell = * icell;
             Real cell_dx = m_caracteristic_length[icell];
             Real sound_speed = m_sound_speed[icell];
             Real vmax ( 0. );
-            if ( options()->withProjection )
+            if ( /* options()->withProjection */ options()->remap()->isEuler() == "Full")
                 for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < cell.nbNode(); ++inode ) {
                     vmax = math::max ( m_velocity[inode].normL2(), vmax );
                 }
@@ -1580,6 +1678,7 @@ computeDeltaT()
                 cell_id = icell.localId();
                 cc = m_sound_speed[icell];
                 ll = m_caracteristic_length[icell];
+                coord = m_cell_coord[icell];
                 AllEnvCell all_env_cell = all_env_cell_converter[cell];
                 nbenvcell = all_env_cell.nbEnvironment();
             }
@@ -1596,9 +1695,9 @@ computeDeltaT()
         new_dt = math::min ( new_dt, options()->deltatMax() );
         // respect du pas de temps minimum
         if ( new_dt < options()->deltatMin() ) {
-            info() << " pas de temps minimum ";
-            info() << " nouveau pas de temps " << new_dt << " par " << cell_id
-                   << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll << " et min " << minimum_aux;
+            pinfo() << " pas de temps minimum ";
+            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll << " et min " << minimum_aux;
             exit ( 1 );
         }
 

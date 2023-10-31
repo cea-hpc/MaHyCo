@@ -5,7 +5,7 @@ Integer RemapALEService::getOrdreProjection() { return options()->ordreProjectio
 bool RemapALEService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapALEService::hasProjectionSimplePente() { return options()->projectionSimplePente;}
 bool RemapALEService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
-bool RemapALEService::isEuler() {return options()->getIsEulerScheme();}
+String RemapALEService::isEuler() {return options()->getIsEulerScheme();}
 /**
  *******************************************************************************/
 void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
@@ -16,7 +16,7 @@ void RemapALEService::appliRemap(Integer dimension, Integer withDualProjection, 
     m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     mm = IMeshMaterialMng::getReference(mesh());
   
-    if (! options()->getIsEulerScheme()) {
+    if (isEuler() == "NON") {
       debug() << "Creation liste des noeuds à relaxer";
       ComputeNodeGroupToRelax();
       debug() << "Deplacement des noeuds : lissage";

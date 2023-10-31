@@ -5,7 +5,7 @@ Integer RemapADIService::getOrdreProjection() { return options()->ordreProjectio
 bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
 bool RemapADIService::hasProjectionSimplePente() { return options()->projectionSimplePente;}
 bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
-bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
+String RemapADIService::isEuler() {return options()->getIsEulerScheme();}
 /**
  **************************************-*****************************************/
 void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
@@ -21,11 +21,13 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
       if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
-      info() << " globalcell " << m_cartesian_mesh->cellDirection(idir).globalNbCell();
-      // cas 1D : on debranche la projeciton suivant Y
-      // if (idir == 1) continue;
-      
-      // info() << " projection direction " << idir;
+      // pinfo() << " globalcell " << m_cartesian_mesh->cellDirection(idir).globalNbCell();
+      // cas Euler 1D : on debranche les autres projections  
+      if (isEuler() == "X" && (idir == 1 || idir == 2 ))   continue;
+      if (isEuler() == "Y" && (idir == 0 || idir == 2 ))   continue;      
+      if (isEuler() == "Z" && (idir == 0 || idir == 1 ))   continue;
+          
+      // pinfo() << " projection direction " << idir << " et iseuler " << isEuler();
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
       // info() << " after computeGradPhiFace " << idir;
@@ -52,6 +54,30 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     }
     m_sens_projection = m_sens_projection()+1;
     m_sens_projection = m_sens_projection()%(mesh()->dimension());
+    
+    if (isEuler() == "Full") {
+      // info() << " recopie des valeurs initiales pour les sorties ";
+      m_node_coord.copy(m_node_coord_0);
+    } else if (isEuler() == "X")  {
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+        m_node_coord[node].x = m_node_coord_0[node].x;
+      }
+      computeVolumeEuler(mesh()->dimension());
+    } else if (isEuler() == "Y")  {
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+        m_node_coord[node].y = m_node_coord_0[node].y;
+      }
+      computeVolumeEuler(mesh()->dimension());
+    } else if (isEuler() == "Z")  {
+      ENUMERATE_NODE(inode, allNodes()){
+        Node node= *inode;
+        m_node_coord[node].z = m_node_coord_0[node].z;
+      }
+      computeVolumeEuler(mesh()->dimension());
+    } 
+        
     
     // recuperation des quantités aux cells et aux envcell
     remapVariables(dimension,  withDualProjection,  nb_vars_to_project,  nb_env);
@@ -533,6 +559,142 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
     }
   }
 }
+/*---------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------*/
+void RemapADIService::
+computeVolumeEuler(Integer dimension)
+{
+    // Copie locale des coordonnées des sommets d'une maille
+    Real3 coord[8];
+    // Coordonnées des centres des faces
+    Real3 face_coord[6];
+
+    Real racine = dimension == 2 ? .5  : 1./3. ;
+    m_node_coord.synchronize();
+    if ( dimension == 3 ) {
+        ENUMERATE_CELL ( icell, allCells() ) {
+            Cell cell = * icell;
+            // Recopie les coordonnées locales (pour le cache)
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < 8; ++inode ) {
+                coord[inode.index()] = m_node_coord[inode];
+            }
+            // Calcul les coordonnées des centres des faces
+            face_coord[0] = 0.25 * ( coord[0] + coord[3] + coord[2] + coord[1] );
+            face_coord[1] = 0.25 * ( coord[0] + coord[4] + coord[7] + coord[3] );
+            face_coord[2] = 0.25 * ( coord[0] + coord[1] + coord[5] + coord[4] );
+            face_coord[3] = 0.25 * ( coord[4] + coord[5] + coord[6] + coord[7] );
+            face_coord[4] = 0.25 * ( coord[1] + coord[2] + coord[6] + coord[5] );
+            face_coord[5] = 0.25 * ( coord[2] + coord[3] + coord[7] + coord[6] );
+
+            // Calcule les résultantes aux sommets
+            computeCQs ( coord, face_coord, cell );
+        }
+    } else {
+        Real3 npc[5];
+        ENUMERATE_CELL ( icell, allCells() ) {
+            Cell cell = * icell;
+            // Recopie les coordonnées locales (pour le cache)
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < cell.nbNode(); ++inode ) {
+                coord[inode.index()] = m_node_coord[inode];
+            }
+            coord[4] = coord[0];
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.index() < cell.nbNode(); ++inode ) {
+                npc[inode.index()+1].x = 0.5 * ( coord[inode.index()+1].y -  coord[inode.index()].y );
+                npc[inode.index()+1].y = 0.5 * ( coord[inode.index()].x -  coord[inode.index()+1].x );
+                // npc[inode.index()+1] = npc[inode.index()+1] / npc[inode.index()+1].normL2();
+            }
+            npc[0] = npc[4];
+            for ( Integer ii = 0; ii < 4; ++ii ) {
+                m_cell_cqs[icell][ii] = npc[ii+1] + npc[ii];
+            }
+        }
+    }
+    m_cell_cqs.synchronize();
+
+    ENUMERATE_CELL ( icell, allCells() ) {
+        Cell cell = * icell;
+        // Calcule le volume de la maille
+        {
+            Real volume = 0., volume_old =0.;
+            for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
+                volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
+            }
+            volume /= dimension;
+            m_euler_volume[cell] = volume;
+            if ( volume < 0. ) {
+                info() << cell.localId() << " : " << " calcul du volume du nouveau maillage de reception (euler) =" << m_euler_volume[cell] ;
+            }
+        }
+    }
+}
+/*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+inline void RemapADIService::
+computeCQs ( Real3 node_coord[8], Real3 face_coord[6], const Cell & cell )
+{
+    const Real3 c0 = face_coord[0];
+    const Real3 c1 = face_coord[1];
+    const Real3 c2 = face_coord[2];
+    const Real3 c3 = face_coord[3];
+    const Real3 c4 = face_coord[4];
+    const Real3 c5 = face_coord[5];
+
+    // Calcul des normales face 1 :
+    const Real3 n1a04 = 0.5 * math::vecMul ( node_coord[0] - c0, node_coord[3] - c0 );
+    const Real3 n1a03 = 0.5 * math::vecMul ( node_coord[3] - c0, node_coord[2] - c0 );
+    const Real3 n1a02 = 0.5 * math::vecMul ( node_coord[2] - c0, node_coord[1] - c0 );
+    const Real3 n1a01 = 0.5 * math::vecMul ( node_coord[1] - c0, node_coord[0] - c0 );
+
+    // Calcul des normales face 2 :
+    const Real3 n2a05 = 0.5 * math::vecMul ( node_coord[0] - c1, node_coord[4] - c1 );
+    const Real3 n2a12 = 0.5 * math::vecMul ( node_coord[4] - c1, node_coord[7] - c1 );
+    const Real3 n2a08 = 0.5 * math::vecMul ( node_coord[7] - c1, node_coord[3] - c1 );
+    const Real3 n2a04 = 0.5 * math::vecMul ( node_coord[3] - c1, node_coord[0] - c1 );
+
+    // Calcul des normales face 3 :
+    const Real3 n3a01 = 0.5 * math::vecMul ( node_coord[0] - c2, node_coord[1] - c2 );
+    const Real3 n3a06 = 0.5 * math::vecMul ( node_coord[1] - c2, node_coord[5] - c2 );
+    const Real3 n3a09 = 0.5 * math::vecMul ( node_coord[5] - c2, node_coord[4] - c2 );
+    const Real3 n3a05 = 0.5 * math::vecMul ( node_coord[4] - c2, node_coord[0] - c2 );
+
+    // Calcul des normales face 4 :
+    const Real3 n4a09 = 0.5 * math::vecMul ( node_coord[4] - c3, node_coord[5] - c3 );
+    const Real3 n4a10 = 0.5 * math::vecMul ( node_coord[5] - c3, node_coord[6] - c3 );
+    const Real3 n4a11 = 0.5 * math::vecMul ( node_coord[6] - c3, node_coord[7] - c3 );
+    const Real3 n4a12 = 0.5 * math::vecMul ( node_coord[7] - c3, node_coord[4] - c3 );
+
+    // Calcul des normales face 5 :
+    const Real3 n5a02 = 0.5 * math::vecMul ( node_coord[1] - c4, node_coord[2] - c4 );
+    const Real3 n5a07 = 0.5 * math::vecMul ( node_coord[2] - c4, node_coord[6] - c4 );
+    const Real3 n5a10 = 0.5 * math::vecMul ( node_coord[6] - c4, node_coord[5] - c4 );
+    const Real3 n5a06 = 0.5 * math::vecMul ( node_coord[5] - c4, node_coord[1] - c4 );
+
+    // Calcul des normales face 6 :
+    const Real3 n6a03 = 0.5 * math::vecMul ( node_coord[2] - c5, node_coord[3] - c5 );
+    const Real3 n6a08 = 0.5 * math::vecMul ( node_coord[3] - c5, node_coord[7] - c5 );
+    const Real3 n6a11 = 0.5 * math::vecMul ( node_coord[7] - c5, node_coord[6] - c5 );
+    const Real3 n6a07 = 0.5 * math::vecMul ( node_coord[6] - c5, node_coord[2] - c5 );
+
+    // Calcul des résultantes aux sommets :
+    m_cell_cqs[cell] [0] = ( 5. * ( n1a01 + n1a04 + n2a04 + n2a05 + n3a05 + n3a01 ) +
+                             ( n1a02 + n1a03 + n2a08 + n2a12 + n3a06 + n3a09 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [1] = ( 5. * ( n1a01 + n1a02 + n3a01 + n3a06 + n5a06 + n5a02 ) +
+                             ( n1a04 + n1a03 + n3a09 + n3a05 + n5a10 + n5a07 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [2] = ( 5. * ( n1a02 + n1a03 + n5a07 + n5a02 + n6a07 + n6a03 ) +
+                             ( n1a01 + n1a04 + n5a06 + n5a10 + n6a11 + n6a08 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [3] = ( 5. * ( n1a03 + n1a04 + n2a08 + n2a04 + n6a08 + n6a03 ) +
+                             ( n1a01 + n1a02 + n2a05 + n2a12 + n6a07 + n6a11 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [4] = ( 5. * ( n2a05 + n2a12 + n3a05 + n3a09 + n4a09 + n4a12 ) +
+                             ( n2a08 + n2a04 + n3a01 + n3a06 + n4a10 + n4a11 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [5] = ( 5. * ( n3a06 + n3a09 + n4a09 + n4a10 + n5a10 + n5a06 ) +
+                             ( n3a01 + n3a05 + n4a12 + n4a11 + n5a07 + n5a02 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [6] = ( 5. * ( n4a11 + n4a10 + n5a10 + n5a07 + n6a07 + n6a11 ) +
+                             ( n4a12 + n4a09 + n5a06 + n5a02 + n6a03 + n6a08 ) ) * ( 1. / 12. );
+    m_cell_cqs[cell] [7] = ( 5. * ( n2a08 + n2a12 + n4a12 + n4a11 + n6a11 + n6a08 ) +
+                             ( n2a04 + n2a05 + n4a09 + n4a10 + n6a07 + n6a03 ) ) * ( 1. / 12. );
+}
+
 /**
  *******************************************************************************
  * \file synchronizeUremap()

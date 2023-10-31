@@ -265,6 +265,8 @@ class MahycoModule
    * divisée par le nouveau volume.
    */
   virtual void updateDensity();
+  
+  virtual void DepotEnergy(IMeshEnvironment* env); 
    /**
    * Calcule la contribution elasto-plastique 
    */

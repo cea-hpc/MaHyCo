@@ -76,7 +76,7 @@ public:
   virtual bool hasProjectionPenteBorne();
   virtual bool hasProjectionSimplePente();    
   virtual bool hasConservationEnergieTotale(); 
-  virtual bool isEuler();   
+  virtual String isEuler();   
   
   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env);
   

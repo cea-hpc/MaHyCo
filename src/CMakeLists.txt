@@ -129,6 +129,7 @@ set( TEST_NAMES_PARA_4
 		"CAS_Lag_BiSodCaseZ"
         "CAS_Lag_SodCaseX"
         "CAS_BiSodCaseY"
+        "CAS_plaque_demi_euler_Y_depot_Gaussian"
 		"CAS_BiSodCaseZ"
 		"CAS_SodCaseY"
         "CAS_SodCaseZ"

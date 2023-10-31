@@ -317,12 +317,54 @@
       Valeur du coefficient quadratique de pseudo
     </description>
    </simple>
+   
+   <complex name="energy-depot" type="TypeEnergyDepot" minOccurs="0" maxOccurs="1">
+    <description>Type de dépot d'énergie dans les mailles</description>
 
-   <!-- - - - - - AdiabaticCst - - - - -->
-   <simple name="valeur-source-energie" type="real" default="0.">
-     <description>Définition de la constante adiabatique</description>
-   </simple>
-  
+    <enumeration name="type" type="TypesMahyco::eEnergyDepot">
+      <description>Type de dépot d'énergie dans les mailles</description>
+      <enumvalue genvalue="TypesMahyco::DepotConstant" name="DepotConstant" />
+      <enumvalue genvalue="TypesMahyco::DepotLineaire" name="DepotLineaire" />
+      <enumvalue genvalue="TypesMahyco::DepotSuperGaussian" name="DepotSuperGaussian" />
+    </enumeration>
+    
+    <!-- - - - - - Source Energie - - - - -->
+    <simple name="valeur-source-energie" type="real" default="0.">
+        <description>Définition de la constante adiabatique</description>
+    </simple>
+    
+    <simple name="dependanceX" type="real" default="0.">
+        <description>Valeur de la dependance à l'absisse </description>
+    </simple>
+    <simple name="dependanceY" type="real" default="0.">
+        <description>Valeur de la dependance à l'ordonée</description>
+    </simple> 
+    <simple name="dependanceZ" type="real" default="0.">
+        <description>Valeur de la dependance à la hauteur</description>
+    </simple>
+    <simple name="cutoffX" type="real" default="1000.">
+        <description>Valeur du cutoff en absisse </description>
+    </simple>
+    <simple name="cutoffY" type="real" default="1000.">
+        <description>Valeur du cutoff en ordonée</description>
+    </simple> 
+        <simple name="cutoffZ" type="real" default="1000.">
+        <description>Valeur du cutoff en hauteur</description>
+    </simple>
+    <simple name="dependanceT" type="real" default="0.">
+      <description>Valeur de la dependance au temps</description>
+    </simple>
+    <simple name="power" type="real" default="4.">
+        <description>Valeur de la puissance de la supergaussian</description>
+    </simple>
+    <simple name="Tdebut" type="real" default="0.">
+        <description>Valeur du debut de la CDL de pression</description>
+    </simple>
+    <simple name="Tfin" type="real" default="1000.">
+        <description>Valeur de la fin de la CDL de pression</description>
+    </simple>
+   
+   </complex>
   </complex>
   
   <service-instance name="cas-model" type="IInitialisations" default="EXTERNAL">
@@ -350,7 +392,13 @@
     <description>Type de longueur caracteristique </description>
   </simple>
   
-
+  <!-- - - - - - deltat-constant - - - - -->
+  <simple name="deltat-constant" type="bool" default="false">
+    <description>
+      Déclaration pour prendre un pas de temps constant
+    </description>
+  </simple>
+  
   <!-- - - - - - deltat-min - - - - -->
   <simple name="deltat-min" type="real">
     <description>
@@ -422,6 +470,8 @@
       <enumvalue genvalue="TypesMahyco::VelocityZ" name="Vz" />
       <enumvalue genvalue="TypesMahyco::OnFileVelocity" name="OFV" />
       <enumvalue genvalue="TypesMahyco::Density" name="Density" />
+      <enumvalue genvalue="TypesMahyco::Energy" name="Energy" />
+      <enumvalue genvalue="TypesMahyco::SuperGaussianEnergy" name="SuperGaussianEnergy" />
       <enumvalue genvalue="TypesMahyco::Pressure" name="Pressure" />
       <enumvalue genvalue="TypesMahyco::GeometricPressure" name="GeometricPressure" />
       <enumvalue genvalue="TypesMahyco::LinearPressure" name="LinearPressure" />
@@ -447,16 +497,19 @@
       <description>Valeur de la dependance à la hauteur</description>
     </simple>
     <simple name="cutoffX" type="real" default="1000.">
-      <description>Valeur de la dependance à l'absisse </description>
+      <description>Valeur du cutoff en absisse </description>
     </simple>
     <simple name="cutoffY" type="real" default="1000.">
-      <description>Valeur de la dependance à l'ordonée</description>
+      <description>Valeur du cutoff en ordonée</description>
     </simple> 
     <simple name="cutoffZ" type="real" default="1000.">
-      <description>Valeur de la dependance à la hauteur</description>
+      <description>Valeur du cutoff en hauteur</description>
     </simple>
     <simple name="dependanceT" type="real" default="0.">
       <description>Valeur de la dependance au temps</description>
+    </simple>
+    <simple name="power" type="real" default="4.">
+        <description>Valeur de la puissance de la supergaussian</description>
     </simple>
     <simple name="Tdebut" type="real" default="0.">
       <description>Valeur du debut de la CDL de pression</description>

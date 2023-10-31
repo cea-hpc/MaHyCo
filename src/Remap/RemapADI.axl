@@ -136,6 +136,9 @@
     <!-- 	FRAC PHASE 6	 -->
     <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	CELL CQS	 -->
+    <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
 </variables>
 
 <options>
@@ -145,8 +148,9 @@
     <description>Définition de la valeur limite des petites fractions et autres </description>
   </simple>
   <!-- - - - - projection-Euler - - - - -->
-  <simple name="is-euler-scheme" type="bool" default="true">
-    <description> projection type Euler (retour sur maillage initial </description>
+  <simple name="is-euler-scheme" type="string" default="Full">
+    <description> projection type Euler 
+    (retour sur maillage initial = Full (defaut) ou suivant une direction seulement :  X ; Y ; Z ) </description>
   </simple>
   <!-- - - - - - ordre de la projection - - - - -->
   <simple name="ordre-projection" type="integer" default="2">

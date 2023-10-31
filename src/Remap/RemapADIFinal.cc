@@ -33,6 +33,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       cells_marker[icell.localId()] = 0;
     }
     ENUMERATE_CELL(icell, allCells()){
+      Cell cell = * icell;   
       if (((m_u_lagrange[icell][index_env] / m_euler_volume[icell]) < options()->threshold ||(m_u_lagrange[icell][nb_env + index_env] == 0. && withDualProjection))
           && cells_marker[icell.localId()] == 0) {
         // m_u_lagrange[icell][nb_env + index_env] == 0. && !withDualProjection signifie 
@@ -188,7 +189,22 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
          /* indice de phase 
           m_frac_phase1[ev] = m_u_lagrange[cell][3 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
           m_frac_phase2[ev] = m_u_lagrange[cell][4 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
-          m_frac_phase3[ev] = m_u_lagrange[cell][5 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; */
+          m_frac_phase3[ev] = m_u_lagrange[cell][5 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
+          Déviateurs des contraintes
+          m_strain_tensor[ev].x.x = m_u_lagrange[cell][8 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
+          m_strain_tensor[ev].y.y = m_u_lagrange[cell][9 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
+          m_strain_tensor[ev].x.y = m_u_lagrange[cell][10 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
+          m_strain_tensor[ev].y.z = m_u_lagrange[cell][11 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
+          m_strain_tensor[ev].z.x = m_u_lagrange[cell][12 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
+          Symétrie et trace nulle
+          m_strain_tensor[ev].z.z = - (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y);
+          m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
+          m_strain_tensor[ev].z.y = m_strain_tensor[ev].y.z;
+          m_strain_tensor[ev].x.z = m_strain_tensor[ev].z.x;
+          Variables de Déformations plastiques 
+          m_plastic_deformation_velocity[ev] =  m_u_lagrange[cell][13 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
+          m_plastic_deformation[ev] =  m_u_lagrange[cell][14 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
+          */
       }
     }
     // mise à jour des valeurs moyennes aux allCells
@@ -215,6 +231,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // energie interne totale
       energie_nplus1 += m_mass_fraction[ev] * m_internal_energy[ev];
       pseudo_nplus1 += m_fracvol[ev] * m_pseudo_viscosity[ev];
+      // indicateurs de phase et contraintes
+      
       if (cell.localId() == -1) pinfo() << cell.localId() << " apres proj env " << index_env << " et density " << m_density[ev];
     }
     // energie interne
@@ -285,10 +303,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     }
   } 
-  if (isEuler()) {
-      // info() << " recopie des valeurs initiales pour les sorties ";
-      m_node_coord.copy(m_node_coord_0);
-  }
+
   m_node_mass.synchronize();
   // conservation energie totale lors du remap
   if (hasConservationEnergieTotale()) {
@@ -298,7 +313,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real ec_proj(0.);
       Real ec_reconst(0.);
       AllEnvCell all_env_cell = all_env_cell_converter[cell];
-      ENUMERATE_NODE(inode, cell->nodes()) {
+      ENUMERATE_NODE(inode, cell.nodes()) {
         if (m_u_dual_lagrange[inode][3] != 0.) {
           ec_proj = m_u_dual_lagrange[inode][4] / m_u_dual_lagrange[inode][3];
           ec_reconst = 0.5 * m_velocity[inode].squareNormL2();

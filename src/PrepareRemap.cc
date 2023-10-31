@@ -108,19 +108,22 @@ void MahycoModule::computeVariablesForRemap()
       m_u_lagrange[cell][nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev];
       // // energies matériels (partiels)
       m_u_lagrange[cell][2 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy[ev];
-      // // Quantites de mouvement centrees
-      //m_u_lagrange[cell][3 * nb_total_env + 0] = 0.;
-      //m_u_lagrange[cell][3 * nb_total_env + 1] = 0.;
-      //m_u_lagrange[cell][3 * nb_total_env + 2] = 0.;
-      // // energie cinetique centree
-      //m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
-      // // Pseudo partiel pour la quantité de mouvement
-      //m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
-      m_u_lagrange[cell][7 * nb_total_env ] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
       /* Indice de phases
       m_u_lagrange[cell][3 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase1[ev];
       m_u_lagrange[cell][4 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase2[ev];
-      m_u_lagrange[cell][5 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase3[ev]; */
+      m_u_lagrange[cell][5 * nb_total_env + index_env] = m_cell_volume[ev] * m_frac_phase3[ev]; 
+      */
+      m_u_lagrange[cell][7 * nb_total_env ] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
+      /* Déviateurs des contraintes
+      m_u_lagrange[cell][8 * nb_total_env + index_env] = m_cell_volume[ev]  * m_strain_tensor[ev].x.x;
+      m_u_lagrange[cell][9 * nb_total_env + index_env] = m_cell_volume[ev]  * m_strain_tensor[ev].y.y;
+      m_u_lagrange[cell][10 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].x.y; 
+      m_u_lagrange[cell][11 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].y.z; 
+      m_u_lagrange[cell][12 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].z.x; 
+         Variables de Déformations plastiques 
+      m_u_lagrange[cell][13 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation_velocity[ev]; 
+      m_u_lagrange[cell][14 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation[ev]; 
+      */
         
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
@@ -128,18 +131,21 @@ void MahycoModule::computeVariablesForRemap()
         m_phi_lagrange[cell][index_env]  = m_fracvol[ev];
         m_phi_lagrange[cell][nb_total_env + index_env] = m_density[ev];
         m_phi_lagrange[cell][2 * nb_total_env + index_env] = m_internal_energy[ev];
-        // les phi sur la vitesse et energie cinétique n'existent pas en VnR
-        //m_phi_lagrange[cell][3 * nb_total_env + 0] = 0.;
-        //m_phi_lagrange[cell][3 * nb_total_env + 1] = 0.;
-        //m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
-        //m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
-        
-        // m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
-        m_phi_lagrange[cell][7 * nb_total_env ] = m_pseudo_viscosity[cell];
         /* Indice de phases
         m_phi_lagrange[cell][3 * nb_total_env + index_env] = m_frac_phase1[ev];
         m_phi_lagrange[cell][4 * nb_total_env + index_env] = m_frac_phase2[ev];
         m_phi_lagrange[cell][5 * nb_total_env + index_env] = m_frac_phase3[ev]; */
+        m_phi_lagrange[cell][7 * nb_total_env ] = m_pseudo_viscosity[cell];
+        /* Indice de phases
+        m_phi_lagrange[cell][8 * nb_total_env + index_env]  = m_strain_tensor[ev].x.x;
+        m_phi_lagrange[cell][9 * nb_total_env + index_env]  = m_strain_tensor[ev].y.y;
+        m_phi_lagrange[cell][10 * nb_total_env + index_env] = m_strain_tensor[ev].x.y; 
+        m_phi_lagrange[cell][11 * nb_total_env + index_env] = m_strain_tensor[ev].y.z;
+        m_phi_lagrange[cell][12 * nb_total_env + index_env] = m_strain_tensor[ev].z.x; 
+         Variables de Déformations plastiques 
+        m_phi_lagrange[cell][11 * nb_total_env + index_env] = m_plastic_deformation_velocity[ev];
+        m_phi_lagrange[cell][12 * nb_total_env + index_env] = m_plastic_deformation[ev].z.x; 
+        */
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];

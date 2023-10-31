@@ -16,6 +16,8 @@ struct TypesMahyco
     VelocityZ, //!< Vitesse Z fixée
     OnFileVelocity, //!< Vitesse analytique
     Density, //!< Densité fixée
+    Energy, //!< Energy fixée
+    SuperGaussianEnergy, 
     Pressure, //!< Pression fixée
     GeometricPressure, //!< Pression fixée
     LinearPressure, //!< Pression linaire suivant X,Y,Z et t
@@ -24,6 +26,13 @@ struct TypesMahyco
     ContactHerzPressure, //!< Pression contact de Herz (loi pression sqrt(1-r2))
     Unknown //!< Type inconnu
   }; 
+  enum eEnergyDepot
+  {
+    DepotConstant, //!< Energy fixée constante
+    DepotLineaire, //!< Energy linaire suivant X,Y,Z et t
+    DepotSuperGaussian, //!< Energy en supergaussienne suivant X,Y,Z
+    Inconnu //!< Type inconnu
+  };
 };
 
 const double Pi = 3.14159265359;
