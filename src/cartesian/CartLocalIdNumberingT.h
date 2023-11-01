@@ -50,7 +50,7 @@ class CartLocalIdNumberingT {
   }
 
   //! Retourne le couple (local id, (i,j,k)) à partir d'un itéré d'une boucle directe
-  ARCCORE_HOST_DEVICE LocalIdIdxType idIdx(const ArrayBoundsIndex<3>& iter) const {
+  ARCCORE_HOST_DEVICE LocalIdIdxType idIdx(const ArrayIndex<3>& iter) const {
     IdxType idx = {iter.id2(),iter.id1(),iter.id0()}; // on remet dans le bon ordre
     IdType cell_id = id(idx[0], idx[1], idx[2]); // on calcule l'id selon la numerotation cartesienne
 
