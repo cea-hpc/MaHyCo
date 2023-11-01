@@ -767,9 +767,9 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
   Real deltat = m_global_deltat();
   Real flux;    
   m_dual_phi_flux.fill(0.);
+  RealUniqueArray flux_face(nb_vars_to_project);
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = * icell;
-    RealUniqueArray flux_face(nb_vars_to_project);
     flux_face.fill(0.);
     ENUMERATE_FACE(iface, cell.faces()){
       const Face& face = *iface;
