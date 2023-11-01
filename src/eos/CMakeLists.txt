@@ -4,6 +4,7 @@ perfectgas/PerfectGasEOSService.h
 IEquationOfState.h)
 
 target_include_directories(PerfectGas PRIVATE ..)
+target_include_directories(PerfectGas PRIVATE .)
 target_link_libraries(PerfectGas PUBLIC Arcane::arcane_core)
 target_link_libraries(PerfectGas PRIVATE mahyco_config)
 install(TARGETS PerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
@@ -14,6 +15,7 @@ add_library(StiffenedGas
   IEquationOfState.h)
 
 target_include_directories(StiffenedGas PRIVATE ..)
+target_include_directories(StiffenedGas PRIVATE .)
 target_link_libraries(StiffenedGas PUBLIC Arcane::arcane_core)
 target_link_libraries(StiffenedGas PRIVATE mahyco_config)
 install(TARGETS StiffenedGas EXPORT ${MAHYCO_EXPORT_TARGET})
@@ -27,6 +29,7 @@ stdperfectgas/EosTypes.h
 IEquationOfState.h)
 
 target_include_directories(StdPerfectGas PRIVATE ..)
+target_include_directories(StdPerfectGas PRIVATE .)
 target_link_libraries(StdPerfectGas PUBLIC Arcane::arcane_core)
 target_link_libraries(StdPerfectGas PRIVATE mahyco_config)
 install(TARGETS StdPerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
@@ -41,6 +44,7 @@ stdperfectgasacc1/Mallocator.h
 IEquationOfState.h)
 
 target_include_directories(StdPerfectGasAcc1 PRIVATE ..)
+target_include_directories(StdPerfectGasAcc1 PRIVATE .)
 target_link_libraries(StdPerfectGasAcc1 PUBLIC Arcane::arcane_core)
 target_link_libraries(StdPerfectGasAcc1 PRIVATE mahyco_config)
 find_package(Boost)
@@ -61,6 +65,7 @@ stdperfectgasacc2/EosTypes.h
 IEquationOfState.h)
 
 target_include_directories(StdPerfectGasAcc2 PRIVATE ..)
+target_include_directories(StdPerfectGasAcc2 PRIVATE .)
 target_link_libraries(StdPerfectGasAcc2 PUBLIC Arcane::arcane_core)
 target_link_libraries(StdPerfectGasAcc2 PRIVATE mahyco_config)
 install(TARGETS StdPerfectGasAcc2 EXPORT ${MAHYCO_EXPORT_TARGET})
@@ -75,6 +80,7 @@ qnewt_stdperfectgas/Utils.h
 IEquationOfState.h)
 
 target_include_directories(QnewtStdPerfectGas PRIVATE ..)
+target_include_directories(QnewtStdPerfectGas PRIVATE .)
 target_link_libraries(QnewtStdPerfectGas PUBLIC Arcane::arcane_core)
 target_link_libraries(QnewtStdPerfectGas PRIVATE mahyco_config)
 install(TARGETS QnewtStdPerfectGas EXPORT ${MAHYCO_EXPORT_TARGET})
@@ -84,8 +90,8 @@ arcane_accelerator_enable()
 arcane_accelerator_add_source_files(perfectgas/PerfectGasEOSService.cc)
 arcane_accelerator_add_source_files(stiffenedgas/StiffenedGasEOSService.cc)
 
-#arcane_accelerator_add_source_files(stdperfectgas/StdPerfectGasEOSService.cc)
-#arcane_accelerator_add_source_files(stdperfectgas/PhyVarType.cc)
+arcane_accelerator_add_source_files(stdperfectgas/StdPerfectGasEOSService.cc)
+arcane_accelerator_add_source_files(stdperfectgas/PhyVarType.cc)
 
 arcane_accelerator_add_source_files(stdperfectgasacc1/StdPerfectGasAcc1EOSService.cc)
 arcane_accelerator_add_source_files(stdperfectgasacc1/PhyVarType.cc)
@@ -94,15 +100,15 @@ arcane_accelerator_add_source_files(stdperfectgasacc2/StdPerfectGasAcc2EOSServic
 arcane_accelerator_add_source_files(stdperfectgasacc2/PhyVarType.cc)
 arcane_accelerator_add_source_files(stdperfectgasacc2/PhyVars.cc)
 
-#arcane_accelerator_add_source_files(qnewt_stdperfectgas/QnewtStdPerfectGasEOSService.cc)
-#arcane_accelerator_add_source_files(qnewt_stdperfectgas/PhyVarType.cc)
+arcane_accelerator_add_source_files(qnewt_stdperfectgas/QnewtStdPerfectGasEOSService.cc)
+arcane_accelerator_add_source_files(qnewt_stdperfectgas/PhyVarType.cc)
 
 arcane_accelerator_add_to_target(PerfectGas)
 arcane_accelerator_add_to_target(StiffenedGas)
-#arcane_accelerator_add_to_target(StdPerfectGas)
+arcane_accelerator_add_to_target(StdPerfectGas)
 arcane_accelerator_add_to_target(StdPerfectGasAcc1)
 arcane_accelerator_add_to_target(StdPerfectGasAcc2)
-#arcane_accelerator_add_to_target(QnewtStdPerfectGas)
+arcane_accelerator_add_to_target(QnewtStdPerfectGas)
 
 arcane_target_add_axl(PerfectGas perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas stiffenedgas/StiffenedGasEOS)
