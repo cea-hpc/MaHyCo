@@ -43,10 +43,10 @@ public:
    */
   virtual void initMatMono(Integer dim)  = 0;
   virtual void initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, 
-                           Real3 pression_initiale, Real3x3 vitesse_initiale) = 0;
+                           Real3 pression_initiale, Real3 temperature_initiale, Real3x3 vitesse_initiale) = 0;
   virtual void initMat(Integer dim)  = 0;
   virtual void initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, 
-                       Real3 pression_initiale, Real3x3 vitesse_initiale) = 0;
+                       Real3 pression_initiale, Real3 temperature_initiale, Real3x3 vitesse_initiale) = 0;
   virtual bool hasReverseOption() = 0;
   virtual Real getReverseParameter() = 0;
   virtual bool isInternalModel() = 0;

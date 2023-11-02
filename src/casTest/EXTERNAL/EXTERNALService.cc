@@ -7,10 +7,10 @@ void EXTERNALService::initMat(Integer dim)  {
    
 }
 void EXTERNALService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
 }
 void EXTERNALService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
 
 }
 
