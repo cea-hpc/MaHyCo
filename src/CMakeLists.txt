@@ -35,6 +35,10 @@ add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
 
+add_library(Tabulee eos/tabulee/TabuleeEOSService.cc)
+target_include_directories(Tabulee PUBLIC .)
+target_link_libraries(Tabulee PUBLIC arcane_core)
+
 # Partie Elasticité
 add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc)
 target_include_directories(Elasto PUBLIC .)
@@ -88,7 +92,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -101,6 +105,7 @@ arcane_target_add_axl(CHOCBULLE casTest/CHOCBULLE/CHOCBULLE)
 arcane_target_add_axl(INSTART casTest/INSTART/INSTART)
 arcane_target_add_axl(VORTEX casTest/VORTEX/VORTEX)
 
+arcane_target_add_axl(Tabulee eos/tabulee/TabuleeEOS)
 arcane_target_add_axl(MieGruneisen eos/miegruneisen/MieGruneisenEOS)
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)

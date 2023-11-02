@@ -105,11 +105,13 @@ hydroStartInit()
         Real3 pression_initiale;
         Real3 energie_initiale;
         Real3x3 vitesse_initiale;
+        Real3 temperature_initiale;
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
             densite_initiale[i] = options()->environment[i].densiteInitiale;
             pression_initiale[i] = options()->environment[i].pressionInitiale;
             energie_initiale[i] = options()->environment[i].energieInitiale;
             vitesse_initiale[i] = options()->environment[i].vitesseInitiale;
+            temperature_initiale[i] = options()->environment[i].temperatureInitiale;
             info() << " L'environnement " << options()->environment() [i]->name() << " est initialisé à ";
             info() << " Densité = " << densite_initiale[i];
             info() << " Pression = " << pression_initiale[i];
@@ -117,7 +119,7 @@ hydroStartInit()
         
         // Initialises les variables (surcharge l'init d'arcane)
         options()->casModel()->initVar ( m_dimension, densite_initiale, energie_initiale, 
-                                        pression_initiale, vitesse_initiale );
+                                        pression_initiale, temperature_initiale, vitesse_initiale );
     } else {
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) { 
             if (options()->environment[i].initialisationUtilisateur) {

@@ -282,12 +282,16 @@
     <description> Valeur de la pression initiale</description>
    </simple>
     
-    <simple name="energie-initiale" type="real" default="0.">
-    <description> Valeur de la pression initiale</description>
-    </simple>
+   <simple name="energie-initiale" type="real" default="0.">
+   <description> Valeur de la pression initiale</description>
+   </simple>
    
+   <simple name="temperature-initiale" type="real" default="0.">
+   <description> Valeur de la pression initiale</description>
+   </simple>
+
    <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
-    <description> Valeur de la vitesse initiale</description>
+   <description> Valeur de la vitesse initiale</description>
    </simple>
    
    <simple name="initialisation-utilisateur" type="bool" default="false">
