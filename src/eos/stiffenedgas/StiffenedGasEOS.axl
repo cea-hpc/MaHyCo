@@ -159,5 +159,13 @@
 		<simple name="density-damage-thresold" type="real" default="0.">
 			<description>Définition du rapport de densité minimal avant endommagement</description>
 		</simple>
+		<!-- - - - - -  Formulation Equation d'etat - - - - -->
+		 <simple name="formulation" type="string" default="VE"> 
+		     <description>Formulation EOS</description> 
+		 </simple>
+		<!-- - - - - -  Formulation Equation d'etat - - - - -->
+		 <simple name="init-formulation" type="string" default="VP"> 
+		     <description>Formulation EOS</description> 
+		 </simple>
 	</options>
 </service>

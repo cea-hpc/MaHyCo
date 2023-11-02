@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="AutreEOS" version="1.0" type="caseoption">
+<service name="TabuleeEOS" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service AutreEOS</description>
+	<description>Jeu de données du service TabuleeEOS</description>
   <interface name="IEquationOfState" />
 
 	<variables>
@@ -185,7 +185,7 @@
 		     <description>Formulation EOS</description> 
 		 </simple>
 		<!-- - - - - -  Formulation Equation d'etat - - - - -->
-		 <simple name="init-formulation" type="string" default="VE"> 
+		 <simple name="init-formulation" type="string" default="VT"> 
 		     <description>Formulation EOS</description> 
 		 </simple>
 	</options>

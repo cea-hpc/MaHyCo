@@ -19,7 +19,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
 {
   bool impression = true;
   String fichier_string = options()->fichierCoeff();
-  const char* fichier= fichier_string.localstr();;
+  const char* fichier= fichier_string.localstr();
   S_LEC_COEF((char*) fichier);
    
   // initialisation rho_std,ene_std
