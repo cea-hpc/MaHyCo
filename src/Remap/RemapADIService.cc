@@ -30,17 +30,17 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
       // pinfo() << " projection direction " << idir << " et iseuler " << isEuler();
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
-      // info() << " after computeGradPhiFace " << idir;
+      // pinfo() << " after computeGradPhiFace " << idir;
       // calcul des gradients des quantites à projeter aux cellules
       // (avec limiteur ordinaire) 
       // et pour le pente borne, calcul des flux aux faces des cellules
       computeGradPhiCell(idir, nb_vars_to_project, nb_env);
-      // info() << " after  computeGradPhiCell " << idir;
+      // pinfo() << " after  computeGradPhiCell " << idir;
       // calcul de m_phi_face
       // qui contient la valeur reconstruite à l'ordre 1, 2 ou 3 des variables projetees 
       // et qui contient les flux des variables projetees avec l'option pente-borne
       computeUpwindFaceQuantitiesForProjection(idir, nb_vars_to_project, nb_env);
-      // info() << " after  computeUpwindFaceQuantitiesForProjection " << idir;
+      // pinfo() << " after  computeUpwindFaceQuantitiesForProjection " << idir;
       
       
       computeUremap(idir, nb_vars_to_project, nb_env, withDualProjection);
@@ -114,7 +114,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  */
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
   
-  debug() << " Entree dans computeGradPhiFace()";
+  info() << " Entree dans computeGradPhiFace()";
   m_h_cell_lagrange.fill(0.0);
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
@@ -129,8 +129,10 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
       Cell cellf = dir_face.nextCell();
       m_deltax_lagrange[face] = math::dot(
        (m_cell_coord[cellf] -  m_cell_coord[cellb]), m_face_normal[face]); 
-
       for (Integer ivar = 0 ; ivar <  nb_vars_to_project ; ++ivar) {
+          // if (ivar == 6 && cellf.localId()==902) info() << " ivar " << ivar ;
+          // if (ivar == 6 && cellf.localId()==902)  info() << " cellf " << cellf.localId() << " "<< m_phi_lagrange[cellf][ivar];
+          // if (ivar == 6 && cellf.localId()==902)  info() << " cellb " << cellb.localId() << " " << m_phi_lagrange[cellb][ivar];
         m_grad_phi_face[iface][ivar] = (m_phi_lagrange[cellf][ivar] - m_phi_lagrange[cellb][ivar]) 
                                     / m_deltax_lagrange[iface];
       }
@@ -140,6 +142,7 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
+  info() << " fin  dans computeGradPhiFace()";
 }
 /**
  *******************************************************************************
@@ -292,18 +295,21 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
         if (options()->projectionPenteBorne == 0) {
           if (m_face_normal_velocity[face] * m_deltax_lagrange[face] > 0.0) {
               // phi_cb + (dot((x_f - x_cb), face_normal) * grad_phi_cb)   
-            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)                                          
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {                       
               m_phi_face[face][ivar] = m_phi_lagrange[cellb][ivar]
                     + order2 * math::dot((m_face_coord[face] - m_cell_coord[cellb]), 
-                    m_face_normal[face]) * m_grad_phi[cellb][ivar];                                
+                    m_face_normal[face]) * m_grad_phi[cellb][ivar];
+            }
           } else { 
-            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++)   
+            for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
               m_phi_face[face][ivar] = m_phi_lagrange[cellf][ivar] 
                     + order2 * math::dot((m_face_coord[face] - m_cell_coord[cellf]), 
                     m_face_normal[face]) * m_grad_phi[cellf][ivar];
+            }
           }
+          
         } else {         
-          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {   
+          for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {
             m_phi_face[face][ivar] = (m_delta_phi_face_av[cellb][ivar] - m_delta_phi_face_ar[cellf][ivar]);
           }
         }
@@ -509,33 +515,38 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
         else
             m_phi_lagrange[cell][2 * nbmat + imat] = 0.;
         }
-        // Phi-Phase1
-        for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] != 0.)
-            m_phi_lagrange[cell][3 * nbmat + imat] =
-                m_u_lagrange[cell][3 * nbmat + imat] /
-                m_u_lagrange[cell][nbmat + imat];
-        else
-            m_phi_lagrange[cell][3 * nbmat + imat] = 0.;
+        /* pour les phases grandeurs massiques (de 3 à 6) */
+        for (size_t i=3 ; i < 7; i++) 
+            for (int imat = 0; imat < nbmat; imat++) {
+            if (m_u_lagrange[cell][nbmat + imat] != 0.)
+                m_phi_lagrange[cell][i * nbmat + imat] =
+                    m_u_lagrange[cell][i * nbmat + imat] /
+                    m_u_lagrange[cell][nbmat + imat];
+            else
+                m_phi_lagrange[cell][i * nbmat + imat] = 0.;
         }
-        // Phi-Phase2
-        for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] != 0.)
-            m_phi_lagrange[cell][4 * nbmat + imat] =
-                m_u_lagrange[cell][4 * nbmat + imat] /
-                m_u_lagrange[cell][nbmat + imat];
-        else
-            m_phi_lagrange[cell][4 * nbmat + imat] = 0.;
+        /* pour la pseudo (7) : pas de filtre */
+            
+        /* pour les variables elasto (volumes) (de 8 à 12) */
+        for (size_t i=8 ; i < 13; i++) 
+            for (int imat = 0; imat < nbmat; imat++) {
+            if (m_u_lagrange[cell][nbmat + imat] != 0.)
+                m_phi_lagrange[cell][i * nbmat + imat] =
+                    m_u_lagrange[cell][i * nbmat + imat] /
+                    m_u_lagrange[cell][nbmat + imat];
+            else
+                m_phi_lagrange[cell][i * nbmat + imat] = 0.;
         }
-        // Phi-Phase3
-        for (int imat = 0; imat < nbmat; imat++) {
-        if (m_u_lagrange[cell][nbmat + imat] != 0.)
-            m_phi_lagrange[cell][5 * nbmat + imat] =
-                m_u_lagrange[cell][5 * nbmat + imat] /
-                m_u_lagrange[cell][nbmat + imat];
-        else
-            m_phi_lagrange[cell][5 * nbmat + imat] = 0.;
-        }
+        /* pour les phases grandeurs massiques de l'elasto (13 et 14)
+        for (size_t i=13 ; i < 15; i++) 
+            for (int imat = 0; imat < nbmat; imat++) {
+            if (m_u_lagrange[cell][nbmat + imat] != 0.)
+                m_phi_lagrange[cell][i * nbmat + imat] =
+                    m_u_lagrange[cell][i * nbmat + imat] /
+                    m_u_lagrange[cell][nbmat + imat];
+            else
+                m_phi_lagrange[cell][i * nbmat + imat] = 0.;
+        } */
     } else {
         // somme_volume doit etre égale à m_cell_volume[cell]
       for (Integer ivar = 0; ivar < nb_vars_to_project; ivar++) {

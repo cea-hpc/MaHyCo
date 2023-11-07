@@ -207,10 +207,10 @@
         dim="0" material="true" dump="true" need-sync="true" />
   <!-- Vitesse de déformation Plastic -->
   <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
-        dim="0" material="false" dump="true" need-sync="true" />
+        dim="0" material="true" dump="true" need-sync="true" />
   <!-- Déformation Plastic -->
   <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
-        dim="0" material="false" dump="true" need-sync="true" />
+        dim="0" material="true" dump="true" need-sync="true" />
   <!-- Norme du Tenseur (déviateur) des contraintes-->
   <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />

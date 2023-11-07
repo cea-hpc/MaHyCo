@@ -184,27 +184,27 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       internal_energy_env_nplus1[index_env] = 0.;
       
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_env + index_env] != 0.) {
-        internal_energy_env_nplus1[index_env] =
+          internal_energy_env_nplus1[index_env] =
           m_u_lagrange[cell][2 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
-         /* indice de phase 
+         /* indice de phase */
           m_frac_phase1[ev] = m_u_lagrange[cell][3 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
           m_frac_phase2[ev] = m_u_lagrange[cell][4 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
-          m_frac_phase3[ev] = m_u_lagrange[cell][5 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
-          Déviateurs des contraintes
+          m_frac_phase3[ev] = m_u_lagrange[cell][5 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];  
+          m_frac_phase4[ev] = m_u_lagrange[cell][6 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
+          /* Déviateurs des contraintes */
           m_strain_tensor[ev].x.x = m_u_lagrange[cell][8 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
           m_strain_tensor[ev].y.y = m_u_lagrange[cell][9 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
           m_strain_tensor[ev].x.y = m_u_lagrange[cell][10 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
           m_strain_tensor[ev].y.z = m_u_lagrange[cell][11 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
           m_strain_tensor[ev].z.x = m_u_lagrange[cell][12 * nb_env + index_env] / m_u_lagrange[cell][index_env];  
-          Symétrie et trace nulle
+          /* Symétrie et trace nulle */
           m_strain_tensor[ev].z.z = - (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y);
           m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
           m_strain_tensor[ev].z.y = m_strain_tensor[ev].y.z;
           m_strain_tensor[ev].x.z = m_strain_tensor[ev].z.x;
-          Variables de Déformations plastiques 
+          /* Variables de Déformations plastiques */
           m_plastic_deformation_velocity[ev] =  m_u_lagrange[cell][13 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
-          m_plastic_deformation[ev] =  m_u_lagrange[cell][14 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
-          */
+          m_plastic_deformation[ev] =  m_u_lagrange[cell][14 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
       }
     }
     // mise à jour des valeurs moyennes aux allCells
