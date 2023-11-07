@@ -336,7 +336,9 @@
     <simple name="valeur-source-energie" type="real" default="0.">
         <description>Définition de la constante adiabatique</description>
     </simple>
-    
+    <simple name="origine" type="real3" default="0. 0. 0.">
+        <description>Valeur de l'origine de la boite de dépot </description>
+    </simple>
     <simple name="dependanceX" type="real" default="0.">
         <description>Valeur de la dependance à l'absisse </description>
     </simple>
@@ -352,7 +354,7 @@
     <simple name="cutoffY" type="real" default="1000.">
         <description>Valeur du cutoff en ordonée</description>
     </simple> 
-        <simple name="cutoffZ" type="real" default="1000.">
+    <simple name="cutoffZ" type="real" default="1000.">
         <description>Valeur du cutoff en hauteur</description>
     </simple>
     <simple name="dependanceT" type="real" default="0.">

@@ -114,7 +114,7 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
  */
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
   
-  info() << " Entree dans computeGradPhiFace()";
+  debug() << " Entree dans computeGradPhiFace()";
   m_h_cell_lagrange.fill(0.0);
   
   FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
@@ -142,7 +142,6 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
   }
   m_grad_phi_face.synchronize();
   m_h_cell_lagrange.synchronize();
-  info() << " fin  dans computeGradPhiFace()";
 }
 /**
  *******************************************************************************

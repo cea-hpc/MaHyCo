@@ -1267,6 +1267,7 @@ void MahycoModule::DepotEnergy(IMeshEnvironment* env)
     // energyDepot EnDepot = options()->environment[env->id()]->energyDepot[0];
     Real value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
     TypesMahyco::eEnergyDepot type = options()->environment[env->id()]->energyDepot[0]->type();
+    Real3 origine = options()->environment[env->id()]->energyDepot[0]->origine();
     int i=0;
     if (type == TypesMahyco::DepotConstant) {
         ENUMERATE_ENVCELL ( ienvcell,env ) {
@@ -1275,8 +1276,8 @@ void MahycoModule::DepotEnergy(IMeshEnvironment* env)
           value = options()->environment[env->id()]->energyDepot[0]->valeurSourceEnergie();
           if (m_global_time() < options()->environment[env->id()]->energyDepot[0]->Tdebut ) value = 0.;
           if (m_global_time() > options()->environment[env->id()]->energyDepot[0]->Tfin ) value = 0.;
-          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
-          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          if (math::abs(m_cell_coord[cell].x - origine.x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y - origine.y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
           m_internal_energy[ev] += value * m_global_deltat();
         }
     } else if (type == TypesMahyco::DepotLineaire) {
@@ -1292,8 +1293,8 @@ void MahycoModule::DepotEnergy(IMeshEnvironment* env)
           value += options()->environment[env->id()]->energyDepot[0]->dependanceZ * m_cell_coord[cell].z;
           // E + DE/DT * T 
           value += options()->environment[env->id()]->energyDepot[0]->dependanceT * m_global_time();
-          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
-          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          if (math::abs(m_cell_coord[cell].x - origine.x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y - origine.y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
           m_internal_energy[ev] += value * m_global_deltat();
         }
     }  else if (type == TypesMahyco::DepotSuperGaussian) {
@@ -1308,8 +1309,8 @@ void MahycoModule::DepotEnergy(IMeshEnvironment* env)
           value *= math::exp ( -math::pow ( ay, power) );
           Real ax= m_cell_coord[cell].x * options()->environment[env->id()]->energyDepot[0]->dependanceX;
           value *= math::exp ( -math::pow ( ax, power) );
-          if (math::abs(m_cell_coord[cell].x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
-          if (math::abs(m_cell_coord[cell].y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
+          if (math::abs(m_cell_coord[cell].x - origine.x)  > options()->environment[env->id()]->energyDepot[0]->cutoffX) value=0.;
+          if (math::abs(m_cell_coord[cell].y - origine.y)  > options()->environment[env->id()]->energyDepot[0]->cutoffY) value=0.;
           m_internal_energy[ev] += value * m_global_deltat();
 
         }
