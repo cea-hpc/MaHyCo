@@ -139,6 +139,15 @@
     <!-- 	CELL CQS	 -->
     <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" /> 
+    <!-- Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />   
+    <!-- Vitesse de déformation Plastic -->
+    <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+    <!-- Déformation Plastic -->
+    <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
 </variables>
 
 <options>

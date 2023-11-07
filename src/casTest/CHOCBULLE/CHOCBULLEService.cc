@@ -9,7 +9,7 @@ void CHOCBULLEService::initMatMono(Integer dim)  {
 }
 
 void CHOCBULLEService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
     
   /* Pas d'implémentation monoMat */
 }
@@ -39,7 +39,7 @@ void CHOCBULLEService::initMat(Integer dim)  {
 }
 
 void CHOCBULLEService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
  
  // mise à zero puis initialisation des fractions de masses et volumes
  m_mass_fraction.fill(0.0);

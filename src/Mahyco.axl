@@ -207,10 +207,10 @@
         dim="0" material="true" dump="true" need-sync="true" />
   <!-- Vitesse de déformation Plastic -->
   <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
-        dim="0" material="false" dump="true" need-sync="true" />
+        dim="0" material="true" dump="true" need-sync="true" />
   <!-- Déformation Plastic -->
   <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
-        dim="0" material="false" dump="true" need-sync="true" />
+        dim="0" material="true" dump="true" need-sync="true" />
   <!-- Norme du Tenseur (déviateur) des contraintes-->
   <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
@@ -282,12 +282,16 @@
     <description> Valeur de la pression initiale</description>
    </simple>
     
-    <simple name="energie-initiale" type="real" default="0.">
-    <description> Valeur de la pression initiale</description>
-    </simple>
+   <simple name="energie-initiale" type="real" default="0.">
+   <description> Valeur de la pression initiale</description>
+   </simple>
    
+   <simple name="temperature-initiale" type="real" default="0.">
+   <description> Valeur de la pression initiale</description>
+   </simple>
+
    <simple name="vitesse-initiale" type="real3" default="0. 0. 0.">
-    <description> Valeur de la vitesse initiale</description>
+   <description> Valeur de la vitesse initiale</description>
    </simple>
    
    <simple name="initialisation-utilisateur" type="bool" default="false">

@@ -52,11 +52,13 @@ void MahycoModule::hydroStartInitEnvAndMat()
   Integer nb_cell = allCells().size();
   Integer nb_env = m_block1->nbEnvironment();
   m_nb_env = nb_env;
-  m_nb_vars_to_project = 7 * nb_env + 3 + 1 + 1 ;
+  // m_nb_vars_to_project = nbmatmax *
+  // (0-volumes, 1-masses, 2-energies internes, 
+  //  -3,4,5,6- phases, 7-pseudo, 
+  // -8,9,10,11,12- deviateurs , -13,14-deformations plastiques) 
+  m_nb_vars_to_project = 15 * nb_env ;
   m_sens_projection = 0;
-  // (volumes, masses, energies internes, phases 1,2,3) * nbmatmax
-  // + vitesses + energie cinétique + pseudo
-  //
+  
   // on redimensionne les tableaux de la projection en fonction
   // du nombre total d'environnements
   m_is_dir_face.resize(3); // dimension 3

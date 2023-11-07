@@ -53,7 +53,7 @@ void RIDERService::initMat(Integer dim)  {
   }
 }
 void RIDERService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
     
   Real3 Xb;
   if (options()->casTest < MonoRiderRotation) 
@@ -131,10 +131,10 @@ void RIDERService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energi
   }
 }
 void RIDERService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
 
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
-    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
+    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);
     return;
   } 
   Real3 Xb;

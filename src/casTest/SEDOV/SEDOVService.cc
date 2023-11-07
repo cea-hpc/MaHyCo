@@ -37,7 +37,7 @@ void SEDOVService::initMat(Integer dim)  {
   }
 } 
 void SEDOVService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
     
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = densite_initiale[0];
@@ -81,11 +81,11 @@ void SEDOVService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energi
   }
 }
 void SEDOVService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  { 
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  { 
   // pour l'instant meme fonction  que la version MonoMat
 
   if (options()->casTest == Sedov) {
-    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
+    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);
     return;
   }
 

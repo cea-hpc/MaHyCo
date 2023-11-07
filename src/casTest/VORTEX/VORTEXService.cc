@@ -16,7 +16,7 @@ void VORTEXService::initMat(Integer dim)  {
   } 
 }
 void VORTEXService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
     
   Real3 Xb = {5.0, 0.0, 0.};
   Real beta = 5.;
@@ -55,10 +55,10 @@ void VORTEXService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energ
   }
 }
 void VORTEXService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                   Real3x3 vitesse_initiale)  {
+                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
 
   if (options()->casTest == Vortex)  {
-    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, vitesse_initiale);
+    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);
     return;
   } 
  
