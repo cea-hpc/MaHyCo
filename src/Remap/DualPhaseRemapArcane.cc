@@ -5,6 +5,8 @@
 
 #include "cartesian/FactCartDirectionMng.h"
 
+#include "arcane/cea/FaceDirectionMng.h"
+
 /**
  *******************************************************************************
  * \file computeDualUremap()
@@ -28,6 +30,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   
   auto queue = m_acc_env->newQueue();
   Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   
   if (options()->ordreProjection > 1) {
     
@@ -136,9 +139,9 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   {
     auto command_f = makeCommand(queue);
     
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.allFaces();
+    //auto cart_fdm = fact_cart.faceDirection(idir);
+    //auto f2cid_stm = cart_fdm.face2CellIdStencil();
+    //auto face_group = cart_fdm.allFaces();
     
     auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
     
@@ -149,13 +152,18 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
     Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
     
-    command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    //command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+    command_f.addKernelName("fcontrib") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.allFaces()) {
+      //auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
       
       // Acces mailles gauche/droite 
-      auto f2cid = f2cid_stm.face(fid, idx);
-      CellLocalId backCid(f2cid.previousCell());
-      CellLocalId frontCid(f2cid.nextCell());
+      //auto f2cid = f2cid_stm.face(fid, idx);
+      //CellLocalId backCid(f2cid.previousCell());
+      //CellLocalId frontCid(f2cid.nextCell());
+
+      DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+      CellLocalId backCid  = dir_face.previousCell();
+      CellLocalId frontCid = dir_face.nextCell();
       
       // Si face au bord gauche, on ne prend pas en compte la backCell
       if (!ItemId::null(backCid)) {
