@@ -6,6 +6,7 @@
 #include "cartesian/FactCartDirectionMng.h"
 
 #include "arcane/cea/FaceDirectionMng.h"
+#include "arcane/cea/NodeDirectionMng.h"
 
 /**
  *******************************************************************************
@@ -31,6 +32,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   auto queue = m_acc_env->newQueue();
   Cartesian::FactCartDirectionMng fact_cart(mesh());
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
+  Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
   if (options()->ordreProjection > 1) {
     
@@ -50,12 +52,12 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
       Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
-        DirNode dir_node(ndm[inode]);
+        Cartesian::DirNode dir_node(ndm[inode]);
         Node backnode = dir_node.previous();
-        DirNode dir_backnode(ndm[backnode]);
+        Cartesian::DirNode dir_backnode(ndm[backnode]);
         Node backbacknode = dir_backnode.previous();
         Node frontnode = dir_node.next();
-        DirNode dir_frontnode(ndm[frontnode]);
+        Cartesian::DirNode dir_frontnode(ndm[frontnode]);
         Node frontfrontnode = dir_frontnode.next();
         
         computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
@@ -375,10 +377,10 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     auto command = makeCommand(queue);
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto in_back_flux_mass  = ax::viewIn(command, m_back_flux_mass );
     auto in_front_flux_mass = ax::viewIn(command, m_front_flux_mass);
@@ -389,14 +391,19 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
       
       // Acces noeuds gauche/droite qui existent forcement
-      auto n2nid = n2nid_stm.stencilNode<1>(nid, idx);
+      //auto n2nid = n2nid_stm.stencilNode<1>(nid, idx);
       
-      NodeLocalId backNid(n2nid.previousId()); // back node
-      NodeLocalId frontNid(n2nid.nextId()); // front node
+      //NodeLocalId backNid(n2nid.previousId()); // back node
+      //NodeLocalId frontNid(n2nid.nextId()); // front node
+      
+      DirNodeLocalId dir_node(ndm.dirNodeId(nid));
+      NodeLocalId backNid  = dir_node.previous();
+      NodeLocalId frontNid = dir_node.next();
       
       // flux de masse
       inout_u_dual_lagrange[nid][3] += in_back_flux_mass[nid] - in_front_flux_mass[nid];
@@ -516,16 +523,17 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     Real thresold = m_arithmetic_thresold;
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto inout_u_dual_lagrange   = ax::viewInOut(command, m_u_dual_lagrange  );
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
       // filtre des valeurs abherentes
       if (abs(inout_u_dual_lagrange[nid][0]) < thresold) inout_u_dual_lagrange[nid][0]=0.;
       if (abs(inout_u_dual_lagrange[nid][1]) < thresold) inout_u_dual_lagrange[nid][1]=0.;
