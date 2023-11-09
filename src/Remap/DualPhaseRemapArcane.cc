@@ -740,32 +740,40 @@ template<typename LimType>
 void RemapArcaneService::
 computeDualGradPhi_LimC(Integer idir) {
   PROF_ACC_BEGIN(__FUNCTION__);
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  //Cartesian::FactCartDirectionMng fact_cart(mesh());
+  
+  Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
   auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto in_phi_dual_lagrange = ax::viewIn(command, m_phi_dual_lagrange);
     auto in_node_coord        = ax::viewIn(command, m_node_coord);
     
     auto out_dual_grad_phi = ax::viewOut(command, m_dual_grad_phi);
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
       
       // Acces noeuds gauche/droite qui existent forcement
-      auto n2nid = n2nid_stm.stencilNode<2>(nid, idx);
+      //auto n2nid = n2nid_stm.stencilNode<2>(nid, idx);
       
-      NodeLocalId backNid(n2nid.previousId()); // back node
-      NodeLocalId frontNid(n2nid.nextId()); // front node
-      NodeLocalId backbackNid(n2nid.prev_previousId()); // back back node
-      NodeLocalId frontfrontNid(n2nid.next_nextId()); // front front node
+      //NodeLocalId backNid(n2nid.previousId()); // back node
+      //NodeLocalId frontNid(n2nid.nextId()); // front node
+      // TODO : Pk backbackNid et frontfrontNid si on ne s'en sert pas ? Voir code CPU après 
+      //NodeLocalId backbackNid(n2nid.prev_previousId()); // back back node
+      //NodeLocalId frontfrontNid(n2nid.next_nextId()); // front front node
+      
+      DirNodeLocalId dir_node(ndm.dirNodeId(nid));
+      NodeLocalId backNid  = dir_node.previous();
+      NodeLocalId frontNid = dir_node.next();
       
       Real3 grad_front(0. , 0. , 0.);
       Real3 grad_back (0. , 0. , 0.);
@@ -843,6 +851,7 @@ computeDualGradPhi_LimC(Integer idir) {
 //     (m_node_coord[node][idir] - m_node_coord[backnode][idir]);
 //     
 //     // largeurs des mailles duales
+       // TODO : Pk backbackNid et frontfrontNid si on ne s'en sert pas ? De meme pour hmoins, h0, hplus
 //     Real hmoins, h0, hplus;
 //     h0 = 0.5 * (m_node_coord[frontnode][idir]- m_node_coord[backnode][idir]);
 //     if (backbacknode.localId() == -1) {
