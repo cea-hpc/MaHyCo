@@ -62,8 +62,7 @@ void TabuleeEOSService::initEOS(IMeshEnvironment* env)
             
             d0 = m_density[ev] ;     
             t0 = m_temperature[ev] ;
-            
-            
+
             calculPetE( d0,  t0,  p0,  e0,  interp );
             
             m_pressure[ev] = p0 ;
