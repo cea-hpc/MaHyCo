@@ -1,22 +1,25 @@
 # Services communs pour les accélérateurs
 add_library(accenv
-        AcceleratorUtils.h
-        AccEnv.axl
-        AccEnvDefault.axl
-        AccEnvDefaultOptions.h
-        AccEnvDefaultService.cc
-        AccEnvDefaultService.h
-        AccEnvModule.cc
-        AccEnvModule.h
-        BufAddrMng.h
-        CMakeLists.txt
-        IAccEnv.h
-        MultiEnvMng.cc
-        MultiEnvMng.h
-        MultiEnvUtils.h
-        ProfAcc.cc
-        ProfAcc.h
-        SingletonIAccEnv.h)
+    AcceleratorUtils.h
+    AccEnv.axl
+    AccEnvDefault.axl
+    AccEnvDefaultOptions.h
+    AccEnvDefaultService.cc
+    AccEnvDefaultService.h
+    AccEnvModule.cc
+    AccEnvModule.h
+    BufAddrMng.h
+    IAccEnv.h
+    IncidentHandler.h
+    IndexSelecter.h
+    MultiEnvMng.cc
+    MultiEnvMng.h
+    MultiEnvUtils.h
+    ProfAcc.cc
+    ProfAcc.h
+    SingletonIAccEnv.h
+    SortSmall.h
+    UtilsAtomic.h)
 
 target_include_directories(accenv PRIVATE ..)
 target_link_libraries(accenv PUBLIC Arcane::arcane_core)

@@ -21,6 +21,7 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
  public:
   void initAcc() override;
+  void initPAcc() override; //! Initialise l'API pré-Accélérateur
 
   ax::Runner& runner() override { return *m_runner_ptr; }
   ax::RunQueue newQueue() override { return makeQueue(*m_runner_ptr); }
@@ -59,6 +60,9 @@ class AccEnvDefaultService : public ArcaneAccEnvDefaultObject
 
   //! Pour "synchroniser" les items fantômes
   VarSyncMng* m_vsync_mng=nullptr;
+
+  //! Par défaut, désactive la pré-API Accélérateur
+  bool m_pacc_needed = false;
 };
 
 #endif

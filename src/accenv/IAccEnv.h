@@ -17,6 +17,7 @@ class IAccEnv {
 
  public:
   virtual void initAcc() = 0;
+  virtual void initPAcc() = 0;
 
   virtual ax::Runner& runner() = 0;
   virtual ax::RunQueue newQueue() = 0;

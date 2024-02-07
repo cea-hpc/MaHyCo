@@ -12,10 +12,12 @@ bool is_comm_device_aware();
 /*---------------------------------------------------------------------------*/
 /* Gère les synchronisations des mailles fantômes par Message Passing        */
 /*---------------------------------------------------------------------------*/
-VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_adv) :
+VarSyncMng::VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_adv, 
+  bool evlist_per_env_needed) :
   m_mesh        (mesh),
   m_acc_mem_adv (acc_mem_adv),
-  m_runner      (runner)
+  m_runner      (runner),
+  m_evlist_per_env_needed (evlist_per_env_needed)
 {
   m_is_device_aware = is_comm_device_aware();
 
@@ -88,7 +90,7 @@ void VarSyncMng::initSyncMultiEnv(IMeshMaterialMng* mesh_material_mng) {
   if (!m_sync_evi) {
     m_sync_evi = new SyncEnvIndexes(
         MatVarSpace::MaterialAndEnvironment, m_mesh_material_mng,
-        m_neigh_ranks, m_sync_cells, m_acc_mem_adv);
+        m_neigh_ranks, m_sync_cells, m_acc_mem_adv, m_evlist_per_env_needed);
   }
 
   // Pour les traitements multi-env "intérieurs" ou de "bord"

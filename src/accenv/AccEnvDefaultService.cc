@@ -64,6 +64,15 @@ initAcc()
 }
 
 /*---------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------*/
+
+void AccEnvDefaultService::
+initPAcc()
+{
+  m_pacc_needed = true;
+}
+
+/*---------------------------------------------------------------------------*/
 /* Référence sur une queue asynchrone créée avec un niveau de priorité       */
 /*---------------------------------------------------------------------------*/
 Ref<ax::RunQueue> AccEnvDefaultService::
@@ -134,7 +143,7 @@ initMesh(IMesh* mesh)
   m_acc_mem_adv->setReadMostly(allFaces().view().localIds());
   m_acc_mem_adv->setReadMostly(ownFaces().view().localIds());
 
-  m_vsync_mng = new VarSyncMng(mesh, runner(), m_acc_mem_adv);
+  m_vsync_mng = new VarSyncMng(mesh, runner(), m_acc_mem_adv, m_pacc_needed);
   m_vsync_mng->setDefaultVarSyncVersion(options()->getVarSyncVersion());
 }
 
@@ -148,7 +157,7 @@ createMultiEnvMng(IMeshMaterialMng* mesh_material_mng)
   {
     throw FatalErrorException(A_FUNCINFO, "Une instance de MultiEnvMng existe déjà");
   }
-  m_menv_mng = new MultiEnvMng(mesh_material_mng, this->runner(), m_vsync_mng, m_acc_mem_adv);
+  m_menv_mng = new MultiEnvMng(mesh_material_mng, this->runner(), m_vsync_mng, m_acc_mem_adv, m_pacc_needed);
 }
 
 /*---------------------------------------------------------------------------*/

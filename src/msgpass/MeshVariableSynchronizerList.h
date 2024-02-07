@@ -65,8 +65,7 @@ template<typename DataType>
 class CellMatVarScalSync : public IMeshVarSync {
  public:
   CellMatVarScalSync(CellMaterialVariableScalarRef<DataType> var,
-      SyncEnvIndexes* sync_evi,
-      BufAddrMng* bam);
+      SyncEnvIndexes* sync_evi);
 
   virtual ~CellMatVarScalSync();
 
@@ -95,7 +94,6 @@ class CellMatVarScalSync : public IMeshVarSync {
 
  protected:
   CellMaterialVariableScalarRef<DataType> m_var;  //! Variable to synchronize
-  MultiEnvVarHD<DataType> m_menv_var;  //! View memories on multi-mat data in HOST/DEVICE
   SyncEnvIndexes* m_sync_evi=nullptr;  //! EnvVarIndex(es) to synchronize
 };
 
