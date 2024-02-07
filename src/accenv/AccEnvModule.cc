@@ -86,6 +86,10 @@ initMultiEnv()
   IMeshMaterialMng* mesh_material_mng = IMeshMaterialMng::getReference(defaultMesh());
   m_acc_env->createMultiEnvMng(mesh_material_mng);
 
+  // active la fonctionnalité des allenvcell pour les runcommand
+  // également possible de le faire via la variable d'environnement ARCANE_ALLENVCELL_FOR_RUNCOMMAND
+  mesh_material_mng->enableCellToAllEnvCellForRunCommand(true);
+
   prof_acc_end("AccEnvModule::initMultiEnv");
 }
 
