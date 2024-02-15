@@ -8,7 +8,7 @@
 
 /** Constructeur de la classe */
 RemapADIService::RemapADIService(const ServiceBuildInfo & sbi)
-  : ArcaneRemapADIObject(sbi) {
+  : ArcaneRemapADIObject(sbi), m_idx_selecter(subDomain()) {
   m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
 }
 

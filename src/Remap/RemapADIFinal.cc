@@ -81,12 +81,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     
   }
 #else
-  ParallelLoopOptions mtopt;
-  mtopt.setPartitioner(ParallelLoopOptions::Partitioner::Static);
-
-  Integer max_nb_task = TaskFactory::nbAllowedThread();
-  UniqueArray< Int32UniqueArray > cid_to_add_per_task(max_nb_task);
-  UniqueArray< Int32UniqueArray > cid_to_rm_per_task(max_nb_task);
+  m_idx_selecter.resize(allCells().size()); // pour sélectionner les mailles à ajouter/supprimer
 
   // Par environnement, on détermine si une maille :
   //  - doit être ajouté à l'env : +1
@@ -94,11 +89,11 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   //  - ne change pas de status
   const Real threshold = options()->threshold;
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
-  auto queue_arm = m_acc_env->newQueue();
+  auto rqueue_arm = m_acc_env->refQueueAsync();
 
   for (Integer index_env=0; index_env < nb_env ; index_env++) 
   { 
-    auto command = makeCommand(queue_arm);
+    auto command = makeCommand(rqueue_arm.get());
     
     auto in_euler_volume = ax::viewIn(command, m_euler_volume);
     auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
@@ -143,72 +138,39 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       out_cell_status[cid] = cell_status;
     };
 
-    // On revient sur CPU pour lire m_cell_status et créer les listes de mailles à ajouter/supprimer
-    // On multithread le traitement
     IMeshEnvironment* env = envs[index_env];
 
-    arcaneParallelForeach(allCells(), mtopt, [&](CellVectorView cells) {
-      // Chaque tache met à jour ses listes spécifiques
-      Integer task_id = TaskFactory::currentTaskIndex();
-      Int32UniqueArray& cid_to_add    = cid_to_add_per_task[task_id];
-      Int32UniqueArray& cid_to_remove = cid_to_rm_per_task [task_id];
-  
-      ENUMERATE_CELL(icell, cells){
-        Integer cell_status = m_cell_status[icell];
-        if (cell_status < 0) 
-        {
-          cid_to_remove.add(icell.localId());
-          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
-        } 
-        else if (cell_status > 0) 
-        {
-          cid_to_add.add(icell.localId());
-          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
-            << " ajoutée dans l'env apres normalisation" << env->name();
-          debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
-          /* debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell]; */
-          debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
-        }
-      }
-    });
+    // On utilise un Span sur m_cell_status plutôt qu'une vue classique sur VariableCellInteger
+    // car on ne connait pas les RunCommand pour l'évaluation des prédicats d'ajout/suppression
+    Span<const Integer> in_cell_status(m_cell_status.asArray());
 
-    // En séquentiel, on va ajouter les listes de toutes les taches
-    // On précalcule les tailles pour réduire le nb d'alloc dynamiques
-    Integer ncells_to_add=0, ncells_to_rm=0; 
-    for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-      ncells_to_add += cid_to_add_per_task[itask].size();
-      ncells_to_rm  += cid_to_rm_per_task [itask].size();
-    }
-    if (ncells_to_add) {
-      Int32UniqueArray cells_to_add;
-      cells_to_add.reserve(ncells_to_add); // but : ne faire qu'une allocation
-      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-        cells_to_add.addRange(cid_to_add_per_task[itask]);
-        cid_to_add_per_task[itask].clear(); // Nettoyage pour le prochain environnement
-      }
-      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
-      std::sort(cells_to_add.data(), cells_to_add.data()+cells_to_add.size());
+    // Construire la liste des mailles à ajouter dans l'environnement index_env
+    ConstArrayView<Int32> cid_to_add_h = m_idx_selecter.syncSelectIf(rqueue_arm,
+	[=] ARCCORE_HOST_DEVICE (Int32 cid) -> bool {
+	  return (in_cell_status[cid]>0);  // critère d'ajout d'une maille
+	},
+	/*host_view=*/true);
 
+    if (cid_to_add_h.size()) {
       // On ajoute réellement les items à l'environnement
       CellGroup env_cells = env->cells();
-      info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
-      env_cells.addItems(cells_to_add);
+      info() << "ADD_CELLS to env " << env->name() << " n=" << cid_to_add_h.size(); 
+      env_cells.addItems(cid_to_add_h);
       to_add_rm_cells = true;
     }
-    if (ncells_to_rm) {
-      Int32UniqueArray cells_to_remove;
-      cells_to_remove.reserve(ncells_to_rm); // but : ne faire qu'une allocation
-      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-        cells_to_remove.addRange(cid_to_rm_per_task[itask]);
-        cid_to_rm_per_task[itask].clear(); // Nettoyage pour le prochain environnement
-      }
-      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
-      std::sort(cells_to_remove.data(), cells_to_remove.data()+cells_to_remove.size());
 
+    // Construire la liste des mailles à supprimer dans l'environnement index_env
+    ConstArrayView<Int32> cid_to_remove_h = m_idx_selecter.syncSelectIf(rqueue_arm,
+	[=] ARCCORE_HOST_DEVICE (Int32 cid) -> bool {
+	  return (in_cell_status[cid]<0);  // critère de suppression d'une maille
+	},
+	/*host_view=*/true);
+
+    if (cid_to_remove_h.size()) {
       // On retire réellement les items de l'environnement
       CellGroup env_cells = env->cells();
-      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
-      env_cells.removeItems(cells_to_remove);
+      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cid_to_remove_h.size();
+      env_cells.removeItems(cid_to_remove_h);
       to_add_rm_cells = true;
     }
   }
