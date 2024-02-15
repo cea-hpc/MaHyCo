@@ -26,7 +26,7 @@ using namespace Arcane::Materials;
 /*---------------------------------------------------------------------------*/
 class VarSyncMng {
  public:
-  VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_adv);
+  VarSyncMng(IMesh* mesh, ax::Runner& runner, AccMemAdviser* acc_mem_adv, bool evlist_per_env_needed);
   virtual ~VarSyncMng();
 
   //! Initialise les futures synchros multi-mat
@@ -177,6 +177,7 @@ class VarSyncMng {
 
   ax::Runner& m_runner;
 
+  bool m_evlist_per_env_needed=false;  //! Création de liste de EnvCell par environnement dans SyncEnvIndexes
   bool m_is_device_aware=false; //! Vrai si l'on peut effectuer les comms avec adresses sur GPU
 
   IParallelMng* m_pm;  //! pour effectuer les send/receive proprement dit

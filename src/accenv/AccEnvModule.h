@@ -24,6 +24,9 @@ class AccEnvModule : public ArcaneAccEnvObject
   //! Initialise les environnements pour les accélérateurs
   void accBuild() override;
 
+  //! Initialise les environnements avec l'API pré-Accélérateur
+  void paccBuild() override;
+
   //! Initialise des informations liées au maillage pour les accélérateurs
   void initMesh() override;
 

@@ -11,35 +11,25 @@ using namespace Arcane;
 using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
-/* Manager pour la descritpion du multi-environnement sur le maillage        */
+/* Manager pour des varables au maille pour représenter le multi-environnement */
 /*---------------------------------------------------------------------------*/
-class MultiEnvMng {
+class MultiEnvVariableMng
+{
  public:
-  MultiEnvMng(IMeshMaterialMng* mm, ax::Runner& runner, VarSyncMng* vsync_mng, AccMemAdviser* acc_mem_adv);
-
-  virtual ~MultiEnvMng();
+  MultiEnvVariableMng(IMeshMaterialMng* mm, ax::Runner& runner, AccMemAdviser* acc_mem_adv);
+  virtual ~MultiEnvVariableMng();
 
   //! Calcul des cell_id globaux : permet d'associer à chaque maille impure (mixte)
   // l'identifiant de la maille globale
   void computeMultiEnvGlobalCellId();
 
-  void checkMultiEnvGlobalCellId();
+  void asyncCheckMultiEnvGlobalCellId([[maybe_unused]] ax::Ref<ax::RunQueue> async_queue);
 
-  //! Préparer les données multi-environnement pour l'accélérateur
-  // A appeler quand la carte des environnements change
-  void updateMultiEnv(VarSyncMng* vsync_mng);
-
-  //! Remplit les tableaux IsActiveCell et IsActiveNode à partir des groupes d'items actifs
-  void setActiveItemsFromGroups(CellGroup active_cells, NodeGroup active_nodes);
-  
   //! Vue sur le stockage pour utilisation en lecture sur GPU
   MultiEnvCellViewIn viewIn(ax::RunCommand& command) {
     return MultiEnvCellViewIn(command, m_max_nb_env, m_nb_env, m_l_env_arrays_idx, m_l_env_values_idx, m_env_id);
   }
   
-  //! les queues pour traiter les environnements de façon asynchrone
-  MultiAsyncRunQueue* multiEnvQueue() { return m_menv_queue; }
-
   //! Nb d'environnement par maille
   VariableCellInteger nbEnv() {
     return m_nb_env;
@@ -55,26 +45,15 @@ class MultiEnvMng {
     return m_global_cell;
   }
 
-  //! Indique si la maille est active (= non 100% vide)
-  VariableCellBool isActiveCell() {
-    return m_is_active_cell;
-  }
-
-  //! Indique si le noeud est actif (= dont au moins une de ces mailles est active)
-  VariableNodeBool isActiveNode() {
-    return m_is_active_node;
-  }
-
  public:
 
-  //! Remplissage
-  void buildStorage(ax::Runner& runner, Materials::MaterialVariableCellInteger& v_global_cell);
+  //! Remplissage de façon asynchrone
+  void asyncBuildStorage(ax::Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell);
 
   //! Verification
-  void checkStorage(Materials::MaterialVariableCellInteger& v_global_cell);
+  void asyncCheckStorage([[maybe_unused]] Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell);
 
- protected:
-
+ private:
   IMeshMaterialMng* m_mesh_material_mng=nullptr;
   ax::Runner& m_runner;
   AccMemAdviser* m_acc_mem_adv = nullptr;
@@ -87,6 +66,70 @@ class MultiEnvMng {
   VariableCellArrayInteger m_l_env_values_idx;
   VariableCellInteger m_env_id;  //! Si maille pure: identifiant de l'environnement de la maille, si maille mixte: opposé du nombre d'environnements+1, si maille vide: -1
   MaterialVariableCellInteger m_global_cell;  //! m_global_cell[envcell] : local id de la maille globale
+};
+
+/*---------------------------------------------------------------------------*/
+/* Manager pour la description du multi-environnement sur le maillage        */
+/*---------------------------------------------------------------------------*/
+class MultiEnvMng {
+ public:
+  MultiEnvMng(IMeshMaterialMng* mm, ax::Runner& runner, VarSyncMng* vsync_mng, AccMemAdviser* acc_mem_adv, bool menv_var_mng_needed);
+
+  virtual ~MultiEnvMng();
+
+  void checkMultiEnvGlobalCellId();
+
+  //! Remplit les tableaux IsActiveCell et IsActiveNode à partir des groupes d'items actifs
+  void setActiveItemsFromGroups(CellGroup active_cells, NodeGroup active_nodes);
+  
+  //! Préparer les données multi-environnement pour l'accélérateur
+  // A appeler quand la carte des environnements change
+  void updateMultiEnv(VarSyncMng* vsync_mng);
+
+  //! Vue sur le stockage pour utilisation en lecture sur GPU
+  MultiEnvCellViewIn viewIn(ax::RunCommand& command) {
+    if (!m_menv_var_mng) throw FatalErrorException(A_FUNCINFO, "menv_var_mng doit être demandé");
+    return m_menv_var_mng->viewIn(command);
+  }
+  
+  //! les queues pour traiter les environnements de façon asynchrone
+  MultiAsyncRunQueue* multiEnvQueue() { return m_menv_queue; }
+
+  //! Nb d'environnement par maille
+  VariableCellInteger nbEnv() {
+    if (!m_menv_var_mng) throw FatalErrorException(A_FUNCINFO, "menv_var_mng doit être demandé");
+    return m_menv_var_mng->nbEnv();
+  }
+
+  //! Si maille pure: identifiant de l'environnement de la maille, si maille mixte: opposé du nombre d'environnements+1, si maille vide: -1
+  VariableCellInteger envId() {
+    if (!m_menv_var_mng) throw FatalErrorException(A_FUNCINFO, "menv_var_mng doit être demandé");
+    return m_menv_var_mng->envId();
+  }
+
+  //! globalCell()[envcell] : local id de la maille globale
+  MaterialVariableCellInteger globalCell() {
+    if (!m_menv_var_mng) throw FatalErrorException(A_FUNCINFO, "menv_var_mng doit être demandé");
+    return m_menv_var_mng->globalCell();
+  }
+
+  //! Indique si la maille est active (= non 100% vide)
+  VariableCellBool isActiveCell() {
+    return m_is_active_cell;
+  }
+
+  //! Indique si le noeud est actif (= dont au moins une de ces mailles est active)
+  VariableNodeBool isActiveNode() {
+    return m_is_active_node;
+  }
+
+ protected:
+
+  IMeshMaterialMng* m_mesh_material_mng=nullptr;
+  ax::Runner& m_runner;
+  AccMemAdviser* m_acc_mem_adv = nullptr;
+  MultiEnvVariableMng* m_menv_var_mng = nullptr;
+
   VariableCellBool m_is_active_cell;  //! Indique si la maille est active (= non 100% vide)
   VariableNodeBool m_is_active_node;  //! Indique si le noeud est actif (= dont au moins une de ces mailles est active)
 

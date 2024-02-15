@@ -19,7 +19,8 @@ class SyncEnvIndexes {
   SyncEnvIndexes(MatVarSpace mvs, IMeshMaterialMng* mm,
     Int32ConstArrayView neigh_ranks, 
     SyncItems<Cell>* sync_cells,
-    AccMemAdviser* acc_mem_adv);
+    AccMemAdviser* acc_mem_adv,
+    bool evlist_per_env_needed);
   virtual ~SyncEnvIndexes() {}
 
   //! Recalcule les listes de EnvIndex "owned" ("shared") et "ghost"
@@ -27,48 +28,51 @@ class SyncEnvIndexes {
 
   MatVarSpace space() const { return m_mvs; }
 
-  auto nbOwnedEviPn() const {
-    return m_nb_owned_evi_pn.constView();
+  auto nbOwnedMviPn() const {
+    return m_nb_owned_mvi_pn.constView();
   }
 
-  auto nbGhostEviPn() const {
-    return m_nb_ghost_evi_pn.constView();
+  auto nbGhostMviPn() const {
+    return m_nb_ghost_mvi_pn.constView();
   }
 
   // Listes par voisin
 
-  auto ownedEviPn() const {
-    return ConstMultiArray2View<EnvVarIndex>(m_buf_owned_evi.constView(),
-        m_indexes_owned_evi_pn.constView(), m_nb_owned_evi_pn.constView());
+  auto ownedMviPn() const {
+    return ConstMultiArray2View<MatVarIndex>(m_buf_owned_mvi.constView(),
+        m_indexes_owned_mvi_pn.constView(), m_nb_owned_mvi_pn.constView());
   }
 
-  auto ghostEviPn() const {
-    return ConstMultiArray2View<EnvVarIndex>(m_buf_ghost_evi.constView(),
-        m_indexes_ghost_evi_pn.constView(), m_nb_ghost_evi_pn.constView());
+  auto ghostMviPn() const {
+    return ConstMultiArray2View<MatVarIndex>(m_buf_ghost_mvi.constView(),
+        m_indexes_ghost_mvi_pn.constView(), m_nb_ghost_mvi_pn.constView());
   }
-
   // Listes par environnement
 
   auto allEviPenv() const {
+    if (!m_evlist_per_env_needed) throw FatalErrorException(A_FUNCINFO, "Liste des EnvCell par environnement doit être activée");
     return ConstMultiArray2View<EnvVarIndex>(m_buf_all_evi_4env.constView(),
         m_indexes_all_evi_penv.constView(), m_nb_all_evi_penv.constView());
   }
 
   auto ownEviPenv() const {
+    if (!m_evlist_per_env_needed) throw FatalErrorException(A_FUNCINFO, "Liste des EnvCell par environnement doit être activée");
     return ConstMultiArray2View<EnvVarIndex>(m_buf_owned_evi_4env.constView(),
         m_indexes_owned_evi_penv.constView(), m_nb_owned_evi_penv.constView());
   }
 
   auto privateEviPenv() const {
+    if (!m_evlist_per_env_needed) throw FatalErrorException(A_FUNCINFO, "Liste des EnvCell par environnement doit être activée");
     return ConstMultiArray2View<EnvVarIndex>(m_buf_private_evi_4env.constView(),
         m_indexes_private_evi_penv.constView(), m_nb_private_evi_penv.constView());
   }
 
   auto sharedEviPenv() const {
+    if (!m_evlist_per_env_needed) throw FatalErrorException(A_FUNCINFO, "Liste des EnvCell par environnement doit être activée");
     return ConstMultiArray2View<EnvVarIndex>(m_buf_shared_evi_4env.constView(),
         m_indexes_shared_evi_penv.constView(), m_nb_shared_evi_penv.constView());
   }
-
+ 
  protected:
 
   //! Calcule les listes de EnvIndex(es) par environnement à partir d'un groupe de mailles
@@ -86,21 +90,22 @@ class SyncEnvIndexes {
   SyncItems<Cell>*                   m_sync_cells=nullptr;
   MatVarSpace                        m_mvs;
   Integer                            m_nb_nei;
+  bool                               m_evlist_per_env_needed=false;
 
-  // "shared" ou "owned" : les EnvVarIndex(es) intérieurs au sous-domaine et qui doivent être envoyés
-  // "ghost" : les EnvVarIndex(es) fantômes pour lesquels on va recevoir des informations
+  // "shared" ou "owned" : les MatVarIndex(es) intérieurs au sous-domaine et qui doivent être envoyés
+  // "ghost" : les MatVarIndex(es) fantômes pour lesquels on va recevoir des informations
   // _pn : _per_neigh, info par voisin
   
-  // Nb d'EnvVarIndex(es) par voisin et listes des EnvVarIndex(es) mêmes
+  // Nb d'MatVarIndex(es) par voisin et listes des MatVarIndex(es) mêmes
   // Owned ou Shared
-  UniqueArray<EnvVarIndex> m_buf_owned_evi;
-  IntegerUniqueArray       m_indexes_owned_evi_pn;
-  IntegerUniqueArray       m_nb_owned_evi_pn;
+  UniqueArray<MatVarIndex> m_buf_owned_mvi;
+  IntegerUniqueArray       m_indexes_owned_mvi_pn;
+  IntegerUniqueArray       m_nb_owned_mvi_pn;
 
   // Ghost
-  UniqueArray<EnvVarIndex> m_buf_ghost_evi;
-  IntegerUniqueArray       m_indexes_ghost_evi_pn;
-  IntegerUniqueArray       m_nb_ghost_evi_pn;
+  UniqueArray<MatVarIndex> m_buf_ghost_mvi;
+  IntegerUniqueArray       m_indexes_ghost_mvi_pn;
+  IntegerUniqueArray       m_nb_ghost_mvi_pn;
 
   // Listes des EnvVarIndex(es) par environnement des groupes de mailles ...
   // "all"

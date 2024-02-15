@@ -9,14 +9,11 @@
 template<typename DataType>
 CellMatVarScalSync<DataType>::CellMatVarScalSync(
     CellMaterialVariableScalarRef<DataType> var,
-    SyncEnvIndexes* sync_evi,
-    BufAddrMng* bam) : 
+    SyncEnvIndexes* sync_evi) : 
   IMeshVarSync(),
   m_var (var),
-  m_menv_var(var, bam),
   m_sync_evi (sync_evi)
 {
-  // m_menv_var on DEVICE will be update by bam
 }
 
 template<typename DataType>
@@ -46,12 +43,12 @@ IVariable* CellMatVarScalSync<DataType>::variable() {
 template<typename DataType>
 Int64 CellMatVarScalSync<DataType>::estimatedMaxBufSz() const
 {
-  auto nb_owned_evi_pn = m_sync_evi->nbOwnedEviPn();
-  auto nb_ghost_evi_pn = m_sync_evi->nbGhostEviPn();
+  auto nb_owned_mvi_pn = m_sync_evi->nbOwnedMviPn();
+  auto nb_ghost_mvi_pn = m_sync_evi->nbGhostMviPn();
 
   Int64 buf_estim_sz=0;
-  buf_estim_sz += SyncBuffers::estimatedMaxBufSz<DataType>(nb_owned_evi_pn, /*degree=*/1);
-  buf_estim_sz += SyncBuffers::estimatedMaxBufSz<DataType>(nb_ghost_evi_pn, /*degree=*/1);
+  buf_estim_sz += SyncBuffers::estimatedMaxBufSz<DataType>(nb_owned_mvi_pn, /*degree=*/1);
+  buf_estim_sz += SyncBuffers::estimatedMaxBufSz<DataType>(nb_ghost_mvi_pn, /*degree=*/1);
 
   return buf_estim_sz;
 }
@@ -61,8 +58,8 @@ template<typename DataType>
 size_t CellMatVarScalSync<DataType>::sizeInBytes(eItemSync item_sync, Integer inei) const
 {
   auto item_sizes = (item_sync == IS_owned ? 
-      m_sync_evi->nbOwnedEviPn() :
-      m_sync_evi->nbGhostEviPn());
+      m_sync_evi->nbOwnedMviPn() :
+      m_sync_evi->nbGhostMviPn());
 
   size_t sizeof_item = sizeof(DataType)*1;  // 1 = degree
   size_t sz_nei_in_bytes = item_sizes[inei]*sizeof_item;
@@ -76,18 +73,18 @@ void CellMatVarScalSync<DataType>::asyncPackOwnedIntoBuf(
     Integer inei,
     ArrayView<Byte> buf, RunQueue& queue)  
 {
-  ConstArrayView<EnvVarIndex> levis = m_sync_evi->ownedEviPn()[inei];  // Owned
+  ConstArrayView<MatVarIndex> lmvis = m_sync_evi->ownedMviPn()[inei];  // Owned
   auto command = makeCommand(queue);
 
-  auto in_var_menv = m_menv_var.spanD();
-  Span<const EnvVarIndex> in_levis(levis);
+  auto in_var = ax::viewIn(command, m_var);
+  Span<const MatVarIndex> in_lmvis(lmvis);
   Span<DataType> buf_vals(MultiBufView::valBuf<DataType>(buf));
 
-  Integer nb_evis = levis.size();
+  Integer nb_mvis = lmvis.size();
 
-  command << RUNCOMMAND_LOOP1(iter, nb_evis) {
+  command << RUNCOMMAND_LOOP1(iter, nb_mvis) {
     auto [i] = iter();
-    buf_vals[i] = in_var_menv[ in_levis[i] ];
+    buf_vals[i] = in_var[ ComponentItemLocalId(in_lmvis[i]) ];
   }; // asynchronous
 }
 
@@ -97,18 +94,18 @@ void CellMatVarScalSync<DataType>::asyncUnpackGhostFromBuf(
     Integer inei,
     ArrayView<Byte> buf, RunQueue& queue)  
 {
-  ConstArrayView<EnvVarIndex> levis = m_sync_evi->ghostEviPn()[inei];  // Ghost
+  ConstArrayView<MatVarIndex> lmvis = m_sync_evi->ghostMviPn()[inei];  // Ghost
   auto command = makeCommand(queue);
 
-  auto out_var_menv = m_menv_var.spanD();
-  Span<const EnvVarIndex> in_levis(levis);
+  auto out_var = ax::viewOut(command, m_var);
+  Span<const MatVarIndex> in_lmvis(lmvis);
   Span<const DataType>    buf_vals(MultiBufView::valBuf<DataType>(buf));
 
-  Integer nb_evis = levis.size();
+  Integer nb_mvis = lmvis.size();
 
-  command << RUNCOMMAND_LOOP1(iter, nb_evis) {
+  command << RUNCOMMAND_LOOP1(iter, nb_mvis) {
     auto [i] = iter();
-    out_var_menv.setValue(in_levis[i], buf_vals[i]);
+    out_var[ComponentItemLocalId(in_lmvis[i])] = buf_vals[i];
   }; // asynchrone
 }
 
@@ -217,7 +214,7 @@ MeshVariableSynchronizerList::~MeshVariableSynchronizerList() {
 template<typename DataType>
 void MeshVariableSynchronizerList::add(CellMaterialVariableScalarRef<DataType> var_menv) {
   auto sync_evi = m_vsync_mng->syncEnvIndexes();
-  m_vars.add(new CellMatVarScalSync<DataType>(var_menv, sync_evi, m_buf_addr_mng));
+  m_vars.add(new CellMatVarScalSync<DataType>(var_menv, sync_evi));
 }
 
 //! Add a global variable into the list of variables to synchronize
@@ -247,34 +244,81 @@ void MeshVariableSynchronizerList::asyncHToD(RunQueue& queue) {
 #define INST_MESH_VAR_SYNC_LIST_ADD(__DataType__) \
   template void MeshVariableSynchronizerList::add(CellMaterialVariableScalarRef<__DataType__> var_menv)
 
-INST_MESH_VAR_SYNC_LIST_ADD(Integer);
+INST_MESH_VAR_SYNC_LIST_ADD(Byte);
+INST_MESH_VAR_SYNC_LIST_ADD(Int16);
+INST_MESH_VAR_SYNC_LIST_ADD(Int32);
+INST_MESH_VAR_SYNC_LIST_ADD(Int64);
 INST_MESH_VAR_SYNC_LIST_ADD(Real);
+INST_MESH_VAR_SYNC_LIST_ADD(Real2);
+INST_MESH_VAR_SYNC_LIST_ADD(Real2x2);
 INST_MESH_VAR_SYNC_LIST_ADD(Real3);
 INST_MESH_VAR_SYNC_LIST_ADD(Real3x3);
 
 #define INST_MESH_VAR_SYNC_LIST_ADDG(__MeshVariableRefT__) \
   template void MeshVariableSynchronizerList::add(__MeshVariableRefT__ var)
 
+/*------------------------- Cell --------------------------------------------*/
+
+// Scalar
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellByte);
+
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellReal3x3);
+
+// Array
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayByte);
+
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableCellArrayReal3x3);
+
+/*------------------------- Node --------------------------------------------*/
+
+// Scalar
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeByte);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeReal3x3);
+
+// Array
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayByte);
+
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableNodeArrayReal3x3);
+
+/*------------------------- Face --------------------------------------------*/
+
+// Scalar
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceByte);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceReal3x3);
+
+// Array
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayByte);
+
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayInteger);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayInt64);
 
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayReal);
 INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayReal3);
+INST_MESH_VAR_SYNC_LIST_ADDG(VariableFaceArrayReal3x3);

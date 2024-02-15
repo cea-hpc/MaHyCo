@@ -4,15 +4,6 @@
 	<description>Environnement à partager pour les accélérateurs</description>
   <interface name="IAccEnv" />
 
-  <variables>
-  <!-- GLOBAL CELL	 -->
-  <variable field-name="global_cell" name="GlobalCell" data-type="integer" item-kind="cell"
-	    dim="0" material="true" dump="false" need-sync="false" sub-domain-depend="true" />
-  <!-- ENV ID -->
-  <variable field-name="env_id" name="EnvId" data-type="integer" item-kind="cell"
-	    dim="0" dump="false" need-sync="false" />
-  </variables>
-    
     <options>
   <!-- - - - - - acc-mem-advise - - - - -->
   <simple name="acc-mem-advise" type="bool" default="true"><description>Active/désactive tous les conseils mémoire (ie tous les appels à cudaMemAdvise).</description></simple>

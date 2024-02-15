@@ -41,6 +41,21 @@ accBuild()
 }
 
 /*---------------------------------------------------------------------------*/
+/* Initialise les environnements avec l'API pré-Accélérateur */
+/*---------------------------------------------------------------------------*/
+
+void AccEnvModule::
+paccBuild() 
+{
+  prof_acc_begin("AccEnvModule::paccBuild");
+
+  accBuild();
+  m_acc_env->initPAcc();
+
+  prof_acc_end("AccEnvModule::paccBuild");
+}
+
+/*---------------------------------------------------------------------------*/
 /* Initialise des informations liées au maillage pour les accélérateurs */
 /*---------------------------------------------------------------------------*/
 
@@ -50,6 +65,11 @@ initMesh()
   prof_acc_begin("AccEnvModule::initMesh");
 
   m_acc_env->initMesh(defaultMesh());
+
+  // active la fonctionnalité des allenvell pour les runcommand
+  // également possible de le faire via la variable d'env ARCANE_ALLENVCELL_FOR_RUNCOMMAND
+  IMeshMaterialMng* mesh_material_mng = IMeshMaterialMng::getReference(defaultMesh());
+  mesh_material_mng->enableCellToAllEnvCellForRunCommand(true);
 
   prof_acc_end("AccEnvModule::initMesh");
 }

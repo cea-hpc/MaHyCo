@@ -544,8 +544,13 @@ MultiBufView2 SyncBuffers::multiBufViewVars(
   template void SyncBuffers::addEstimatedMaxSz<__DataType__>(IntegerConstArrayView item_sizes, Integer degree); \
   template Int64 SyncBuffers::estimatedMaxBufSz<__DataType__>(IntegerConstArrayView item_sizes, Integer degree)
 
-INST_SYNC_BUFFERS(Integer);
+INST_SYNC_BUFFERS(Byte);
+INST_SYNC_BUFFERS(Int16);
+INST_SYNC_BUFFERS(Int32);
+INST_SYNC_BUFFERS(Int64);
 INST_SYNC_BUFFERS(Real);
+INST_SYNC_BUFFERS(Real2);
+INST_SYNC_BUFFERS(Real2x2);
 INST_SYNC_BUFFERS(Real3);
 INST_SYNC_BUFFERS(Real3x3);
 
