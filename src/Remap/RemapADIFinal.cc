@@ -680,36 +680,30 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }; // asynchrone et non bloquant vis-à-vis du CPU et des autres queues
   }
 
-  // Mise à jour des m_cell_volume sur les mailles mixtes
-  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
-  ENUMERATE_ENV(ienv, mm) {
-    IMeshEnvironment* env = *ienv;
+  auto ref_queue_cv = m_acc_env->refQueueAsync();
+  {
+    auto command_cv = makeCommand(ref_queue_cv.get());
 
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
+    auto in_fracvol = ax::viewIn(command_cv, m_fracvol);
+    auto inout_cell_volume = ax::viewInOut(command_cv, m_cell_volume);
 
-    // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<Real> out_cell_volume(envView(m_cell_volume, env));
-    Span<const Real> in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
+    CellToAllEnvCellAccessor c2a(mm);
 
-    // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(menv_queue->queue(env->id()));
-
-    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
-
-    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
-      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
+    command_cv.addKernelName("cellv") << RUNCOMMAND_ENUMERATE_CELL_ALLENVCELL(c2a,cid,allCells()) {
+      // des volumes matieres
+      if (c2a.nbEnvironment(cid) !=1) {
+	ENUMERATE_CELL_ALLENVCELL(iev,cid,c2a) {
+	  inout_cell_volume[*iev] = in_fracvol[*iev] * inout_cell_volume[cid];
+	}
+      }
     };
   }
 
 //   m_node_mass.synchronize();
   // ref_queue_nm va être synchronisée dans globalSynchronize
   m_acc_env->vsyncMng()->globalSynchronize(ref_queue_nm, m_node_mass);
-  menv_queue->waitAllQueues();
+
+  ref_queue_cv->barrier();
 #endif
  
   // conservation energie totale lors du remap
