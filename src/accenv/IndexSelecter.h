@@ -89,8 +89,8 @@ class IndexSelecter {
     SmallSpan<const Int32> in_lid(m_lid_d.data(), m_nb_idx); // =[0, m_nb_idx[
     SmallSpan<Int32> out_lid_select(m_lid_select_d.data(), m_nb_idx);
 
-    ax::Filterer<Int32> filterer;
-    filterer.apply(rqueue_async.get(), in_lid, out_lid_select, in_mask);
+    ax::Filterer<Int32> filterer(rqueue_async.get());
+    filterer.apply(in_lid, out_lid_select, in_mask);
     Int32 nb_cell_selected = filterer.nbOutputElement();
 
     if (nb_cell_selected && host_view) 
