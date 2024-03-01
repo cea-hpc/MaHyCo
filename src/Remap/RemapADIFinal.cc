@@ -100,19 +100,16 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     auto out_cell_status = ax::viewOut(command, m_cell_status); // var tempo
  
-    // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
-
     command.addKernelName("add_rm") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
       Real fvol = in_u_lagrange[cid][index_env] / in_euler_volume[cid];
 
       // Recherche de l'appartenance de la maille à l'env index_env
       bool cell_in_env = false;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        //auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env_loc = in_menv_cell.envId(cid,ienv);
-        if (index_env_loc == index_env)
+      AllEnvCell all_env_cell = all_env_cell_converter[cid];
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        EnvCell ev = *ienvcell;
+	if (ev.environmentId() == index_env)
           cell_in_env = true;
       }
 
@@ -375,41 +372,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto in_euler_volume = ax::viewIn(command, m_euler_volume);
     auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
     
-    auto out_cell_volume_g      = ax::viewOut(command, m_cell_volume.globalVariable());
-    auto out_density_g          = ax::viewOut(command, m_density.globalVariable());
-    auto out_pseudo_viscosity_g = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
-    auto out_internal_energy_g  = ax::viewOut(command, m_internal_energy.globalVariable());
-    auto out_est_pure           = ax::viewOut(command, m_est_pure);
+    auto out_cell_volume       = ax::viewOut(command, m_cell_volume);
+    auto out_est_pure          = ax::viewOut(command, m_est_pure);
+    auto out_pseudo_viscosity  = ax::viewOut(command, m_pseudo_viscosity);
 
-    auto inout_est_mixte     = ax::viewInOut(command, m_est_mixte);
-    auto inout_cell_mass_g   = ax::viewInOut(command, m_cell_mass.globalVariable());
-
-    // Variables multi-environnement
-    auto bam = m_acc_env->vsyncMng()->bufAddrMng();
-    MultiEnvVarHD<Real> menv_fracvol         (m_fracvol         , bam);
-    MultiEnvVarHD<Real> menv_mass_fraction   (m_mass_fraction   , bam);
-    MultiEnvVarHD<Real> menv_cell_mass       (m_cell_mass       , bam);
-    MultiEnvVarHD<Real> menv_pseudo_viscosity(m_pseudo_viscosity, bam);
-    MultiEnvVarHD<Real> menv_density         (m_density         , bam);
-    MultiEnvVarHD<Real> menv_internal_energy (m_internal_energy , bam);
-
-    bam->asyncCpyHToD(queue); 
-    // copie asynchrone avant le kernel de calcul qui se fait aussi sur <queue>
-
-    auto inout_menv_fracvol         (menv_fracvol         .spanD());
-    auto inout_menv_mass_fraction   (menv_mass_fraction   .spanD());
-    auto inout_menv_cell_mass       (menv_cell_mass       .spanD());
-    auto inout_menv_pseudo_viscosity(menv_pseudo_viscosity.spanD());
-    auto inout_menv_density         (menv_density         .spanD());
-    auto inout_menv_internal_energy (menv_internal_energy .spanD());
-
-    // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
+    auto inout_fracvol           = ax::viewInOut(command, m_fracvol);
+    auto inout_mass_fraction     = ax::viewInOut(command, m_mass_fraction);
+    auto inout_density           = ax::viewInOut(command, m_density);
+    auto inout_internal_energy   = ax::viewInOut(command, m_internal_energy);
+    auto inout_cell_mass         = ax::viewInOut(command, m_cell_mass);
+    auto inout_est_mixte         = ax::viewInOut(command, m_est_mixte);
 
     command.addKernelName("moy") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
+      AllEnvCell all_env_cell = all_env_cell_converter[cid];
+
       Real vol = in_euler_volume[cid];  // volume euler   
-      out_cell_volume_g[cid] = vol; // retour à la grille euler
+      out_cell_volume[cid] = vol; // retour à la grille euler
       Real volt = 0.;
       Real masset = 0.;
 
@@ -435,32 +414,32 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // info() << " cell " << cell.localId() << " fin des masses et volumes normalisées ";
       double somme_frac = 0.;
       Real unsurvol = 1. / vol;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
         // Simplification : 
         // in_u_lagrange[cid][index_env] *vol*unsurvolt*unsurvol == in_u_lagrange[cid][index_env] *unsurvolt
         Real fvol = in_u_lagrange[cid][index_env] * unsurvolt;
         if (fvol < threshold)
           fvol = 0.;
-        inout_menv_fracvol.setValue(evi, fvol);
+	inout_fracvol[evi] = fvol;
         somme_frac += fvol;
       }
       // apres normamisation
       Integer matcell(0);
       Integer imatpure(-1);  
       Real unsursomme_frac = 1. / somme_frac;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
-        Real fvol = inout_menv_fracvol[evi] * unsursomme_frac;
+        Real fvol = inout_fracvol[evi] * unsursomme_frac;
         if (fvol > 0.) {
           matcell++;
           imatpure = index_env;
         }
-        inout_menv_fracvol.setValue(evi, fvol);
+        inout_fracvol[evi] = fvol;
       }
       if (matcell > 1) {
         inout_est_mixte[cid] = 1;
@@ -476,43 +455,43 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real fmasset = 0.;
       if (masset != 0.) {
         Real unsurmasset = 1./  masset;
-        for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-          auto evi = in_menv_cell.envCell(cid,ienv);
-          Integer index_env = in_menv_cell.envId(cid,ienv);
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          auto evi = *ienvcell;
+          Integer index_env = evi.environmentId();
 
           // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
           Real mass_frac = in_u_lagrange[cid][nb_env + index_env] * unsurmasset;
-          if (inout_menv_fracvol[evi] < threshold) {
+          if (inout_fracvol[evi] < threshold) {
             mass_frac = 0.;
           }
           fmasset += mass_frac;
-          inout_menv_mass_fraction.setValue(evi, mass_frac);
+          inout_mass_fraction[evi] = mass_frac;
         }
         if (fmasset!= 0.) {
           Real unsurfmasset = 1. / fmasset;
-          for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-            auto evi = in_menv_cell.envCell(cid,ienv);
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            auto evi = *ienvcell;
 
             // m_mass_fraction[ev] /= fmasset;
-            Real mass_frac = inout_menv_mass_fraction[evi] * unsurfmasset;
-            inout_menv_mass_fraction.setValue(evi, mass_frac);
+            Real mass_frac = inout_mass_fraction[evi] * unsurfmasset;
+            inout_mass_fraction[evi] = mass_frac;
           }
         }
       }
       Real density_nplus1 = 0.;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
         Real density_env_nplus1 = 0.;
-        Real fvol = inout_menv_fracvol[evi];
+        Real fvol = inout_fracvol[evi];
         if (fvol > threshold) {
           Real vol_nplus1_norm = in_u_lagrange[cid][index_env] * vol * unsurvolt;
           density_env_nplus1 = in_u_lagrange[cid][nb_env + index_env] 
             / vol_nplus1_norm;
         }
         // recuperation de la densite, se trouvait avant dans boucle B
-        inout_menv_density.setValue(evi, density_env_nplus1);
+        inout_density[evi] = density_env_nplus1;
 
         density_nplus1 += fvol * density_env_nplus1;
         // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
@@ -522,23 +501,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // mise à jour des valeurs moyennes aux allCells
       // densite
       if (inout_est_mixte[cid])
-        out_density_g[cid] = density_nplus1; 
+        inout_density[cid] = density_nplus1; 
       // density_nplus1 est la valeur moyenne,
       // ne pas affecter dans le cas d'une maille pure sinon on n'aurait pas la valeur partielle
 
       // info() << cell.localId() << " apres proj " << m_u_lagrange[cell];
       // recalcul de la masse
       // Rem : on n'a plus besoin de m_cell_mass.fill(0.0)
-      inout_cell_mass_g[cid] = in_euler_volume[cid] * density_nplus1;
+      inout_cell_mass[cid] = in_euler_volume[cid] * density_nplus1;
 
       Real energie_nplus1 = 0.;
       Real pseudo_nplus1 = 0.;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
-        Real fvol      = inout_menv_fracvol[evi];
-        Real mass_frac = inout_menv_mass_fraction[evi];
+        Real fvol      = inout_fracvol[evi];
+        Real mass_frac = inout_mass_fraction[evi];
 
         // coeur boucle A
         Real internal_energy_env_nplus1 = 0.;
@@ -547,7 +526,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
             in_u_lagrange[cid][2 * nb_env + index_env] / in_u_lagrange[cid][nb_env + index_env];
         }
         // recuperation de l'energie, se trouvait avant dans boucle B
-        inout_menv_internal_energy.setValue(evi, internal_energy_env_nplus1);
+        inout_internal_energy[evi] = internal_energy_env_nplus1;
         // conservation energie totale
         // delta_ec : energie specifique
         // m_internal_energy_env[ev] += delta_ec;
@@ -555,23 +534,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         energie_nplus1 += mass_frac * internal_energy_env_nplus1;
 
         // coeur boucle B
-        inout_menv_cell_mass.setValue(evi, mass_frac * inout_cell_mass_g[cid]);
+        inout_cell_mass[evi] = mass_frac * inout_cell_mass[cid];
         // recuperation de la pseudo projetee
         // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
         Real pseudo_visco = in_u_lagrange[cid][3 * nb_env + 4] * unsurvol;
-        inout_menv_pseudo_viscosity.setValue(evi, pseudo_visco);
+        out_pseudo_viscosity[evi] = pseudo_visco;
         pseudo_nplus1 += fvol * pseudo_visco;
       }
       // energie interne
-      out_internal_energy_g[cid] = energie_nplus1;
+      inout_internal_energy[cid] = energie_nplus1;
       // pseudoviscosité
-      out_pseudo_viscosity_g[cid] = pseudo_nplus1;
+      out_pseudo_viscosity[cid] = pseudo_nplus1;
 
       // Boucle de "blindage" pas totalement portée
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
 
-        if (inout_menv_density[evi] < 0. || inout_menv_internal_energy[evi] < 0.) {
+        if (inout_density[evi] < 0. || inout_internal_energy[evi] < 0.) {
           // Comment gérer des messages d'erreur ou d'avertissement ?
           /*
           pinfo() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
@@ -583,10 +562,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           pinfo() << " fraction vol env " << m_fracvol[ev];
           pinfo() << " fraction massique env " <<  m_mass_fraction[ev];
           */
-          inout_menv_internal_energy.setValue(evi, 0.);
-          inout_menv_density.setValue(evi, 0.);
-          inout_menv_fracvol.setValue(evi, 0.);
-          inout_menv_mass_fraction.setValue(evi, 0.);
+          inout_internal_energy[evi] = 0.;
+          inout_density[evi] = 0.;
+          inout_fracvol[evi] = 0.;
+          inout_mass_fraction[evi] = 0.;
         }
         // NAN sur GPU ? comment gérer l'arrêt du calcul ?
         /*
