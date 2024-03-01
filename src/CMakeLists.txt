@@ -11,9 +11,9 @@ find_package(Arcane)
 # Indique la version minimale de Arcane nécessaire
 # À partir de la version 3.8 de Arcane, il sera possible
 # d'utiliser directement 'find_package(Arcane 3.8 REQUIRED)'
-if (Arcane_VERSION VERSION_LESS "3.9")
+if (Arcane_VERSION VERSION_LESS "3.12.8")
   message(FATAL_ERROR "Arcane version '${Arcane_VERSION}' is too old."
-    " Version 3.9+ is required")
+    " Version 3.12.8+ is required")
 endif()
 
 if (WANT_CUDA AND NOT ARCANE_HAS_CUDA)
