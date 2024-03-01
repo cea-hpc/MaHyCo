@@ -26,6 +26,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   PROF_ACC_BEGIN("cellStatus");
 
   bool to_add_rm_cells = false;
+  Materials::MeshMaterialModifier modifier(mm);
 #if 0
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
@@ -150,9 +151,8 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     if (cid_to_add_h.size()) {
       // On ajoute réellement les items à l'environnement
-      CellGroup env_cells = env->cells();
       info() << "ADD_CELLS to env " << env->name() << " n=" << cid_to_add_h.size(); 
-      env_cells.addItems(cid_to_add_h);
+      modifier.addCells(env->materials()[0], cid_to_add_h);
       to_add_rm_cells = true;
     }
 
@@ -165,22 +165,36 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     if (cid_to_remove_h.size()) {
       // On retire réellement les items de l'environnement
-      CellGroup env_cells = env->cells();
       info() << "REMOVE_CELLS to env " << env->name() << " n=" << cid_to_remove_h.size();
-      env_cells.removeItems(cid_to_remove_h);
+      modifier.removeCells(env->materials()[0], cid_to_remove_h);
       to_add_rm_cells = true;
     }
   }
 #endif
   PROF_ACC_END;
 
+  bool to_update=false;
   if (to_add_rm_cells) 
   {
-    PROF_ACC_BEGIN("forceRecompute");
+    to_update=true;
+    PROF_ACC_BEGIN("endUpdate");
     // finalisation avant remplissage des variables
+    modifier.endUpdate();
+    PROF_ACC_END;
+  }
+
+  Integer force_iter=options()->forceRecomputeIteration();
+  if (force_iter>0 && m_global_iteration()%force_iter == 0) 
+  {
+    to_update=true;
+    PROF_ACC_BEGIN("forceRecompute");
+    info() << "FORCE_RECOMPUTE";
     mm->forceRecompute();
     PROF_ACC_END;
+  }
 
+  if (to_update)
+  {
     // Ici, la carte des environnements a changé
     m_acc_env->multiEnvMng()->updateMultiEnv(m_acc_env->vsyncMng());
   }
