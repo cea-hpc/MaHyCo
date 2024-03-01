@@ -30,7 +30,10 @@ class IndexSelecter {
   {
   }
 
-  ~IndexSelecter() {}
+  ~IndexSelecter() 
+  {
+    delete m_gen_filterer_inst;
+  }
 
   /*!
    * \brief Définit l'intervalle [0,nb_idx[ sur lequel va s'opérer la sélection
@@ -48,18 +51,32 @@ class IndexSelecter {
   template<typename PredicateType>
   ConstArrayView<Int32> syncSelectIf(Ref<RunQueue> rqueue_async, PredicateType pred, bool host_view=false) 
   {
+    // On essaie de réutiliser au maximum la même instance de GenericFilterer
+    // afin de minimiser des allocations dynamiques dans cette classe.
+    // L'instance du GenericFilterer dépend du pointeur de RunQueue donc
+    // si ce pointeur change, il faut détruire et réallouer une nouvelle instance.
+    bool to_instantiate=(m_gen_filterer_inst==nullptr);
+    if (m_async_queue_ptr!=rqueue_async.get()) 
+    {
+      m_async_queue_ptr=rqueue_async.get();
+      delete m_gen_filterer_inst;
+      to_instantiate=true;
+    }
+    if (to_instantiate) {
+      m_gen_filterer_inst = new ax::GenericFilterer(m_async_queue_ptr);
+    }
+
     // On sélectionne dans [0,m_nb_idx[ les indices i pour lesquels pred(i) est vrai
     //  et on les copie dans out_lid_select.
     //  Le nb d'indices sélectionnés est donné par nbOutputElement()
     SmallSpan<Int32> out_lid_select(m_lid_select_d.data(), m_nb_idx);
 
-    ax::GenericFilterer gen_filterer(rqueue_async.get());
-    gen_filterer.applyWithIndex(m_nb_idx, pred,
+    m_gen_filterer_inst->applyWithIndex(m_nb_idx, pred,
 	[=] ARCCORE_HOST_DEVICE (Int32 input_index, Int32 output_index) -> void
 	{
 	  out_lid_select[output_index] = input_index;
 	});
-    Int32 nb_idx_selected = gen_filterer.nbOutputElement();
+    Int32 nb_idx_selected = m_gen_filterer_inst->nbOutputElement();
 
     if (nb_idx_selected && host_view) 
     {
@@ -96,6 +113,9 @@ class IndexSelecter {
   UniqueArray<Int32> m_lid_select_h; // liste des identifiants sélectionnés avec un Filterer (alloué sur HOST)
 
   Int32 m_nb_idx=0;  //!< Intervalle [0, m_nb_idx[ sur lequel on va opérer la sélection
+
+  RunQueue* m_async_queue_ptr=nullptr; //!< Pointeur sur la queue du GenericFilterer
+  ax::GenericFilterer* m_gen_filterer_inst=nullptr; //!< Instance du GenericFilterer
 };
 
 /*---------------------------------------------------------------------------*/
