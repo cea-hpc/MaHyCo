@@ -51,15 +51,18 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     }
     else { // (options()->projectionLimiteurId > minmodG) PAS SUR GPU
       m_dual_grad_phi.fill(0.0);
-      Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
+      //Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
-        Cartesian::DirNode dir_node(ndm[inode]);
+        //Cartesian::DirNode dir_node(ndm[inode]);
+        Arcane::DirNode dir_node(ndm[inode]);
         Node backnode = dir_node.previous();
-        Cartesian::DirNode dir_backnode(ndm[backnode]);
+        //Cartesian::DirNode dir_backnode(ndm[backnode]);
+        Arcane::DirNode dir_backnode(ndm[backnode]);
         Node backbacknode = dir_backnode.previous();
         Node frontnode = dir_node.next();
-        Cartesian::DirNode dir_frontnode(ndm[frontnode]);
+        //Cartesian::DirNode dir_frontnode(ndm[frontnode]);
+        Arcane::DirNode dir_frontnode(ndm[frontnode]);
         Node frontfrontnode = dir_frontnode.next();
         
         computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
