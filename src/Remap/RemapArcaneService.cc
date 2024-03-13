@@ -27,7 +27,7 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
     
     Integer idir(-1);
     m_arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
-    m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
+    //m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
 
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
@@ -180,37 +180,49 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
     {
       auto command_p = makeCommand(queue_hcell);
 
-      auto cart_fdm = fact_cart.faceDirection(idir);
-      auto f2cid_stm = cart_fdm.face2CellIdStencil();
-      auto face_group = cart_fdm.innerFaces();
+      //auto cart_fdm = fact_cart.faceDirection(idir);
+
+      //auto f2cid_stm = cart_fdm.face2CellIdStencil();
+      //auto face_group = cart_fdm.innerFaces();
 
       auto in_face_coord   = ax::viewIn(command_p, m_face_coord);
       auto in_cell_coord   = ax::viewIn(command_p, m_cell_coord);
       auto inout_h_cell_lagrange = ax::viewInOut(command_p, m_h_cell_lagrange);
 
       // D'abord contribution dans toutes les mailles précédentes
-      command_p.addKernelName("hcell_prev") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      command_p.addKernelName("hcell_prev") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
+      //command_p.addKernelName("hcell_prev") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+      //  auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+
+        // Acces mailles gauche 
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId pcid = dir_face.previousCell();
 
         // Acces maille gauche
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId pcid(f2cid.previousCell());
+        //auto f2cid = f2cid_stm.face(fid, idx);
+        //CellLocalId pcid(f2cid.previousCell());
 
         // somme des distances entre le milieu de la maille et le milieu de la face
         inout_h_cell_lagrange[pcid] =  (in_face_coord[fid] - in_cell_coord[pcid]).normL2();
       };
 
-      const Integer last_idx = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
+      //const Integer last_idx = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
       // Puis, contrib dans toutes les mailles suivantes
-      command_p.addKernelName("hcell_next") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      //command_p.addKernelName("hcell_next") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+      command_p.addKernelName("hcell_next") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
+        //auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
 
         // Acces maille droite
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId ncid(f2cid.nextCell());
+        //auto f2cid = f2cid_stm.face(fid, idx);
+        //CellLocalId ncid(f2cid.nextCell());
+
+        // Aces mailles droite 
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId ncid = dir_face.nextCell();
 
         // somme des distances entre le milieu de la maille et le milieu de la face
-        Real hcell = (idx[idir]==last_idx ? 0. : inout_h_cell_lagrange[ncid]);
+        //Real hcell = (idx[idir]==last_idx ? 0. : inout_h_cell_lagrange[ncid]);
+        Real hcell = inout_h_cell_lagrange[ncid];
         hcell +=  (in_face_coord[fid] - in_cell_coord[ncid]).normL2();
         inout_h_cell_lagrange[ncid] = hcell;
       };

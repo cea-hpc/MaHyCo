@@ -58,7 +58,7 @@ public:
     double inf, sup;
   };
   Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
-  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
+  //CartesianInterface::ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:
