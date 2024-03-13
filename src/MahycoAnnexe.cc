@@ -37,6 +37,27 @@ _initCartMesh() {
 }
 
 /*---------------------------------------------------------------------------*/
+/*!
+ * \brief Initialisation du maillage cartésien à la Arcane
+ */
+/*---------------------------------------------------------------------------*/
+Arcane::ICartesianMesh* MahycoModule::
+_initArcaneCartMesh() {
+  Arcane::ICartesianMesh* arcane_cartesian_mesh = nullptr;
+
+  PROF_ACC_BEGIN(__FUNCTION__);
+    
+  // On force l'implémentation Arcane::
+  info() << "Maillage Arcane cartésien";
+  arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
+  arcane_cartesian_mesh->computeDirections();
+
+  PROF_ACC_END;
+
+  return arcane_cartesian_mesh;
+}
+
+/*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
 void MahycoModule::hydroStartInitEnvAndMat()

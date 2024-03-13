@@ -54,6 +54,8 @@
 #include "cartesian/interface/FaceDirectionMng.h"
 #include "cartesian/interface/NodeDirectionMng.h"
 #include "cartesian/interface/CartesianConnectivity.h"
+
+#include "arcane/cartesianmesh/ICartesianMesh.h"
 // fin ajout au PIF
 
 // Ajout pour accélérateur
@@ -191,6 +193,12 @@ class MahycoModule
    * 
    */
   void initCartesianMesh() override;
+  
+  /**
+   * Initialisation de m_arcane_cartesian_mesh et m_dimensio
+   * 
+   */
+  void initArcaneCartesianMesh() override;
 
   /**
    * Allocation dans la deuxième dimension des tableaux CQS
@@ -456,6 +464,10 @@ class MahycoModule
   /** Construit le maillage cartésien et les managers par direction
    */
   CartesianInterface::ICartesianMesh* _initCartMesh();
+  
+  /** Construit le maillage Arcane cartésien et les managers par direction
+   */
+  Arcane::ICartesianMesh* _initArcaneCartMesh();
 
   /**
    * Fonctions diverses
@@ -492,6 +504,8 @@ class MahycoModule
   /* variables membre */
   // CartesianInterface:: = Arcane:: ou Cartesian::
   CartesianInterface::ICartesianMesh* m_cartesian_mesh;
+  // Arcane::CartesianMesh 
+  Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
   Integer m_nb_vars_to_project;
   Integer m_nb_env;

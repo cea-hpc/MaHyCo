@@ -1,9 +1,14 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#include "RemapADIService.h"
+#include "RemapArcaneService.h"
 #include "accenv/AcceleratorUtils.h"
 #include "accenv/IAccEnv.h"
+#include "arcane/utils/FatalErrorException.h"
+
 #include "cartesian/FactCartDirectionMng.h"
 
+#include "arcane/cea/FaceDirectionMng.h"
+#include "arcane/cea/NodeDirectionMng.h"
+#include "arcane/cea/CartesianConnectivity.h"
 
 /**
  *******************************************************************************
@@ -20,7 +25,7 @@
  * \return m_dual_grad_phi
  *******************************************************************************
  */
-void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
+void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
@@ -28,6 +33,8 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   
   auto queue = m_acc_env->newQueue();
   Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
+  Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
   if (options()->ordreProjection > 1) {
     
@@ -44,15 +51,18 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     }
     else { // (options()->projectionLimiteurId > minmodG) PAS SUR GPU
       m_dual_grad_phi.fill(0.0);
-      Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
+      //Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
-        DirNode dir_node(ndm[inode]);
+        //Cartesian::DirNode dir_node(ndm[inode]);
+        Arcane::DirNode dir_node(ndm[inode]);
         Node backnode = dir_node.previous();
-        DirNode dir_backnode(ndm[backnode]);
+        //Cartesian::DirNode dir_backnode(ndm[backnode]);
+        Arcane::DirNode dir_backnode(ndm[backnode]);
         Node backbacknode = dir_backnode.previous();
         Node frontnode = dir_node.next();
-        DirNode dir_frontnode(ndm[frontnode]);
+        //Cartesian::DirNode dir_frontnode(ndm[frontnode]);
+        Arcane::DirNode dir_frontnode(ndm[frontnode]);
         Node frontfrontnode = dir_frontnode.next();
         
         computeDualGradPhi(node, frontfrontnode, frontnode, backnode, backbacknode, idir);   
@@ -136,9 +146,9 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   {
     auto command_f = makeCommand(queue);
     
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.allFaces();
+    //auto cart_fdm = fact_cart.faceDirection(idir);
+    //auto f2cid_stm = cart_fdm.face2CellIdStencil();
+    //auto face_group = cart_fdm.allFaces();
     
     auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
     
@@ -149,13 +159,18 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
     Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
     
-    command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    //command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
+    command_f.addKernelName("fcontrib") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.allFaces()) {
+      //auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
       
       // Acces mailles gauche/droite 
-      auto f2cid = f2cid_stm.face(fid, idx);
-      CellLocalId backCid(f2cid.previousCell());
-      CellLocalId frontCid(f2cid.nextCell());
+      //auto f2cid = f2cid_stm.face(fid, idx);
+      //CellLocalId backCid(f2cid.previousCell());
+      //CellLocalId frontCid(f2cid.nextCell());
+
+      DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+      CellLocalId backCid  = dir_face.previousCell();
+      CellLocalId frontCid = dir_face.nextCell();
       
       // Si face au bord gauche, on ne prend pas en compte la backCell
       if (!ItemId::null(backCid)) {
@@ -201,20 +216,24 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_back_flux_mass_env  = ax::viewInOut(command,m_back_flux_mass_env );
     auto inout_front_flux_mass_env = ax::viewInOut(command,m_front_flux_mass_env);
     
-    auto cart_cell_dm = fact_cart.cellDirection(idir);
-    auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
+    //auto cart_cell_dm = fact_cart.cellDirection(idir);
+    //auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
 
-    auto node_dm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = node_dm.node2NodeIdStencil();
-    auto node_group = node_dm.allNodes();
+    //auto node_dm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = node_dm.node2NodeIdStencil();
+    //auto node_group = node_dm.allNodes();
 
     // Direction transverse en 2D
-    Integer dir1 = (idir+1)%2;
-    Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
-    Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
+    //Integer dir1 = (idir+1)%2;
+    //Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
+    //Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
+  
+    // Connectivité cartésienne Arcane
+    CartesianConnectivityLocalId cc = m_arcane_cartesian_mesh->connectivity();
 
-    command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
+    //command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command.addKernelName("ncontrib") << RUNCOMMAND_ENUMERATE(Node, nid, ndm.allNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
 
       for (Integer index_env=0; index_env < nb_env; index_env++) {
         inout_back_flux_mass_env[nid][index_env] =0.;
@@ -223,39 +242,37 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       inout_back_flux_mass[nid] = 0.;
       inout_front_flux_mass[nid] = 0.;
 
-      // 2 Mailles "back" dans la direction en 2D
-      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
-        IdxType cellb_idx=idx;
-        cellb_idx[idir]-=1; // back
-        cellb_idx[dir1]+=sht1;
+      CellLocalId lower_left  = cc.lowerLeftId (nid, idir);
+      CellLocalId upper_left  = cc.upperLeftId (nid, idir);
+      CellLocalId lower_right = cc.lowerRightId(nid, idir);
+      CellLocalId upper_right = cc.upperRightId(nid, idir);
 
-        // La maille existe-t-elle ?
-        if ((cellb_idx[0]>=0 && cellb_idx[0]<ncells0) &&
-            (cellb_idx[1]>=0 && cellb_idx[1]<ncells1)) {
-          CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
-
-          for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
-            inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
-          }
+      if (!lower_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[lower_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[lower_left][index_env];
         }
       }
-
-      // 2 Mailles "front" dans la direction en 2D
-      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
-        IdxType cellf_idx=idx;
-        // cellf_idx[idir]+=0; // front
-        cellf_idx[dir1]+=sht1;
-
-        // La maille existe-t-elle ?
-        if ((cellf_idx[0]>=0 && cellf_idx[0]<ncells0) &&
-            (cellf_idx[1]>=0 && cellf_idx[1]<ncells1)) {
-          CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
-
-          for (Integer index_env=0; index_env < nb_env; index_env++) { 
-            inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
-            inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
-          }
+      if (!upper_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[upper_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[upper_left][index_env];
+        }
+      }
+      if (!lower_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[lower_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[lower_right][index_env];
+        }
+      }
+      if (!upper_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[upper_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[upper_right][index_env];
         }
       }
     };
@@ -271,23 +288,27 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_front_flux_mass     = ax::viewInOut(command,m_front_flux_mass    );
     auto inout_back_flux_mass_env  = ax::viewInOut(command,m_back_flux_mass_env );
     auto inout_front_flux_mass_env = ax::viewInOut(command,m_front_flux_mass_env);
-    
-    auto cart_cell_dm = fact_cart.cellDirection(idir);
-    auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
 
-    auto node_dm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = node_dm.node2NodeIdStencil();
-    auto node_group = node_dm.allNodes();
+    // Connectivité cartésienne Arcane
+    CartesianConnectivityLocalId cc = m_arcane_cartesian_mesh->connectivity();
+    
+    //auto cart_cell_dm = fact_cart.cellDirection(idir);
+    //auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
+
+    //auto node_dm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = node_dm.node2NodeIdStencil();
+    //auto node_group = node_dm.allNodes();
 
     // Directions transverses en 3D
-    Integer dir1 = (idir+1)%3;
-    Integer dir2 = (idir+2)%3;
-    Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
-    Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
-    Integer ncells2 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(2);
+    //Integer dir1 = (idir+1)%3;
+    //Integer dir2 = (idir+2)%3;
+    //Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
+    //Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
+    //Integer ncells2 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(2);
 
-    command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
+    //command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command.addKernelName("ncontrib") << RUNCOMMAND_ENUMERATE(Node, nid, ndm.allNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
 
       for (Integer index_env=0; index_env < nb_env; index_env++) {
         inout_back_flux_mass_env[nid][index_env] =0.;
@@ -296,47 +317,69 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
       inout_back_flux_mass[nid] = 0.;
       inout_front_flux_mass[nid] = 0.;
 
-      // 4 Mailles "back" dans la direction en 3D
-      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
-        for(Integer sht2=-1 ; sht2<=0 ; ++sht2) {
-          IdxType cellb_idx=idx;
-          cellb_idx[idir]-=1; // back
-          cellb_idx[dir1]+=sht1;
-          cellb_idx[dir2]+=sht2;
+      CellLocalId lower_left  = cc.lowerLeftId (nid, idir);
+      CellLocalId upper_left  = cc.upperLeftId (nid, idir);
+      CellLocalId lower_right = cc.lowerRightId(nid, idir);
+      CellLocalId upper_right = cc.upperRightId(nid, idir);
+      CellLocalId topZlower_left  = cc.topZLowerLeftId (nid, idir);
+      CellLocalId topZupper_left  = cc.topZUpperLeftId (nid, idir);
+      CellLocalId topZlower_right = cc.topZLowerRightId(nid, idir);
+      CellLocalId topZupper_right = cc.topZUpperRightId(nid, idir);
 
-          // La maille existe-t-elle ?
-          if ((cellb_idx[0]>=0 && cellb_idx[0]<ncells0) &&
-              (cellb_idx[1]>=0 && cellb_idx[1]<ncells1) &&
-              (cellb_idx[2]>=0 && cellb_idx[2]<ncells2)) {
-            CellLocalId backCid{c2cid_stm.id(cellb_idx[0],cellb_idx[1],cellb_idx[2])};
-
-            for (Integer index_env=0; index_env < nb_env; index_env++) { 
-              inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[backCid][index_env];
-              inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[backCid][index_env];
-            }
-          }
+      if (!lower_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[lower_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[lower_left][index_env];
         }
       }
-
-      // 4 Mailles "front" dans la direction en 3D
-      for(Integer sht1=-1 ; sht1<=0 ; ++sht1) {
-        for(Integer sht2=-1 ; sht2<=0 ; ++sht2) {
-          IdxType cellf_idx=idx;
-          // cellf_idx[idir]+=0; // front
-          cellf_idx[dir1]+=sht1;
-          cellf_idx[dir2]+=sht2;
-
-          // La maille existe-t-elle ?
-          if ((cellf_idx[0]>=0 && cellf_idx[0]<ncells0) &&
-              (cellf_idx[1]>=0 && cellf_idx[1]<ncells1) &&
-              (cellf_idx[2]>=0 && cellf_idx[2]<ncells2)) {
-            CellLocalId frontCid{c2cid_stm.id(cellf_idx[0],cellf_idx[1],cellf_idx[2])};
-
-            for (Integer index_env=0; index_env < nb_env; index_env++) { 
-              inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[frontCid][index_env];
-              inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[frontCid][index_env];
-            }
-          }
+      if (!upper_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[upper_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[upper_left][index_env];
+        }
+      }
+      if (!lower_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[lower_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[lower_right][index_env];
+        }
+      }
+      if (!upper_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[upper_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[upper_right][index_env];
+        }
+      }
+      if (!topZlower_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[topZlower_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[topZlower_left][index_env];
+        }
+      }
+      if (!topZupper_left.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_back_flux_mass_env[nid][index_env] += in_back_flux_contrib_env[topZupper_left][index_env];
+          inout_back_flux_mass    [nid]            += in_back_flux_contrib_env[topZupper_left][index_env];
+        }
+      }
+      if (!topZlower_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[topZlower_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[topZlower_right][index_env];
+        }
+      }
+      if (!topZupper_right.isNull())
+      {
+        for (Integer index_env=0; index_env < nb_env; index_env++) { 
+          inout_front_flux_mass_env[nid][index_env] += in_front_flux_contrib_env[topZupper_right][index_env];
+          inout_front_flux_mass    [nid]            += in_front_flux_contrib_env[topZupper_right][index_env];
         }
       }
     };
@@ -367,10 +410,10 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     auto command = makeCommand(queue);
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto in_back_flux_mass  = ax::viewIn(command, m_back_flux_mass );
     auto in_front_flux_mass = ax::viewIn(command, m_front_flux_mass);
@@ -381,14 +424,19 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
       
       // Acces noeuds gauche/droite qui existent forcement
-      auto n2nid = n2nid_stm.stencilNode<1>(nid, idx);
+      //auto n2nid = n2nid_stm.stencilNode<1>(nid, idx);
       
-      NodeLocalId backNid(n2nid.previousId()); // back node
-      NodeLocalId frontNid(n2nid.nextId()); // front node
+      //NodeLocalId backNid(n2nid.previousId()); // back node
+      //NodeLocalId frontNid(n2nid.nextId()); // front node
+      
+      DirNodeLocalId dir_node(ndm.dirNodeId(nid));
+      NodeLocalId backNid  = dir_node.previous();
+      NodeLocalId frontNid = dir_node.next();
       
       // flux de masse
       inout_u_dual_lagrange[nid][3] += in_back_flux_mass[nid] - in_front_flux_mass[nid];
@@ -508,16 +556,17 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     Real thresold = m_arithmetic_thresold;
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto inout_u_dual_lagrange   = ax::viewInOut(command, m_u_dual_lagrange  );
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
       // filtre des valeurs abherentes
       if (abs(inout_u_dual_lagrange[nid][0]) < thresold) inout_u_dual_lagrange[nid][0]=0.;
       if (abs(inout_u_dual_lagrange[nid][1]) < thresold) inout_u_dual_lagrange[nid][1]=0.;
@@ -683,7 +732,6 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
   
 
 #endif
-
   PROF_ACC_END;
 }
 /*
@@ -693,7 +741,7 @@ void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
  * \return m_phi_dual_lagrange, m_u_dual_lagrange synchonise sur les mailles fantomes
  *******************************************************************************
  */
-void RemapADIService::synchronizeDualUremap()  {
+void RemapArcaneService::synchronizeDualUremap()  {
   PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
 #if 0
@@ -722,36 +770,43 @@ void RemapADIService::synchronizeDualUremap()  {
  *******************************************************************************
  */
 template<typename LimType>
-void RemapADIService::
+void RemapArcaneService::
 computeDualGradPhi_LimC(Integer idir) {
   PROF_ACC_BEGIN(__FUNCTION__);
+  //Cartesian::FactCartDirectionMng fact_cart(mesh());
   
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
   auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
     
-    auto cart_ndm = fact_cart.nodeDirection(idir);
-    auto n2nid_stm = cart_ndm.node2NodeIdStencil();
+    //auto cart_ndm = fact_cart.nodeDirection(idir);
+    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
     
-    auto node_group = cart_ndm.innerNodes();
+    //auto node_group = cart_ndm.innerNodes();
     
     auto in_phi_dual_lagrange = ax::viewIn(command, m_phi_dual_lagrange);
     auto in_node_coord        = ax::viewIn(command, m_node_coord);
     
     auto out_dual_grad_phi = ax::viewOut(command, m_dual_grad_phi);
     
-    command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
-      auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
+    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
+    command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
+      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
       
       // Acces noeuds gauche/droite qui existent forcement
-      auto n2nid = n2nid_stm.stencilNode<2>(nid, idx);
+      //auto n2nid = n2nid_stm.stencilNode<2>(nid, idx);
       
-      NodeLocalId backNid(n2nid.previousId()); // back node
-      NodeLocalId frontNid(n2nid.nextId()); // front node
-      NodeLocalId backbackNid(n2nid.prev_previousId()); // back back node
-      NodeLocalId frontfrontNid(n2nid.next_nextId()); // front front node
+      //NodeLocalId backNid(n2nid.previousId()); // back node
+      //NodeLocalId frontNid(n2nid.nextId()); // front node
+      // TODO : Pk backbackNid et frontfrontNid si on ne s'en sert pas ? Voir code CPU après 
+      //NodeLocalId backbackNid(n2nid.prev_previousId()); // back back node
+      //NodeLocalId frontfrontNid(n2nid.next_nextId()); // front front node
+      
+      DirNodeLocalId dir_node(ndm.dirNodeId(nid));
+      NodeLocalId backNid  = dir_node.previous();
+      NodeLocalId frontNid = dir_node.next();
       
       Real3 grad_front(0. , 0. , 0.);
       Real3 grad_back (0. , 0. , 0.);
@@ -829,6 +884,7 @@ computeDualGradPhi_LimC(Integer idir) {
 //     (m_node_coord[node][idir] - m_node_coord[backnode][idir]);
 //     
 //     // largeurs des mailles duales
+       // TODO : Pk backbackNid et frontfrontNid si on ne s'en sert pas ? De meme pour hmoins, h0, hplus
 //     Real hmoins, h0, hplus;
 //     h0 = 0.5 * (m_node_coord[frontnode][idir]- m_node_coord[backnode][idir]);
 //     if (backbacknode.localId() == -1) {
