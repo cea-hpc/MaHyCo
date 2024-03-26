@@ -85,12 +85,12 @@ hydroStartInit()
     m_fracvol.fill ( 1.0 );
     m_mass_fraction.fill ( 1.0 );
     // fraction des phases
-    m_frac_phase1.fill ( 1.0 );
-    m_frac_phase2.fill ( 1.0 );
-    m_frac_phase3.fill ( 1.0 );
-    m_frac_phase4.fill ( 1.0 );
-    m_frac_phase5.fill ( 1.0 );
-    m_frac_phase6.fill ( 1.0 );
+    m_frac_phase1.fill ( 0.0 );
+    m_frac_phase2.fill ( 0.0 );
+    m_frac_phase3.fill ( 0.0 );
+    m_frac_phase4.fill ( 0.0 );
+    m_frac_phase5.fill ( 0.0 );
+    m_frac_phase6.fill ( 0.0 );
     // initialisation de la pseudo à 0.
     m_pseudo_viscosity.fill ( 0.0 );
     
