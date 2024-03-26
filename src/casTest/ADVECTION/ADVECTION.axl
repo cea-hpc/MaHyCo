@@ -156,5 +156,11 @@
   <simple name="parametre" type="real" default="0.">
     <description>Parametre du cas test</description>
   </simple>
+  <simple name="rayon-bulle" type="real" default="0.25">
+    <description>rayon des bulles</description>
+    </simple>
+  <simple name="densite-interieure-initiale-lineaire" type="bool" default="false">
+    <description> densite de la bulle lineaire croissante de 0 a 1</description>
+  </simple>
 </options>
 </service>

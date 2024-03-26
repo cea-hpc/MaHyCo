@@ -21,7 +21,8 @@ void RIDERService::initMat(Integer dim)  {
       else
           Xb = {0.50, 0.75, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);     
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     Real rmin(10.), rmax(0.);
@@ -62,7 +63,9 @@ void RIDERService::initVarMono(Integer dim, double* densite_initiale, double* en
           Xb = {0.50, 0.75, 0.};
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);     
+  Real croissance_densite(1.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
         
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -88,6 +91,7 @@ void RIDERService::initVarMono(Integer dim, double* densite_initiale, double* en
     if (rmax < rb) {
       // maille pure de bulle
       m_density[cell] = densite_initiale[1];
+      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*rmax;
       m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
       double frac_b = (rb - rmin) / (rmax - rmin);
@@ -146,7 +150,9 @@ void RIDERService::initVar(Integer dim, double* densite_initiale, double* energi
   CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);     
+  Real croissance_densite(1.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
         
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
@@ -172,6 +178,7 @@ void RIDERService::initVar(Integer dim, double* densite_initiale, double* energi
     if (rmax < rb) {
       // maille pure de bulle
       m_density[cell] = densite_initiale[1];
+      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*rmax;
       m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
       // cas des cellules mailles mixtes

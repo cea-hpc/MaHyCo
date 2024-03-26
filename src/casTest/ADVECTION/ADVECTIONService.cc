@@ -22,6 +22,8 @@ void ADVECTIONService::initMat(Integer dim)  {
 
   // rayon interne et externe
   double rb(0.25);
+  
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     Real rmin(10.), rmax(0.);
@@ -73,8 +75,13 @@ void ADVECTIONService::initVarMono(Integer dim, double* densite_initiale, double
             Xb = {0.50, 0.75, 0.};
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.25);      
+  double rb(options()->rayonBulle);      
   // info() << " boucle sur les mailles";
+  
+  
+  Real croissance_densite(1.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     // parametres maille
@@ -113,12 +120,9 @@ void ADVECTIONService::initVarMono(Integer dim, double* densite_initiale, double
     if ((rx < rb) && (ry < rb)) {
         // maille pure de carré
         m_density[cell] = densite_initiale[1];
+        if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*r;
         m_pressure[cell] = pression_initiale[1];
-    } /* else if (((rmaxx >= rb) && (rminx < rb))  ((rmaxx >= rb) && (rminx < rb))) {
-      double frac_b = (rb - rminx) / (rmaxx - rminx);
-      m_density[cell] = frac_b;
-      m_pressure[cell] = 0.;
-    } */
+    } 
   }
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
@@ -150,10 +154,14 @@ void ADVECTIONService::initVar(Integer dim, double* densite_initiale, double* en
       else
           Xb = {0.50, 0.75, 0.};
   
+  
   CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.25);              
+  double rb(options()->rayonBulle);     
+  Real croissance_densite(1.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     // parametres maille
@@ -193,6 +201,7 @@ void ADVECTIONService::initVar(Integer dim, double* densite_initiale, double* en
     if ((rx < rb) && (ry < rb)) {
       // maille pure de bulle
       m_density[cell] = densite_initiale[1];
+      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*r;
       m_pressure[cell] = pression_initiale[1];
     } /* else if (((rmaxx >= rb) && (rminx < rb)) || ((rmaxx >= rb) && (rminx < rb))) {
       // cas des cellules mailles mixtes
