@@ -12,6 +12,7 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
   // Initialise l'énergie et la vitesse du son
   Real limit_tension = getTensionLimitCst(env);
   Real adiabatic_cst = getAdiabaticCst(env);
+  Real specific_heat = getSpecificHeatCst(env);
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -20,6 +21,8 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
     m_internal_energy[ev] = (pressure + (adiabatic_cst * limit_tension)) / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
     m_density_0[ev] = m_density[ev];
+    // calcul de la temperature de la constante (on prend celle de l'air : 287.)
+    m_temperature[ev] = pressure / (287. * density);
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -36,6 +39,7 @@ void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
   // Calcul de la pression et de la vitesse du son
   Real limit_tension = getTensionLimitCst(env);
   Real adiabatic_cst = getAdiabaticCst(env);
+  Real specific_heat = getSpecificHeatCst(env);
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -46,6 +50,7 @@ void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
         m_pressure[ev] = pressure;
         m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
         m_dpde[ev] = (adiabatic_cst - 1.) * density;
+        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
     }
   }
 }
@@ -59,12 +64,14 @@ void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   // Calcul de la pression et de la vitesse du son
   Real limit_tension = getTensionLimitCst(env);
   Real adiabatic_cst = getAdiabaticCst(env);
+  Real specific_heat = getSpecificHeatCst(env);
   Real internal_energy = m_internal_energy[ev];
   Real density = m_density[ev];
   Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);
   m_pressure[ev] = pressure;
   m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
   m_dpde[ev] = (adiabatic_cst - 1.) * density;
+  m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

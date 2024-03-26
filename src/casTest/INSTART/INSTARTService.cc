@@ -8,8 +8,8 @@ void INSTARTService::initMatMono(Integer dim)  {
   }
 }
 
-void INSTARTService::initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
+void INSTARTService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
   Real a0 = 0.01;
   Real rhoH = 2.0;
   Real rhoL = 1.0;
@@ -122,8 +122,8 @@ void INSTARTService::initMat(Integer dim)  {
   }
 }
 
-void INSTARTService::initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                    Real3 temperature_initiale, Real3x3 vitesse_initiale)  {
+void INSTARTService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
     
     
  if (options()->casTest == InstaRTX ||

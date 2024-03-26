@@ -22,8 +22,8 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
     // Affiche l'identifiant local de la maille, la pression et la densité
     m_internal_energy[ev] = (pressure - options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3)) / (adiabatic_cst * density);
     m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
-    // calcul de la temperature en fonction de la chaleur specifique
-    m_temperature[ev] = m_internal_energy[ev] / specific_heat;
+    // calcul de la temperature de la constante (on prend celle de l'air : 287.)
+    m_temperature[ev] = pressure / (287. * density);
     m_density_0[ev] = m_density[ev];
   }
 }
@@ -53,7 +53,7 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
         Real J = options()->rho0 / density ;
         Real mu = 1./J -1.;
         m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
-        m_temperature[ev] = internal_energy / specific_heat;
+        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
         m_dpde[ev] = adiabatic_cst * density;  
         // vitesse du son 
         J = options()->rho0 / (density - 1.e-7);
@@ -85,7 +85,7 @@ void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
     Real mu = 1./J -1.;
     m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
     // calcul de la temperature en fonction de la chaleur specifique
-    m_temperature[ev] = internal_energy / specific_heat;
+    m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
     m_dpde[ev] = adiabatic_cst * density;
     // vitesse du son 
     J = options()->rho0 / (density - 1.e-7);

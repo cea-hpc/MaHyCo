@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="TabuleeEOS" version="1.0" type="caseoption">
+<service name="FictifEOS" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service TabuleeEOS</description>
+	<description>Jeu de données du service FictifEOS</description>
   <interface name="IEquationOfState" />
 
 	<variables>
@@ -103,35 +103,16 @@
 			dump="true"
 			need-sync="true" />
 			
-        <!-- 	FRAC PHASE 1	 -->
-        <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-        <!-- 	FRAC PHASE 2	 -->
-        <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-        <!-- 	FRAC PHASE 3	 -->
-        <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-        <!-- 	FRAC PHASE 4	 -->
-        <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-        <!-- 	FRAC PHASE 5	 -->
-        <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-        <!-- 	FRAC PHASE 6	 -->
-        <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />  
         <!-- TEMPERATURE -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
+	    dim="0" material="true" dump="true" need-sync="true" />
 	    <!-- DENSITY 0 -->
         <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-	    
-        <!-- Indicateur Maille Endommagée	 -->
+        <!-- 	Indicateur Maille Endommagée	 -->
         <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
-            dim="0" material="true" dump="true" need-sync="true" />
-         
+        dim="0" material="true" dump="true" need-sync="true" />
+            
        <!-- DENSITY DE FRACTURATION-->
 		<variable
 			field-name="density_fracture"
@@ -141,7 +122,7 @@
 			dim="0"
 			material="true" 
 			dump="true"
-			need-sync="true" />   
+			need-sync="true" />
 			
 		<!-- INTERNAL ENERGY DE FRACTURATION -->
 		<variable
@@ -152,7 +133,13 @@
 			dim="0"
 			material="true" 
 			dump="true"
-			need-sync="true" />	
+			need-sync="true" />
+        <!-- INTERNAL ENERGY OLD N -->
+        <variable field-name="internal_energy_n" name="InternalEnergyN" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- TEMPERATURE OLD N-->
+        <variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />      
 	</variables>
 
 	<options>
@@ -168,11 +155,7 @@
 		<simple name="specific-heat" type="real" default="0.0">
 			<description>Définition de la chaleur spécifique</description>
 		</simple>
-		<!-- - - - - -  fichier_de_coeff - - - - -->
-		 <simple name="fichier-coeff" type="string" default=""> 
-		     <description>Nom du fichier de coefficient</description> 
-		 </simple>
-		<!-- - - - - - tension-damage thresold - - - - -->
+		<!-- - - - - - damage thresold - - - - -->
 		<simple name="tension-damage-thresold" type="real" default="-1.e12">
 			<description>Définition de pression minimal avant endommagement</description>
 		</simple>
@@ -180,17 +163,25 @@
 		<simple name="density-damage-thresold" type="real" default="0.">
 			<description>Définition du rapport de densité minimal avant endommagement</description>
 		</simple>
-		<!-- - - - - - density-damage thresold - - - - -->
-		<simple name="facteur-density-max-damage" type="real" default="1.e10">
-			<description>Définition du rapport de densité max avant endommagement</description>
-		</simple>
 		<!-- - - - - -  Formulation Equation d'etat - - - - -->
 		 <simple name="formulation" type="string" default="VE"> 
 		     <description>Formulation EOS</description> 
 		 </simple>
 		<!-- - - - - -  Formulation Equation d'etat - - - - -->
-		 <simple name="init-formulation" type="string" default="VT"> 
+		 <simple name="init-formulation" type="string" default="VP"> 
 		     <description>Formulation EOS</description> 
 		 </simple>
+		 <simple name="tdebut-pression" type="real" default="0.">
+             <description>Valeur du temps de début de la loi de pression </description>
+         </simple>
+         <simple name="tfin-pression" type="real" default="0.">
+             <description>Valeur du temps de fin de la loi de pression </description>
+         </simple>
+         <simple name="valeur-debut-pression" type="real" default="0.">
+             <description>Valeur de la pression initiale de la loi de pression </description>
+         </simple> 
+         <simple name="valeur-dependance-temps" type="real" default="0.">
+             <description>Valeur du coefficient linéaire de la loi de pression </description>
+         </simple>
 	</options>
 </service>

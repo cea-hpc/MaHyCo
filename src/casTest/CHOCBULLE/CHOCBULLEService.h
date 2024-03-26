@@ -43,15 +43,18 @@ public:
 
 public:
   virtual void initMatMono(Integer dim);
-  virtual void initVarMono(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                    Real3 temperature_initiale, Real3x3 vitesse_initiale);
+  virtual void initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale);
   virtual void initMat(Integer dim);
-  virtual void initVar(Integer dim, Real3 densite_initiale, Real3 energie_initiale, Real3 pression_initiale, 
-                                    Real3 temperature_initiale, Real3x3 vitesse_initiale);
+  virtual void initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale);
   virtual bool hasReverseOption();
   virtual Real getReverseParameter();
   virtual bool isInternalModel();
   virtual void initUtilisateur();
+private:
+  // valeur aléatoire pour les bulles
+  float *m_rand1, *m_rand2, *m_rand3, *m_rand4;  
 };
 
 #endif

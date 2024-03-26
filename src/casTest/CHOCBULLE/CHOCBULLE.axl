@@ -137,6 +137,27 @@
             dim="0" 
             dump="true" 
             need-sync="true" />
+	    <!-- 	FRAC PHASE 1	 -->
+        <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 2	 -->
+        <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 3	 -->
+        <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 4	 -->
+        <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 5	 -->
+        <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 6	 -->
+        <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />  
+        <!-- TEMPERATURE -->
+        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
 	</variables>
 
 <options>
@@ -150,10 +171,77 @@
     <description>
      Option de retour arriere 
     </description>
-  </simple>
+    </simple>
    <!-- - - - - - parametre du cas test - - - - -->
-  <simple name="parametre" type="real" default="0.">
+   <simple name="parametre" type="real" default="0.">
     <description>Parametre du cas test</description>
-  </simple>
+   </simple>
+   
+    <simple name="nombre-bulles-x" type="integer" default="0">
+        <description>Nombre de bulles suivant x</description>
+    </simple>
+    <simple name="nombre-bulles-y" type="integer" default="0">
+        <description>Nombre de bulles suivant y</description>
+    </simple>
+    <simple name="nombre-bulles-z" type="integer" default="1">
+        <description>Nombre de bulles suivant y</description>
+    </simple>
+    <simple name="position-premiere-bulle" type="real3" default="0. 0. 0.">
+        <description>Position centre premiere bulle</description>
+    </simple>
+    <simple name="deltax-bulle" type="real" default="0.">
+    <description>distance-x entre bulles</description>
+    </simple>
+    <simple name="deltay-bulle" type="real" default="0.">
+    <description>distance-y entre bulles</description>
+    </simple>
+    <simple name="deltaz-bulle" type="real" default="0.">
+    <description>distance-z entre bulles</description>
+    </simple>
+    <simple name="rayon-bulle" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="nombre-bulles-aleatoires" type="integer" default="0">
+        <description>Nombre de bulles aleatoires</description>
+    </simple>
+    <simple name="position-min" type="real3" default="0. 0. 0.">
+        <description>Position min du domaine des bulles</description>
+    </simple>
+    <simple name="position-max" type="real3" default="0. 0. 0.">
+        <description>Position max du domaine des bulles</description>
+    </simple>
+    <simple name="rayon-min" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="rayon-max" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="xfin-fictif" type="real" default="0.25">
+    <description>Position de la fin du fictif </description>
+    </simple>    
+    <simple name="xdebut-fictif2" type="real" default="0.5">
+    <description>Position du début du fictif </description>
+    </simple>
+    <simple name="yfin-fictif2" type="real" default="0.">
+    <description>Position de la fin du fictif </description>
+    </simple>    
+    <simple name="ydebut-fictif2" type="real" default="100.">
+    <description>Position du début du fictif </description>
+    </simple>
+    <simple name="creneau" type="bool" default="false">
+    <description> option du créneau en surface libre</description>
+    </simple>
+    <simple name="position-crenau-min-min" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à gauche </description>
+    </simple>
+    <simple name="position-crenau-min-max" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à droite </description>
+    </simple>
+    <simple name="position-crenau-max-min" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à gauche </description>
+    </simple>
+    <simple name="position-crenau-max-max" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à droite </description>
+    </simple>
 </options>
 </service>
