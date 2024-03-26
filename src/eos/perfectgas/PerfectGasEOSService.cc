@@ -11,6 +11,8 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
+  Real energy_ref(0.);
+  Real temperature_ref(0.);
   // Initialise l'énergie et la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -21,8 +23,8 @@ void PerfectGasEOSService::initEOS(IMeshEnvironment* env)
     // Affiche l'identifiant local de la maille, la pression et la densité
     m_internal_energy[ev] = pressure / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
-    // calcul de la temperature en fonction de la chaleur specifique
-    m_temperature[ev] = m_internal_energy[ev] / specific_heat;
+    // calcul de la temperature de la constante (on prend celle de l'air : 287.)
+    m_temperature[ev] = pressure / (287. * density);
     m_density_0[ev] = m_density[ev];
     
   }
@@ -54,7 +56,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
         m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
         m_dpde[ev] = (adiabatic_cst - 1.) * density;
         // calcul de la temperature en fonction de la chaleur specifique
-        m_temperature[ev] = internal_energy / specific_heat;
+        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
     }
   }
 }
@@ -76,7 +78,7 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
   m_dpde[ev] = (adiabatic_cst - 1.) * density;
   // calcul de la temperature en fonction de la chaleur specifique
-  m_temperature[ev] = internal_energy / specific_heat;
+  m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

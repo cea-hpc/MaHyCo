@@ -135,7 +135,12 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />	
-			
+		<!-- INTERNAL ENERGY OLD N -->
+        <variable field-name="internal_energy_n" name="InternalEnergyN" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- TEMPERATURE OLD N-->
+        <variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />      
     </variables>
 
 	<options>

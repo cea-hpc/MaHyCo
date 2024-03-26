@@ -31,6 +31,10 @@ add_library(PerfectGas eos/perfectgas/PerfectGasEOSService.cc)
 target_include_directories(PerfectGas PUBLIC .)
 target_link_libraries(PerfectGas PUBLIC arcane_core)
 
+add_library(Fictif eos/fictif/FictifEOSService.cc)
+target_include_directories(Fictif PUBLIC .)
+target_link_libraries(Fictif PUBLIC arcane_core)
+
 add_library(StiffenedGas eos/stiffenedgas/StiffenedGasEOSService.cc)
 target_include_directories(StiffenedGas PUBLIC .)
 target_link_libraries(StiffenedGas PUBLIC arcane_core)
@@ -92,7 +96,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -108,6 +112,7 @@ arcane_target_add_axl(VORTEX casTest/VORTEX/VORTEX)
 arcane_target_add_axl(Tabulee eos/tabulee/TabuleeEOS)
 arcane_target_add_axl(MieGruneisen eos/miegruneisen/MieGruneisenEOS)
 arcane_target_add_axl(PerfectGas eos/perfectgas/PerfectGasEOS)
+arcane_target_add_axl(Fictif eos/fictif/FictifEOS)
 arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Elasto elasto/DefaultModel)
@@ -168,6 +173,7 @@ set( TEST_NAMES_PARA_8
 		"CAS_MonoRiderTy_pb_simple_superbee"
 		"CAS_MonoRiderTy_pb_mixte_superbee_vanleer"
 		"CAS_Sedov"
+		"CAS_2D_shallow_chocBulle"
 		)
 set( TEST_NAMES
         "CAS_2D_Lag_NOH"
@@ -186,6 +192,7 @@ set( TEST_NAMES
 		"CAS_2D_ALE_Sedov_euler"
 		"CAS_2D_ALE_BiSedov_euler"
 		"CAS_Compression_isotherme_ALU_monodimX"
+		"CAS_2D_choc_plaque_crenau"
 		)
 
 set( TEST_NAMES_PR

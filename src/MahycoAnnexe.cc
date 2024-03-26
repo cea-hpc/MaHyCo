@@ -36,8 +36,8 @@ void MahycoModule::hydroStartInitEnvAndMat()
     IMeshEnvironment* env = mm->createEnvironment(env_build);
     info() << "Environment cree";
     saved_envs.add(env);
-    // Le bloc ne contient que 2 milieux
-    if (i<3){
+    // Le bloc ne contient que 5 milieux au max
+    if (i<5){
       info() << "Add environment " << env_name << " to block1";
       mbbi.addEnvironment(env);
     }
@@ -97,20 +97,26 @@ void MahycoModule::hydroStartInitEnvAndMat()
     Cell cell = *icell;
     if (m_materiau[icell] == 0.) {
       mat_indexes[0].add(icell.itemLocalId());
-    } else if (m_materiau[icell] == 1.) {
-      mat_indexes[1].add(icell.itemLocalId());
-    } else if (m_materiau[icell] == 2.) {
-      mat_indexes[2].add(icell.itemLocalId());
     } else if (m_materiau[icell] > 0. && m_materiau[icell] < 1.) {
       mat_indexes[0].add(icell.itemLocalId());
+      mat_indexes[1].add(icell.itemLocalId());
+    } else if (m_materiau[icell] == 1.) {
       mat_indexes[1].add(icell.itemLocalId());
     } else if (m_materiau[icell] > 1. && m_materiau[icell] < 2.) {
       mat_indexes[1].add(icell.itemLocalId());
       mat_indexes[2].add(icell.itemLocalId());
+    } else if (m_materiau[icell] == 2.) {
+      mat_indexes[2].add(icell.itemLocalId());
+    } else if (m_materiau[icell] > 2. && m_materiau[icell] < 3.) {
+      mat_indexes[2].add(icell.itemLocalId());
+      mat_indexes[3].add(icell.itemLocalId());
+    } else if (m_materiau[icell] == 3.) {
+      mat_indexes[3].add(icell.itemLocalId());
     } else {
       mat_indexes[0].add(icell.itemLocalId());
       mat_indexes[1].add(icell.itemLocalId());
       mat_indexes[2].add(icell.itemLocalId());
+      mat_indexes[3].add(icell.itemLocalId());
     }
         
   }
@@ -200,10 +206,10 @@ void MahycoModule::PrepareFaceGroup() {
     FaceGroup facexmin = mesh()->faceFamily()->findGroup("XMIN");
     FaceGroup faceymin = mesh()->faceFamily()->findGroup("YMIN");
     FaceGroup facezmin = mesh()->faceFamily()->findGroup("ZMIN");
-    pinfo() << " taille x 0 " << facexmin.size();
-    pinfo() << " taille y 0 " << faceymin.size();
-    pinfo() << " taille z 0 " << facezmin.size();
-    pinfo() << " thresold " << options()->threshold;
+    // pinfo() << " taille x 0 " << facexmin.size();
+    // pinfo() << " taille y 0 " << faceymin.size();
+    // pinfo() << " taille z 0 " << facezmin.size();
+    // pinfo() << " thresold " << options()->threshold;
     
     mesh()->faceFamily()->createGroup("XMAX", face_xmax_lid,true);
     mesh()->faceFamily()->createGroup("YMAX", face_ymax_lid,true);
@@ -211,14 +217,14 @@ void MahycoModule::PrepareFaceGroup() {
     FaceGroup facexmax = mesh()->faceFamily()->findGroup("XMAX");
     FaceGroup faceymax = mesh()->faceFamily()->findGroup("YMAX");
     FaceGroup facezmax = mesh()->faceFamily()->findGroup("ZMAX");
-    pinfo() << " taille x max " << facexmax.size();
-    pinfo() << " taille y max " << faceymax.size();
-    pinfo() << " taille z max " << facezmax.size();
+    // pinfo() << " taille x max " << facexmax.size();
+    // pinfo() << " taille y max " << faceymax.size();
+    // pinfo() << " taille z max " << facezmax.size();
     
     
-    info() << " nombre total de face " << allFaces().size();
+    // info() << " nombre total de face " << allFaces().size();
     
-    info() << " creation des groupes de dimension " << m_dimension;
+    // info() << " creation des groupes de dimension " << m_dimension;
   } 
 } 
 /**

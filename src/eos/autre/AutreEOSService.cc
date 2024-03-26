@@ -20,6 +20,8 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
   bool impression = true;
   String fichier_string = options()->fichierCoeff();
   const char* fichier= fichier_string.localstr();
+  pinfo() << "Debut de S_LEC_COEF";
+  
   S_LEC_COEF((char*) fichier);
    
   // initialisation rho_std,ene_std
@@ -84,6 +86,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
   pinfo() << "  ene = " << m_ene[0];
   pinfo() << "  pres = " << m_Pres[0];
   pinfo() << "  Temp = " << m_Temp[0];
+  pinfo() << "  Frac_phase = " << m_Frac1[0] << " , " << m_Frac2[0] << " , " << m_Frac3[0];
   
   S_CALC_CINE_VE( &nbmail,
                  m_dtime,

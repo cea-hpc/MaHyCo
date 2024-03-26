@@ -156,6 +156,12 @@ function main {
   else
     echo "pas fichier de maillage dans le cas"
   fi
+  if [ -f $test_dir/*.txt ]; then
+    echo "fichier de texte de tabulation dans le cas"
+    cp $test_dir/*.txt . 2>/dev/null
+  else
+    echo "pas fichier de maillage dans le cas"
+  fi
   
   if [ ${type}  = "para_8" ]
   then

@@ -31,6 +31,9 @@
   <!-- TEMPERATURE -->
   <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- TEMPERATURE -->
+  <variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- PSEUDO OLD N-1-->
   <variable field-name="pseudo_viscosity_nmoins1" name="PseudoViscosityNmoins1" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />

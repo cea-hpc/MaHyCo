@@ -102,8 +102,14 @@ void TabuleeEOSService::applyEOS(IMeshEnvironment* env)
         EnvCell ev = *ienvcell;   
         Cell cell = ev.globalCell();
         
+        // std::cout << " cell " << cell.uniqueId() << " e = " << m_internal_energy[ev] << " emax " << emax << std::endl; 
+        // pour éviter de sortir de la tabulation
+        // d0 = std::max(std::min(m_density[ev], dmax/2), dmin);  
+        // e0 = std::max(std::min(m_internal_energy[ev], emax/2), emin); 
+        
+       
         d0 = m_density[ev];  
-        e0 = m_internal_energy[ev];
+        e0 = m_internal_energy[ev]; 
         
         calculPetT( d0,  e0,  t0,  p0,  interp );
         
@@ -132,8 +138,12 @@ void TabuleeEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
     double d0, t0, p0, e0;
     double epsilon ; 
     
+    // pour éviter de sortir de la tabulation
+    // d0 = std::max(std::min(m_density[ev], dmax/2), dmin);  
+    // e0 = std::max(std::min(m_internal_energy[ev], emax/2), emin);
+       
     d0 = m_density[ev];  
-    e0 = m_internal_energy[ev];
+    e0 = m_internal_energy[ev]; 
     
     calculPetT( d0,  e0,  t0,  p0,  interp );
     
@@ -158,18 +168,22 @@ void TabuleeEOSService::Endommagement(IMeshEnvironment* env)
 {
   Real damage_thresold = options()->tensionDamageThresold();
   Real density_thresold = options()->densityDamageThresold();
+  Real density_max= options()->facteurDensityMaxDamage();
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;  
     Cell cell = ev.globalCell(); 
+    // std::cout << " cell " << cell.uniqueId() << m_maille_endo[ev.globalCell()]  << std::endl; 
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[ev] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
+        // std::cout << " cell " << cell.uniqueId() << m_density[cell]/m_density_0[cell] << std::endl; 
+        if (m_pressure[ev] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold || m_density[cell]/m_density_0[cell] > density_max) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];
             m_internal_energy_fracture[ev] = m_internal_energy[ev];
             m_pressure[ev] = 0.;
+            // std::cout << " cell endommagée " << cell.uniqueId()  << std::endl; 
         }
     } else { 
         // Maille endo : on verifie si elle ne s'est pas recompactée
@@ -286,7 +300,6 @@ void TabuleeEOSService::initdata() {
         dmin = math::min(dens[i], dmin);
         dmax = math::max(dens[i], dmax);
     }
-    
 	std::cout << " Rangement dans data " << std::endl;
         
     data = { {"t", _temp},
@@ -314,8 +327,9 @@ bool TabuleeEOSService::calculPetT(double d0, double e0, double &t0, double &p0,
   auto d =_d.at(0);
   auto t =_t.at(0);
   
+    
 //   std::cout << " densité " << d0 << std::endl;
-//   std::cout << " energie " << e0 << std::endl;
+//   std::cout << " energie " << e0 << " emax " << emax << std::endl;
 //   std::cout << "data input d: " << d.at(1) << std::endl;
 //   std::cout << "data input d : " << d.at(75) << std::endl;
 //   std::cout << "data input p : " << p[5][10] << std::endl;
@@ -367,7 +381,8 @@ bool TabuleeEOSService::calculPetT(double d0, double e0, double &t0, double &p0,
     double ed_min = *it.first;
     double ed_max = *it.second;
     if (e0 > ed_max || e0 < ed_min) {
-        std::cout << "test in calculPetT energy blocking: " << e0 << " " << ed_min << " " <<  ed_max << std::endl;
+        std::cout << " minmax_element : test in calculPetT energy blocking: " << e0 << " " << ed_min << " " <<  ed_max << std::endl;
+        std::cout << " densité " << d0 << std::endl;
         e0 = std::max(std::min(e0,ed_max ),ed_min );
         exit(1);
     }

@@ -180,6 +180,10 @@
 		<simple name="density-damage-thresold" type="real" default="0.">
 			<description>Définition du rapport de densité minimal avant endommagement</description>
 		</simple>
+		<!-- - - - - - density-damage thresold - - - - -->
+		<simple name="facteur-density-max-damage" type="real" default="1.e10">
+			<description>Définition du rapport de densité max avant endommagement</description>
+		</simple>
 		<!-- - - - - -  Formulation Equation d'etat - - - - -->
 		 <simple name="formulation" type="string" default="VE"> 
 		     <description>Formulation EOS</description> 

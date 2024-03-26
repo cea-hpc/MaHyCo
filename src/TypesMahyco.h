@@ -86,6 +86,7 @@ enum Test {
      BiInstaRTY = 44,
      BiInstaRTZ = 45,
      Vortex = 46,
+     ChocBulle = 47,
   };
   
   enum limiteur {
