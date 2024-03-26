@@ -464,16 +464,16 @@ void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, In
             info() << " cell " << cell.localId()
                     << " proj 1 --masse tres faiblement negative   "
                     << " soit " << m_u_lagrange[cell][nbmat + imat]
-                    << " et volume " << m_u_lagrange[cell][imat];
+                    << " et volume " << m_u_lagrange[cell][imat] << " matériau " << imat;
                     
           // m_u_lagrange[cell][imat] = 0.;
           m_u_lagrange[cell][nbmat + imat] = 0.;
         }
         if (m_u_lagrange[cell][2 * nbmat + imat] < 0.) {
-          if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
-            info() << " cell " << cell.localId()
-                    << " --energie tres faiblement negative "
-                    << " cell " << m_u_lagrange[cell][2 * nbmat + imat];
+          // if (abs(m_u_lagrange[cell][nbmat + imat]) > 1.e2 * options()->threshold)
+            // info() << " cell " << cell.localId()
+            //         << " --energie tres faiblement negative "
+            //        << " cell " << m_u_lagrange[cell][2 * nbmat + imat] << " matériau " << imat;
           // m_u_lagrange[cell][imat] = 0.;
           // m_u_lagrange[cell][nbmat + imat] = 0.;
           m_u_lagrange[cell][2 * nbmat + imat] = 0.;

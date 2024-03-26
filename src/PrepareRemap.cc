@@ -206,7 +206,7 @@ void MahycoModule::remap() {
     // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees
     // pour les nouveaux environements crees dans les mailles mixtes par la projection
     m_pseudo_viscosity_n.fill(0.0);
-    m_internal_energy_n.fill(0.0);
+    // m_internal_energy_n.fill(0.0); // utilisé pour le calcul de la temperature dans l'EOS
     m_cell_volume_n.fill(0.0);
     m_pressure_n.fill(0.0);
     m_density_n.fill(0.0);
@@ -220,6 +220,10 @@ void MahycoModule::remap() {
           EnvCell ev = *ienvcell;
           Cell cell = ev.globalCell();
           m_materiau[cell] += index_env*m_fracvol[ev];
+          // copie de l'energie dans l'energie n 
+          // pour d'avoir une élévation de température due seulement à la projection
+          m_internal_energy_n[cell] = m_internal_energy[cell];
+          m_internal_energy_n[ev] = m_internal_energy[ev];
         }
     }
     if (!options()->sansLagrange) {

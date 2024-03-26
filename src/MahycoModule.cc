@@ -98,14 +98,14 @@ hydroStartInit()
     m_density_fracture.fill ( 0.0 );
     m_internal_energy_fracture.fill ( 0.0 );
     
-    
     if (options()->casModel()->isInternalModel() == true) { 
         info() << " Initialisation des variables pour les cas test internes";
-        Real3 densite_initiale;
-        Real3 pression_initiale;
-        Real3 energie_initiale;
+        Real* densite_initiale = (double *)malloc(sizeof(double) * m_nb_env);
+        Real* pression_initiale = (double *)malloc(sizeof(double) * m_nb_env);
+        Real* energie_initiale = (double *)malloc(sizeof(double) * m_nb_env);
+        Real* temperature_initiale=  (double *)malloc(sizeof(double) * m_nb_env);
         Real3x3 vitesse_initiale;
-        Real3 temperature_initiale;
+        
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
             densite_initiale[i] = options()->environment[i].densiteInitiale;
             pression_initiale[i] = options()->environment[i].pressionInitiale;
@@ -134,18 +134,20 @@ hydroStartInit()
         initTH();
     }
       
-    info() << " appel aux eos ";
+    info() << " - Appel aux eos ";
     if ( !options()->sansLagrange ) {
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
             IMeshEnvironment* ienv = mm->environments() [i];
+            info() << " - Appel aux eos pour l'env " << ienv->name();
             // Initialise l'énergie et la vitesse du son
             options()->environment[i].eosModel()->initEOS ( ienv );
+            info() << " - Appel modèle elasto pour l'env " << ienv->name();
             // Initialisation des varibles ElastoPlastic (mise à zéro)
             options()->environment[i].elastoModel()->initElasto ( ienv );
         }
 
         CellToAllEnvCellConverter all_env_cell_converter ( mm );
-
+        info() << " Calcul Valeurs moyennes ";
         // valeur moyenne
         ENUMERATE_CELL ( icell, allCells() ) {
             Cell cell = * icell;
@@ -294,6 +296,9 @@ hydroContinueInit()
                 options()->environment[i].eosModel()->ReinitEOS ( ienv );
             }
         }
+        
+        IParallelMng* m_parallel_mng = subDomain()->parallelMng();
+        my_rank = m_parallel_mng->commRank();
     }
 }
 /*---------------------------------------------------------------------------*/
@@ -341,6 +346,7 @@ saveValuesAtN()
         m_cell_volume_n[cell] = m_cell_volume[cell];
         m_density_n[cell] = m_density[cell];
         m_internal_energy_n[cell] = m_internal_energy[cell];
+        m_temperature_n[cell] = m_temperature[cell];
     }
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
@@ -353,6 +359,11 @@ saveValuesAtN()
             m_cell_volume_n[ev] = m_cell_volume[ev];
             m_density_n[ev] = m_density[ev];
             m_internal_energy_n[ev] = m_internal_energy[ev];
+            m_temperature_n[ev] = m_temperature[ev];
+            /* Cell cell = ev.globalCell();
+            if (cell.localId() == 2000) pinfo() << env->name() <<  " SAV m_temperature_n[ev] " << m_temperature_n[ev] << " m_temperature[ev] " << m_temperature[ev]; 
+            if (cell.localId() == 2000) pinfo() << env->name() << " SAV m_internal_energy_n[ev] " << m_internal_energy_n[ev] << " m_internal_energy[ev] " << m_internal_energy[ev];
+            */
         }
     }
 
@@ -439,9 +450,8 @@ updateVelocity()
     if ( options()->schemaCsts() && options()->withProjection ) {
         updateVelocityBackward();
     }
-
-
-    debug() << my_rank << " : " << " Entree dans updateVelocity()";
+    
+    // pinfo() << my_rank << " : " << " Entree dans updateVelocity()";
     // Remise à zéro du vecteur des forces.
     m_force.fill ( Real3::zero() );
 
@@ -481,6 +491,11 @@ updateVelocity()
     ENUMERATE_NODE ( inode, allNodes() ) {
         Node node = *inode;
         m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
+        /* if (node.uniqueId() ==  177437 || node.uniqueId() ==  177438 || node.uniqueId() == 178439  || node.uniqueId() == 178438 ) {
+            pinfo() << my_rank << " " << node.uniqueId() << " Vitesse " << m_velocity[node];
+            pinfo() << my_rank << " " << node.uniqueId() << " Masse " << m_node_mass[inode];
+            pinfo() << my_rank << " " << node.uniqueId() << " Force " << m_force[inode];
+        } */
     }
      
     Real3 g = options()->gravity;
@@ -490,7 +505,7 @@ updateVelocity()
     }
     m_velocity.synchronize();
     
-    debug() << my_rank << " : " << " Fin dans updateVelocity()";
+    // pinfo() << my_rank << " : " << " Fin dans updateVelocity()";
 }
 /**
  *******************************************************************************
@@ -1034,6 +1049,7 @@ computeGeometricValues()
     // Coordonnées des centres des faces
     Real3 face_coord[6];
 
+    CellToAllEnvCellConverter all_env_cell_converter ( mm );
     Real racine = m_dimension == 2 ? .5  : 1./3. ;
     m_node_coord.synchronize();
     if ( m_dimension == 3 ) {
@@ -1090,11 +1106,33 @@ computeGeometricValues()
             volume /= m_dimension;
 
             m_cell_volume[cell] = volume;
-
+            
             if ( volume < 0. ) {
+                pinfo() << " ------------------------------------------------------------";
                 pinfo() << " Volume Négatif";
-                pinfo() << cell.localId() << " : " << " calcul du volume=" << volume;
+                pinfo() << cell.uniqueId() << " : " << " calcul du volume=" << volume;
                 pinfo() << "de coordonnées : "  << m_cell_coord[cell];
+                pinfo() << " Energie Interne de la maille " << m_internal_energy[cell];
+                pinfo() << " Pression de la maille " << m_pressure[cell];
+                pinfo() << " Pseudo " << m_pseudo_viscosity[cell];
+                pinfo() << " -------------------------------------";
+                ENUMERATE_NODE(inode, cell.nodes()) {
+                     Node node = *inode; 
+                     pinfo() << node.uniqueId() << " Vitesse " << m_velocity[node];
+                     ENUMERATE_CELL(icell, node.cells()) {
+                          Cell cell2 = * icell;
+                          pinfo() << " Environnement Cell :" << cell2.uniqueId() << " ESTMixte " << m_est_mixte[cell2] << " Energie Interne " << m_internal_energy[cell2]
+                            << " Pression moyenne " << m_pressure[cell2] << " Pseudo " << m_pseudo_viscosity[cell2];
+                          AllEnvCell all_env_cell = all_env_cell_converter[cell2];
+                            if ( all_env_cell.nbEnvironment() !=1 ) {
+                                ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+                                    EnvCell ev = *ienvcell; 
+                                    int index_env = ev.environmentId(); 
+                                    pinfo() << " ENV INDEX  " << index_env << " Energie Interne ENV " << m_internal_energy[ev] << " Fraction de volume ENV " << m_fracvol[ev] << " Pression ENV " << m_pressure[ev];
+                                }
+                            }
+                     }
+                }
                 exit(1);
             }
         }
@@ -1147,7 +1185,6 @@ computeGeometricValues()
 
     // maille mixte
     // moyenne sur la maille
-    CellToAllEnvCellConverter all_env_cell_converter ( mm );
     ENUMERATE_CELL ( icell, allCells() ) {
         Cell cell = * icell;
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
@@ -1662,9 +1699,11 @@ computeDeltaT()
 
         // Calcul du pas de temps pour le respect du critère de CFL
         Real minimum_aux = FloatInfo < Real >::maxValue();
-        Integer cell_id ( -1 ), nbenvcell ( -1 );
+        Int64 cell_id ( -1 ), nbenvcell ( -1 );
         Real cc ( 0. ), ll ( 0. );
         Real3 coord;
+        Cell cell_min;
+        Real vit_cell_min(0.);
 
         ENUMERATE_CELL ( icell, allCells() ) {
             Cell cell = * icell;
@@ -1678,18 +1717,35 @@ computeDeltaT()
             Real dx_sound = cell_dx / ( sound_speed + vmax );
             minimum_aux = math::min ( minimum_aux, dx_sound );
             if ( minimum_aux == dx_sound ) {
-                cell_id = icell.localId();
+                cell_id = cell.uniqueId();
                 cc = m_sound_speed[icell];
                 ll = m_caracteristic_length[icell];
                 coord = m_cell_coord[icell];
                 AllEnvCell all_env_cell = all_env_cell_converter[cell];
                 nbenvcell = all_env_cell.nbEnvironment();
+                cell_min = cell;
+                vit_cell_min = vmax;
             }
         }
 
+
         new_dt = options()->cfl() * minimum_aux;
         new_dt = parallelMng()->reduce ( Parallel::ReduceMin, new_dt );
-
+        
+        if (new_dt < .5*m_global_old_deltat() ) {
+            pinfo() << " Chute du pas de temps ";
+            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
+            pinfo() << " Vitesse matérielle " << vit_cell_min;
+            pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
+            AllEnvCell all_env_cell = all_env_cell_converter[cell_min];
+             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+                EnvCell ev = *ienvcell;
+                int index_env = ev.environmentId(); 
+                pinfo() << " Vitson : env  " << index_env << " = " << m_sound_speed[ev] << " et pression= " << m_pressure[ev];
+                pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev]; 
+             }
+        }
         // respect de taux de croissance max
         new_dt = math::min ( new_dt, 1.05 * m_global_old_deltat() );
         // respect de la valeur max imposée par le fichier de données .plt
@@ -1700,10 +1756,20 @@ computeDeltaT()
         if ( new_dt < options()->deltatMin() ) {
             pinfo() << " pas de temps minimum ";
             pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
-            pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longeur  =  " << ll << " et min " << minimum_aux;
+            pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
+            pinfo() << " Vitesse matérielle " << vit_cell_min;
+            pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
+            AllEnvCell all_env_cell = all_env_cell_converter[cell_min];
+             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+                EnvCell ev = *ienvcell;
+                int index_env = ev.environmentId(); 
+                pinfo() << " Vitson : env  " << index_env << " = " <<  m_sound_speed[ev] << " et pression= " << m_pressure[ev];
+                pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev];
+             }
             exit ( 1 );
         }
 
+        
         debug() << " nouveau pas de temps2 " << new_dt;
 
     }
