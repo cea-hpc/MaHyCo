@@ -74,6 +74,7 @@
    </cas-model>
    <remap name="RemapADI">
     <ordre-projection>2</ordre-projection>
+    <force-recompute-iteration>40</force-recompute-iteration>
     </remap>
    
     <pseudo-centree>0</pseudo-centree>

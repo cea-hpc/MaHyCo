@@ -8,13 +8,10 @@
   <arcane-post-processing>
     <output-period>50</output-period>
     <output>
-      <variable>CellMass</variable>
       <variable>Pressure</variable>
       <variable>Density</variable>
-      <variable>Velocity</variable>
       <variable>NodeMass</variable>
       <variable>InternalEnergy</variable>
-      <variable>PseudoViscosity</variable>
       <variable>Materiau</variable>
     </output>
     <format>
@@ -25,13 +22,11 @@
   <mesh nb-ghostlayer="2" ghostlayer-builder-version="3">
     <meshgenerator>
      <cartesian>
-       <nsd>2 2 2</nsd> 
+       <nsd>2 2 1</nsd> 
        <origine>0.0 0.0 0.0</origine>
-       <lx nx='80' prx='1.0'>1.</lx>
-
-       <ly ny='80' pry='1.0'>1.</ly>
-
-       <lz nz='80' prz='1.0'>1.</lz>
+       <lx nx='30' prx='1.0'>1.</lx>
+       <ly ny='30' pry='1.0'>1.</ly>
+       <lz nz='30' prz='1.0'>1.</lz>
      </cartesian>
 
      </meshgenerator>
@@ -74,6 +69,7 @@
    </cas-model>
    <remap name="RemapADI">
     <ordre-projection>1</ordre-projection>
+    <force-recompute-iteration>20</force-recompute-iteration>
     </remap>
    
     <pseudo-centree>0</pseudo-centree>
@@ -83,7 +79,7 @@
      <deltat-max>0.01</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
-    <final-time>.2</final-time>
+    <final-time>100e-3</final-time>
     
     <boundary-condition>
       <surface>XMIN</surface>

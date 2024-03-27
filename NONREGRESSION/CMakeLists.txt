@@ -77,6 +77,7 @@ set(TEST_NAMES_CUDA_1
 
 set(TEST_NAMES_CUDA_4
 		"CAS_BiSodCaseX"
+		"CAS_BiSodSph"
 		)
 
 set(PARA4 "para_4")
