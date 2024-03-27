@@ -8,7 +8,7 @@
 
 /** Constructeur de la classe */
 RemapADIService::RemapADIService(const ServiceBuildInfo & sbi)
-  : ArcaneRemapADIObject(sbi) {
+  : ArcaneRemapADIObject(sbi), m_idx_selecter(subDomain()) {
   m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
 }
 
@@ -334,8 +334,19 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
                    -0.5 * idir * (1 - idir)};  
 
   // uniquement utilisés pour (options()->ordreProjection > 1) && (options()->projectionPenteBorne == 1)
+#if 0
   m_delta_phi_face_av.fill(0.0);
   m_delta_phi_face_ar.fill(0.0);
+#else
+  auto rqueue1 = m_acc_env->refQueueAsync();
+  auto rqueue2 = m_acc_env->refQueueAsync();
+
+  m_delta_phi_face_av.fill(0.0, rqueue1.get());
+  m_delta_phi_face_ar.fill(0.0, rqueue2.get());
+
+  rqueue1->barrier();
+  rqueue2->barrier();
+#endif
   
   CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {

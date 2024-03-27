@@ -25,25 +25,21 @@ class IndexSelecter {
     m_is_acc_avl (AcceleratorUtils::isAvailable(m_sd)),
     m_mem_h (m_is_acc_avl ? eMemoryRessource::HostPinned : eMemoryRessource::Host),
     m_mem_d (m_is_acc_avl ? eMemoryRessource::Device : eMemoryRessource::Host),
-    m_mask_buf_d   (platform::getDataMemoryRessourceMng()->getAllocator(m_mem_d)),
-    m_lid_d        (platform::getDataMemoryRessourceMng()->getAllocator(m_mem_d)),
     m_lid_select_d (platform::getDataMemoryRessourceMng()->getAllocator(m_mem_d)),
     m_lid_select_h (platform::getDataMemoryRessourceMng()->getAllocator(m_mem_h))
   {
   }
 
-  ~IndexSelecter() {}
+  ~IndexSelecter() 
+  {
+    delete m_gen_filterer_inst;
+  }
 
   /*!
    * \brief Définit l'intervalle [0,nb_idx[ sur lequel va s'opérer la sélection
    */
   void resize(Int32 nb_idx) {
     m_nb_idx = nb_idx;
-    m_mask_buf_d.resize(m_nb_idx);
-    if (m_lid_d.size() != m_nb_idx) {
-      m_lid_d.resize(m_nb_idx);
-      m_lid_to_fill = true;
-    }
     m_lid_select_d.resize(m_nb_idx);
     m_lid_select_h.resize(m_nb_idx);
   }
@@ -55,51 +51,40 @@ class IndexSelecter {
   template<typename PredicateType>
   ConstArrayView<Int32> syncSelectIf(Ref<RunQueue> rqueue_async, PredicateType pred, bool host_view=false) 
   {
-    // Init (si nécessaire) de la liste des identifiants [0, m_nb_idx[
-    if (m_lid_to_fill)
+    // On essaie de réutiliser au maximum la même instance de GenericFilterer
+    // afin de minimiser des allocations dynamiques dans cette classe.
+    // L'instance du GenericFilterer dépend du pointeur de RunQueue donc
+    // si ce pointeur change, il faut détruire et réallouer une nouvelle instance.
+    bool to_instantiate=(m_gen_filterer_inst==nullptr);
+    if (m_async_queue_ptr!=rqueue_async.get()) 
     {
-      SmallSpan<Int32> out_lid(m_lid_d);
-
-      auto command = makeCommand(rqueue_async.get());
-      command << RUNCOMMAND_LOOP1(iter, m_nb_idx)
-      {
-        auto [id] = iter();
-        out_lid[id] = id;
-      };  // asynchrone
-
-      m_lid_to_fill=false;
+      m_async_queue_ptr=rqueue_async.get();
+      delete m_gen_filterer_inst;
+      to_instantiate=true;
+    }
+    if (to_instantiate) {
+      m_gen_filterer_inst = new ax::GenericFilterer(m_async_queue_ptr);
     }
 
-    // Remplissage du masque selon le prédicat
-    {
-      SmallSpan<Byte> out_mask(m_mask_buf_d.data(), m_nb_idx);
-
-      auto command = makeCommand(rqueue_async.get());
-      command << RUNCOMMAND_LOOP1(iter, m_nb_idx)
-      {
-        auto [id] = iter();
-        out_mask[id] = pred(id);
-      };  // asynchrone
-    }
-
-    // On sélectionne dans in_lid les éléments pour lesquels in_mask est vrai
+    // On sélectionne dans [0,m_nb_idx[ les indices i pour lesquels pred(i) est vrai
     //  et on les copie dans out_lid_select.
-    //  Le nb d'éléments sélectionnés est donné par nbOutputElement()
-    SmallSpan<const Byte> in_mask(m_mask_buf_d.data(), m_nb_idx);
-    SmallSpan<const Int32> in_lid(m_lid_d.data(), m_nb_idx); // =[0, m_nb_idx[
+    //  Le nb d'indices sélectionnés est donné par nbOutputElement()
     SmallSpan<Int32> out_lid_select(m_lid_select_d.data(), m_nb_idx);
 
-    ax::Filterer<Int32> filterer;
-    filterer.apply(rqueue_async.get(), in_lid, out_lid_select, in_mask);
-    Int32 nb_cell_selected = filterer.nbOutputElement();
+    m_gen_filterer_inst->applyWithIndex(m_nb_idx, pred,
+	[=] ARCCORE_HOST_DEVICE (Int32 input_index, Int32 output_index) -> void
+	{
+	  out_lid_select[output_index] = input_index;
+	});
+    Int32 nb_idx_selected = m_gen_filterer_inst->nbOutputElement();
 
-    if (nb_cell_selected && host_view) 
+    if (nb_idx_selected && host_view) 
     {
       prof_acc_begin("cpyD2H_lid_sel");
       // Copie asynchrone Device to Host (m_lid_select_d ==> m_lid_select_h)
-      rqueue_async->copyMemory(ax::MemoryCopyArgs(m_lid_select_h.subView(0, nb_cell_selected).data(),
-                                                  m_lid_select_d.subView(0, nb_cell_selected).data(),
-                                                  nb_cell_selected * sizeof(Int32))
+      rqueue_async->copyMemory(ax::MemoryCopyArgs(m_lid_select_h.subView(0, nb_idx_selected).data(),
+                                                  m_lid_select_d.subView(0, nb_idx_selected).data(),
+                                                  nb_idx_selected * sizeof(Int32))
                                    .addAsync());
 
       rqueue_async->barrier();
@@ -112,8 +97,8 @@ class IndexSelecter {
 
     ConstArrayView<Int32> lid_select_view = (
       host_view ? 
-      m_lid_select_h.subConstView(0, nb_cell_selected) : 
-      m_lid_select_d.subConstView(0, nb_cell_selected));
+      m_lid_select_h.subConstView(0, nb_idx_selected) : 
+      m_lid_select_d.subConstView(0, nb_idx_selected));
 
     return lid_select_view;
   }
@@ -124,13 +109,13 @@ class IndexSelecter {
   bool m_is_acc_avl = false;  // indique si l'accélérateur est disponible ou non
   eMemoryRessource m_mem_h; // identification de l'allocateur HOST
   eMemoryRessource m_mem_d; // identification de l'allocateur DEVICE
-  UniqueArray<Byte> m_mask_buf_d; // Pour indiquer si un index doit être sélectionné (alloué sur DEVICE)
-  UniqueArray<Int32> m_lid_d; // liste des identifiants de l'intervalle [0, m_nb_idx[ (alloué sur DEVICE)
   UniqueArray<Int32> m_lid_select_d; // liste des identifiants sélectionnés avec un Filterer (alloué sur DEVICE)
   UniqueArray<Int32> m_lid_select_h; // liste des identifiants sélectionnés avec un Filterer (alloué sur HOST)
 
   Int32 m_nb_idx=0;  //!< Intervalle [0, m_nb_idx[ sur lequel on va opérer la sélection
-  bool m_lid_to_fill=true;  //!< Indique s'il faut remplir la liste des indexes [0, m_nb_idx[
+
+  RunQueue* m_async_queue_ptr=nullptr; //!< Pointeur sur la queue du GenericFilterer
+  ax::GenericFilterer* m_gen_filterer_inst=nullptr; //!< Instance du GenericFilterer
 };
 
 /*---------------------------------------------------------------------------*/

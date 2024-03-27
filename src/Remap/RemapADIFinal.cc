@@ -26,6 +26,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   PROF_ACC_BEGIN("cellStatus");
 
   bool to_add_rm_cells = false;
+  Materials::MeshMaterialModifier modifier(mm);
 #if 0
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
   Int32UniqueArray cells_to_add;
@@ -81,12 +82,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     
   }
 #else
-  ParallelLoopOptions mtopt;
-  mtopt.setPartitioner(ParallelLoopOptions::Partitioner::Static);
-
-  Integer max_nb_task = TaskFactory::nbAllowedThread();
-  UniqueArray< Int32UniqueArray > cid_to_add_per_task(max_nb_task);
-  UniqueArray< Int32UniqueArray > cid_to_rm_per_task(max_nb_task);
+  m_idx_selecter.resize(allCells().size()); // pour sélectionner les mailles à ajouter/supprimer
 
   // Par environnement, on détermine si une maille :
   //  - doit être ajouté à l'env : +1
@@ -94,30 +90,27 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   //  - ne change pas de status
   const Real threshold = options()->threshold;
   ConstArrayView<IMeshEnvironment*> envs = mm->environments();
-  auto queue_arm = m_acc_env->newQueue();
+  auto rqueue_arm = m_acc_env->refQueueAsync();
 
   for (Integer index_env=0; index_env < nb_env ; index_env++) 
   { 
-    auto command = makeCommand(queue_arm);
+    auto command = makeCommand(rqueue_arm.get());
     
     auto in_euler_volume = ax::viewIn(command, m_euler_volume);
     auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
 
     auto out_cell_status = ax::viewOut(command, m_cell_status); // var tempo
  
-    // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
-
     command.addKernelName("add_rm") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
       Real fvol = in_u_lagrange[cid][index_env] / in_euler_volume[cid];
 
       // Recherche de l'appartenance de la maille à l'env index_env
       bool cell_in_env = false;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        //auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env_loc = in_menv_cell.envId(cid,ienv);
-        if (index_env_loc == index_env)
+      AllEnvCell all_env_cell = all_env_cell_converter[cid];
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        EnvCell ev = *ienvcell;
+	if (ev.environmentId() == index_env)
           cell_in_env = true;
       }
 
@@ -143,85 +136,65 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       out_cell_status[cid] = cell_status;
     };
 
-    // On revient sur CPU pour lire m_cell_status et créer les listes de mailles à ajouter/supprimer
-    // On multithread le traitement
     IMeshEnvironment* env = envs[index_env];
 
-    arcaneParallelForeach(allCells(), mtopt, [&](CellVectorView cells) {
-      // Chaque tache met à jour ses listes spécifiques
-      Integer task_id = TaskFactory::currentTaskIndex();
-      Int32UniqueArray& cid_to_add    = cid_to_add_per_task[task_id];
-      Int32UniqueArray& cid_to_remove = cid_to_rm_per_task [task_id];
-  
-      ENUMERATE_CELL(icell, cells){
-        Integer cell_status = m_cell_status[icell];
-        if (cell_status < 0) 
-        {
-          cid_to_remove.add(icell.localId());
-          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " << " retirée dans l'env " << env->name();
-        } 
-        else if (cell_status > 0) 
-        {
-          cid_to_add.add(icell.localId());
-          debug() << " cell " << icell.localId() << " ( " << icell->uniqueId() << " ) " 
-            << " ajoutée dans l'env apres normalisation" << env->name();
-          debug() << " volume : " <<  m_u_lagrange[icell][index_env] << " fracvol " << m_u_lagrange[icell][index_env] / m_euler_volume[icell];
-          /* debug() << " volume-apres_nomalisation " << vol_ev_apres_normalisation <<  " fracvol " << vol_ev_apres_normalisation / m_euler_volume[icell]; */
-          debug() << " masse projetée " << m_u_lagrange[icell][nb_env + index_env];
-        }
-      }
-    });
+    // On utilise un Span sur m_cell_status plutôt qu'une vue classique sur VariableCellInteger
+    // car on ne connait pas les RunCommand pour l'évaluation des prédicats d'ajout/suppression
+    Span<const Integer> in_cell_status(m_cell_status.asArray());
 
-    // En séquentiel, on va ajouter les listes de toutes les taches
-    // On précalcule les tailles pour réduire le nb d'alloc dynamiques
-    Integer ncells_to_add=0, ncells_to_rm=0; 
-    for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-      ncells_to_add += cid_to_add_per_task[itask].size();
-      ncells_to_rm  += cid_to_rm_per_task [itask].size();
-    }
-    if (ncells_to_add) {
-      Int32UniqueArray cells_to_add;
-      cells_to_add.reserve(ncells_to_add); // but : ne faire qu'une allocation
-      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-        cells_to_add.addRange(cid_to_add_per_task[itask]);
-        cid_to_add_per_task[itask].clear(); // Nettoyage pour le prochain environnement
-      }
-      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
-      std::sort(cells_to_add.data(), cells_to_add.data()+cells_to_add.size());
+    // Construire la liste des mailles à ajouter dans l'environnement index_env
+    ConstArrayView<Int32> cid_to_add_h = m_idx_selecter.syncSelectIf(rqueue_arm,
+	[=] ARCCORE_HOST_DEVICE (Int32 cid) -> bool {
+	  return (in_cell_status[cid]>0);  // critère d'ajout d'une maille
+	},
+	/*host_view=*/true);
 
+    if (cid_to_add_h.size()) {
       // On ajoute réellement les items à l'environnement
-      CellGroup env_cells = env->cells();
-      info() << "ADD_CELLS to env " << env->name() << " n=" << cells_to_add.size(); 
-      env_cells.addItems(cells_to_add);
+      info() << "ADD_CELLS to env " << env->name() << " n=" << cid_to_add_h.size(); 
+      modifier.addCells(env->materials()[0], cid_to_add_h);
       to_add_rm_cells = true;
     }
-    if (ncells_to_rm) {
-      Int32UniqueArray cells_to_remove;
-      cells_to_remove.reserve(ncells_to_rm); // but : ne faire qu'une allocation
-      for(Integer itask=0 ; itask<max_nb_task ; ++itask) {
-        cells_to_remove.addRange(cid_to_rm_per_task[itask]);
-        cid_to_rm_per_task[itask].clear(); // Nettoyage pour le prochain environnement
-      }
-      // On fait un tri pour avoir la même liste quelles que soient les contributions de chaque tache
-      std::sort(cells_to_remove.data(), cells_to_remove.data()+cells_to_remove.size());
 
+    // Construire la liste des mailles à supprimer dans l'environnement index_env
+    ConstArrayView<Int32> cid_to_remove_h = m_idx_selecter.syncSelectIf(rqueue_arm,
+	[=] ARCCORE_HOST_DEVICE (Int32 cid) -> bool {
+	  return (in_cell_status[cid]<0);  // critère de suppression d'une maille
+	},
+	/*host_view=*/true);
+
+    if (cid_to_remove_h.size()) {
       // On retire réellement les items de l'environnement
-      CellGroup env_cells = env->cells();
-      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cells_to_remove.size();
-      env_cells.removeItems(cells_to_remove);
+      info() << "REMOVE_CELLS to env " << env->name() << " n=" << cid_to_remove_h.size();
+      modifier.removeCells(env->materials()[0], cid_to_remove_h);
       to_add_rm_cells = true;
     }
   }
 #endif
   PROF_ACC_END;
 
+  bool to_update=false;
   if (to_add_rm_cells) 
   {
-    PROF_ACC_BEGIN("forceRecompute");
+    to_update=true;
+    PROF_ACC_BEGIN("endUpdate");
     // finalisation avant remplissage des variables
+    modifier.endUpdate();
+    PROF_ACC_END;
+  }
+
+  Integer force_iter=options()->forceRecomputeIteration();
+  if (force_iter>0 && m_global_iteration()%force_iter == 0) 
+  {
+    to_update=true;
+    PROF_ACC_BEGIN("forceRecompute");
+    info() << "FORCE_RECOMPUTE";
     mm->forceRecompute();
     PROF_ACC_END;
+  }
 
+  if (to_update)
+  {
     // Ici, la carte des environnements a changé
     m_acc_env->multiEnvMng()->updateMultiEnv(m_acc_env->vsyncMng());
   }
@@ -413,41 +386,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto in_euler_volume = ax::viewIn(command, m_euler_volume);
     auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
     
-    auto out_cell_volume_g      = ax::viewOut(command, m_cell_volume.globalVariable());
-    auto out_density_g          = ax::viewOut(command, m_density.globalVariable());
-    auto out_pseudo_viscosity_g = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
-    auto out_internal_energy_g  = ax::viewOut(command, m_internal_energy.globalVariable());
-    auto out_est_pure           = ax::viewOut(command, m_est_pure);
+    auto out_cell_volume       = ax::viewOut(command, m_cell_volume);
+    auto out_est_pure          = ax::viewOut(command, m_est_pure);
+    auto out_pseudo_viscosity  = ax::viewOut(command, m_pseudo_viscosity);
 
-    auto inout_est_mixte     = ax::viewInOut(command, m_est_mixte);
-    auto inout_cell_mass_g   = ax::viewInOut(command, m_cell_mass.globalVariable());
-
-    // Variables multi-environnement
-    auto bam = m_acc_env->vsyncMng()->bufAddrMng();
-    MultiEnvVarHD<Real> menv_fracvol         (m_fracvol         , bam);
-    MultiEnvVarHD<Real> menv_mass_fraction   (m_mass_fraction   , bam);
-    MultiEnvVarHD<Real> menv_cell_mass       (m_cell_mass       , bam);
-    MultiEnvVarHD<Real> menv_pseudo_viscosity(m_pseudo_viscosity, bam);
-    MultiEnvVarHD<Real> menv_density         (m_density         , bam);
-    MultiEnvVarHD<Real> menv_internal_energy (m_internal_energy , bam);
-
-    bam->asyncCpyHToD(queue); 
-    // copie asynchrone avant le kernel de calcul qui se fait aussi sur <queue>
-
-    auto inout_menv_fracvol         (menv_fracvol         .spanD());
-    auto inout_menv_mass_fraction   (menv_mass_fraction   .spanD());
-    auto inout_menv_cell_mass       (menv_cell_mass       .spanD());
-    auto inout_menv_pseudo_viscosity(menv_pseudo_viscosity.spanD());
-    auto inout_menv_density         (menv_density         .spanD());
-    auto inout_menv_internal_energy (menv_internal_energy .spanD());
-
-    // Pour décrire l'accés multi-env sur GPU
-    auto in_menv_cell(m_acc_env->multiEnvMng()->viewIn(command));
+    auto inout_fracvol           = ax::viewInOut(command, m_fracvol);
+    auto inout_mass_fraction     = ax::viewInOut(command, m_mass_fraction);
+    auto inout_density           = ax::viewInOut(command, m_density);
+    auto inout_internal_energy   = ax::viewInOut(command, m_internal_energy);
+    auto inout_cell_mass         = ax::viewInOut(command, m_cell_mass);
+    auto inout_est_mixte         = ax::viewInOut(command, m_est_mixte);
 
     command.addKernelName("moy") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
+      AllEnvCell all_env_cell = all_env_cell_converter[cid];
+
       Real vol = in_euler_volume[cid];  // volume euler   
-      out_cell_volume_g[cid] = vol; // retour à la grille euler
+      out_cell_volume[cid] = vol; // retour à la grille euler
       Real volt = 0.;
       Real masset = 0.;
 
@@ -473,32 +428,32 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // info() << " cell " << cell.localId() << " fin des masses et volumes normalisées ";
       double somme_frac = 0.;
       Real unsurvol = 1. / vol;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
         // Simplification : 
         // in_u_lagrange[cid][index_env] *vol*unsurvolt*unsurvol == in_u_lagrange[cid][index_env] *unsurvolt
         Real fvol = in_u_lagrange[cid][index_env] * unsurvolt;
         if (fvol < threshold)
           fvol = 0.;
-        inout_menv_fracvol.setValue(evi, fvol);
+	inout_fracvol[evi] = fvol;
         somme_frac += fvol;
       }
       // apres normamisation
       Integer matcell(0);
       Integer imatpure(-1);  
       Real unsursomme_frac = 1. / somme_frac;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
-        Real fvol = inout_menv_fracvol[evi] * unsursomme_frac;
+        Real fvol = inout_fracvol[evi] * unsursomme_frac;
         if (fvol > 0.) {
           matcell++;
           imatpure = index_env;
         }
-        inout_menv_fracvol.setValue(evi, fvol);
+        inout_fracvol[evi] = fvol;
       }
       if (matcell > 1) {
         inout_est_mixte[cid] = 1;
@@ -514,43 +469,43 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real fmasset = 0.;
       if (masset != 0.) {
         Real unsurmasset = 1./  masset;
-        for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-          auto evi = in_menv_cell.envCell(cid,ienv);
-          Integer index_env = in_menv_cell.envId(cid,ienv);
+        ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+          auto evi = *ienvcell;
+          Integer index_env = evi.environmentId();
 
           // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
           Real mass_frac = in_u_lagrange[cid][nb_env + index_env] * unsurmasset;
-          if (inout_menv_fracvol[evi] < threshold) {
+          if (inout_fracvol[evi] < threshold) {
             mass_frac = 0.;
           }
           fmasset += mass_frac;
-          inout_menv_mass_fraction.setValue(evi, mass_frac);
+          inout_mass_fraction[evi] = mass_frac;
         }
         if (fmasset!= 0.) {
           Real unsurfmasset = 1. / fmasset;
-          for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-            auto evi = in_menv_cell.envCell(cid,ienv);
+          ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+            auto evi = *ienvcell;
 
             // m_mass_fraction[ev] /= fmasset;
-            Real mass_frac = inout_menv_mass_fraction[evi] * unsurfmasset;
-            inout_menv_mass_fraction.setValue(evi, mass_frac);
+            Real mass_frac = inout_mass_fraction[evi] * unsurfmasset;
+            inout_mass_fraction[evi] = mass_frac;
           }
         }
       }
       Real density_nplus1 = 0.;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
         Real density_env_nplus1 = 0.;
-        Real fvol = inout_menv_fracvol[evi];
+        Real fvol = inout_fracvol[evi];
         if (fvol > threshold) {
           Real vol_nplus1_norm = in_u_lagrange[cid][index_env] * vol * unsurvolt;
           density_env_nplus1 = in_u_lagrange[cid][nb_env + index_env] 
             / vol_nplus1_norm;
         }
         // recuperation de la densite, se trouvait avant dans boucle B
-        inout_menv_density.setValue(evi, density_env_nplus1);
+        inout_density[evi] = density_env_nplus1;
 
         density_nplus1 += fvol * density_env_nplus1;
         // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
@@ -560,23 +515,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       // mise à jour des valeurs moyennes aux allCells
       // densite
       if (inout_est_mixte[cid])
-        out_density_g[cid] = density_nplus1; 
+        inout_density[cid] = density_nplus1; 
       // density_nplus1 est la valeur moyenne,
       // ne pas affecter dans le cas d'une maille pure sinon on n'aurait pas la valeur partielle
 
       // info() << cell.localId() << " apres proj " << m_u_lagrange[cell];
       // recalcul de la masse
       // Rem : on n'a plus besoin de m_cell_mass.fill(0.0)
-      inout_cell_mass_g[cid] = in_euler_volume[cid] * density_nplus1;
+      inout_cell_mass[cid] = in_euler_volume[cid] * density_nplus1;
 
       Real energie_nplus1 = 0.;
       Real pseudo_nplus1 = 0.;
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
-        Integer index_env = in_menv_cell.envId(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
+        Integer index_env = evi.environmentId();
 
-        Real fvol      = inout_menv_fracvol[evi];
-        Real mass_frac = inout_menv_mass_fraction[evi];
+        Real fvol      = inout_fracvol[evi];
+        Real mass_frac = inout_mass_fraction[evi];
 
         // coeur boucle A
         Real internal_energy_env_nplus1 = 0.;
@@ -585,7 +540,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
             in_u_lagrange[cid][2 * nb_env + index_env] / in_u_lagrange[cid][nb_env + index_env];
         }
         // recuperation de l'energie, se trouvait avant dans boucle B
-        inout_menv_internal_energy.setValue(evi, internal_energy_env_nplus1);
+        inout_internal_energy[evi] = internal_energy_env_nplus1;
         // conservation energie totale
         // delta_ec : energie specifique
         // m_internal_energy_env[ev] += delta_ec;
@@ -593,23 +548,23 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         energie_nplus1 += mass_frac * internal_energy_env_nplus1;
 
         // coeur boucle B
-        inout_menv_cell_mass.setValue(evi, mass_frac * inout_cell_mass_g[cid]);
+        inout_cell_mass[evi] = mass_frac * inout_cell_mass[cid];
         // recuperation de la pseudo projetee
         // m_pseudo_viscosity[ev] = m_u_lagrange[cell][3 * nb_env + 4] / vol;
         Real pseudo_visco = in_u_lagrange[cid][3 * nb_env + 4] * unsurvol;
-        inout_menv_pseudo_viscosity.setValue(evi, pseudo_visco);
+        out_pseudo_viscosity[evi] = pseudo_visco;
         pseudo_nplus1 += fvol * pseudo_visco;
       }
       // energie interne
-      out_internal_energy_g[cid] = energie_nplus1;
+      inout_internal_energy[cid] = energie_nplus1;
       // pseudoviscosité
-      out_pseudo_viscosity_g[cid] = pseudo_nplus1;
+      out_pseudo_viscosity[cid] = pseudo_nplus1;
 
       // Boucle de "blindage" pas totalement portée
-      for(Integer ienv=0 ; ienv<in_menv_cell.nbEnv(cid) ; ++ienv) {
-        auto evi = in_menv_cell.envCell(cid,ienv);
+      ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+        auto evi = *ienvcell;
 
-        if (inout_menv_density[evi] < 0. || inout_menv_internal_energy[evi] < 0.) {
+        if (inout_density[evi] < 0. || inout_internal_energy[evi] < 0.) {
           // Comment gérer des messages d'erreur ou d'avertissement ?
           /*
           pinfo() << " cell " << cell.localId() << " --energy ou masse negative pour l'environnement "
@@ -621,10 +576,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           pinfo() << " fraction vol env " << m_fracvol[ev];
           pinfo() << " fraction massique env " <<  m_mass_fraction[ev];
           */
-          inout_menv_internal_energy.setValue(evi, 0.);
-          inout_menv_density.setValue(evi, 0.);
-          inout_menv_fracvol.setValue(evi, 0.);
-          inout_menv_mass_fraction.setValue(evi, 0.);
+          inout_internal_energy[evi] = 0.;
+          inout_density[evi] = 0.;
+          inout_fracvol[evi] = 0.;
+          inout_mass_fraction[evi] = 0.;
         }
         // NAN sur GPU ? comment gérer l'arrêt du calcul ?
         /*
@@ -718,36 +673,30 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }; // asynchrone et non bloquant vis-à-vis du CPU et des autres queues
   }
 
-  // Mise à jour des m_cell_volume sur les mailles mixtes
-  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
-  ENUMERATE_ENV(ienv, mm) {
-    IMeshEnvironment* env = *ienv;
+  auto ref_queue_cv = m_acc_env->refQueueAsync();
+  {
+    auto command_cv = makeCommand(ref_queue_cv.get());
 
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
+    auto in_fracvol = ax::viewIn(command_cv, m_fracvol);
+    auto inout_cell_volume = ax::viewInOut(command_cv, m_cell_volume);
 
-    // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<Real> out_cell_volume(envView(m_cell_volume, env));
-    Span<const Real> in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
+    CellToAllEnvCellAccessor c2a(mm);
 
-    // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(menv_queue->queue(env->id()));
-
-    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
-
-    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
-      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
+    command_cv.addKernelName("cellv") << RUNCOMMAND_ENUMERATE_CELL_ALLENVCELL(c2a,cid,allCells()) {
+      // des volumes matieres
+      if (c2a.nbEnvironment(cid) !=1) {
+	ENUMERATE_CELL_ALLENVCELL(iev,cid,c2a) {
+	  inout_cell_volume[*iev] = in_fracvol[*iev] * inout_cell_volume[cid];
+	}
+      }
     };
   }
 
 //   m_node_mass.synchronize();
   // ref_queue_nm va être synchronisée dans globalSynchronize
   m_acc_env->vsyncMng()->globalSynchronize(ref_queue_nm, m_node_mass);
-  menv_queue->waitAllQueues();
+
+  ref_queue_cv->barrier();
 #endif
  
   // conservation energie totale lors du remap

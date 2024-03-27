@@ -175,6 +175,10 @@
   <simple name="calcul_flux_masse" type="integer" default="0">
     <description> identifiant de la methode de calcul du flux de masse duale </description>
   </simple>
+  <!-- - - - - - forceRecompute itération - - - - -->
+  <simple name="force-recompute-iteration" type="integer" default="20">
+    <description>Fréquence d'appel à forcerRecompute() en nb d'itérations</description>
+  </simple>
  
 </options>
 </service>

@@ -34,6 +34,8 @@
 #include "cartesian/interface/ICartesianMesh.h"
 #include "cartesian/interface/NodeDirectionMng.h"
 
+#include "accenv/IndexSelecter.h"
+
 class IAccEnv;
 
 using namespace Arcane;
@@ -248,6 +250,8 @@ private:
   
   // Pour l'utilisation des accélérateurs
   IAccEnv* m_acc_env=nullptr;
+
+  Accenv::IndexSelecter m_idx_selecter; // pour sélectionner les mailles à ajouter/supprimer
 };
 
 /**
