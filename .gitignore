@@ -36,3 +36,6 @@ build/
 
 # clangd directory
 .clangd
+
+# VScode workspace
+*.code-workspace
