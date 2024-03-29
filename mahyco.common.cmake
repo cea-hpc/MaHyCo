@@ -8,9 +8,10 @@ find_package(Arcane)
 include(${Arcane_DIR}/ArcaneDotNet.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/mahyco.utils.cmake)
 
-add_executable(${EXAMPLE_NAME} ${EXAMPLE_NAME}Module.cc main ${EXAMPLE_NAME}_axl.h)
+add_executable(${EXAMPLE_NAME} ${EXAMPLE_NAME}Module.cc main ${EXAMPLE_NAME}_axl.h IpgModule.cc Ipg_axl.h)
 
 arcane_generate_axl(${EXAMPLE_NAME})
+arcane_generate_axl(Ipg)
 configure_file(${EXAMPLE_NAME}.config ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 configure_file(${EXAMPLE_NAME}.arc ${CMAKE_CURRENT_BINARY_DIR} @ONLY)
 arcane_add_arcane_libraries_to_target(${EXAMPLE_NAME})
