@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<module name="Ipg" version="1.0">
+
+<description>Descripteur du module Ipg</description>
+
+<variables>
+  <!-- Pas de temps Old --> 
+  <variable field-name="old_deltat" name="OldDeltat" data-type="real" dim="0" dump="true" />    
+</variables>
+
+<entry-points>
+  <entry-point method-name="createParticles" name="CreateParticles" where="start-init" property="none" />
+  <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
+</entry-points>
+
+<options> 
+   <simple name = "material" type = "string"
+    minOccurs = "1" maxOccurs = "unbounded" >
+    <description>Nom du materiau</description>
+   </simple>
+</options>
+</module>
