@@ -98,6 +98,10 @@ hydroStartInit()
     m_density_fracture.fill ( 0.0 );
     m_internal_energy_fracture.fill ( 0.0 );
     
+    m_internal_energy_n.fill ( 0.0 );
+    m_temperature_n.fill ( 0.0 );
+    m_temperature.fill ( 0.0 );
+    
     if (options()->casModel()->isInternalModel() == true) { 
         info() << " Initialisation des variables pour les cas test internes";
         Real* densite_initiale = (double *)malloc(sizeof(double) * m_nb_env);

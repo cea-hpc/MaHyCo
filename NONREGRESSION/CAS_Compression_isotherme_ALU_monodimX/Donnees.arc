@@ -72,6 +72,7 @@
       <d-cst>1.3266e11</d-cst>
       <s-cst>0.</s-cst>
       <specific-heat>1000.</specific-heat>
+      <temperature-ref>300.</temperature-ref>
     </eos-model>
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.2</quadratic-pseudo-coeff>

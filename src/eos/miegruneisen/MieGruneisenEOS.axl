@@ -187,5 +187,13 @@
 		 <simple name="init-formulation" type="string" default="VP"> 
 		     <description>Formulation EOS</description> 
 		 </simple>
+		 <!-- - - - - - Parametre eref - - - - -->
+		<simple name="energie-ref" type="real" default="0.0">
+			<description>Valeur de l'energie de reférence</description>
+		</simple>
+		 <!-- - - - - - Parametre eref - - - - -->
+		<simple name="temperature-ref" type="real" default="300.0">
+			<description>Valeur de la temperature de reférence</description>
+		</simple>
 	</options>
 </service>

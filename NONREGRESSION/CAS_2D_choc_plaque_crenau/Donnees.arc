@@ -68,6 +68,7 @@
       <tfin-pression>.25</tfin-pression>
       <valeur-debut-pression>3.e9</valeur-debut-pression>
       <valeur-dependance-temps>0.</valeur-dependance-temps>
+      <temperature-ref>300.</temperature-ref>
     </eos-model>
   </environment>
   
