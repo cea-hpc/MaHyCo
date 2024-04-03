@@ -113,7 +113,7 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
     Cell cell = ev.globalCell();  
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[cell] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
+        if (m_pressure[cell] < damage_thresold) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];
@@ -135,6 +135,7 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
 Real MieGruneisenEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real MieGruneisenEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real MieGruneisenEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real MieGruneisenEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

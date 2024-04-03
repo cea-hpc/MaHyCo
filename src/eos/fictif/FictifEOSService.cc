@@ -109,6 +109,7 @@ void FictifEOSService::Endommagement(IMeshEnvironment* env)
 Real FictifEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real FictifEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real FictifEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real FictifEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

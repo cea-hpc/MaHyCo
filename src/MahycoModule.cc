@@ -364,10 +364,6 @@ saveValuesAtN()
             m_density_n[ev] = m_density[ev];
             m_internal_energy_n[ev] = m_internal_energy[ev];
             m_temperature_n[ev] = m_temperature[ev];
-            /* Cell cell = ev.globalCell();
-            if (cell.localId() == 2000) pinfo() << env->name() <<  " SAV m_temperature_n[ev] " << m_temperature_n[ev] << " m_temperature[ev] " << m_temperature[ev]; 
-            if (cell.localId() == 2000) pinfo() << env->name() << " SAV m_internal_energy_n[ev] " << m_internal_energy_n[ev] << " m_internal_energy[ev] " << m_internal_energy[ev];
-            */
         }
     }
 
@@ -1224,6 +1220,7 @@ updateDensity()
     debug() << my_rank << " : " << " Entree dans updateDensity() ";
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
+        Real density_thresold = options()->environment[env->id()].eosModel()->getdensityDamageThresold ( env );
         ENUMERATE_ENVCELL ( ienvcell,env ) {
             EnvCell ev = *ienvcell;
             Cell cell = ev.globalCell();
@@ -1231,6 +1228,13 @@ updateDensity()
             Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
             // nouvelle density
             m_density[ev] = new_density;
+            // Options de blocage de la densité à une valeur seuil 
+            if (m_density[ev]/m_density_0[cell] < density_thresold) {
+              // pinfo()  << ev.globalCell().localId() << " blocage densité " << m_density[ev]  << " et " <<  m_density_0[cell];
+              m_density[ev] = density_thresold * m_density_0[cell];
+              // pinfo()  << ev.globalCell().localId() << " donne blocage densité " << m_density[ev]  << " et " <<  m_density_0[cell];
+            }
+            
             // volume specifique de l'environnement au temps n+1/2
             m_tau_density[ev] =
                 0.5 * ( 1.0 / m_density_n[ev] + 1.0 / m_density[ev] );
@@ -1708,6 +1712,7 @@ computeDeltaT()
         Real3 coord;
         Cell cell_min;
         Real vit_cell_min(0.);
+        Real new_dt_proc;
 
         ENUMERATE_CELL ( icell, allCells() ) {
             Cell cell = * icell;
@@ -1731,14 +1736,14 @@ computeDeltaT()
                 vit_cell_min = vmax;
             }
         }
-
-
+        
         new_dt = options()->cfl() * minimum_aux;
+        new_dt_proc = new_dt;
         new_dt = parallelMng()->reduce ( Parallel::ReduceMin, new_dt );
         
         if (new_dt < .5*m_global_old_deltat() ) {
-            pinfo() << " Chute du pas de temps ";
-            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " Chute du pas de temps " << new_dt;
+            pinfo() << " nouveau pas de temps " << new_dt_proc << " par " << cell_id << " position : " << coord;
             pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
             pinfo() << " Vitesse matérielle " << vit_cell_min;
             pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
@@ -1748,6 +1753,7 @@ computeDeltaT()
                 int index_env = ev.environmentId(); 
                 pinfo() << " Vitson : env  " << index_env << " = " << m_sound_speed[ev] << " et pression= " << m_pressure[ev];
                 pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev]; 
+                pinfo() << " et une densité de " << m_density[ev] << " et avant densité de "  << m_density_n[ev];
              }
         }
         // respect de taux de croissance max
@@ -1758,18 +1764,21 @@ computeDeltaT()
         new_dt = math::min ( new_dt, options()->deltatMax() );
         // respect du pas de temps minimum
         if ( new_dt < options()->deltatMin() ) {
-            pinfo() << " pas de temps minimum ";
-            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " ------------------------------------------" ;
+            pinfo() << " pas de temps minimum " << new_dt ;
+            pinfo() << " nouveau pas de temps " << new_dt_proc << " par " << cell_id << " position : " << coord;
             pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
             pinfo() << " Vitesse matérielle " << vit_cell_min;
             pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
             AllEnvCell all_env_cell = all_env_cell_converter[cell_min];
-             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+            ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
                 EnvCell ev = *ienvcell;
                 int index_env = ev.environmentId(); 
                 pinfo() << " Vitson : env  " << index_env << " = " <<  m_sound_speed[ev] << " et pression= " << m_pressure[ev];
                 pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev];
-             }
+                pinfo() << " et une densité de " << m_density[ev] << " et avant densité de "  << m_density_n[ev];
+            }
+            pinfo() << " ------------------------------------------" ;
             exit ( 1 );
         }
 

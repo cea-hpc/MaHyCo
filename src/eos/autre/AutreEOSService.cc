@@ -440,6 +440,7 @@ void AutreEOSService::Endommagement(IMeshEnvironment* env)
 Real AutreEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real AutreEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real AutreEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real AutreEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

@@ -115,6 +115,7 @@ void PerfectGasEOSService::Endommagement(IMeshEnvironment* env)
 Real PerfectGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real PerfectGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real PerfectGasEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real PerfectGasEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

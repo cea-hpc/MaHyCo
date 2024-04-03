@@ -240,6 +240,8 @@ void MahycoModule::remap() {
         IMeshEnvironment* ienv = mm->environments()[index_env];
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
+        // Test endommagement --> Pression devient nulle ?
+        options()->environment[index_env].eosModel()->Endommagement(ienv);
       }
       computePressionMoyenne();
    }
