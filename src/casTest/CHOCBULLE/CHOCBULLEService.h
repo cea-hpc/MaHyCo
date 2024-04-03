@@ -55,6 +55,11 @@ public:
 private:
   // valeur aléatoire pour les bulles
   float *m_rand1, *m_rand2, *m_rand3, *m_rand4;  
+  std::vector<double> m_posx;
+  std::vector<double> m_posy;
+  std::vector<double> m_posz;
+  std::vector<double> m_posr;
+  void lectureFichier(const std::string& nomFichier);
 };
 
 #endif

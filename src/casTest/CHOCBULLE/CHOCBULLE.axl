@@ -243,5 +243,8 @@
     <simple name="position-crenau-max-max" type="real3" default="0. 0. 0.">
         <description>Position du point en bas à droite </description>
     </simple>
+    <simple name="fichier_bulles" type="string" default="RIEN">
+      <description>Fichier des positions des bulles et de leur rayon</description>
+    </simple>
 </options>
 </service>
