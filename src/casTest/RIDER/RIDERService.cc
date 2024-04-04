@@ -88,15 +88,16 @@ void RIDERService::initVarMono(Integer dim, double* densite_initiale, double* en
                         (m_cell_coord[cell][0] - Xb[0]) +
                     (m_cell_coord[cell][1] - Xb[1]) *
                         (m_cell_coord[cell][1] - Xb[1]));
-    if (rmax < rb) {
+    if (r < rb) {
       // maille pure de bulle
       m_density[cell] = densite_initiale[1];
-      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*rmax;
+      if (options()->densiteInterieureInitialeLineaire()) 
+          m_density[cell] = densite_initiale[1]*std::min(croissance_densite*2*(rb-r), 1.);
       m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
-      double frac_b = (rb - rmin) / (rmax - rmin);
-      m_density[cell] = frac_b * densite_initiale[1];
-      m_pressure[cell] = pression_initiale[1];
+      //double frac_b = (rb - rmin) / (rmax - rmin);
+      //m_density[cell] = frac_b * densite_initiale[1];
+      //m_pressure[cell] = pression_initiale[1];
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
@@ -178,7 +179,7 @@ void RIDERService::initVar(Integer dim, double* densite_initiale, double* energi
     if (rmax < rb) {
       // maille pure de bulle
       m_density[cell] = densite_initiale[1];
-      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*croissance_densite*rmax;
+      if (options()->densiteInterieureInitialeLineaire()) m_density[cell] = densite_initiale[1]*std::min(croissance_densite*2*(rb-rmax), 1.);
       m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
       // cas des cellules mailles mixtes
