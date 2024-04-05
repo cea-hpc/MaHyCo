@@ -10,6 +10,9 @@
   <!-- sens de la projection --> 
   <variable field-name="sens_projection" name="SensProjection" data-type="integer"
 	    dim="0" dump="true" />
+  <!-- DELTAT -->
+  <variable field-name="deltat_cell" name="DeltaTCell" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- Materiau -->
   <variable field-name="materiau" name="Materiau" data-type="real" item-kind="cell"
 	    dim="0" dump="true" need-sync="true" />
@@ -442,6 +445,10 @@
   <!-- - - - - - cfl - - - - -->
   <simple name="cfl" type="real" default="0.3">
     <description>Définition de la CFL</description>
+  </simple>
+  <!-- - - - - option pour le calcul de la vitesse du son - - - - - -->
+  <simple name="calcul-vitson-max" type="bool" default="true">
+    <description> Calcul de la vitesse du son dans les mailles mixtes en prenant le max des env </description>
   </simple>
   <!-- - - - - - thresold - - - - -->
   <simple name="threshold" type="real" default="1.e-10">

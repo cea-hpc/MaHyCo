@@ -1666,6 +1666,8 @@ computePressionMoyenne()
     if ( options()->sansLagrange ) {
         return;
     }
+    Real option = 0.;
+    if ( options()->calculVitsonMax ) option = 1.;
     debug() << " Entree dans computePressionMoyenne() ";
     // maille mixte
     // moyenne sur la maille
@@ -1675,11 +1677,13 @@ computePressionMoyenne()
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
         if ( all_env_cell.nbEnvironment() !=1 ) {
             m_pressure[cell] = 0.;
-            m_sound_speed[icell] = 1.e-20;
+            // m_sound_speed[icell] = 1.e-20;
+            m_sound_speed[icell] = 0.;
             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
                 EnvCell ev = *ienvcell;
                 m_pressure[cell] += m_fracvol[ev] * m_pressure[ev];
-                m_sound_speed[cell] = std::max ( m_sound_speed[ev], m_sound_speed[cell] );
+                m_sound_speed[cell] = option * std::max ( m_sound_speed[ev], m_sound_speed[cell] );
+                m_sound_speed[cell] += (1.-option) * m_fracvol[ev] * m_sound_speed[ev];
             }
         }
     }
@@ -1724,6 +1728,7 @@ computeDeltaT()
                     vmax = math::max ( m_velocity[inode].normL2(), vmax );
                 }
             Real dx_sound = cell_dx / ( sound_speed + vmax );
+            m_deltat_cell[icell] = options()->cfl() * dx_sound;
             minimum_aux = math::min ( minimum_aux, dx_sound );
             if ( minimum_aux == dx_sound ) {
                 cell_id = cell.uniqueId();
