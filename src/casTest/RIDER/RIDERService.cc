@@ -14,13 +14,15 @@ void RIDERService::initMat(Integer dim)  {
     initMatMono(dim);
     return;
   } 
+  
   Real3 Xb;
   if (options()->casTest < RiderRotation) 
           Xb = {0.20, 0.20, 0.};
       else
           Xb = {0.50, 0.75, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);     
+  
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     Real rmin(10.), rmax(0.);
@@ -44,14 +46,15 @@ void RIDERService::initMat(Integer dim)  {
     
     if (rmax < rb) {
       // maille pure de bulle
-    m_materiau[cell] = 1;
+      m_materiau[cell] = 1;
     } else if ((rmax >= rb) && (rmin < rb)) {
       double frac_b = (rb - rmin) / (rmax - rmin);
       m_materiau[cell] = frac_b;
     }
   }
 }
-void RIDERService::initVarMono(Integer dim)  {
+void RIDERService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
     
   Real3 Xb;
   if (options()->casTest < MonoRiderRotation) 
@@ -60,13 +63,13 @@ void RIDERService::initVarMono(Integer dim)  {
           Xb = {0.50, 0.75, 0.};
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);    
+  Real r_cell(0.);
+  Real croissance_densite(1.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
         
-  info() << " boucle sur les mailles";
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
@@ -78,25 +81,29 @@ void RIDERService::initVarMono(Integer dim)  {
       rmax = std::max(rmax, rnode);
     }
     // Air partout
-    m_density[cell] = 0.;
-    m_pressure[cell] = 0.;
+    m_density[cell] = densite_initiale[0];
+    m_pressure[cell] = pression_initiale[0];
     // bulle surchargera l'aire
     // centre de la bulle
     double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
                         (m_cell_coord[cell][0] - Xb[0]) +
                     (m_cell_coord[cell][1] - Xb[1]) *
                         (m_cell_coord[cell][1] - Xb[1]));
-    if (rmax < rb) {
+    if (options()->densiteInterieureInitialeLineaire()) r_cell = r;
+    else r_cell = rmax;
+    if (r_cell < rb) {
       // maille pure de bulle
-      m_density[cell] = 1.;
-      m_pressure[cell] = 0.;
+      m_density[cell] = densite_initiale[1];
+      if (options()->densiteInterieureInitialeLineaire()) 
+          m_density[cell] = densite_initiale[1]*std::min(croissance_densite*2*(rb-r), 1.);
+      m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
-      double frac_b = (rb - rmin) / (rmax - rmin);
-      m_density[cell] = frac_b;
-      m_pressure[cell] = 0.;
+      if ( ! options()->densiteInterieureInitialeLineaire()) {
+        double frac_b = (rb - rmin) / (rmax - rmin);
+        m_density[cell] = frac_b * densite_initiale[1];
+        m_pressure[cell] = pression_initiale[1];
+      }
     }
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
   }
   ENUMERATE_NODE(inode, allNodes()){
     m_velocity[inode] = {0.0, 0.0, 0.0};    
@@ -133,10 +140,11 @@ void RIDERService::initVarMono(Integer dim)  {
     m_velocity_n[inode] = m_velocity[inode];
   }
 }
-void RIDERService::initVar(Integer dim)  {
+void RIDERService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
 
   if (options()->casTest >= MonoRiderTx && options()->casTest <= MonoRiderDeformationTimeReverse)  {
-    initVarMono(dim);
+    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);
     return;
   } 
   Real3 Xb;
@@ -148,12 +156,13 @@ void RIDERService::initVar(Integer dim)  {
   CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
   Real3 cc = {0.5, 0.5, 0.};
   // rayon interne et externe
-  double rb(0.15);
+  double rb(options()->rayonBulle);     
+  Real croissance_densite(1.);
+  Real r_cell(0.);
+  if (options()->densiteInterieureInitialeLineaire()) croissance_densite = 1./rb;
         
   ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
-    // pseudo-viscosité 
-    m_pseudo_viscosity[cell] = 0.;
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
@@ -165,44 +174,45 @@ void RIDERService::initVar(Integer dim)  {
       rmax = std::max(rmax, rnode);
     }
     // Air partout
-    m_density[cell] = 0.;
-    m_pressure[cell] = 0.;
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
+    m_density[cell] = densite_initiale[0];
+    m_pressure[cell] = pression_initiale[0];
     // bulle surchargera l'aire
     // centre de la bulle
     double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
                         (m_cell_coord[cell][0] - Xb[0]) +
                     (m_cell_coord[cell][1] - Xb[1]) *
                         (m_cell_coord[cell][1] - Xb[1]));
-    if (rmax < rb) {
+    if (options()->densiteInterieureInitialeLineaire()) r_cell = r;
+    else r_cell = rmax;
+    if (r_cell < rb) {
       // maille pure de bulle
-      m_density[cell] = 1.;
-      m_pressure[cell] = 0.;
-      m_fracvol[cell] = 1.;
-      m_mass_fraction[cell] = 1.;
+      m_density[cell] = densite_initiale[1];
+      if (options()->densiteInterieureInitialeLineaire()) 
+          m_density[cell] = densite_initiale[1]*std::min(croissance_densite*2*(rb-r), 1.);
+      m_pressure[cell] = pression_initiale[1];
     } else if ((rmax >= rb) && (rmin < rb)) {
-      // cas des cellules mailles mixtes
-      double frac_b = (rb - rmin) / (rmax - rmin);
-      AllEnvCell all_env_cell = all_env_cell_converter[cell];
-      ENUMERATE_CELL_ENVCELL(ienvcell, all_env_cell) {
-        EnvCell ev = *ienvcell;
-        if (ev.environmentId() == 0) {
-          m_density[ev] = 1.;
-          m_fracvol[ev] = frac_b;
-          m_mass_fraction[ev] = frac_b;
-          m_pseudo_viscosity[ev] = 0.;
+
+      if ( ! options()->densiteInterieureInitialeLineaire()) {
+        // cas des cellules mailles mixtes
+        double frac_b = (rb - rmin) / (rmax - rmin);
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        ENUMERATE_CELL_ENVCELL(ienvcell, all_env_cell) {
+            EnvCell ev = *ienvcell;
+            if (ev.environmentId() == 0) {
+            m_density[ev] = densite_initiale[1];
+            m_fracvol[ev] = frac_b;
+            m_mass_fraction[ev] = frac_b;
+            }
+            if (ev.environmentId() == 1) {
+            m_density[ev] = densite_initiale[0];
+            m_fracvol[ev] = 1.-frac_b;
+            m_mass_fraction[ev] = 1.-frac_b;
+            }
+            m_pressure[ev] = 0.;
         }
-        if (ev.environmentId() == 1) {
-          m_density[ev] = 0.;
-          m_fracvol[ev] = 1-frac_b;
-          m_mass_fraction[ev] = 1-frac_b;
-          m_pseudo_viscosity[ev] = 0.;
-        }
-        m_pressure[ev] = 0.;
+        m_density[cell] = frac_b * densite_initiale[1];
+        m_pressure[cell] = pression_initiale[1];
       }
-      m_density[cell] = frac_b;
-      m_pressure[cell] = 0.;
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
@@ -245,5 +255,7 @@ void RIDERService::initVar(Integer dim)  {
 
 bool RIDERService::hasReverseOption() { return options()->reverseOption;}
 Real RIDERService::getReverseParameter() { return options()->parametre;}
+bool RIDERService::isInternalModel() { return true; }
+void RIDERService::initUtilisateur() { }
 
 ARCANE_REGISTER_SERVICE_RIDER(RIDER, RIDERService);

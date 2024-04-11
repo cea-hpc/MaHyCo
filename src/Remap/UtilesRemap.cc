@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "RemapADIService.h"
 
 /**
@@ -127,7 +127,7 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
                            Real gradmoins, Real y0, Real yplus,
                            Real ymoins, Real h0, Real hplus,
                            Real hmoins) {
-  Real grady, gradM, gradMplus, gradMmoins;
+  Real grady, gradM, gradMplus, gradMmoins, gradyl;
   // limitation rupture de pente (formule 16 si on utilise pas le plateau pente)
   if (gradplus * gradmoins < 0.0) return 0.;
 
@@ -159,15 +159,22 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
     Real lambdamoins = (h0 / 2. + hmoins) / (h0 + hplus + hmoins);
     grady = lambdamoins * gradplus + lambdaplus * gradmoins;
   }
-  // limitation simple-pente (formule 10)
-  gradMplus = gradplus * (h0 + hplus) / h0;
-  gradMmoins = gradmoins * (h0 + hmoins) / h0;
-  gradM = std::min(fabs(gradMplus), fabs(gradMmoins));
-  if ((yplus - ymoins) > 0.)
-    grady = std::min(fabs(gradM), fabs(grady));
-  else
-    grady = -std::min(fabs(gradM), fabs(grady));
-
+  // Cas ou on force la simple pente (monotonie et TVD) 
+  // mais on veut rentrer dans le calcul des flux à l'ordre 2 en temps 
+  // c'est à dire avec la méthode Pente-Borne du calcul des flux
+  if (options()->projectionSimplePente) {
+    // limitation simple-pente (formule 10)  
+    gradMplus = gradplus * (h0 + hplus) / h0;
+    gradMmoins = gradmoins * (h0 + hmoins) / h0;
+    gradM = std::min(fabs(gradMplus), fabs(gradMmoins));
+    if ((yplus - ymoins) > 0.)
+    gradyl = std::min(fabs(gradM), fabs(grady));
+    else
+    gradyl = -std::min(fabs(gradM), fabs(grady));
+    // pinfo() << "limiteur utilisé ?";
+    //if (gradyl != grady) pinfo() << "limiteur actif" << gradyl << " au lieu " << grady;
+    grady =  gradyl;
+  }
   return grady;
 }
 /**
@@ -225,6 +232,14 @@ Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
     y0plus = yplus;
     y0moins = ymoins;
   }
+  // Cas ou on force la simple pente (monotonie et TVD) 
+  // mais on veut rentrer dans le calcul des flux à l'ordre 2 en temps 
+  // c'est à dire avec la méthode Pente-Borne du calcul des flux
+  if (options()->projectionSimplePente) {
+    y0plus = yplus;
+    y0moins = ymoins;
+  }
+      
   if (type == 0)
     return y0plus;
   else if (type == 1)
@@ -255,6 +270,7 @@ Real RemapADIService::computexgxd(Real y0, Real yplus,
     xmoins = (y0 - ymoins) / (y0moins - ymoins) - 1. / 2.;
   xd = +h0 * math::min(math::max(xplus, -1. / 2.), 1. / 2.);
   xg = -h0 * math::min(math::max(xmoins, -1. / 2.), 1. / 2.);
+  // if (xd != h0/2.) pinfo() << " xg=" << xg << " xd=" << xd << " et h0/2=" << h0/2.;
   if (type == 0)
     return xg;
   else if (type == 1)
@@ -413,6 +429,7 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
                                     ) {
     
 
+  // std::cout << " Passage dans fluxPP"  << std::endl;
   Flux.fill(0.0);
   Flux_dual.fill(0.0);
 
@@ -421,7 +438,7 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
   Real partie_positive_v = 0.5 * (face_normal_velocity + abs(face_normal_velocity)) * deltat_n;
   Real partie_positive_dual_v = 0.5 * (dual_normal_velocity + abs(dual_normal_velocity)) * deltat_n;
   Integer cas_PP = 0;
-    for (Integer ivar = 0; ivar < nb_vars; ivar++) {
+  for (Integer ivar = 0; ivar < nb_vars; ivar++) {
       Real h0 = m_h_cell_lagrange[cell];
       Real hplus = m_h_cell_lagrange[frontcell];
       Real hmoins = m_h_cell_lagrange[backcell];
@@ -553,20 +570,20 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
       for (size_t imat = 0; imat < nbmat; imat++) {
         Flux[nbmat + imat] =
             (Flux[nbmat + imat] / somme_flux_volume) * Flux[imat];
-        Flux[2. * nbmat + imat] =
-            (Flux[2. * nbmat + imat] / somme_flux_volume) * Flux[nbmat + imat];
         somme_flux_masse += Flux[nbmat + imat];
+        /* pour les autres quantités massiques : l'energie interne (2) les phases (3 à 6)*/
+        for (size_t i=2 ; i < 7; i++) 
+            Flux[i * nbmat + imat] =
+                (Flux[i * nbmat + imat] / somme_flux_volume) * Flux[nbmat + imat]; 
+        /* pour les autres quantités volumique : l'elasto  (8 à 12)*/
+        for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
+            m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
+        /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
+            
       }
-
-      Flux[3 * nbmat] = (Flux[3 * nbmat] / somme_flux_volume) *
-                        somme_flux_masse;  // flux de quantité de mouvement x
-      Flux[3 * nbmat + 1] =
-          (Flux[3 * nbmat + 1] / somme_flux_volume) *
-          somme_flux_masse;  // flux de quantité de mouvement y
-      Flux[3 * nbmat + 2] =
-          (Flux[3 * nbmat + 2] / somme_flux_volume) * somme_flux_masse;
-      Flux[3 * nbmat + 3] =
-          m_phi_lagrange[cell][3 * nbmat + 3] * somme_flux_volume;  // flux pour la pseudo VNR
     } else {
       Flux.fill(0.);
     }
@@ -579,20 +596,19 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
     for (size_t imat = 0; imat < nbmat; imat++) {
       Flux[nbmat + imat] =
           m_phi_lagrange[cell][nbmat + imat] * Flux[imat];  // flux de masse de imat
-      Flux[2 * nbmat + imat] =
-          m_phi_lagrange[cell][2 * nbmat + imat] *
-          Flux[nbmat + imat];  // flux de masse energy de imat
       somme_flux_masse += Flux[nbmat + imat];
       somme_flux_volume += Flux[imat];
+      /* pour les autres quantités massiques : l'energie interne (2) les phases (3 à 6)*/
+      for (size_t i=2 ; i < 7; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];  
+      /* pour les autres quantités volumique : l'elasto  (8 à 12)*/
+      for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
+      /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
+      /* pour l'energie_interne_old et les temperatures */
+      for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat]; 
     }
-    Flux[3 * nbmat] =
-        m_phi_lagrange[cell][3 * nbmat] * somme_flux_masse;  // flux de quantité de mouvement x
-    Flux[3 * nbmat + 1] = m_phi_lagrange[cell][3 * nbmat + 1] *
-                          somme_flux_masse;  // flux de quantité de mouvement y
-    Flux[3 * nbmat + 2] =
-        m_phi_lagrange[cell][3 * nbmat + 2] * somme_flux_masse;  // flux d'energie cinetique
-    Flux[3 * nbmat + 3] =
-        m_phi_lagrange[cell][3 * nbmat + 3] * somme_flux_volume;  // flux pour la pseudo VNR
   }
 
   if (partie_positive_v == 0.) Flux.fill(0.);
@@ -633,6 +649,7 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
                                      RealArrayView Flux, RealArrayView Flux_dual,
                                      int nbmat, int nb_vars
                                     ) {
+  // std::cout << " Passage dans fluxPPPure"  << std::endl;
   Flux.fill(0.0);
   Flux_dual.fill(0.0);   
   Real y0plus, y0moins, xd, xg, yd, yg;
@@ -760,7 +777,8 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
   if (projectionPenteBorneDebarFix == 1) {
     // les flux d' energie se déduisent des flux de masse en utilisant 
     // une valeur moyenne de e calculée par le flux
-    // d'energie / flux de volume Celles de quantité de mouvement avec une
+    // d'energie / flux de volume
+    // Celles de quantité de mouvement avec une
     // valeur moyenne de u calculée par le flux de vitesse / flux de volume
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
@@ -768,20 +786,18 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
 
     if (std::fabs(somme_flux_volume) > flux_threshold ) {
       for (size_t imat = 0; imat < nbmat; imat++) {
-        Flux[2. * nbmat + imat] =
-            (Flux[2. * nbmat + imat] / somme_flux_volume) * Flux[nbmat + imat];
-        somme_flux_masse += Flux[nbmat + imat];
+        somme_flux_masse += Flux[nbmat + imat];  
+        /* pour les autres quantités massiques : l'energie interne (2) les phases (3 à 6)*/  
+        for (size_t i=2 ; i < 7; i++) Flux[i * nbmat + imat] =
+            (Flux[i * nbmat + imat] / somme_flux_volume) * Flux[nbmat + imat];
+        /* pour les autres quantités volumique : l'elasto  (8 à 12)*/
+        for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
+            m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
+        /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
       }
-
-      Flux[3 * nbmat] = (Flux[3 * nbmat] / somme_flux_volume) *
-                        somme_flux_masse;  // flux de quantité de mouvement x
-      Flux[3 * nbmat + 1] =
-          (Flux[3 * nbmat + 1] / somme_flux_volume) *
-          somme_flux_masse;  // flux de quantité de mouvement y
-      Flux[3 * nbmat + 2] =
-          (Flux[3 * nbmat + 2] / somme_flux_volume) * somme_flux_masse;
-      Flux[3 * nbmat + 3] =
-          m_phi_lagrange[cell][3 * nbmat + 3] * somme_flux_volume;  // flux pour la pseudo VNR
     } else {
       Flux.fill(0.);
     }
@@ -791,20 +807,19 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
     Real somme_flux_masse = 0.;
     Real somme_flux_volume = 0.;
     for (size_t imat = 0; imat < nbmat; imat++) {
-      Flux[2 * nbmat + imat] =
-          m_phi_lagrange[cell][2 * nbmat + imat] *
-          Flux[nbmat + imat];  // flux de masse energy de imat
       somme_flux_masse += Flux[nbmat + imat];
       somme_flux_volume += Flux[imat];
+      /* pour les autres quantités massiques : l'energie interne (2) les phases (3 à 6)*/
+      for (size_t i=2 ; i < 7; i++) Flux[i * nbmat + imat] =
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];  
+      /* pour les autres quantités volumique : l'elasto  (8 à 12)*/
+      for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
+      /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
     }
-    Flux[3 * nbmat] =
-        m_phi_lagrange[cell][3 * nbmat] * somme_flux_masse;  // flux de quantité de mouvement x
-    Flux[3 * nbmat + 1] = m_phi_lagrange[cell][3 * nbmat + 1] *
-                          somme_flux_masse;  // flux de quantité de mouvement y
-    Flux[3 * nbmat + 2] =
-        m_phi_lagrange[cell][3 * nbmat + 2] * somme_flux_masse;  // flux d'energie cinetique
-    Flux[3 * nbmat + 3] =
-        m_phi_lagrange[cell][3 * nbmat + 3] * somme_flux_volume;  // flux pour la pseudo VNR
   }
 
   if (partie_positive_v == 0.) Flux.fill(0.);

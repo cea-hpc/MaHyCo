@@ -32,6 +32,15 @@
   <!-- CELL VOLUME EULER	 -->
   <variable field-name="euler_volume" name="EulerVolume" data-type="real" item-kind="cell"
 	    dim="0" material="false" dump="true" need-sync="true" />
+  <!-- TEMPERATURE -->
+  <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- TEMPERATURE -->
+  <variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- INTERNAL ENERGY OLD N -->
+  <variable field-name="internal_energy_n" name="InternalEnergyN" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- 	VELOCITY -->
   <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
@@ -118,6 +127,36 @@
 	    dim="0" dump="true" need-sync="true" /> 
     <variable field-name="front_flux_mass" name="FrontFluxMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" /> 
+    <!-- 	FRAC PHASE 1	 -->
+    <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 2	 -->
+    <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 3	 -->
+    <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 4	 -->
+    <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 5	 -->
+    <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	FRAC PHASE 6	 -->
+    <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    <!-- 	CELL CQS	 -->
+    <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
+	    dim="1" dump="true" need-sync="true" /> 
+    <!-- Tenseur (déviateur) des contraintes -->
+    <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />   
+    <!-- Vitesse de déformation Plastic -->
+    <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+    <!-- Déformation Plastic -->
+    <variable field-name="plastic_deformation" name="PlasticDeformation" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
 </variables>
 
 <options>
@@ -127,8 +166,9 @@
     <description>Définition de la valeur limite des petites fractions et autres </description>
   </simple>
   <!-- - - - - projection-Euler - - - - -->
-  <simple name="is-euler-scheme" type="bool" default="true">
-    <description> projection type Euler (retour sur maillage initial </description>
+  <simple name="is-euler-scheme" type="string" default="Full">
+    <description> projection type Euler 
+    (retour sur maillage initial = Full (defaut) ou suivant une direction seulement :  X ; Y ; Z ) </description>
   </simple>
   <!-- - - - - - ordre de la projection - - - - -->
   <simple name="ordre-projection" type="integer" default="2">
@@ -153,6 +193,10 @@
   <!-- - - - - projection-pente-borne- - - - - -->
   <simple name="projection-pente-borne" type="bool" default="false">
     <description> projection avec l'algorithme pente-borne </description>
+  </simple>
+  <!-- - - - - projection-simple-pente- - - - - -->
+  <simple name="projection-simple-pente" type="bool" default="false">
+    <description> projection avec l'algorithme pente-borne mais en simple pente</description>
   </simple>
   <!-- - - - - projection-pente-borne- - - - - -->
   <simple name="projection-pente-borne-debar-fix" type="integer" default="0">

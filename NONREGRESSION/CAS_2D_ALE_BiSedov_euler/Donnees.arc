@@ -1,12 +1,11 @@
 <?xml version='1.0'?>
 <case codeversion="1.0" codename="Mahyco" xml:lang="en">
   <arcane>
-    <title>Exemple Arcane d'un module Hydro tres simplifie</title>
+    <title>CAS_2D_ALE_BiSedov_euler</title>
     <timeloop>MahycoLoop</timeloop>
   </arcane>
 
   <arcane-post-processing>
-    <output-period>300</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -47,33 +46,39 @@
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
-  <material><name>Mat</name></material>
   <material><name>Air</name></material>
-  <environment>
-    <name>ZoneInit</name>
-    <material>Mat</material>
-    <eos-model name="PerfectGas">
-      <adiabatic-cst>1.4</adiabatic-cst>
-    </eos-model>
-  </environment>
-  <environment>
+  <material><name>Init</name></material>
+   <environment>
     <name>ZoneAir</name>
     <material>Air</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>0.0979264e-5</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     <!-- <eos-model name="StiffenedGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>
+  <environment>
+    <name>ZoneInit</name>
+    <material>Init</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>1.</pression-initiale>
+    <eos-model name="PerfectGas">
+      <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
+    </eos-model> 
+  </environment>
+
   
    <cas-model name="SEDOV">
    <cas-test>11</cas-test>
    </cas-model>
    <remap name="RemapALE">
-    <is-euler-scheme>true</is-euler-scheme>
-    <!-- <volum-criteria>0.8</volum-criteria>
-    <nb-iteration-winslow>10</nb-iteration-winslow> -->
+    <is-euler-scheme>Full</is-euler-scheme>
     <ordre-projection>2</ordre-projection>
    </remap>
        <!--<with-projection>false</with-projection>-->

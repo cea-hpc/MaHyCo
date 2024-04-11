@@ -66,16 +66,40 @@ function compare_results {
   local readonly reference_dir=$1
   local return_code=0
   ls -l "$reference_dir/output"
-  echo "Differences in : ${PWD}/DIFF.txt"
+  echo "Differences dans le fichier : ${PWD}/DIFF.txt"
+  echo ${test_name} >>  $reference_dir/../../list_of_cases_to_change
   diff -r output/depouillement "$reference_dir/output/depouillement" > DIFF.txt 2>&1
+#  if [[ -e ${PWD}/DIFF.txt  ]]; then
+#      echo "fichier existe "
+#      if [[ -s ${PWD}/DIFF.txt  ]]; then
+#        echo " Différence avec la reference : mise dans la list_of_cases_to_change"
+#        echo ${test_dir} >>  list_of_cases_to_change
+#      fi
+#  fi
   if [[ $? -ne 0 ]]; then
       echo "Test failure! Output is different from reference"
-      echo ${test_dir} >>  list_of_cases_to_change
-    return_code=1
+      return_code=1
   fi
   return ${return_code}
 }
-
+function bascule_results {
+  local readonly reference_dir=$1
+  local return_code=0
+  ls -l "$reference_dir/output"
+  echo "Differences dans le fichier ? : ${PWD}/DIFF.txt"
+  if [[  -e ${PWD}/DIFF.txt  ]]; then
+      echo "fichier existe "
+      if [[  -s ${PWD}/DIFF.txt  ]]; then
+        echo " Différence avec la reference : mise dans la list_of_cases_to_change"
+        echo ${test_dir} >>  list_of_cases_to_change
+      fi
+  fi
+  if [[ $? -ne 0 ]]; then
+      echo "Test failure! Output is different from reference"
+      return_code=1
+  fi
+  return ${return_code}
+}
 # Main function. Calls launch_computation and compare_results
 # For each test a directory is created inside /tmp
 function main {
@@ -113,6 +137,32 @@ function main {
   echo "This directory contains the output of the test under ${test_dir}" > README.txt
   pwd
   echo ${type}
+  
+  if [ -f $test_dir/*.coeff ]; then
+    echo "fichier de coeff dans le cas"
+    cp $test_dir/*.coeff . 2>/dev/null
+  else
+    echo "pas fichier de coeff dans le cas"
+  fi
+  if [ -f $test_dir/*.data ]; then
+    echo "fichier de data dans le cas"
+    cp $test_dir/*.data . 2>/dev/null
+  else
+    echo "pas fichier de data dans le cas"
+  fi
+  if [ -f $test_dir/*.msh ]; then
+    echo "fichier de maillage dans le cas"
+    cp $test_dir/*.msh . 2>/dev/null
+  else
+    echo "pas fichier de maillage dans le cas"
+  fi
+  if [ -f $test_dir/*.txt ]; then
+    echo "fichier de texte de tabulation dans le cas"
+    cp $test_dir/*.txt . 2>/dev/null
+  else
+    echo "pas fichier de maillage dans le cas"
+  fi
+  
   if [ ${type}  = "para_8" ]
   then
       echo " lancement parallele sur 8 coeurs" 
@@ -141,6 +191,13 @@ function main {
   else
     echo "Success!"
   fi
+#  bascule_results ${test_dir}
+#   if [[ $? -ne 0 ]]; then
+#     echo "Aborting!"
+#     exit 2
+#   else
+#     echo "Success!"
+#   fi
   exit 0
 }
 

@@ -74,17 +74,27 @@ public:
   
   virtual Integer getOrdreProjection();
   virtual bool hasProjectionPenteBorne();
+  virtual bool hasProjectionSimplePente();    
   virtual bool hasConservationEnergieTotale();   
-  virtual bool isEuler();
+  virtual String isEuler();
   
     /**
    * fonction final de la projection
    **/
-   virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
+  virtual void remapVariables(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) ;
    
 private:
     
- 
+  /**
+   * Calcule les résultantes aux noeuds d'une maille hexaédrique.
+   * La méthode utilisée est celle du découpage en quatre triangles.
+   * Méthode appelée par le point d'entrée \c computeGeometricValues()
+   */
+  inline void computeCQs(Real3 node_coord[8],Real3 face_coord[6],const Cell& cell);
+  /** 
+   * calcul du nouveau volume dit Euler si différent du maillage initial    
+   **/ 
+   void computeVolumeEuler(Integer idir);
   /**
    * calcul des gradients aux faces
    **/
@@ -100,7 +110,7 @@ private:
   /**
    * calcul des valeurs aux cellules 
    **/
-   void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env);
+   void computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env, Integer withDualProjection);
 
   /**
    * fonction pour la phase de projection duales

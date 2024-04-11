@@ -42,11 +42,15 @@ public:
    *  Initialise les cas test en mono ou multimatériau
    */
   virtual void initMatMono(Integer dim)  = 0;
-  virtual void initVarMono(Integer dim) = 0;
+  virtual void initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, 
+                           double* pression_initiale, double* temperature_initiale, Real3x3 vitesse_initiale) = 0;
   virtual void initMat(Integer dim)  = 0;
-  virtual void initVar(Integer dim) = 0;
+  virtual void initVar(Integer dim, double* densite_initiale, double* energie_initiale, 
+                       double* pression_initiale, double* temperature_initiale, Real3x3 vitesse_initiale) = 0;
   virtual bool hasReverseOption() = 0;
   virtual Real getReverseParameter() = 0;
+  virtual bool isInternalModel() = 0;
+  virtual void initUtilisateur() = 0;
 };
 
 #endif

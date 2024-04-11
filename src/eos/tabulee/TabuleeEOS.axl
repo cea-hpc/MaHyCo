@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="TabuleeEOS" version="1.0" type="caseoption">
+
+	<description>Jeu de données du service TabuleeEOS</description>
+  <interface name="IEquationOfState" />
+
+	<variables>
+		<!-- DENSITY -->
+		<variable
+			field-name="density"
+			name="Density"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- PRESSURE -->
+		<variable
+			field-name="pressure"
+			name="Pressure"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- INTERNAL ENERGY	 -->
+		<variable
+			field-name="internal_energy"
+			name="InternalEnergy"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- CELL VOLUME	 -->
+		<variable
+			field-name="cell_volume"
+			name="CellVolume"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- OLD CELL VOLUME	 -->
+		<variable
+			field-name="old_cell_volume"
+			name="OldCellVolume"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	NODE MASS	 -->
+		<variable
+			field-name="node_mass"
+			name="NodeMass"
+			data-type="real"
+			item-kind="node"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	CARACTERISTIC LENGTH	 -->
+		<variable
+			field-name="caracteristic_length"
+			name="CaracteristicLength"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	SOUND SPEED	 -->
+		<variable
+			field-name="sound_speed"
+			name="SoundSpeed"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- 	DPDE	 -->
+		<variable
+			field-name="dpde"
+			name="DpDe"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- 	CV	 -->
+		<variable
+			field-name="cv"
+			name="Cv"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+			
+        <!-- 	FRAC PHASE 1	 -->
+        <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 2	 -->
+        <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 3	 -->
+        <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 4	 -->
+        <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 5	 -->
+        <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 6	 -->
+        <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />  
+        <!-- TEMPERATURE -->
+        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+	    <!-- DENSITY 0 -->
+        <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+	    
+        <!-- Indicateur Maille Endommagée	 -->
+        <variable field-name="maille_endo" name="MailleEndo" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+         
+       <!-- DENSITY DE FRACTURATION-->
+		<variable
+			field-name="density_fracture"
+			name="Density"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />   
+			
+		<!-- INTERNAL ENERGY DE FRACTURATION -->
+		<variable
+			field-name="internal_energy_fracture"
+			name="InternalEnergyFracture"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />	
+	</variables>
+
+	<options>
+		<!-- - - - - - AdiabaticCst - - - - -->
+		<simple name="adiabatic-cst" type="real" default="1.4">
+			<description>Définition de la constante adiabatique</description>
+		</simple>
+		<!-- - - - - - limit tension - - - - -->
+		<simple name="limit-tension" type="real" default="0.0">
+			<description>Définition de la tension limite</description>
+		</simple>
+		<!-- - - - - - specific heat - - - - -->
+		<simple name="specific-heat" type="real" default="0.0">
+			<description>Définition de la chaleur spécifique</description>
+		</simple>
+		<!-- - - - - -  fichier_de_coeff - - - - -->
+		 <simple name="fichier-coeff" type="string" default=""> 
+		     <description>Nom du fichier de coefficient</description> 
+		 </simple>
+		<!-- - - - - - tension-damage thresold - - - - -->
+		<simple name="tension-damage-thresold" type="real" default="-1.e12">
+			<description>Définition de pression minimal avant endommagement</description>
+		</simple>
+		<!-- - - - - - density-damage thresold - - - - -->
+		<simple name="density-damage-thresold" type="real" default="0.">
+			<description>Définition du rapport de densité minimal avant endommagement</description>
+		</simple>
+		<!-- - - - - - density-damage thresold - - - - -->
+		<simple name="facteur-density-max-damage" type="real" default="1.e10">
+			<description>Définition du rapport de densité max avant endommagement</description>
+		</simple>
+		<!-- - - - - -  Formulation Equation d'etat - - - - -->
+		 <simple name="formulation" type="string" default="VE"> 
+		     <description>Formulation EOS</description> 
+		 </simple>
+		<!-- - - - - -  Formulation Equation d'etat - - - - -->
+		 <simple name="init-formulation" type="string" default="VT"> 
+		     <description>Formulation EOS</description> 
+		 </simple>
+	</options>
+</service>

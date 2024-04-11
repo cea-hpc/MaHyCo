@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="CHOCBULLE" version="1.0" type="caseoption">
+
+	<description>Jeu de données du service CHOCBULLE</description>
+  <interface name="IInitialisations" />
+
+	<variables>
+		<!-- DENSITY -->
+		<variable
+			field-name="density"
+			name="Density"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- PRESSURE -->
+		<variable
+			field-name="pressure"
+			name="Pressure"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- INTERNAL ENERGY	 -->
+		<variable
+			field-name="internal_energy"
+			name="InternalEnergy"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- CELL VOLUME	 -->
+		<variable
+			field-name="cell_volume"
+			name="CellVolume"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- OLD CELL VOLUME	 -->
+		<variable
+			field-name="old_cell_volume"
+			name="OldCellVolume"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	NODE MASS	 -->
+		<variable
+			field-name="node_mass"
+			name="NodeMass"
+			data-type="real"
+			item-kind="node"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	CELL COORD	 -->
+		<variable
+			field-name="cell_coord"
+			name="CellCoord"
+			data-type="real3"
+			item-kind="cell"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- PSEUDO VISCOSITY	 -->
+		<variable
+			field-name="pseudo_viscosity"
+			name="PseudoViscosity"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />			
+		<!-- MATERIAU	 -->
+		<variable
+			field-name="materiau"
+			name="Materiau"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			dump="true"
+			need-sync="true" />		
+		<!-- FRACVOL	 -->
+		<variable
+			field-name="fracvol"
+			name="FracVol"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />	
+		<!-- MASS FRACTION	 -->
+		<variable
+			field-name="mass_fraction"
+			name="MassFraction"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
+		<!-- 	VELOCITY	 -->
+		<variable
+			field-name="velocity"
+			name="Velocity"
+			data-type="real3"
+			item-kind="node"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+		<!-- 	VELOCITY_N	 -->
+		<variable
+			field-name="velocity_n"
+			name="VelocityN"
+			data-type="real3"
+			item-kind="node"
+			dim="0"
+			dump="true"
+			need-sync="true" />
+        <!-- 	NODE COORD	 -->
+        <variable field-name="node_coord" 
+            name="NodeCoord" 
+            data-type="real3" 
+            item-kind="node"
+            dim="0" 
+            dump="true" 
+            need-sync="true" />
+	    <!-- 	FRAC PHASE 1	 -->
+        <variable field-name="frac_phase1" name="FracPhase1" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 2	 -->
+        <variable field-name="frac_phase2" name="FracPhase2" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 3	 -->
+        <variable field-name="frac_phase3" name="FracPhase3" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 4	 -->
+        <variable field-name="frac_phase4" name="FracPhase4" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 5	 -->
+        <variable field-name="frac_phase5" name="FracPhase5" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+        <!-- 	FRAC PHASE 6	 -->
+        <variable field-name="frac_phase6" name="FracPhase6" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />  
+        <!-- TEMPERATURE -->
+        <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
+	</variables>
+
+<options>
+   <!-- - - - - - cas test - - - - -->
+  <simple name="cas-test" type="integer" default="-1">
+    <description>Numéro du cas test</description>
+  </simple>
+  
+   <!-- - - - - - options reverse - - - - -->
+   <simple name="reverse-option" type="bool" default="false">
+    <description>
+     Option de retour arriere 
+    </description>
+    </simple>
+   <!-- - - - - - parametre du cas test - - - - -->
+   <simple name="parametre" type="real" default="0.">
+    <description>Parametre du cas test</description>
+   </simple>
+   
+    <simple name="nombre-bulles-x" type="integer" default="0">
+        <description>Nombre de bulles suivant x</description>
+    </simple>
+    <simple name="nombre-bulles-y" type="integer" default="0">
+        <description>Nombre de bulles suivant y</description>
+    </simple>
+    <simple name="nombre-bulles-z" type="integer" default="1">
+        <description>Nombre de bulles suivant y</description>
+    </simple>
+    <simple name="position-premiere-bulle" type="real3" default="0. 0. 0.">
+        <description>Position centre premiere bulle</description>
+    </simple>
+    <simple name="deltax-bulle" type="real" default="0.">
+    <description>distance-x entre bulles</description>
+    </simple>
+    <simple name="deltay-bulle" type="real" default="0.">
+    <description>distance-y entre bulles</description>
+    </simple>
+    <simple name="deltaz-bulle" type="real" default="0.">
+    <description>distance-z entre bulles</description>
+    </simple>
+    <simple name="rayon-bulle" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="nombre-bulles-aleatoires" type="integer" default="0">
+        <description>Nombre de bulles aleatoires</description>
+    </simple>
+    <simple name="position-min" type="real3" default="0. 0. 0.">
+        <description>Position min du domaine des bulles</description>
+    </simple>
+    <simple name="position-max" type="real3" default="0. 0. 0.">
+        <description>Position max du domaine des bulles</description>
+    </simple>
+    <simple name="rayon-min" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="rayon-max" type="real" default="0.">
+    <description>rayon des bulles</description>
+    </simple>
+    <simple name="xfin-fictif" type="real" default="0.25">
+    <description>Position de la fin du fictif </description>
+    </simple>    
+    <simple name="xdebut-fictif2" type="real" default="0.5">
+    <description>Position du début du fictif </description>
+    </simple>
+    <simple name="yfin-fictif2" type="real" default="0.">
+    <description>Position de la fin du fictif </description>
+    </simple>    
+    <simple name="ydebut-fictif2" type="real" default="100.">
+    <description>Position du début du fictif </description>
+    </simple>
+    <simple name="creneau" type="bool" default="false">
+    <description> option du créneau en surface libre</description>
+    </simple>
+    <simple name="position-crenau-min-min" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à gauche </description>
+    </simple>
+    <simple name="position-crenau-min-max" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à droite </description>
+    </simple>
+    <simple name="position-crenau-max-min" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à gauche </description>
+    </simple>
+    <simple name="position-crenau-max-max" type="real3" default="0. 0. 0.">
+        <description>Position du point en bas à droite </description>
+    </simple>
+    <simple name="fichier_bulles" type="string" default="RIEN">
+      <description>Fichier des positions des bulles et de leur rayon</description>
+    </simple>
+</options>
+</service>

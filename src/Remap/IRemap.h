@@ -54,9 +54,10 @@ public:
 
   
   virtual Integer getOrdreProjection() = 0;
-  virtual bool hasProjectionPenteBorne() = 0;    
+  virtual bool hasProjectionPenteBorne() = 0; 
+  virtual bool hasProjectionSimplePente() = 0;    
   virtual bool hasConservationEnergieTotale() = 0;   
-  virtual bool isEuler() = 0;
+  virtual String isEuler() = 0;
     /**
    * fonction final de la projection
    **/

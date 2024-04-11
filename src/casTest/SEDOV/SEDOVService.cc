@@ -36,11 +36,12 @@ void SEDOVService::initMat(Integer dim)  {
     }
   }
 } 
-void SEDOVService::initVarMono(Integer dim)  {
+void SEDOVService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
     
   Real3 Xb={0.0, 0.0, 0.};
-  Real rhoInit = 1.;
-  Real pInit = 1.e-6;
+  Real rhoInit = densite_initiale[0];
+  Real pInit = pression_initiale[0];
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
   Real rmin(1.e-10);  // depot sur 1 maille
@@ -53,9 +54,8 @@ void SEDOVService::initVarMono(Integer dim)  {
     bool isCenterCell = false;  
     m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
-    m_pressure[cell] = 0.4 * rhoInit * e1;
+    //m_pressure[cell] = 0.4 * rhoInit * e1;
+    m_pressure[cell] = pInit;
     Real vol = m_cell_volume[cell]; 
     ENUMERATE_NODE(inode, cell.nodes()) {
         if (dim == 3) rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
@@ -80,17 +80,18 @@ void SEDOVService::initVarMono(Integer dim)  {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void SEDOVService::initVar(Integer dim)  { 
+void SEDOVService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
+                                    double* temperature_initiale, Real3x3 vitesse_initiale)  { 
   // pour l'instant meme fonction  que la version MonoMat
 
   if (options()->casTest == Sedov) {
-    initVarMono(dim);
+    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);
     return;
   }
 
   Real3 Xb={0.0, 0.0, 0.};
-  Real rhoInit = 1.;
-  Real pInit = 1.e-6;
+  Real rhoInit = densite_initiale[0];
+  Real pInit = pression_initiale[0];
   Real e1 = 0.244816e-5;
   Real total_energy_deposit = 0.244816;
   Real rmin(1.e-10);  // depot sur 1 maille
@@ -100,11 +101,11 @@ void SEDOVService::initVar(Integer dim)  {
     Cell cell = *icell;
     Real rmax(0.);
     bool isCenterCell = false;  
-    m_internal_energy[cell] = e1;
+    // m_internal_energy[cell] = e1;
     m_density[cell] = rhoInit;
-    m_fracvol[cell] = 1.;
-    m_mass_fraction[cell] = 1.;
-    m_pressure[cell] = 0.4 * rhoInit * e1;
+    // m_pressure[cell] = 0.4 * rhoInit * e1;
+    m_pressure[cell] = pInit;
+    
     Real vol = m_cell_volume[cell];
     ENUMERATE_NODE(inode, cell.nodes()) {
         if (dim == 3) rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
@@ -133,6 +134,8 @@ void SEDOVService::initVar(Integer dim)  {
 
 bool SEDOVService::hasReverseOption() { return options()->reverseOption;}
 Real SEDOVService::getReverseParameter() { return options()->parametre;}
+bool SEDOVService::isInternalModel() { return true ;}
+void SEDOVService::initUtilisateur() { }
 /*---------------------------------------------------------------------------*/
 
 

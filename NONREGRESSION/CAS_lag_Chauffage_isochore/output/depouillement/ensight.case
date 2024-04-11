@@ -1,0 +1,37 @@
+FORMAT
+type: ensight gold
+
+GEOMETRY
+model: 1 ensight.geo/ensight.geo******
+
+VARIABLE
+scalar per element:    1   CellMass CellMass/CellMass******
+scalar per element:    1   Pressure Pressure/Pressure******
+scalar per element:    1   Temperature Temperature/Temperature******
+scalar per element:    1   Density Density/Density******
+vector per node:       1   Velocity Velocity/Velocity******
+scalar per node:       1   NodeMass NodeMass/NodeMass******
+scalar per element:    1   InternalEnergy InternalEnergy/InternalEnergy******
+scalar per element:    1   PseudoViscosity PseudoViscosity/PseudoViscosity******
+scalar per element:    1   Materiau Materiau/Materiau******
+scalar per element:    1   FracPhase1 FracPhase1/FracPhase1******
+scalar per element:    1   FracPhase2 FracPhase2/FracPhase2******
+scalar per element:    1   FracPhase3 FracPhase3/FracPhase3******
+scalar per element:    1   StrainTensorXX StrainTensorXX/StrainTensorXX******
+scalar per element:    1   StrainTensorXY StrainTensorXY/StrainTensorXY******
+scalar per element:    1   StrainTensorXZ StrainTensorXZ/StrainTensorXZ******
+scalar per element:    1   StrainTensorYY StrainTensorYY/StrainTensorYY******
+scalar per element:    1   StrainTensorYZ StrainTensorYZ/StrainTensorYZ******
+scalar per element:    1   PlasticDeformationVelocity PlasticDeformationVelocity/PlasticDeformationVelocity******
+scalar per element:    1   PlasticDeformation PlasticDeformation/PlasticDeformation******
+scalar per element:    1   StrainNorm StrainNorm/StrainNorm******
+
+TIME
+time set:              1
+number of steps:       2
+filename start number: 0
+filename increment:    1
+time values:
+0
+4.9999999999997e-10
+

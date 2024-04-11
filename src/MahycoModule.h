@@ -54,6 +54,8 @@
 #include "arcane/cea/FaceDirectionMng.h"
 #include "arcane/cea/NodeDirectionMng.h"
 #include "arcane/cea/CartesianConnectivity.h"
+#include "arcane/ITimeHistoryMng.h"
+#include "arcane/CaseOptionService.h"
 // fin ajout au PIF
 
 #include "Mahyco_axl.h"
@@ -172,7 +174,6 @@ class MahycoModule
    *  Sauvegarde des variables à l'instant n 
    */
   virtual void saveValuesAtN();
-
    /** 
    * Calcule la masse des mailles
    */
@@ -219,7 +220,8 @@ class MahycoModule
    * possède les propriétés suivantes :
    * - un type: trois types sont supportés: contraindre la composante
    * \f$x\f$ du vecteur vitesse, contraindre la composante \f$y\f$ du vecteur
-   * vitesse ou contraindre la composante \f$z\f$ du vecteur vitesse,
+   * vitesse ou contraindre la composante \f$z\f$ du vecteur vitesse, 
+   * contrainte une variable à la maille 
    * - une valeur: il s'agit d'un réel indiquant la valeur de la
    * contrainte,
    * - une surface: il s'agit de la surface sur laquelle s'applique la
@@ -230,6 +232,7 @@ class MahycoModule
    * chaque surface sur laquelle on impose une condition aux limites.
    */		
   virtual void applyBoundaryCondition();
+  virtual void applyBoundaryConditionForCellVariables();
 		
   /**
    * Modifie les coordonnées (\c m_node_coord)
@@ -262,7 +265,12 @@ class MahycoModule
    * divisée par le nouveau volume.
    */
   virtual void updateDensity();
-		
+  
+  virtual void DepotEnergy(IMeshEnvironment* env); 
+   /**
+   * Calcule la contribution elasto-plastique 
+   */
+  virtual void updateElasticityAndPlasticity();
   /**
    * Ce point d'entrée calcule l'énergie interne, la pression et la vitesse
    * du son dans la maille en faisant appel au service d'équation d'état.
@@ -276,6 +284,10 @@ class MahycoModule
    * Cacul de l'energie et de la pression par une méthode directe pour les gaz parfait
    **/
   virtual void updateEnergyAndPressureforGP();
+  /*
+   * Cacul de l'energie et de la pression de facon explicite (ordre 1)
+   **/
+  virtual void updateEnergyAndPressureExplicite();  
     /**
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
@@ -291,6 +303,11 @@ class MahycoModule
    *   dans le jeu de données (\c finalTime()).
    */
   virtual void computeDeltaT();
+  
+  /**
+   * effectue des sorties sur les mailles en mode TH
+   * */
+  virtual void SortieHistory();
   
   /**
    * Calcul de quantites aux faces pour la projection :
@@ -333,9 +350,19 @@ class MahycoModule
    * point d'entree pour la phase de projection
    **/
   virtual void remap();
+  /**
+   * Initialisation Time History
+   **/
+  virtual void initTH();
+  
+  /** lecture du fichier de pression(temps) pour les CDL */
+  virtual void  lireFichierCDL( const std::string& nomFichier);
+
  
   /** Retourne le numéro de version du module */
   virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
+  
+  
   
  private:
   
@@ -377,7 +404,6 @@ class MahycoModule
    /** */
    inline double fderiv(double e, double p, double dpde, double cn1, double m)
      {return 1.+0.5*dpde*cn1/m;}; 
-
   
   /* variables membre */
   ICartesianMesh* m_cartesian_mesh;
@@ -386,6 +412,9 @@ class MahycoModule
   Integer m_nb_env;
   Integer my_rank;
   Integer m_dimension;
+  Integer m_taille_table;
+  std::vector<Real>  m_table_pression;
+  std::vector<Real>  m_table_temps;
  
 };
 

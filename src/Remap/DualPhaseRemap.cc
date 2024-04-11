@@ -14,6 +14,22 @@
  * \param idir : direction de la projection
  * \param name : nom du groupe de face suivant la direction demandée
  * \return m_dual_grad_phi
+ * 
+ * Résumé obtenu par ChatGPT
+ * --------------------------
+ * Cette fonction, nommée computeDualUremap(), est une méthode de la classe RemapADIService. 
+ * Elle calcule les gradients aux nœuds ainsi que les flux de masse pour une projection duale. 
+ * Plus précisément, elle calcule les flux de masse par environnement, m_back_flux_mass_env et m_front_flux_mass_env, 
+ * ainsi que les flux de masse moyens m_back_flux_mass et m_front_flux_mass.
+ * Les paramètres de cette fonction sont :
+ * 
+ * idir : la direction de la projection ;
+ * nb_env : le nombre d'environnements considérés dans le calcul.
+ * Le corps de la fonction commence par initialiser un certain nombre de variables et de tableaux, 
+ * puis par calculer le gradient aux nœuds avec la méthode computeDualGradPhi(), si l'ordre de projection est supérieur à 1. 
+ * Ensuite, la fonction calcule les flux de masse en parcourant toutes les faces de la direction considérée.
+ * Les flux de masse sont calculés pour chaque nœud en sommant les flux associés aux cellules voisines. 
+ * Finalement, les résultats sont synchronisés entre les processus.
  *******************************************************************************
  */
 void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {

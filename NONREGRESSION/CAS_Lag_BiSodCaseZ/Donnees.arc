@@ -1,12 +1,11 @@
 <?xml version='1.0'?>
 <case codeversion="1.0" codename="Mahyco" xml:lang="en">
   <arcane>
-    <title>Exemple Arcane d'un module Hydro tres simplifie</title>
+    <title>CAS_Lag_BiSodCaseZ</title>
     <timeloop>MahycoLagrangeLoop</timeloop>
   </arcane>
 
   <arcane-post-processing>
-    <output-period>50</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
@@ -52,17 +51,24 @@
   <environment>
     <name>ZG</name>
     <material>ZG_mat</material>
+    <densite-initiale>1.</densite-initiale>
+    <pression-initiale>1.</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     </eos-model> 
   </environment>
   <environment>
     <name>ZD</name>
     <material>ZD_mat</material>
+    <densite-initiale>.125</densite-initiale>
+    <pression-initiale>.1</pression-initiale>
     <eos-model name="PerfectGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
     <!-- <eos-model name="StiffenedGas">
       <adiabatic-cst>1.4</adiabatic-cst>
+      <specific-heat>2.4</specific-heat>
       <limit-tension>0.01</limit-tension> -->
     </eos-model> 
   </environment>

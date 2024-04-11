@@ -108,35 +108,59 @@ void MahycoModule::computeVariablesForRemap()
       m_u_lagrange[cell][nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev];
       // // energies matériels (partiels)
       m_u_lagrange[cell][2 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy[ev];
-      // // Quantites de mouvement centrees
-      m_u_lagrange[cell][3 * nb_total_env + 0] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 1] = 0.;
-      m_u_lagrange[cell][3 * nb_total_env + 2] = 0.;
-      // // energie cinetique centree
-      m_u_lagrange[cell][3 * nb_total_env + 3] = 0.;
-      // // Pseudo partiel pour la quantité de mouvement
-      m_u_lagrange[cell][3 * nb_total_env + 4] = m_cell_volume[ev] * m_pseudo_viscosity[ev];
-//       if (cell.localId() == 754) info() << cell.localId() << " pseudo avant proj " << m_pseudo_viscosity[ev] 
-//            << " ul " << m_u_lagrange[cell][3 * nb_total_env + 4] << " " << index_env;
+      /* Indice de phases */
+      m_u_lagrange[cell][3 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_frac_phase1[ev];
+      m_u_lagrange[cell][4 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_frac_phase2[ev];
+      m_u_lagrange[cell][5 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_frac_phase3[ev]; 
+      m_u_lagrange[cell][6 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_frac_phase4[ev]; 
+      /* pseudo-viscosité */
+      m_u_lagrange[cell][7 * nb_total_env ] = m_cell_volume[cell] * m_pseudo_viscosity[cell];
+      /* Déviateurs des contraintes */
+      m_u_lagrange[cell][8 * nb_total_env + index_env] = m_cell_volume[ev]  * m_strain_tensor[ev].x.x;
+      m_u_lagrange[cell][9 * nb_total_env + index_env] = m_cell_volume[ev]  * m_strain_tensor[ev].y.y;
+      m_u_lagrange[cell][10 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].x.y; 
+      m_u_lagrange[cell][11 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].y.z; 
+      m_u_lagrange[cell][12 * nb_total_env + index_env] = m_cell_volume[ev] * m_strain_tensor[ev].z.x; 
+      /*   Variables de Déformations plastiques */
+      m_u_lagrange[cell][13 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation_velocity[ev]; 
+      m_u_lagrange[cell][14 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation[ev];
+      /* energies matériels (partiels) old */
+      m_u_lagrange[cell][15 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy_n[ev];
+      /* temperature */
+      m_u_lagrange[cell][16 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_temperature[ev];
+      /* temperature old */
+      m_u_lagrange[cell][17 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_temperature_n[ev];
+        
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
         // Cell cell = ev.globalCell();
         m_phi_lagrange[cell][index_env]  = m_fracvol[ev];
         m_phi_lagrange[cell][nb_total_env + index_env] = m_density[ev];
         m_phi_lagrange[cell][2 * nb_total_env + index_env] = m_internal_energy[ev];
-        // les phi sur la vitesse et energie cinétique n'existent pas en VnR
-        m_phi_lagrange[cell][3 * nb_total_env + 0] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 1] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 2] = 0.;
-        m_phi_lagrange[cell][3 * nb_total_env + 3] = 0.;
-        
-        m_phi_lagrange[cell][3 * nb_total_env + 4] = m_pseudo_viscosity[ev];
+        /* Indice de phases */
+        m_phi_lagrange[cell][3 * nb_total_env + index_env] = m_frac_phase1[ev];
+        m_phi_lagrange[cell][4 * nb_total_env + index_env] = m_frac_phase2[ev];
+        m_phi_lagrange[cell][5 * nb_total_env + index_env] = m_frac_phase3[ev]; 
+        m_phi_lagrange[cell][6 * nb_total_env + index_env] = m_frac_phase4[ev]; 
+        /* pseudo-viscosité */
+        m_phi_lagrange[cell][7 * nb_total_env ] = m_pseudo_viscosity[cell];
+        /* Déviateurs des contraintes */
+        m_phi_lagrange[cell][8 * nb_total_env + index_env]  = m_strain_tensor[ev].x.x;
+        m_phi_lagrange[cell][9 * nb_total_env + index_env]  = m_strain_tensor[ev].y.y;
+        m_phi_lagrange[cell][10 * nb_total_env + index_env] = m_strain_tensor[ev].x.y; 
+        m_phi_lagrange[cell][11 * nb_total_env + index_env] = m_strain_tensor[ev].y.z;
+        m_phi_lagrange[cell][12 * nb_total_env + index_env] = m_strain_tensor[ev].z.x; 
+        /* Variables de Déformations plastiques */
+        m_phi_lagrange[cell][13 * nb_total_env + index_env] = m_plastic_deformation_velocity[ev];
+        m_phi_lagrange[cell][14 * nb_total_env + index_env] = m_plastic_deformation[ev];
+        m_phi_lagrange[cell][15 * nb_total_env + index_env] = m_internal_energy_n[ev];
+        m_phi_lagrange[cell][16 * nb_total_env + index_env] = m_temperature[ev];
+        m_phi_lagrange[cell][17 * nb_total_env + index_env] = m_temperature_n[ev];
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
         }
       }
-      
     }
   }
   ENUMERATE_NODE(inode, allNodes()){
@@ -149,7 +173,7 @@ void MahycoModule::computeVariablesForRemap()
     m_u_dual_lagrange[inode][3] = m_node_mass[inode];
     // projection de l'energie cinétique
     //     if (options->projectionConservative == 1)
-    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].abs2();
+    m_u_dual_lagrange[inode][4] = 0.5 * m_node_mass[inode] * m_velocity[inode].squareNormL2();
 
     //         if (limiteurs->projectionAvecPlateauPente == 1) {   
     // *** variables Phi
@@ -160,7 +184,7 @@ void MahycoModule::computeVariablesForRemap()
      m_phi_dual_lagrange[inode][3] = m_node_mass[inode];
      // Phi energie cinétique
      //     if (options->projectionConservative == 1)
-     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].abs2();
+     m_phi_dual_lagrange[inode][4] = 0.5 * m_velocity[inode].squareNormL2();
   }
   
 }
@@ -189,9 +213,9 @@ void MahycoModule::remap() {
     options()->remap()->appliRemap(m_dimension, withDualProjection, m_nb_vars_to_project, m_nb_env);
     
     // reinitialisaiton des variables (à l'instant N) pour eviter des variables non initialisees
-    // pour les nouveaux envirronements crees dans les mailles mixtes par la projection
+    // pour les nouveaux environements crees dans les mailles mixtes par la projection
     m_pseudo_viscosity_n.fill(0.0);
-    m_internal_energy_n.fill(0.0);
+    // m_internal_energy_n.fill(0.0); // utilisé pour le calcul de la temperature dans l'EOS
     m_cell_volume_n.fill(0.0);
     m_pressure_n.fill(0.0);
     m_density_n.fill(0.0);
@@ -205,6 +229,10 @@ void MahycoModule::remap() {
           EnvCell ev = *ienvcell;
           Cell cell = ev.globalCell();
           m_materiau[cell] += index_env*m_fracvol[ev];
+          // copie de l'energie dans l'energie n 
+          // pour d'avoir une élévation de température due seulement à la projection
+          // m_internal_energy_n[cell] = m_internal_energy[cell];
+          // m_internal_energy_n[ev] = m_internal_energy[ev];
         }
     }
     if (!options()->sansLagrange) {
@@ -212,6 +240,8 @@ void MahycoModule::remap() {
         IMeshEnvironment* ienv = mm->environments()[index_env];
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
+        // Test endommagement --> Pression devient nulle ?
+        options()->environment[index_env].eosModel()->Endommagement(ienv);
       }
       computePressionMoyenne();
    }

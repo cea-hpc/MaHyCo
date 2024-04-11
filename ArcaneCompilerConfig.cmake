@@ -1,5 +1,7 @@
 # Indique qu'on veut des bibliothèques dynamiques (indispensable avec les services)
 set(BUILD_SHARED_LIBS TRUE)
+set(Arcane_ROOT "/home/perlatj/Workspace/arcane" CACHE PATH "Arcane cmake root path" FORCE)
+message("ArcaneRoot = ${Arcane_ROOT}")
 set(CMAKE_VERBOSE_MAKEFILE TRUE CACHE BOOL "Verbose makefile?" FORCE)
 set(CMAKE_CXX_FLAGS_INIT "  " CACHE STRING "Default flags for C++ compiler" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS "" CACHE STRING "Default flags for linker" FORCE)
