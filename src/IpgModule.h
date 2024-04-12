@@ -1,6 +1,8 @@
-﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #ifndef IPGMODULE_H
 #define IPGMODULE_H
+
+#include "arcane/IParticleFamily.h"
 
 #include "Ipg_axl.h"
 
@@ -19,7 +21,7 @@ class IpgModule
 {
  public:
   /** Constructeur de la classe */
-  IpgModule(const ModuleBuildInfo& mbi) : ArcaneIpgObject(mbi) {}
+  IpgModule(const ModuleBuildInfo& mbi);
   
   /** Destructeur de la classe */
   ~IpgModule() {}
@@ -31,6 +33,8 @@ class IpgModule
   virtual void updateParticlePosition();
 
  
+ private:
+  IParticleFamily* m_particles_family;
 };
 
 #endif
