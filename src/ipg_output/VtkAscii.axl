@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="VtkAscii" version="1.0" type="caseoption">
+
+  <description>Paramétrage du service VtkAscii</description>
+  <interface name="IIpgOutput" />
+
+	<variables>
+	</variables>
+
+	<options>
+		<!-- - - - - - Nom du fichier de sortie  - - - - -->
+		<simple name="filename" type="string" minOccurs="1" maxOccurs="1" default="Particle">
+			<description>Nom du fichier de sortie</description>
+		</simple>
+		<!-- - - - - - Nom des variables à sortir  - - - - -->
+		<simple name="variable" type="string" minOccurs="1" maxOccurs="unbounded">
+			<description>Nom des variables particules à sortir</description>
+		</simple>
+	</options>
+</service>

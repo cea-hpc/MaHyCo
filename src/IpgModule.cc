@@ -1,4 +1,4 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "IpgModule.h"
 
 #include "arcane/ITimeLoopMng.h"
@@ -43,6 +43,16 @@ createParticles()
         m_particle_velocity[part_i] = Real3(init_velocity * std::cos(angle), init_velocity * std::sin(angle), 0);
     }
 }
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Initialisation des sorties
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+initParticleOutput()
+{
+    options()->getIpgOutput()->initOutput();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -50,7 +60,6 @@ createParticles()
  * \brief Mise à jour de la position des particule
  */
 /*---------------------------------------------------------------------------*/
-
 void IpgModule::
 updateParticlePosition()
 {
@@ -61,6 +70,23 @@ updateParticlePosition()
     }
 }
 
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Ecriture des sorties
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+writeParticleOutput()
+{
+
+    // Pour test des sorties uniquement, en attendant que les variables soient calculées correctement
+    ENUMERATE_PARTICLE(part_i, m_particles_family->allItems()) {
+        m_particle_weight[part_i] = part_i.localId();
+        m_particle_radius[part_i] = part_i.localId() * 2.0 ;
+        m_particle_temperature[part_i] = options()->getInitTemperature();
+    }
+    
+    options()->getIpgOutput()->writeOutput(m_particles_family->allItems());
 }
 
 /*---------------------------------------------------------------------------*/

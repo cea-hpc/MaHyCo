@@ -1,8 +1,9 @@
-// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #ifndef IPGMODULE_H
 #define IPGMODULE_H
 
 #include "arcane/IParticleFamily.h"
+#include "ipg_output/IIpgOutput.h"
 
 #include "Ipg_axl.h"
 
@@ -25,6 +26,9 @@ class IpgModule
   
   /** Destructeur de la classe */
   ~IpgModule() {}
+
+  /** Création des particules */
+  virtual void initParticleOutput();
   
   /** Création des particules */
   virtual void createParticles();
@@ -32,7 +36,9 @@ class IpgModule
   /** Mise à jour de la position des particules */
   virtual void updateParticlePosition();
 
- 
+  /** Ecriture des sorties des particules */
+  virtual void writeParticleOutput();
+
  private:
   IParticleFamily* m_particles_family;
 };

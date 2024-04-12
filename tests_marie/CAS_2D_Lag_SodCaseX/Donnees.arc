@@ -122,5 +122,10 @@
   <!-- IPG -->
   <ipg>
     <init-temperature>12.</init-temperature>
+    <ipg-output name="VtkAscii">
+      <variable>ParticleVelocity</variable>
+      <variable>ParticleRadius</variable>
+      <variable>ParticleTemperature</variable>
+    </ipg-output>
   </ipg>
 </case>

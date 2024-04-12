@@ -14,13 +14,20 @@
 
 <entry-points>
   <entry-point method-name="createParticles" name="CreateParticles" where="start-init" property="none" />
+  <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />
   <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
+  <entry-point method-name="writeParticleOutput" name="WriteParticleOutput" where="compute-loop" property="none" />
 </entry-points>
 
 <options> 
+
+  <service-instance name="ipg-output" type="IIpgOutput">
+    <description>Service d'écriture des sorties ipg</description>
+   </service-instance>
+  
   <simple name="init-temperature" type="real" minOccurs="1" maxOccurs="1">
   <description>Température initiale</description>
-   </simple>
+  </simple>
 
 </options>
 </module>

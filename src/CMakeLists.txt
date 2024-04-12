@@ -48,6 +48,11 @@ add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc)
 target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
+# Partie Ipg
+add_library(IpgOutput ipg_output/VtkAsciiService.cc)
+target_include_directories(IpgOutput PUBLIC .)
+target_link_libraries(IpgOutput PUBLIC arcane_core)
+
 # Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
@@ -96,7 +101,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -117,6 +122,8 @@ arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
+
+arcane_target_add_axl(IpgOutput ipg_output/VtkAscii)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
