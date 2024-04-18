@@ -135,7 +135,7 @@ void SEDOVService::initVar(Integer dim, double* densite_initiale, double* energi
 bool SEDOVService::hasReverseOption() { return options()->reverseOption;}
 Real SEDOVService::getReverseParameter() { return options()->parametre;}
 bool SEDOVService::isInternalModel() { return true ;}
-void SEDOVService::initUtilisateur() { }
+void SEDOVService::initUtilisateur(Real3 vitesse_initiale) { }
 /*---------------------------------------------------------------------------*/
 
 

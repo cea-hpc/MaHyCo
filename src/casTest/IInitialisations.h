@@ -50,7 +50,7 @@ public:
   virtual bool hasReverseOption() = 0;
   virtual Real getReverseParameter() = 0;
   virtual bool isInternalModel() = 0;
-  virtual void initUtilisateur() = 0;
+  virtual void initUtilisateur(Real3 vitesse_initiale) = 0;
 };
 
 #endif
