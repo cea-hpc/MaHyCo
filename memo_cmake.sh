@@ -16,10 +16,10 @@ if [ "$host" = "c-inti.mg1.ccc.ocre.cea.fr" ]; then
     cmake $HOME/workspace/MaHyCo -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/local_arcane" -DCINETIQUE_SRC="$HOME/workspace//Cinetique_chgt_phase/"
 
     cmake --build . -- -j16 
-    cd $OWN_CCCWORKDIR/MaHyCo/build/src
+    cd $OWN_CCCWORKDIR/MaHyCo/build
     
     cp $HOME/workspace/MaHyCo/NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
-    mpiexec -n 1 ./Mahyco Donnees.arc
+    mpiexec -n 1 ./src/Mahyco Donnees.arc
     rm -rf Donnees.arc output
 else
     echo "Passage pour Udbuntu"
@@ -35,8 +35,8 @@ else
     #cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/workspace/arcane/" -DWANT_CUDA=TRUE -DWANT_PROF_ACC=TRUE
 
     #cmake --build . --target test
-    cp ../../NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
-    mpiexec -n 1 ./Mahyco Donnees.arc
+    cp ../NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
+    mpiexec -n 1 ./src/Mahyco Donnees.arc
     rm -rf Donnees.arc output
 fi
 
