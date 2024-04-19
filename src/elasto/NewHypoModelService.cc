@@ -95,9 +95,9 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     // calcul du nouveau tenseur
     // pour retrouver les résultats hypo s = s + 2 * mu (D-trace(D)/3) 
     // on pose 
-    J = 1;
+    // J = 1;
     // et 
-    m_gauchy_green_tensor[cell] = Identity;
+    // m_gauchy_green_tensor[cell] = Identity;
     Real mu_over_J = mu / math::pow(J, FiveoverThree);
     Real3x3 DB = math::matrixProduct(m_deformation_rate[cell], m_gauchy_green_tensor[cell]);
     Real3x3 BD = math::matrixProduct(m_gauchy_green_tensor[cell], m_deformation_rate[cell]);
