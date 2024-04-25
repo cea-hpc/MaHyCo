@@ -1,4 +1,4 @@
-# Etat des lieux sur l'IPG dans Mahyco
+# Etat des lieux sur l'IPG dans Mahyco -- 25/04/2024
 
 (fichier versionné dans la branche ipg de Mahyco)
 
