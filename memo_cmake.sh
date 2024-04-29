@@ -13,7 +13,7 @@ if [ "$host" = "c-inti.mg1.ccc.ocre.cea.fr" ]; then
     rm -r $OWN_CCCWORKDIR/MaHyCo/build
     mkdir $OWN_CCCWORKDIR/MaHyCo/build
     cd $OWN_CCCWORKDIR/MaHyCo/build
-    cmake $HOME/workspace/MaHyCo -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/local_arcane" -DCINETIQUE_SRC="$HOME/workspace//Cinetique_chgt_phase/"
+    cmake $HOME/workspace/MaHyCo -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/local_arcane" -DCINETIQUE_SRC="$HOME/workspace/Cinetique_chgt_phase/"
 
     cmake --build . -- -j16 
     cd $OWN_CCCWORKDIR/MaHyCo/build
@@ -22,11 +22,11 @@ if [ "$host" = "c-inti.mg1.ccc.ocre.cea.fr" ]; then
     mpiexec -n 1 ./src/Mahyco Donnees.arc
     rm -rf Donnees.arc output
 else
-    echo "Passage pour Udbuntu"
+    echo "Passage pour Ubuntu"
     rm -rf build
     mkdir build
     cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/arcane/" -DCINETIQUE_SRC="$HOME/Cinetique_chgt_phase/"
+    cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane/" -DCINETIQUE_SRC="$HOME/Workspace/Cinetique_chgt_phase/"
     #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane/"
     #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane_cuda/"
     cmake --build . -- -j16 
