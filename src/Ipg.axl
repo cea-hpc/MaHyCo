@@ -23,11 +23,29 @@
 
   <service-instance name="ipg-output" type="IIpgOutput">
     <description>Service d'écriture des sorties ipg</description>
-   </service-instance>
+  </service-instance>
   
-  <simple name="init-temperature" type="real" minOccurs="1" maxOccurs="1">
+  <simple name="init-temperature" type="real" default="42.">  <!-- fixme: is there a more clever default value ? -->
   <description>Température initiale</description>
   </simple>
+
+  <simple name="init-velocity" type="real3" default="0. 0. 0.">
+  <description>Vitesse initiale</description>
+  </simple>
+
+  <!--
+  <simple name="init-position" type="real3" default="0. 0. 0.">  ou init-coord
+  <description>Position initiale</description>
+  </simple>
+
+  <simple name="init-weight" type="integer" default="1">  ou real ?
+  <description>Poids initiale (nombre de particules physiques représentées par la particule numérique)</description>
+  </simple>
+
+  <simple name="init-radius" type="real" default="1.">
+  <description>Rayon initiale</description>
+  </simple>
+  -->
 
 </options>
 </module>

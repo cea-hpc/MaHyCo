@@ -5,6 +5,7 @@
 #include "arcane/IParticleFamily.h"
 #include "ipg_output/IIpgOutput.h"
 
+#include "arcane/utils/Real3.h"
 #include "Ipg_axl.h"
 
 using namespace Arcane;

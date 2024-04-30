@@ -85,7 +85,8 @@
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
-    <final-time>1e-3</final-time>
+    <!-- <final-time>1e-3</final-time> -->
+    <final-time>1e-4</final-time>
     
     <boundary-condition>
       <surface>XMIN</surface>
@@ -122,6 +123,7 @@
   <!-- IPG -->
   <ipg>
     <init-temperature>12.</init-temperature>
+    <init-velocity>0. 1. 0.</init-velocity>
     <ipg-output name="VtkAscii">
       <variable>ParticleVelocity</variable>
       <variable>ParticleRadius</variable>
