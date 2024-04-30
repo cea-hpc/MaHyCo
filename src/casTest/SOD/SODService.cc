@@ -117,7 +117,7 @@ void SODService::initVar(Integer dim, double* densite_initiale, double* energie_
 bool SODService::hasReverseOption() { return options()->reverseOption;}
 Real SODService::getReverseParameter() { return options()->parametre;}
 bool SODService::isInternalModel() { return true; }
-void SODService::initUtilisateur() {}
+void SODService::initUtilisateur(Real3 vitesse_initiale) {}
 
 /*---------------------------------------------------------------------------*/
 

@@ -471,7 +471,7 @@ void CHOCBULLEService::lectureFichier(const std::string& nomFichier)
 bool CHOCBULLEService::hasReverseOption() { return options()->reverseOption;}
 Real CHOCBULLEService::getReverseParameter() { return options()->parametre;}
 bool CHOCBULLEService::isInternalModel() { return true; }
-void CHOCBULLEService::initUtilisateur() { }
+void CHOCBULLEService::initUtilisateur(Real3 vitesse_initiale) { }
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_CHOCBULLE(CHOCBULLE, CHOCBULLEService);

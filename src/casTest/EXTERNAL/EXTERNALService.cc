@@ -14,11 +14,20 @@ void EXTERNALService::initVar(Integer dim, double* densite_initiale, double* ene
 
 }
 
-void EXTERNALService::initUtilisateur() {  
-  info() << " Initialisation de " << m_velocity.name();
-  ENUMERATE_NODE(inode, allNodes()){
-    m_velocity[inode] = - m_node_coord[inode] / m_node_coord[inode].normL2();
-    // info() << " noeud " <<  inode.localId() << " " << m_node_coord[inode] << " " << m_velocity[inode];
+void EXTERNALService::initUtilisateur(Real3 vitesse_initiale) {  
+  Real3 zero = {0.0, 0.0, 0.0};
+  pinfo() << vitesse_initiale ;
+  if ( vitesse_initiale ==  zero) {
+    info() << " Initialisation analytique de " << m_velocity.name();
+    ENUMERATE_NODE(inode, allNodes()){
+        m_velocity[inode] = - m_node_coord[inode] / m_node_coord[inode].normL2();
+        // info() << " noeud " <<  inode.localId() << " " << m_node_coord[inode] << " " << m_velocity[inode];
+    }
+  } else {
+    info() << " Initialisation constante de " << m_velocity.name();
+    ENUMERATE_NODE(inode, allNodes()){
+        m_velocity[inode] = vitesse_initiale;
+    }
   }
 }
 /*---------------------------------------------------------------------------*/

@@ -102,6 +102,8 @@ hydroStartInit()
     m_temperature_n.fill ( 0.0 );
     m_temperature.fill ( 0.0 );
     
+    m_displacement.fill ( Real3(0.0, 0.0, 0.0));
+    
     if (options()->casModel()->isInternalModel() == true) { 
         info() << " Initialisation des variables pour les cas test internes";
         Real* densite_initiale = (double *)malloc(sizeof(double) * m_nb_env);
@@ -128,7 +130,7 @@ hydroStartInit()
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) { 
             if (options()->environment[i].initialisationUtilisateur) {
                 // Initialises les variables par programme (surcharge l'init d'arcane)
-                options()->casModel()->initUtilisateur();
+                options()->casModel()->initUtilisateur(options()->environment[i].vitesseInitiale);
             }
         }
     }
@@ -683,6 +685,7 @@ updatePosition()
         Node node = *inode;
         if ( ( ( options()->sansLagrange ) && ( node.nbCell() == 4 ) ) || ( !options()->sansLagrange ) ) {
             m_node_coord[inode] += deltat * m_velocity[inode];
+            m_displacement[inode] += deltat * m_velocity[inode];
         }
     }
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;

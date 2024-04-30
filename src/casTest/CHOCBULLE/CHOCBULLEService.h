@@ -51,7 +51,7 @@ public:
   virtual bool hasReverseOption();
   virtual Real getReverseParameter();
   virtual bool isInternalModel();
-  virtual void initUtilisateur();
+  virtual void initUtilisateur(Real3 vitesse_initiale);
 private:
   // valeur aléatoire pour les bulles
   float *m_rand1, *m_rand2, *m_rand3, *m_rand4;  
