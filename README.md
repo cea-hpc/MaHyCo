@@ -52,12 +52,14 @@ toujours etre le dernier argument).
 ```sh
  -arcane_opt max_iteration N  
 ```
-     avec N le nombre d'iterations a effectuer
+
+avec N le nombre d'iterations a effectuer
 
 ```sh
  -arcane_opt continue
 ```
-     pour faire une reprise: continuer une execution precedente.
+
+pour faire une reprise: continuer une execution precedente.
 
 
 Pour lancer un cas en parallele, il faut specifier le service
