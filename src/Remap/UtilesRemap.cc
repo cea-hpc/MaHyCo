@@ -579,8 +579,10 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
         for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
             m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
         /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
-        for (size_t i=13 ; i < 15; i++) Flux[i * nbmat + imat] = 
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
           m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
+            
       }
     } else {
       Flux.fill(0.);
@@ -603,8 +605,9 @@ void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
       for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
           m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
       /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
-      for (size_t i=13 ; i < 15; i++) Flux[i * nbmat + imat] = 
-          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
+      /* pour l'energie_interne_old et les temperatures */
+      for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
+          m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat]; 
     }
   }
 
@@ -791,7 +794,8 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
         for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
             m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
         /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
-        for (size_t i=13 ; i < 15; i++) Flux[i * nbmat + imat] = 
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
           m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
       }
     } else {
@@ -812,7 +816,8 @@ void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell
       for (size_t i=8 ; i < 13; i++) Flux[i * nbmat + imat] = 
           m_phi_lagrange[cell][i * nbmat + imat] * Flux[imat];  
       /* pour les autres quantités massiques : variables deformations plastiques (13 et 14) */
-        for (size_t i=13 ; i < 15; i++) Flux[i * nbmat + imat] = 
+        /* pour l'energie_interne_old et les temperatures */
+        for (size_t i=13 ; i < 18; i++) Flux[i * nbmat + imat] = 
           m_phi_lagrange[cell][i * nbmat + imat] * Flux[nbmat + imat];
     }
   }

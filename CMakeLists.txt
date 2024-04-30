@@ -5,7 +5,6 @@ project(Mahyco LANGUAGES C CXX VERSION 0.1)
 
 set(BUILD_SHARED_LIBS TRUE)
 if (NOT Arcane_DIR)
-  message("passage ici")
   include(ArcaneCompilerConfig.cmake)
   message(STATUS "ArcaneRoot = ${Arcane_DIR}")
   message(STATUS "AxlstarRoot = ${Axlstar_DIR}")

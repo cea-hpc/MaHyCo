@@ -108,6 +108,7 @@ void StiffenedGasEOSService::Endommagement(IMeshEnvironment* env)
 Real StiffenedGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real StiffenedGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real StiffenedGasEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real StiffenedGasEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

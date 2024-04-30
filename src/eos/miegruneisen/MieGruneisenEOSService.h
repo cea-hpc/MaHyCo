@@ -76,6 +76,10 @@ public:
    *  Renvoie la chaleur spécifique de l'environnement. 
    */
   virtual Real getSpecificHeatCst(IMeshEnvironment* env);
+  /** 
+   *  Renvoie le rapport seuil de densité  
+   */
+  virtual Real getdensityDamageThresold(IMeshEnvironment* env);
 };
 
 #endif

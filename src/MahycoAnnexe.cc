@@ -56,7 +56,10 @@ void MahycoModule::hydroStartInitEnvAndMat()
   // (0-volumes, 1-masses, 2-energies internes, 
   //  -3,4,5,6- phases, 7-pseudo, 
   // -8,9,10,11,12- deviateurs , -13,14-deformations plastiques) 
-  m_nb_vars_to_project = 15 * nb_env ;
+  // 15-energies internes old
+  // 16-temperature
+  // 17-temperature-old
+  m_nb_vars_to_project = 18 * nb_env ;
   m_sens_projection = 0;
   
   // on redimensionne les tableaux de la projection en fonction

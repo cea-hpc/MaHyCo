@@ -11,6 +11,8 @@ void FictifEOSService::initEOS(IMeshEnvironment* env)
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
+  Real eref = options()->energieRef();
+  Real tref = options()->temperatureRef();
   // Initialise l'énergie et la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -21,8 +23,8 @@ void FictifEOSService::initEOS(IMeshEnvironment* env)
     // Affiche l'identifiant local de la maille, la pression et la densité
     m_internal_energy[ev] = pressure / ((adiabatic_cst - 1.) * density);
     m_sound_speed[ev] = sqrt(adiabatic_cst * pressure / density);
-    // calcul de la temperature de la constante (on prend celle de l'air : 287.)
-    m_temperature[ev] = pressure / (287. * density);
+    if (eref == 0) eref = m_internal_energy[ev];
+    m_temperature[ev] = (m_internal_energy[ev] - eref) / specific_heat + tref;
     m_density_0[ev] = m_density[ev];
     
   }
@@ -107,6 +109,7 @@ void FictifEOSService::Endommagement(IMeshEnvironment* env)
 Real FictifEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real FictifEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real FictifEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real FictifEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

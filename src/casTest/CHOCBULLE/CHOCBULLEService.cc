@@ -15,8 +15,13 @@ void CHOCBULLEService::initVarMono(Integer dim, double* densite_initiale, double
 }
 void CHOCBULLEService::initMat(Integer dim)  {
     
+  String fichier_string = options()->fichier_bulles();
+  const char* fichier= fichier_string.localstr();
+  lectureFichier(fichier);
+  Integer nb_bulles_fichier(m_posr.size());
+  pinfo() << " Nombre de bulles " << nb_bulles_fichier;
   Integer nb_bulles(options()->nombreBullesX 
-        * options()->nombreBullesY * options()->nombreBullesZ + options()->nombreBullesAleatoires);
+        * options()->nombreBullesY * options()->nombreBullesZ + options()->nombreBullesAleatoires + nb_bulles_fichier);
   Real3* Xb = (Real3 *)malloc(sizeof(Real3) * nb_bulles);
   Real* rb = (Real *)malloc(sizeof(Real) * nb_bulles);
   Real3 Position_1_bulle(options()->positionPremiereBulle);
@@ -57,7 +62,9 @@ void CHOCBULLEService::initMat(Integer dim)  {
     Cell cell = *icell;
     // Plaque par défaut
     m_materiau[cell] = 1.;
-    
+// -----------------------------------------------------------------------------
+// ---- Bulles en réseau
+// -----------------------------------------------------------------------------
     // Boucle sur le nombre de bulle
     for (Integer ibullex=0; ibullex <options()->nombreBullesX ; ibullex++) {
     for (Integer ibulley=0; ibulley <options()->nombreBullesY ; ibulley++) {
@@ -94,8 +101,11 @@ void CHOCBULLEService::initMat(Integer dim)  {
     }
     }
     }
+
+// -----------------------------------------------------------------------------
+// ---- Bulles aléatoires
+// -----------------------------------------------------------------------------    
     nb_bulles = options()->nombreBullesAleatoires;
-    
     Real3 position_min(options()->positionMin);
     Real3 position_max(options()->positionMax);
     Real rayon_min(options()->rayonMin);
@@ -126,6 +136,34 @@ void CHOCBULLEService::initMat(Integer dim)  {
         }
         
     }
+// -----------------------------------------------------------------------------
+// ---- Bulles lues dans un fichier
+// -----------------------------------------------------------------------------  
+    nb_bulles = nb_bulles_fichier;
+    for (Integer ibulle=0; ibulle < nb_bulles ; ibulle++) {
+        const Real x = m_cell_coord[cell].x - m_posx[ibulle];
+        const Real y = m_cell_coord[cell].y - m_posy[ibulle];
+        r = std::sqrt(x*x + y*y);
+        // pinfo() << " Position de la bulle " << ibulle << " : " << m_posx[ibulle] << " , " << m_posy[ibulle] ;
+        // bulle surchargera l'aire
+        if (r <= m_posr[ibulle]) {
+            m_materiau[cell] = 2.;
+            ENUMERATE_NODE(inode, cell.nodes()) {
+                rn = std::sqrt(m_node_coord[inode].x * m_node_coord[inode].x +
+                    m_node_coord[inode].y * m_node_coord[inode].y);
+                Rmin = std::min(rn, Rmin);
+                Rmax = std::max(rn, Rmax);
+            }
+            // pinfo() << " Cellule dans une bulle " << cell.localId();
+            if (Rmin < m_posr[ibulle] && Rmax > m_posr[ibulle]) {
+                // maille bulle + matiere
+                m_materiau[cell] = 1.5;
+            }
+        }
+    }
+// -----------------------------------------------------------------------------
+// ---- Fin de la locasition des Bulles
+// -----------------------------------------------------------------------------   
 
      // Fictif en aval de la plaque :
     if (m_cell_coord[cell].x > XposFictif2) 
@@ -153,8 +191,9 @@ void CHOCBULLEService::initMat(Integer dim)  {
 void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
                                     double* temperature_initiale, Real3x3 vitesse_initiale)  {
 
+    Integer nb_bulles_fichier(m_posr.size());
     Integer nb_bulles(options()->nombreBullesX * 
-        options()->nombreBullesY * options()->nombreBullesZ + options()->nombreBullesAleatoires);
+        options()->nombreBullesY * options()->nombreBullesZ + options()->nombreBullesAleatoires + nb_bulles_fichier);
     Real3* Xb = (Real3 *)malloc(sizeof(Real3) * nb_bulles);
     Real* rb = (Real *)malloc(sizeof(Real) * nb_bulles);
     Real3 Position_1_bulle(options()->positionPremiereBulle);
@@ -193,7 +232,9 @@ void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* en
         m_pressure[cell] = pression_initiale[1];
         m_internal_energy[cell] = energie_initiale[1];
         m_temperature[cell] = temperature_initiale[1];
-        // Boucle sur le nombre de bulle
+// -----------------------------------------------------------------------------
+// ---- Bulles en réseau
+// -----------------------------------------------------------------------------  
         for (Integer ibullex=0; ibullex <options()->nombreBullesX ; ibullex++) {
         for (Integer ibulley=0; ibulley <options()->nombreBullesY ; ibulley++) {
         for (Integer ibullez=0; ibullez <options()->nombreBullesZ ; ibullez++) {
@@ -247,6 +288,9 @@ void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* en
         }
         }
         }
+// -----------------------------------------------------------------------------
+// ---- Bulles aléatoires
+// -----------------------------------------------------------------------------    
         nb_bulles = options()->nombreBullesAleatoires;
         Real3 position_min(options()->positionMin);
         Real3 position_max(options()->positionMax);
@@ -296,6 +340,53 @@ void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* en
                 }
             }
         }
+// -----------------------------------------------------------------------------
+// ---- Bulles lues dans un fichier
+// -----------------------------------------------------------------------------  
+        nb_bulles = nb_bulles_fichier;
+        for (Integer ibulle=0; ibulle < nb_bulles ; ibulle++) {
+            // les positions Xb et les rayons rb ont été lus dans un fichier
+            const Real x = m_cell_coord[cell].x - m_posx[ibulle];
+            const Real y = m_cell_coord[cell].y - m_posy[ibulle];
+            r = std::sqrt(x*x + y*y);
+            if (r <= m_posr[ibulle]) {
+                m_density[cell] = densite_initiale[2];
+                m_pressure[cell] = pression_initiale[2];
+                m_internal_energy[cell] = energie_initiale[2];
+                m_temperature[cell] = temperature_initiale[2];
+                m_fracvol[cell] = 1.;
+                m_mass_fraction[cell] = 1.;
+                ENUMERATE_NODE(inode, cell.nodes()) {
+                    rn = std::sqrt(m_node_coord[inode].x * m_node_coord[inode].x +
+                        m_node_coord[inode].y * m_node_coord[inode].y);
+                    Rmin = std::min(rn, Rmin);
+                    Rmax = std::max(rn, Rmax);
+                }
+                if (Rmin < m_posr[ibulle] && Rmax > m_posr[ibulle]) {
+                    if (all_env_cell.nbEnvironment() ==1) { 
+                        pinfo() << "Maille limite de la bulle doit etre mixte"; 
+                        exit(1);
+                    }
+                    fracvol = (rb[ibulle] - Rmin) / (Rmax - Rmin); // fraction de la bulle
+                    m_density[cell] = fracvol * densite_initiale[2] + (1. - fracvol) * densite_initiale[1];
+                    m_pressure[cell] = fracvol * pression_initiale[2] + (1. - fracvol) * pression_initiale[1];
+                    m_internal_energy[cell] = fracvol * energie_initiale[2] + (1. - fracvol) * energie_initiale[1];
+                    m_temperature[cell] = fracvol * temperature_initiale[2] + (1. - fracvol) * temperature_initiale[1];
+                    
+                    ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
+                        EnvCell ev = *ienvcell;  
+                        Integer index_env = ev.environmentId();  
+                        m_density[ev] = densite_initiale[index_env] ;
+                        m_pressure[ev] = pression_initiale[index_env] ;
+                        m_internal_energy[ev] = energie_initiale[index_env];
+                        m_temperature[ev] = temperature_initiale[index_env];
+                    }
+                }
+            }
+        }
+// -----------------------------------------------------------------------------
+// ---- Fin de la locasition des Bulles
+// -----------------------------------------------------------------------------   
         if (m_cell_coord[cell].x > XposFictif2) {
             m_density[cell] = densite_initiale[3];
             m_fracvol[cell] = 1.;
@@ -341,13 +432,46 @@ void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* en
         m_velocity[inode] = vitesse_initiale[0];
     } 
 }
+/**
+ *******************************************************************************
+ * \file lectureFichier()
+ * \brief 
+ *******************************************************************************
+ */
+void CHOCBULLEService::lectureFichier(const std::string& nomFichier)
+{
+    std::ifstream fichier(nomFichier); // Ouverture du fichier en lecture
+    pinfo() << "Ouverture de " << nomFichier;
+    
+    if (fichier)
+    {
+        
+        int compteur = 0;
+        Real x(-1),y(-1),r(-1);
+        String ligne; // premiere ligne à ne pas lire 
+        fichier >> ligne; 
+        while (fichier >> x >> y >> r)
+        {
+            compteur++;
+            pinfo() << x << " " << y << " " << r ;
+            m_posx.push_back(x);
+            m_posy.push_back(y);
+            m_posr.push_back(r);
+        }
+        fichier.close(); // Fermeture du fichier
+    }
+    else
+    {
+        std::cout << "Erreur lors de l'ouverture du fichier." << std::endl;
+    }
+}
 /*---------------------------------------------------------------------------*/
 
 
 bool CHOCBULLEService::hasReverseOption() { return options()->reverseOption;}
 Real CHOCBULLEService::getReverseParameter() { return options()->parametre;}
 bool CHOCBULLEService::isInternalModel() { return true; }
-void CHOCBULLEService::initUtilisateur() { }
+void CHOCBULLEService::initUtilisateur(Real3 vitesse_initiale) { }
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_CHOCBULLE(CHOCBULLE, CHOCBULLEService);

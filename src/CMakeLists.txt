@@ -44,7 +44,7 @@ target_include_directories(Tabulee PUBLIC .)
 target_link_libraries(Tabulee PUBLIC arcane_core)
 
 # Partie Elasticité
-add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc)
+add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc elasto/NewHypoModelService.cc)
 target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
@@ -122,6 +122,7 @@ arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 
 arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
+arcane_target_add_axl(Elasto elasto/NewHypoModel)
 
 arcane_target_add_axl(IpgOutput ipg_output/VtkAscii)
 
@@ -182,32 +183,35 @@ set( TEST_NAMES_PARA_8
 		"CAS_Sedov"
 		"CAS_2D_shallow_chocBulle"
 		)
+
 set( TEST_NAMES
-        "CAS_2D_Lag_NOH"
-		"CAS_Lag_BiSodCaseX"
-        "CAS_2D_Lag_SodCaseZ"
-        "CAS_Lag_BiSodCaseY"
-		"CAS_Lag_SodCaseY"
-        "CAS_Lag_SodCaseZ"
-		"CAS_BiSodCaseX"
-		"CAS_MonoRiderDeformation"
-		"CAS_MonoRiderRotation"
-		"CAS_MonoRiderT45"
-		"CAS_MonoRiderTy"
-		"CAS_2D_Lag_SodCaseX_newton"
-		"CAS_2D_Sedov"
-		"CAS_2D_ALE_Sedov_euler"
-		"CAS_2D_ALE_BiSedov_euler"
-		"CAS_Compression_isotherme_ALU_monodimX"
-		"CAS_2D_choc_plaque_crenau"
-		)
+  "CAS_2D_Lag_Taylor_elasto"
+  "CAS_2D_Lag_Taylor_elasto_NeoHook"
+  "CAS_2D_Lag_NOH"
+  "CAS_Lag_BiSodCaseX"
+  "CAS_2D_Lag_SodCaseZ"
+  "CAS_Lag_BiSodCaseY"
+  "CAS_Lag_SodCaseY"
+  "CAS_Lag_SodCaseZ"
+  "CAS_BiSodCaseX"
+  "CAS_MonoRiderDeformation"
+  "CAS_MonoRiderRotation"
+  "CAS_MonoRiderT45"
+  "CAS_MonoRiderTy"
+  "CAS_2D_Lag_SodCaseX_newton"
+  "CAS_2D_Sedov"
+  "CAS_2D_ALE_Sedov_euler"
+  "CAS_2D_ALE_BiSedov_euler"
+  "CAS_Compression_isotherme_ALU_monodimX"
+  "CAS_2D_choc_plaque_crenau"
+)
 
 set( TEST_NAMES_PR
         "CAS_2D_Lag_SodCaseX"
         "CAS_SodCaseX"
-		"CAS_MonoRiderTx"
-		"CAS_RiderT45"
-		)
+	"CAS_MonoRiderTx"
+	"CAS_RiderT45"
+)
 
 if (IS_DIRECTORY ${CINETIQUE_SRC})
 set( TEST_NAMES_PARA_4_CIN

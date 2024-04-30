@@ -124,6 +124,12 @@ void MahycoModule::computeVariablesForRemap()
       /*   Variables de Déformations plastiques */
       m_u_lagrange[cell][13 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation_velocity[ev]; 
       m_u_lagrange[cell][14 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_plastic_deformation[ev];
+      /* energies matériels (partiels) old */
+      m_u_lagrange[cell][15 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_internal_energy_n[ev];
+      /* temperature */
+      m_u_lagrange[cell][16 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_temperature[ev];
+      /* temperature old */
+      m_u_lagrange[cell][17 * nb_total_env + index_env] = m_cell_volume[ev] * m_density[ev] * m_temperature_n[ev];
         
       
       if (options()->remap()->hasProjectionPenteBorne() == 1) {     
@@ -147,6 +153,9 @@ void MahycoModule::computeVariablesForRemap()
         /* Variables de Déformations plastiques */
         m_phi_lagrange[cell][13 * nb_total_env + index_env] = m_plastic_deformation_velocity[ev];
         m_phi_lagrange[cell][14 * nb_total_env + index_env] = m_plastic_deformation[ev];
+        m_phi_lagrange[cell][15 * nb_total_env + index_env] = m_internal_energy_n[ev];
+        m_phi_lagrange[cell][16 * nb_total_env + index_env] = m_temperature[ev];
+        m_phi_lagrange[cell][17 * nb_total_env + index_env] = m_temperature_n[ev];
       } else {
         for (Integer ivar = 0; ivar < m_nb_vars_to_project; ivar++) {
           m_phi_lagrange[cell][ivar] = m_u_lagrange[cell][ivar] / m_cell_volume[cell];
@@ -222,8 +231,8 @@ void MahycoModule::remap() {
           m_materiau[cell] += index_env*m_fracvol[ev];
           // copie de l'energie dans l'energie n 
           // pour d'avoir une élévation de température due seulement à la projection
-          m_internal_energy_n[cell] = m_internal_energy[cell];
-          m_internal_energy_n[ev] = m_internal_energy[ev];
+          // m_internal_energy_n[cell] = m_internal_energy[cell];
+          // m_internal_energy_n[ev] = m_internal_energy[ev];
         }
     }
     if (!options()->sansLagrange) {
@@ -231,6 +240,8 @@ void MahycoModule::remap() {
         IMeshEnvironment* ienv = mm->environments()[index_env];
         // Calcul de la pression et de la vitesse du son
         options()->environment[index_env].eosModel()->applyEOS(ienv);
+        // Test endommagement --> Pression devient nulle ?
+        options()->environment[index_env].eosModel()->Endommagement(ienv);
       }
       computePressionMoyenne();
    }

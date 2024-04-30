@@ -11,6 +11,8 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
   // Récupère les constantes adiabatique et de chaleur spécifique
   Real adiabatic_cst = getAdiabaticCst(env);
   Real specific_heat = getSpecificHeatCst(env);
+  Real eref = options()->energieRef();
+  Real tref = options()->temperatureRef();
   // Initialise l'énergie et la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -22,8 +24,8 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
     // Affiche l'identifiant local de la maille, la pression et la densité
     m_internal_energy[ev] = (pressure - options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3)) / (adiabatic_cst * density);
     m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
-    // calcul de la temperature de la constante (on prend celle de l'air : 287.)
-    m_temperature[ev] = pressure / (287. * density);
+    if (eref == 0) eref = m_internal_energy[ev];
+    m_temperature[ev] = (m_internal_energy[ev] - eref) / specific_heat + tref;
     m_density_0[ev] = m_density[ev];
   }
 }
@@ -111,7 +113,7 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
     Cell cell = ev.globalCell();  
     if (m_maille_endo[ev.globalCell()] == 0) {
         // Maille saine : verification des seuils 
-        if (m_pressure[cell] < damage_thresold || m_density[cell]/m_density_0[cell] < density_thresold) {
+        if (m_pressure[cell] < damage_thresold) {
             // maille devient endommagée
             m_maille_endo[ev] = 1;
             m_density_fracture[ev] = m_density[ev];
@@ -133,6 +135,7 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
 Real MieGruneisenEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real MieGruneisenEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real MieGruneisenEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real MieGruneisenEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
