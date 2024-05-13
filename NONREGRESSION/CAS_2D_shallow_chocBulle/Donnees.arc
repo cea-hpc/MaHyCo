@@ -67,6 +67,7 @@
       <tfin-pression>.25</tfin-pression>
       <valeur-debut-pression>3.e9</valeur-debut-pression>
       <valeur-dependance-temps>0.</valeur-dependance-temps>
+      <temperature-ref>300.</temperature-ref>
     </eos-model>
   </environment>
   
@@ -82,6 +83,7 @@
       <d-cst>1.3266e11</d-cst>
       <s-cst>0.</s-cst>
       <specific-heat>900.</specific-heat>
+      <temperature-ref>300.</temperature-ref>
     </eos-model>
     <elasto-model name="NoModel">
         <elastic-cst>3.e10</elastic-cst>

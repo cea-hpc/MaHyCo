@@ -17,7 +17,7 @@ using namespace Arcane::Materials;
 
 void AutreEOSService::initEOS(IMeshEnvironment* env)
 {
-  bool impression = true;
+  bool impression = false;
   String fichier_string = options()->fichierCoeff();
   const char* fichier= fichier_string.localstr();
   pinfo() << "Debut de S_LEC_COEF";
@@ -80,13 +80,15 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     // sortie m_dpde,m_cs2,m_conv;
     imail++;
   }
-  pinfo() << " Appel à la fonction " ;
-  pinfo() << " Valeurs envoyé à l'EOS ";
-  pinfo() << "  rho = " << m_rho[0];
-  pinfo() << "  ene = " << m_ene[0];
-  pinfo() << "  pres = " << m_Pres[0];
-  pinfo() << "  Temp = " << m_Temp[0];
-  pinfo() << "  Frac_phase = " << m_Frac1[0] << " , " << m_Frac2[0] << " , " << m_Frac3[0];
+  if (impression) { 
+    pinfo() << " Appel à la fonction " ;
+    pinfo() << " Valeurs envoyé à l'EOS ";
+    pinfo() << "  rho = " << m_rho[0];
+    pinfo() << "  ene = " << m_ene[0];
+    pinfo() << "  pres = " << m_Pres[0];
+    pinfo() << "  Temp = " << m_Temp[0];
+    pinfo() << "  Frac_phase = " << m_Frac1[0] << " , " << m_Frac2[0] << " , " << m_Frac3[0];
+  }
   
   S_CALC_CINE_VE( &nbmail,
                  m_dtime,
@@ -258,7 +260,7 @@ void AutreEOSService::ReinitEOS(IMeshEnvironment* env)
 
 void AutreEOSService::applyEOS(IMeshEnvironment* env)
 {
-  bool impression = true;
+  bool impression = false;
   Integer ip(0), imail(0);
   // copie dans des tableaux Theia
   ENUMERATE_ENVCELL(ienvcell,env)
@@ -440,6 +442,7 @@ void AutreEOSService::Endommagement(IMeshEnvironment* env)
 Real AutreEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
 Real AutreEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
 Real AutreEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
+Real AutreEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

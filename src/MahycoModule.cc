@@ -98,6 +98,12 @@ hydroStartInit()
     m_density_fracture.fill ( 0.0 );
     m_internal_energy_fracture.fill ( 0.0 );
     
+    m_internal_energy_n.fill ( 0.0 );
+    m_temperature_n.fill ( 0.0 );
+    m_temperature.fill ( 0.0 );
+    
+    m_displacement.fill ( Real3(0.0, 0.0, 0.0));
+    
     if (options()->casModel()->isInternalModel() == true) { 
         info() << " Initialisation des variables pour les cas test internes";
         Real* densite_initiale = (double *)malloc(sizeof(double) * m_nb_env);
@@ -124,7 +130,7 @@ hydroStartInit()
         for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) { 
             if (options()->environment[i].initialisationUtilisateur) {
                 // Initialises les variables par programme (surcharge l'init d'arcane)
-                options()->casModel()->initUtilisateur();
+                options()->casModel()->initUtilisateur(options()->environment[i].vitesseInitiale);
             }
         }
     }
@@ -360,10 +366,6 @@ saveValuesAtN()
             m_density_n[ev] = m_density[ev];
             m_internal_energy_n[ev] = m_internal_energy[ev];
             m_temperature_n[ev] = m_temperature[ev];
-            /* Cell cell = ev.globalCell();
-            if (cell.localId() == 2000) pinfo() << env->name() <<  " SAV m_temperature_n[ev] " << m_temperature_n[ev] << " m_temperature[ev] " << m_temperature[ev]; 
-            if (cell.localId() == 2000) pinfo() << env->name() << " SAV m_internal_energy_n[ev] " << m_internal_energy_n[ev] << " m_internal_energy[ev] " << m_internal_energy[ev];
-            */
         }
     }
 
@@ -683,6 +685,7 @@ updatePosition()
         Node node = *inode;
         if ( ( ( options()->sansLagrange ) && ( node.nbCell() == 4 ) ) || ( !options()->sansLagrange ) ) {
             m_node_coord[inode] += deltat * m_velocity[inode];
+            m_displacement[inode] += deltat * m_velocity[inode];
         }
     }
     Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
@@ -1220,6 +1223,7 @@ updateDensity()
     debug() << my_rank << " : " << " Entree dans updateDensity() ";
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
+        Real density_thresold = options()->environment[env->id()].eosModel()->getdensityDamageThresold ( env );
         ENUMERATE_ENVCELL ( ienvcell,env ) {
             EnvCell ev = *ienvcell;
             Cell cell = ev.globalCell();
@@ -1227,6 +1231,13 @@ updateDensity()
             Real new_density = m_cell_mass[ev] / m_cell_volume[ev];
             // nouvelle density
             m_density[ev] = new_density;
+            // Options de blocage de la densité à une valeur seuil 
+            if (m_density[ev]/m_density_0[cell] < density_thresold) {
+              // pinfo()  << ev.globalCell().localId() << " blocage densité " << m_density[ev]  << " et " <<  m_density_0[cell];
+              m_density[ev] = density_thresold * m_density_0[cell];
+              // pinfo()  << ev.globalCell().localId() << " donne blocage densité " << m_density[ev]  << " et " <<  m_density_0[cell];
+            }
+            
             // volume specifique de l'environnement au temps n+1/2
             m_tau_density[ev] =
                 0.5 * ( 1.0 / m_density_n[ev] + 1.0 / m_density[ev] );
@@ -1658,6 +1669,8 @@ computePressionMoyenne()
     if ( options()->sansLagrange ) {
         return;
     }
+    Real option = 0.;
+    if ( options()->calculVitsonMax ) option = 1.;
     debug() << " Entree dans computePressionMoyenne() ";
     // maille mixte
     // moyenne sur la maille
@@ -1667,11 +1680,13 @@ computePressionMoyenne()
         AllEnvCell all_env_cell = all_env_cell_converter[cell];
         if ( all_env_cell.nbEnvironment() !=1 ) {
             m_pressure[cell] = 0.;
-            m_sound_speed[icell] = 1.e-20;
+            // m_sound_speed[icell] = 1.e-20;
+            m_sound_speed[icell] = 0.;
             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
                 EnvCell ev = *ienvcell;
                 m_pressure[cell] += m_fracvol[ev] * m_pressure[ev];
-                m_sound_speed[cell] = std::max ( m_sound_speed[ev], m_sound_speed[cell] );
+                m_sound_speed[cell] = option * std::max ( m_sound_speed[ev], m_sound_speed[cell] );
+                m_sound_speed[cell] += (1.-option) * m_fracvol[ev] * m_sound_speed[ev];
             }
         }
     }
@@ -1704,6 +1719,7 @@ computeDeltaT()
         Real3 coord;
         Cell cell_min;
         Real vit_cell_min(0.);
+        Real new_dt_proc;
 
         ENUMERATE_CELL ( icell, allCells() ) {
             Cell cell = * icell;
@@ -1715,6 +1731,7 @@ computeDeltaT()
                     vmax = math::max ( m_velocity[inode].normL2(), vmax );
                 }
             Real dx_sound = cell_dx / ( sound_speed + vmax );
+            m_deltat_cell[icell] = options()->cfl() * dx_sound;
             minimum_aux = math::min ( minimum_aux, dx_sound );
             if ( minimum_aux == dx_sound ) {
                 cell_id = cell.uniqueId();
@@ -1727,14 +1744,14 @@ computeDeltaT()
                 vit_cell_min = vmax;
             }
         }
-
-
+        
         new_dt = options()->cfl() * minimum_aux;
+        new_dt_proc = new_dt;
         new_dt = parallelMng()->reduce ( Parallel::ReduceMin, new_dt );
         
         if (new_dt < .5*m_global_old_deltat() ) {
-            pinfo() << " Chute du pas de temps ";
-            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " Chute du pas de temps " << new_dt;
+            pinfo() << " nouveau pas de temps " << new_dt_proc << " par " << cell_id << " position : " << coord;
             pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
             pinfo() << " Vitesse matérielle " << vit_cell_min;
             pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
@@ -1744,6 +1761,7 @@ computeDeltaT()
                 int index_env = ev.environmentId(); 
                 pinfo() << " Vitson : env  " << index_env << " = " << m_sound_speed[ev] << " et pression= " << m_pressure[ev];
                 pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev]; 
+                pinfo() << " et une densité de " << m_density[ev] << " et avant densité de "  << m_density_n[ev];
              }
         }
         // respect de taux de croissance max
@@ -1754,18 +1772,21 @@ computeDeltaT()
         new_dt = math::min ( new_dt, options()->deltatMax() );
         // respect du pas de temps minimum
         if ( new_dt < options()->deltatMin() ) {
-            pinfo() << " pas de temps minimum ";
-            pinfo() << " nouveau pas de temps " << new_dt << " par " << cell_id << " position : " << coord;
+            pinfo() << " ------------------------------------------" ;
+            pinfo() << " pas de temps minimum " << new_dt ;
+            pinfo() << " nouveau pas de temps " << new_dt_proc << " par " << cell_id << " position : " << coord;
             pinfo() << " (avec " << nbenvcell << " envs) avec vitson = " << cc << " et longueur  =  " << ll << " et min " << minimum_aux;
             pinfo() << " Vitesse matérielle " << vit_cell_min;
             pinfo() << " Pseudo " << m_pseudo_viscosity[cell_min];
             AllEnvCell all_env_cell = all_env_cell_converter[cell_min];
-             ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+            ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
                 EnvCell ev = *ienvcell;
                 int index_env = ev.environmentId(); 
                 pinfo() << " Vitson : env  " << index_env << " = " <<  m_sound_speed[ev] << " et pression= " << m_pressure[ev];
                 pinfo() << " pour une fraction de " << m_fracvol[ev] << " et une Pseudo " << m_pseudo_viscosity[ev];
-             }
+                pinfo() << " et une densité de " << m_density[ev] << " et avant densité de "  << m_density_n[ev];
+            }
+            pinfo() << " ------------------------------------------" ;
             exit ( 1 );
         }
 

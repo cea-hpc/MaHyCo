@@ -40,6 +40,6 @@ void ONECELLService::initVar(Integer dim, double* densite_initiale, double* ener
 bool ONECELLService::hasReverseOption() { return options()->reverseOption;}
 Real ONECELLService::getReverseParameter() { return options()->parametre;}
 bool ONECELLService::isInternalModel() { return true;}
-void ONECELLService::initUtilisateur() { }
+void ONECELLService::initUtilisateur(Real3 vitesse_initiale) { }
 
 ARCANE_REGISTER_SERVICE_ONECELL(ONECELL, ONECELLService); 

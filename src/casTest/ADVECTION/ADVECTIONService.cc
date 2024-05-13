@@ -248,6 +248,6 @@ void ADVECTIONService::initVar(Integer dim, double* densite_initiale, double* en
 bool ADVECTIONService::hasReverseOption() { return options()->reverseOption;}
 Real ADVECTIONService::getReverseParameter() { return options()->parametre;}
 bool ADVECTIONService::isInternalModel() { return true; }
-void ADVECTIONService::initUtilisateur() { }
+void ADVECTIONService::initUtilisateur(Real3 vitesse_initiale) { }
 
 ARCANE_REGISTER_SERVICE_ADVECTION(ADVECTION, ADVECTIONService);

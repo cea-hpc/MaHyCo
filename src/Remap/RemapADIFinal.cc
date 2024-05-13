@@ -75,6 +75,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   UniqueArray<Real> vol_nplus1(nb_env);
   UniqueArray<Real> density_env_nplus1(nb_env);
   UniqueArray<Real> internal_energy_env_nplus1(nb_env);
+  UniqueArray<Real> internal_energy_env_nplus1_old(nb_env);
   m_cell_mass.fill(0.0);
   Integer index_env;
   ENUMERATE_CELL(icell, allCells()) {
@@ -176,16 +177,16 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       if (cell.localId() == -1) pinfo() << cell.localId() << " calcul density moy env " << index_env << " et density " << density_env_nplus1[index_env] << " fraction " << m_fracvol[ev] << " m_u_lagrange[cell][nb_env + index_env] " <<  m_u_lagrange[cell][nb_env + index_env] << " et vol " << vol_nplus1[index_env];
       // 1/density_nplus1 += m_mass_fraction_env(cCells)[imat] / density_env_nplus1[imat];  
     }
-    Real energie_nplus1 = 0.;
+    Real energie_nplus1(0.), energie_nplus1_old(0.);
     Real pseudo_nplus1 = 0.;
     ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
       EnvCell ev = *ienvcell; 
       index_env = ev.environmentId();  
       internal_energy_env_nplus1[index_env] = 0.;
+      internal_energy_env_nplus1_old[index_env] = 0.;
       
       if (m_fracvol[ev] > options()->threshold && m_u_lagrange[cell][nb_env + index_env] != 0.) {
-          internal_energy_env_nplus1[index_env] =
-          m_u_lagrange[cell][2 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          internal_energy_env_nplus1[index_env] = m_u_lagrange[cell][2 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
          /* indice de phase */
           m_frac_phase1[ev] = m_u_lagrange[cell][3 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
           m_frac_phase2[ev] = m_u_lagrange[cell][4 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
@@ -205,6 +206,10 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
           /* Variables de Déformations plastiques */
           m_plastic_deformation_velocity[ev] =  m_u_lagrange[cell][13 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env]; 
           m_plastic_deformation[ev] =  m_u_lagrange[cell][14 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          /* energie interne_n */
+          internal_energy_env_nplus1_old[index_env] = m_u_lagrange[cell][15 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          m_temperature[ev] =  m_u_lagrange[cell][16 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
+          m_temperature_n[ev] =  m_u_lagrange[cell][17 * nb_env + index_env] / m_u_lagrange[cell][nb_env + index_env];
       }
     }
     // mise à jour des valeurs moyennes aux allCells
@@ -225,11 +230,13 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       m_density[ev] = density_env_nplus1[index_env];
       // recuperation de l'energie
       m_internal_energy[ev] = internal_energy_env_nplus1[index_env];
+      m_internal_energy_n[ev] = internal_energy_env_nplus1_old[index_env];
       // conservation energie totale
       // delta_ec : energie specifique
       // m_internal_energy_env[ev] += delta_ec;
       // energie interne totale
       energie_nplus1 += m_mass_fraction[ev] * m_internal_energy[ev];
+      energie_nplus1_old += m_mass_fraction[ev] * m_internal_energy_n[ev];
       pseudo_nplus1 += m_fracvol[ev] * m_pseudo_viscosity[ev];
       // indicateurs de phase et contraintes
       
@@ -237,6 +244,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     }
     // energie interne
     m_internal_energy[cell] = energie_nplus1;
+    m_internal_energy_n[cell] = energie_nplus1_old;
     // pseudoviscosité
     m_pseudo_viscosity[cell] = pseudo_nplus1;
     
