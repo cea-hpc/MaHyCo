@@ -115,18 +115,18 @@ function main {
 	# avec mpiexec -n 4 ou 8
 
         # Visualisation des résultats :
+        # TODO(MS) : paramétrer ça dans la ligne de commande
         # echo "Lancement de paraview pour le cas "
         # paraview $cas_dir/output/depouillement/ensight.case &
 	# paraview output/depouillement/ensight.case &
-        echo "----> Affichage du diff output [cette exécution] et $cas_dir/output [référence]"
-        diff -r output $cas_dir/output
+        #echo "----> Affichage du diff output [cette exécution] et $cas_dir/output [référence]"
+        #diff -r output $cas_dir/output
         
 	echo "----> Changement des résultats sur le cas $cas, exécution $RUN_PROC"
 	echo "----> Basculer Yes/No ?"
-	read reponse
-        #reponse="Yes"  # pour mettre à jour les références de façon systématique
+	#read reponse
+        reponse="Yes"  # pour mettre à jour les références de façon systématique
 	if  [[ "$reponse" == "Yes" ]]; then
-            continue
 	    rm -rf $cas_dir/output
             # Sauvegarde des résultats
 	    mv output $cas_dir/output
