@@ -122,8 +122,10 @@
   
   <!-- IPG -->
   <ipg>
-    <init-temperature>12.</init-temperature>
-    <init-velocity>0. 1. 0.</init-velocity>
+    <!-- <init-temperature>12.</init-temperature> -->
+    <!-- <init-velocity>0. 1. 0.</init-velocity> -->
+    <ipg-creation-of-particles name="OneParticle">
+    </ipg-creation-of-particles>
     <ipg-output name="VtkAscii">
       <variable>ParticleVelocity</variable>
       <variable>ParticleRadius</variable>

@@ -1,51 +1,36 @@
 <?xml version="1.0" ?>
 <module name="Ipg" version="1.0">
 
-<description>Descripteur du module Ipg</description>
+  <description>Descripteur du module Ipg</description>
 
-<variables>
-  <variable field-name="particle_coord" name="ParticleCoordinates" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
-  <variable field-name="particle_velocity" name="ParticleVelocity" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
-  <variable field-name="particle_radius" name="ParticleRadius" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
-  <variable field-name="particle_weight" name="ParticleWeight" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
-  <variable field-name="particle_temperature" name="ParticleTemperature" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
-
-</variables>
-
-<entry-points>
-  <entry-point method-name="createParticles" name="CreateParticles" where="start-init" property="none" />
-  <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />
-  <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
-  <entry-point method-name="writeParticleOutput" name="WriteParticleOutput" where="compute-loop" property="none" />
-</entry-points>
-
-<options> 
-
-  <service-instance name="ipg-output" type="IIpgOutput">
-    <description>Service d'écriture des sorties ipg</description>
-  </service-instance>
   
-  <simple name="init-temperature" type="real" default="42.">  <!-- fixme: is there a more clever default value ? -->
-  <description>Température initiale</description>
-  </simple>
+  <variables>
+    <variable field-name="particle_coord" name="ParticleCoordinates" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_velocity" name="ParticleVelocity" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_radius" name="ParticleRadius" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_weight" name="ParticleWeight" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_temperature" name="ParticleTemperature" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
-  <simple name="init-velocity" type="real3" default="0. 0. 0.">
-  <description>Vitesse initiale</description>
-  </simple>
+  </variables>
 
-  <!--
-  <simple name="init-position" type="real3" default="0. 0. 0.">  ou init-coord
-  <description>Position initiale</description>
-  </simple>
+  
+  <entry-points>
+    <entry-point method-name="createParticles" name="CreateParticles" where="start-init" property="none" />        <!-- fixme: in compute-loop -->
+    <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />  <!-- fixme: useful ?? -->
+    <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
+    <entry-point method-name="writeParticleOutput" name="WriteParticleOutput" where="compute-loop" property="none" />
+  </entry-points>
 
-  <simple name="init-weight" type="integer" default="1">  ou real ?
-  <description>Poids initiale (nombre de particules physiques représentées par la particule numérique)</description>
-  </simple>
+  
+  <options> 
+    <service-instance name="ipg-output" type="IIpgOutput">
+      <description>Service d'écriture des sorties ipg</description>
+    </service-instance>
 
-  <simple name="init-radius" type="real" default="1.">
-  <description>Rayon initiale</description>
-  </simple>
-  -->
 
-</options>
+	  <service-instance name="ipg-creation-of-particles" type="ICreationOfParticles">
+      <description>Service de creation des particule</description>
+    </service-instance>
+  </options>
+
 </module>

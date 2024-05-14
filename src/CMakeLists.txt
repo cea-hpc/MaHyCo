@@ -6,6 +6,9 @@ include(../mahyco.common.cmake)
 target_sources(${EXAMPLE_NAME} PRIVATE MahycoAnnexe.cc)
 target_sources(${EXAMPLE_NAME} PRIVATE PrepareRemap.cc)
 
+
+### Ajout des liens vers les services
+
 if (IS_DIRECTORY ${CINETIQUE_SRC})
 # Partie Equation d'état Cinetique
 enable_language( Fortran )
@@ -52,6 +55,10 @@ target_link_libraries(Elasto PUBLIC arcane_core)
 add_library(IpgOutput ipg_output/VtkAsciiService.cc)
 target_include_directories(IpgOutput PUBLIC .)
 target_link_libraries(IpgOutput PUBLIC arcane_core)
+
+add_library(CreationOfParticles ipg_creation_of_particles/oneparticle/OneParticleService.cc)
+target_include_directories(CreationOfParticles PUBLIC .)
+target_link_libraries(CreationOfParticles PUBLIC arcane_core)
 
 # Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
@@ -101,7 +108,14 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+
+### edition du lien pour associer toutes les bibliothèques
+
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput CreationOfParticles RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+
+
+
+### ajout des liens pour les _axl.h créé à partie des .axl
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -124,7 +138,9 @@ arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
 arcane_target_add_axl(Elasto elasto/NewHypoModel)
 
+# ipg
 arcane_target_add_axl(IpgOutput ipg_output/VtkAscii)
+arcane_target_add_axl(CreationOfParticles ipg_creation_of_particles/oneparticle/OneParticle)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
