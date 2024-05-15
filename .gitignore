@@ -39,3 +39,6 @@ build/
 
 # VScode workspace
 *.code-workspace
+
+# temporary files
+*~
