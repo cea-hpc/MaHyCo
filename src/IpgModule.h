@@ -32,7 +32,7 @@ class IpgModule
   virtual void initParticleOutput();
   
   /** Création des particules */
-  virtual void createParticles();
+  virtual void injectParticles();
 
   /** Mise à jour de la position des particules */
   virtual void updateParticlePosition();

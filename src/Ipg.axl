@@ -15,8 +15,8 @@
 
   
   <entry-points>
-    <entry-point method-name="createParticles" name="CreateParticles" where="start-init" property="none" />        <!-- fixme: in compute-loop -->
-    <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />  <!-- fixme: useful ?? -->
+    <entry-point method-name="injectParticles" name="InjectParticles" where="compute-loop" property="none" />
+    <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />
     <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
     <entry-point method-name="writeParticleOutput" name="WriteParticleOutput" where="compute-loop" property="none" />
   </entry-points>
@@ -27,9 +27,8 @@
       <description>Service d'écriture des sorties ipg</description>
     </service-instance>
 
-
-	  <service-instance name="ipg-creation-of-particles" type="ICreationOfParticles">
-      <description>Service de creation des particule</description>
+	  <service-instance name="particle-injector-type" type="ICreationOfParticles">
+      <description>Service de creation des particule (choix du type d'injection de particules)</description>
     </service-instance>
   </options>
 

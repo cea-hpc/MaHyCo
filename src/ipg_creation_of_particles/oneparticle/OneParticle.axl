@@ -16,28 +16,28 @@
 
 
   <options>
-    <simple name="init-temperature" type="real" default="42.">  <!-- fixme: is there a more clever default value ? -->
-      <description>Température initiale</description>
+    <simple name="init-temperature" type="real" default="42.">
+      <description>Température initiale de la particule</description>
     </simple>
 
     <simple name="init-velocity" type="real3" default="0. 0. 0.">
-      <description>Vitesse initiale</description>
+      <description>Vitesse initiale de la particule</description>
     </simple>
 
     <simple name="init-coord" type="real3" default="0. 0. 0.">
-      <description>Position initiale</description>
+      <description>Position initiale de la particule</description>
     </simple>
 
     <simple name="init-weight" type="integer" default="1">  <!-- fixme: real or int ?-->
-      <description>Poids initial (nombre de particules physiques représentées par la particule numérique)</description>
+      <description>Poids initial de la particule (nombre de particules physiques représentées par la particule numérique)</description>
     </simple>
 
     <simple name="init-radius" type="real" default="1.">
-      <description>Rayon initial</description>
+      <description>Rayon initial de la particule</description>
     </simple>
 
-    <simple name="init-time" type="real" default="1.">
-      <description>Rayon initial</description>
+    <simple name="init-time" type="real" minOccurs = "1" maxOccurs = "1">
+      <description>Instant de création de la particule</description>
     </simple>
 
   </options>

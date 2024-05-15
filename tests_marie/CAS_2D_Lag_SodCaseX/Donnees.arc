@@ -122,10 +122,10 @@
   
   <!-- IPG -->
   <ipg>
-    <!-- <init-temperature>12.</init-temperature> -->
-    <!-- <init-velocity>0. 1. 0.</init-velocity> -->
-    <ipg-creation-of-particles name="OneParticle">
-    </ipg-creation-of-particles>
+    <particle-injector-type name="OneParticle">   <!-- il faut indiquer le nom du service qu'on veut utiliser -->
+      <init-velocity>500. 0. 0.</init-velocity>
+      <init-time>3.3e-5</init-time>
+    </particle-injector-type>
     <ipg-output name="VtkAscii">
       <variable>ParticleVelocity</variable>
       <variable>ParticleRadius</variable>
