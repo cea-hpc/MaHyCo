@@ -41,6 +41,7 @@ class IpgModule
   virtual void writeParticleOutput();
 
  private:
+  // protected:
   IParticleFamily* m_particles_family;
 };
 

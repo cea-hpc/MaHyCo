@@ -29,20 +29,20 @@ IpgModule:: IpgModule(const ModuleBuildInfo& mbi) :
 void IpgModule::
 createParticles()
 {
-  // options()->getIpgCreationOfParticles()->createParticles();
+  options()->getIpgCreationOfParticles()->createParticles(m_particles_family);
 
-  UniqueArray<Integer> lids({0,1,2}); //local Id
-  UniqueArray<Int64> uids({0,1,2}); //unique Id
-  info() << "Création des particules de localId " << lids.view();
-  m_particles_family->addParticles(uids.view(), lids.view());
-  m_particles_family->endUpdate();
+  // UniqueArray<Integer> lids({0,1,2}); //local Id
+  // UniqueArray<Int64> uids({0,1,2}); //unique Id
+  // info() << "Création des particules de localId " << lids.view();
+  // m_particles_family->addParticles(uids.view(), lids.view());
+  // m_particles_family->endUpdate();
 
-  ENUMERATE_PARTICLE (part_i, m_particles_family->allItems()) {
-    m_particle_coord[part_i] = Real3{0.5, 0.05, 0};
-    Real init_velocity = 500.;
-    Real angle = 2 * part_i.localId() * 3.141592 / 3;
-    m_particle_velocity[part_i] = Real3(init_velocity * std::cos(angle), init_velocity * std::sin(angle), 0);
-  }
+  // ENUMERATE_PARTICLE (part_i, m_particles_family->allItems()) {
+  //   m_particle_coord[part_i] = Real3{0.5, 0.05, 0};
+  //   Real init_velocity = 500.;
+  //   Real angle = 2 * part_i.localId() * 3.141592 / 3;
+  //   m_particle_velocity[part_i] = Real3(init_velocity * std::cos(angle), init_velocity * std::sin(angle), 0);
+  // }
 
 }
 
@@ -86,7 +86,7 @@ writeParticleOutput()
   ENUMERATE_PARTICLE(part_i, m_particles_family->allItems()) {
     m_particle_weight[part_i] = part_i.localId();
     m_particle_radius[part_i] = part_i.localId() * 2.0 ;
-    m_particle_temperature[part_i] = 42.;// options()->getIpgCreationOfParticles()->getInitTemperature();
+    m_particle_temperature[part_i] = 42.;
   }
     
   options()->getIpgOutput()->writeOutput(m_particles_family->allItems());

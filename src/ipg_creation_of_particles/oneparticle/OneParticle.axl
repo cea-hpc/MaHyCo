@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="OneParticle" version="1.0" type="caseoption">
+  <description>Jeu de données du service PerfectGasEOS</description>
+  <interface name="ICreationOfParticles" />
+
+
+
+  <variables>
+    <variable field-name="particle_coord" name="ParticleCoordinates" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_velocity" name="ParticleVelocity" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_radius" name="ParticleRadius" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_weight" name="ParticleWeight" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_temperature" name="ParticleTemperature" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+  </variables>
+
+
+
+  <options>
+    <simple name="init-temperature" type="real" default="42.">  <!-- fixme: is there a more clever default value ? -->
+      <description>Température initiale</description>
+    </simple>
+
+    <simple name="init-velocity" type="real3" default="0. 0. 0.">
+      <description>Vitesse initiale</description>
+    </simple>
+
+    <simple name="init-coord" type="real3" default="0. 0. 0.">
+      <description>Position initiale</description>
+    </simple>
+
+    <simple name="init-weight" type="integer" default="1">  <!-- fixme: real or int ?-->
+      <description>Poids initial (nombre de particules physiques représentées par la particule numérique)</description>
+    </simple>
+
+    <simple name="init-radius" type="real" default="1.">
+      <description>Rayon initial</description>
+    </simple>
+
+    <simple name="init-time" type="real" default="1.">
+      <description>Rayon initial</description>
+    </simple>
+
+  </options>
+
+</service>
+
+
+
+
+
+
+
+
+
