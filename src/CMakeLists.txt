@@ -56,9 +56,13 @@ add_library(IpgOutput ipg_output/VtkAsciiService.cc)
 target_include_directories(IpgOutput PUBLIC .)
 target_link_libraries(IpgOutput PUBLIC arcane_core)
 
-add_library(CreationOfParticles ipg_creation_of_particles/oneparticle/OneParticleService.cc)
-target_include_directories(CreationOfParticles PUBLIC .)
-target_link_libraries(CreationOfParticles PUBLIC arcane_core)
+add_library(OneParticle ipg_creation_of_particles/oneparticle/OneParticleService.cc)
+target_include_directories(OneParticle PUBLIC .)
+target_link_libraries(OneParticle PUBLIC arcane_core)
+
+add_library(UserFileInputParticles ipg_creation_of_particles/userfileinput/UserFileInputParticlesService.cc)
+target_include_directories(UserFileInputParticles PUBLIC .)
+target_link_libraries(UserFileInputParticles PUBLIC arcane_core)
 
 # Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
@@ -111,7 +115,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 ### edition du lien pour associer toutes les bibliothèques
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput CreationOfParticles RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput OneParticle UserFileInputParticles RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 
 
@@ -138,9 +142,10 @@ arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
 arcane_target_add_axl(Elasto elasto/NewHypoModel)
 
-# ipg
+# IPG
 arcane_target_add_axl(IpgOutput ipg_output/VtkAscii)
-arcane_target_add_axl(CreationOfParticles ipg_creation_of_particles/oneparticle/OneParticle)
+arcane_target_add_axl(OneParticle ipg_creation_of_particles/oneparticle/OneParticle)
+arcane_target_add_axl(UserFileInputParticles ipg_creation_of_particles/userfileinput/UserFileInputParticles)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
