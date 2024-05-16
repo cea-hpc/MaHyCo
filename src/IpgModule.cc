@@ -34,6 +34,18 @@ injectParticles()
 
 /*---------------------------------------------------------------------------*/
 /**
+ * \brief Initialisation éventuellement nécessaires dans start-init pour créer 
+ * les particules.
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+initInjectParticles()
+{
+  options()->getParticleInjectorType()->initParticles();
+}
+
+/*---------------------------------------------------------------------------*/
+/**
  * \brief Initialisation des sorties
  */
 /*---------------------------------------------------------------------------*/

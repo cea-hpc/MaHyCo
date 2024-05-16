@@ -28,11 +28,14 @@ class IpgModule
   /** Destructeur de la classe */
   ~IpgModule() {}
 
-  /** Création des particules */
+  /** Création des sorties pour les particules */
   virtual void initParticleOutput();
   
   /** Création des particules */
   virtual void injectParticles();
+
+  /** Initialisations éventuellement nécessaires dans start-init pour créer des particules */
+  virtual void initInjectParticles();
 
   /** Mise à jour de la position des particules */
   virtual void updateParticlePosition();

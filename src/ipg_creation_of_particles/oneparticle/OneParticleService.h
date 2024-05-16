@@ -36,6 +36,10 @@ public:
    */
   virtual void createParticles(IParticleFamily* m_particles_family);
 
+  /** 
+   * Rien à faire pour ce service.
+   */
+  void initParticles(){}
 };
 
 #endif

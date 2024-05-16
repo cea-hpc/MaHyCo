@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <service name="OneParticle" version="1.0" type="caseoption">
-  <description>Jeu de données du service PerfectGasEOS</description>
+  <description>Jeu de données du service OneParticle, qui crée une unique particule.</description>
   <interface name="ICreationOfParticles" />
 
 

@@ -15,6 +15,7 @@
 
   
   <entry-points>
+    <entry-point method-name="initInjectParticles" name="InitInjectParticles" where="start-init" property="none" />
     <entry-point method-name="injectParticles" name="InjectParticles" where="compute-loop" property="none" />
     <entry-point method-name="initParticleOutput" name="InitParticleOutput" where="start-init" property="none" />
     <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
