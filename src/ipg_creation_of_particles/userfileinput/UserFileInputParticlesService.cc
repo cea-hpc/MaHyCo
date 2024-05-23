@@ -60,12 +60,15 @@ void UserFileInputParticlesService::initParticles()
 */
 /*---------------------------------------------------------------------------*/
 
-void UserFileInputParticlesService::createParticles(IParticleFamily* m_particles_family, ParticleGroup activeParticlesGroup)
+void UserFileInputParticlesService::createParticles()
 {
   // ### si au moins une particule doit être injectée à cette itération
   if ((t_next_part >= m_global_time()-m_global_deltat()) && (t_next_part < m_global_time())){
     // note: m_global_time() contient le temps t^{n+1} !!!
 
+    IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
+    ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
+    
     Int32UniqueArray particles_to_move; // to add to activeParticlesGroup and remove from toBeCreatedParticlesGroup
 
     // ### on récupère l'Id de toutes les particules à injecter
