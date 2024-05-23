@@ -23,7 +23,7 @@ class MultiEnvVariableMng
   // l'identifiant de la maille globale
   void computeMultiEnvGlobalCellId();
 
-  void asyncCheckMultiEnvGlobalCellId([[maybe_unused]] ax::Ref<ax::RunQueue> async_queue);
+  void asyncCheckMultiEnvGlobalCellId([[maybe_unused]] Ref<ax::RunQueue> async_queue);
 
   //! Vue sur le stockage pour utilisation en lecture sur GPU
   MultiEnvCellViewIn viewIn(ax::RunCommand& command) {
@@ -48,7 +48,7 @@ class MultiEnvVariableMng
  public:
 
   //! Remplissage de façon asynchrone
-  void asyncBuildStorage(ax::Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell);
+  void asyncBuildStorage(Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell);
 
   //! Verification
   void asyncCheckStorage([[maybe_unused]] Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell);
