@@ -27,7 +27,6 @@ void OneParticleService::createParticles()
     activeParticlesGroup.addItems(lids.view());
 
     ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
-    // ENUMERATE_PARTICLE (part_i, m_particles_family->allItems()) {
       m_particle_coord[part_i] = options()->getInitCoord();
       m_particle_velocity[part_i] = options()->getInitVelocity();
       m_particle_temperature[part_i] = options()->getInitTemperature();

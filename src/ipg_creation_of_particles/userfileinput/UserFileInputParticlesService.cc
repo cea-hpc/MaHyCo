@@ -69,7 +69,7 @@ void UserFileInputParticlesService::createParticles()
     IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
     ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
     
-    Int32UniqueArray particles_to_move; // to add to activeParticlesGroup and remove from toBeCreatedParticlesGroup
+    Int32UniqueArray particles_to_move;
 
     // ### on récupère l'Id de toutes les particules à injecter
     ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
@@ -79,15 +79,11 @@ void UserFileInputParticlesService::createParticles()
         particles_to_move.add(part_i.localId());
     }
     
-    // ### on les ajoute au groupe des particules actives
     if (!particles_to_move.empty()) {   // fixme: if not necessary, because we know that at least a particle should be created
-      info() << "Add n= " << particles_to_move.size() << " particles to group activeParticles ";    // info()  -> debug() ??
+      info() << "We change the group of n= " << particles_to_move.size() << " particles to inject them in the simulation ";  // fixme: remove
+      // ### on les ajoute au groupe des particules actives
       activeParticlesGroup.addItems(particles_to_move);
-    }
-
-    // ### on les retire du groupe des particules à créer
-    if (!particles_to_move.empty()){
-      info() << "Remove n= " << particles_to_move.size() << " particles from group toBeCreatedParticles ";    // info()  -> debug() ??
+      // ### on les retire du groupe des particules à créer
       toBeCreatedParticlesGroup.removeItems(particles_to_move);
     }
 
@@ -164,8 +160,6 @@ void UserFileInputParticlesService::initialize_data_particule()
   std::string one_particle;
 
   // ### stockage des données initiales
-  // note: le nombre de particules est le nombre de lignes non vides
-  // et non commentées du fichier d'input utilisateur
   ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
 
     // lecture des données d'une particule
@@ -182,7 +176,7 @@ void UserFileInputParticlesService::initialize_data_particule()
     std::string ti, wi, xi, yi, zi, uxi, uyi, uzi, ri, Ti;
     s_one_particle >> ti >> wi >> xi >> yi >> zi >> uxi >> uyi >> uzi >> ri >> Ti;
 
-    // stockage dans les variables de valeur initiale
+    // stockage des valeurs initiales
     m_particle_init_time[part_i] = stod(ti);
     m_particle_weight[part_i] = stoi(wi);
     m_particle_coord[part_i] = Real3(stod(xi), stod(yi), stod(zi));
@@ -208,9 +202,6 @@ Real UserFileInputParticlesService::get_t_next_part()
 {  
 
   Real tend = options()->getTMaxInjection();  // par defaut: 1e30
-  // j'aurais préféré utiliser le temps final de simulation,
-  // mais c'est l'option final-time de MahycoModule, donc non accessible directement ici.
-
   
   // on parcours le groupe des particules à créer pour connaître le temps d'injection
   // de la prochaine particule.

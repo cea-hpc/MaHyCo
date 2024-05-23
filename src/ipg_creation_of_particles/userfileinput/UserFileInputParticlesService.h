@@ -28,8 +28,6 @@ class UserFileInputParticlesService
 public:
   /** Constructeur de la classe */
   UserFileInputParticlesService(const ServiceBuildInfo & sbi);
-// UserFileInputParticlesService(const ServiceBuildInfo & sbi) 
-//   : ArcaneUserFileInputParticlesObject(sbi){}
 
   /** Destructeur de la classe */
   virtual ~UserFileInputParticlesService() {};
