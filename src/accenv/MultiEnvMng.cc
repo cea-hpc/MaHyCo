@@ -84,7 +84,7 @@ computeMultiEnvGlobalCellId()
 }
 
 void MultiEnvVariableMng::
-asyncCheckMultiEnvGlobalCellId([[maybe_unused]] ax::Ref<ax::RunQueue> async_queue) {
+asyncCheckMultiEnvGlobalCellId([[maybe_unused]] Ref<ax::RunQueue> async_queue) {
 #ifdef ARCANE_DEBUG
   m_mesh_material_mng->traceMng()->debug() << "checkMultiEnvGlobalCellId";
 
@@ -114,7 +114,7 @@ asyncCheckMultiEnvGlobalCellId([[maybe_unused]] ax::Ref<ax::RunQueue> async_queu
 /*---------------------------------------------------------------------------*/
 //! Remplissage de façon asynchrone
 /*---------------------------------------------------------------------------*/
-void MultiEnvVariableMng::asyncBuildStorage(ax::Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell) {
+void MultiEnvVariableMng::asyncBuildStorage(Ref<ax::RunQueue> async_queue, Materials::MaterialVariableCellInteger& v_global_cell) {
   PROF_ACC_BEGIN(__FUNCTION__);
 
   Integer max_nb_env = m_max_nb_env; // on ne peut pas utiliser un attribut dans le kernel
