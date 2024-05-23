@@ -2,8 +2,11 @@
 #ifndef USERFILEINPUTPARTICULESSERVICE_H
 #define USERFILEINPUTPARTICULESSERVICE_H
 
+#include <filesystem>
 
 #include "arcane/IParticleFamily.h"
+#include "arcane/IMesh.h"
+#include "arcane/IItemFamily.h"
 
 #include "ipg_creation_of_particles/ICreationOfParticles.h"
 #include "ipg_creation_of_particles/userfileinput/UserFileInputParticles_axl.h"
@@ -24,8 +27,10 @@ class UserFileInputParticlesService
 {
 public:
   /** Constructeur de la classe */
-  UserFileInputParticlesService(const ServiceBuildInfo & sbi) 
-    : ArcaneUserFileInputParticlesObject(sbi) {}
+  UserFileInputParticlesService(const ServiceBuildInfo & sbi);
+// UserFileInputParticlesService(const ServiceBuildInfo & sbi) 
+//   : ArcaneUserFileInputParticlesObject(sbi){}
+
   /** Destructeur de la classe */
   virtual ~UserFileInputParticlesService() {};
   
@@ -33,7 +38,7 @@ public:
    *  Crée les particules et leurs propriétés (poids, position, vitesse, 
    *  rayon, température) à partir des données stockées lors de initParticles.
    */
-  virtual void createParticles(IParticleFamily* m_particles_family);
+  virtual void createParticles();
 
   /** 
    * Etapes à faire lors de start-init : lecture du fichier utilisateur
@@ -43,9 +48,33 @@ public:
 
 
 
-// private:
-//   m_particles_not_yet_created_family;
+private:
+  /*
+  non-active particle group, contains the particules given in the user file 
+  as long as they have not yet been injected in the simulation as active particule
+  */
+  ParticleGroup toBeCreatedParticlesGroup;    // fixme: pointeur ??
+
+  /*
+  Add particles to the particle family
+  */
+  void initialize_particule_family();
+
+  /*
+  init data of the particles
+  */
+  void initialize_data_particule();
+
+  /*
+  time of injection of the next particle, to avoid some loops over the particles
+  */
+  Real t_next_part;
   
+  /*
+  get the time of the next injection of particle
+  */
+  Real get_t_next_part();
+
 };
 
 #endif

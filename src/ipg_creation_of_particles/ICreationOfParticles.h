@@ -26,7 +26,7 @@ public:
    *  Crée les particules et leurs propriétés (poids, position, vitesse, 
    *  rayon, température). 
    */
-  virtual void createParticles(IParticleFamily* m_particles_family) = 0;
+  virtual void createParticles() = 0;
 
   /** 
    * Etapes à faire lors de start-init (si besoin).

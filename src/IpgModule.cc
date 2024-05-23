@@ -17,8 +17,15 @@ using namespace Arcane::Materials;
 IpgModule:: IpgModule(const ModuleBuildInfo& mbi) : 
   ArcaneIpgObject(mbi)
 {
-  auto* item_family = mesh()->createItemFamily (eItemKind::IK_Particle, "ActiveParticles");
+  auto* item_family = mesh()->createItemFamily (eItemKind::IK_Particle, "AllParticles");
+
+  // creation de groupes pour les particules :
+  // celles qui sont actives suivront les equations des particules
+  // on aura besoin ailleurs de créer d'autres groupes qui ne suivront pas necessairement les equations.
+  activeParticlesGroup = item_family->createGroup("activeItem");
+
   m_particles_family = item_family->toParticleFamily();
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -29,7 +36,7 @@ IpgModule:: IpgModule(const ModuleBuildInfo& mbi) :
 void IpgModule::
 injectParticles()
 {
-  options()->getParticleInjectorType()->createParticles(m_particles_family);
+  options()->getParticleInjectorType()->createParticles();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -64,7 +71,7 @@ void IpgModule::
 updateParticlePosition()
 {
   Real deltat = m_global_deltat();
-  ENUMERATE_PARTICLE (part_i, m_particles_family->allItems()) {
+  ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * deltat;
     info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i];
     info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i];
@@ -81,7 +88,7 @@ writeParticleOutput()
 {
 
   // Pour test des sorties uniquement, en attendant que les variables soient calculées correctement
-  ENUMERATE_PARTICLE(part_i, m_particles_family->allItems()) {
+  ENUMERATE_PARTICLE(part_i, activeParticlesGroup) {
     m_particle_weight[part_i] = part_i.localId();
     m_particle_radius[part_i] = part_i.localId() * 2.0 ;
     m_particle_temperature[part_i] = 42.;

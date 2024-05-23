@@ -23,7 +23,7 @@ using namespace Arcane;
 
 void VtkAsciiService::initOutput()
 {
-  m_item_family = mesh()->findItemFamily(eItemKind::IK_Particle, "ActiveParticles");
+  m_item_family = mesh()->findItemFamily(eItemKind::IK_Particle, "AllParticles");
   for (const String& var_name : options()->getVariable()) {
      IVariable* ivar = m_item_family->findVariable(var_name, true);
      // true => levée d'exception si la variable n'existe pas.

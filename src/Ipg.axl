@@ -5,11 +5,11 @@
 
   
   <variables>
-    <variable field-name="particle_coord" name="ParticleCoordinates" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
-    <variable field-name="particle_velocity" name="ParticleVelocity" family-name="ActiveParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
-    <variable field-name="particle_radius" name="ParticleRadius" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
-    <variable field-name="particle_weight" name="ParticleWeight" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
-    <variable field-name="particle_temperature" name="ParticleTemperature" family-name="ActiveParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_coord" name="ParticleCoordinates" family-name="AllParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_velocity" name="ParticleVelocity" family-name="AllParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_radius" name="ParticleRadius" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_weight" name="ParticleWeight" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
   </variables>
 
