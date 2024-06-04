@@ -131,5 +131,7 @@
       <variable>ParticleRadius</variable>
       <variable>ParticleTemperature</variable>
     </ipg-output>
+    <spray-type name="SprayFin">
+    </spray-type>
   </ipg>
 </case>

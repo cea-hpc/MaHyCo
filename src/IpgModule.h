@@ -5,6 +5,7 @@
 #include "arcane/IParticleFamily.h"
 #include "ipg_output/IIpgOutput.h"
 #include "ipg_creation_of_particles/ICreationOfParticles.h"
+#include "ipg_solver/ISprayType.h"
 
 #include "Ipg_axl.h"
 
@@ -36,6 +37,15 @@ class IpgModule
 
   /** Initialisations éventuellement nécessaires dans start-init pour créer des particules */
   virtual void initInjectParticles();
+
+  /** Initialisations du solver de particules dans start-init */
+  virtual void initSolverParticles();
+
+  /** correction de la vitesse du fluide (prise en compte de la traînée due aux particules). */
+  virtual void correctFluidVelocity();
+
+  /** mise à jour de la vitesse des particules */
+  virtual void updateParticleVelocity();
 
   /** Mise à jour de la position des particules */
   virtual void updateParticlePosition();

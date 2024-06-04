@@ -64,18 +64,46 @@ initParticleOutput()
 
 /*---------------------------------------------------------------------------*/
 /**
- * \brief Mise à jour de la position des particule
+ * \brief Initialisation du solver pour les particules dans start-init
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+initSolverParticles()
+{
+  options()->getSprayType()->initSolverParticles();
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Mise à jour de la position des particules
  */
 /*---------------------------------------------------------------------------*/
 void IpgModule::
 updateParticlePosition()
 {
-  Real deltat = m_global_deltat();
-  ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
-    m_particle_coord[part_i] += m_particle_velocity[part_i] * deltat;
-    info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i];
-    info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i];
-  }
+  options()->getSprayType()->updateParticlePosition();
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Mise à jour de la vitesse des particules
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+updateParticleVelocity()
+{
+  options()->getSprayType()->updateParticleVelocity();
+}
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Correction de la vitesse du fluide en présence de particules (traînée)
+ */
+/*---------------------------------------------------------------------------*/
+void IpgModule::
+correctFluidVelocity()
+{
+  options()->getSprayType()->correctFluidVelocity();
 }
 
 /*---------------------------------------------------------------------------*/
