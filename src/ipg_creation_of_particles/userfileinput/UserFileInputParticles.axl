@@ -16,6 +16,10 @@
     <!-- variables des particules utilisées uniquement dans ce service -->
     <variable field-name="particle_init_time" name="ParticleInitTime" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
+    <!-- variables nodes, necessary to attach particule to cells -->
+    <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+
   </variables>
 
 

@@ -12,6 +12,8 @@
 #include "ipg_creation_of_particles/oneparticle/OneParticle_axl.h"
 
 
+#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
+
 
 using namespace Arcane;
 
@@ -44,6 +46,13 @@ public:
    */
   void initParticles(){}
 
+private:
+
+  /** 
+   * affecte la particule à la cellule à laquelle elle appartient
+   */
+  virtual void assignParticleToCell();
+  
 };
 
 #endif

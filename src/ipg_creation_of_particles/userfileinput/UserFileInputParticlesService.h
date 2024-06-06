@@ -12,6 +12,8 @@
 #include "ipg_creation_of_particles/userfileinput/UserFileInputParticles_axl.h"
 
 
+#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
+
 
 using namespace Arcane;
 
@@ -72,6 +74,11 @@ private:
   get the time of the next injection of particle
   */
   Real get_t_next_part();
+
+  /*
+  assigne les particules à la cellule qui les contient.
+  */
+  void assignParticleToCell(IItemFamily* item_family, UniqueArray<ParticleEnumerator> particules_to_move, Int32UniqueArray particles_to_move_Id);
 
 };
 

@@ -56,7 +56,8 @@ void UserFileInputParticlesService::initParticles()
 /* 
    \brief Création des particules (dans compute-loop)
 
-   En pratique, lorsque leur temps d'initilisation 
+   Lorsque le temps de la simulation atteint le temps où des particules doivent
+   être créées, on les change de groupe (toBeCreatedParticlesGroup -> activeParticlesGroup)
 */
 /*---------------------------------------------------------------------------*/
 
@@ -70,21 +71,38 @@ void UserFileInputParticlesService::createParticles()
     ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
     
     Int32UniqueArray particles_to_move;
+    UniqueArray<ParticleEnumerator> particules_to_move; // TODO: utiliser un seul des deux tableaux
 
     // ### on récupère l'Id de toutes les particules à injecter
     ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
       Real t_init = m_particle_init_time[part_i];
-      if ((t_init >= m_global_time()-m_global_deltat()) && (t_init < m_global_time()))
+      if ((t_init >= m_global_time()-m_global_deltat()) && (t_init < m_global_time())){
         // note: m_global_time() contient le temps t^{n+1} !!!
         particles_to_move.add(part_i.localId());
+        particules_to_move.add(part_i);
+      }
     }
-    
-    if (!particles_to_move.empty()) {   // fixme: if not necessary, because we know that at least a particle should be created
-      info() << "We change the group of n= " << particles_to_move.size() << " particles to inject them in the simulation ";  // fixme: remove
-      // ### on les ajoute au groupe des particules actives
+
+    // ### On change de groupe les particules pour lesquelles c'est nécessaire
+    if (!particles_to_move.empty()) {   // TODO: remove the if, I think it is not necessary
+      info() << "We change the group of n= " << particles_to_move.size() << " particles to inject them in the simulation ";
+
+      // on les ajoute au groupe des particules actives
       activeParticlesGroup.addItems(particles_to_move);
-      // ### on les retire du groupe des particules à créer
+      // on les retire du groupe des particules à créer
       toBeCreatedParticlesGroup.removeItems(particles_to_move);
+    }
+
+    // ### on assigne les nouvelles particules actives à leur cellule
+    assignParticleToCell(item_family, particules_to_move, particles_to_move);
+
+
+    // ### on vérifie que toutes les (la) particules sont dans une cellule.
+    ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
+      if (!(part_i->hasCell()))
+        info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. ";
+      else
+        info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
     }
 
     // ### we find the time of injection of the first particle
@@ -217,6 +235,47 @@ Real UserFileInputParticlesService::get_t_next_part()
     info() << "All particles have been injected";
   
   return tend;
+}
+
+
+
+/*---------------------------------------------------------------------------*/
+/*
+  assigne les particules à la cellule qui les contient.
+*/
+/*---------------------------------------------------------------------------*/
+
+void UserFileInputParticlesService::assignParticleToCell(IItemFamily* item_family, UniqueArray<ParticleEnumerator> particules_to_move, Int32UniqueArray particles_to_move_Id)
+{
+
+  IParticleFamily* m_particles_family = item_family->toParticleFamily();
+  for (Integer ipart=0 ; ipart<particules_to_move.size() ; ipart++){
+
+    info() << " ipart vaut " << ipart;
+    
+    ParticleEnumerator part_i = particules_to_move[ipart];
+    Particle particule = *part_i;
+
+    info() << " particle Id " << part_i.localId();
+    info() << " particle Id v2 " << particles_to_move_Id[ipart];
+
+    ENUMERATE_CELL ( icell, allCells() ) {
+      Cell cell = * icell;
+      Real3 particule_coord = m_particle_coord[part_i] ;
+
+      UniqueArray<Real3> nodes_coord;
+      for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+        Real3 node_coord = m_node_coord[inode] ;
+        nodes_coord.add(node_coord);
+      }
+        
+      // if (isCoordInCell(particule_coord, cell))
+      if (isCoordInCell(particule_coord, nodes_coord))
+        m_particles_family->setParticleCell(particule, cell);
+    }
+
+  }
+
 }
 
 

@@ -30,6 +30,79 @@ void SprayFinService::correctFluidVelocity() {
   // 2 - calcul de la force de trainée aux noeuds
 
   // 3 - MaJ de la vitesse du fluide aux noeuds
+
+
+  // // // // Arcane::geometric::GeomShapeMng shape_mng = mesh();
+  // // Arcane::geometric::GeomShapeMng shape_mng(mesh(), "coucou");
+  // // // // Arcane::geometric::GeomShapeMng shape_mng;
+  // // // // GeomShapeMng shape_mng;
+  // // Arcane::geometric::GeomShapeView shape_view;
+  // // shape_mng.initialize(); // il faut initialize avant initShape
+  
+  // ENUMERATE_CELL(icell,allCells()){
+
+  //   // // Arcane::geometric::GeomShapeMng shape_mng(mesh());
+  //   // // Arcane::geometric::GeomShapeView shape_view;
+  //   // // shape_mng.initialize(); // il faut initialize avant initShape
+  //   // Cell cell = *icell;
+  //   // // Initialise la vue \a shape_view sur la maille \a cell
+  //   // shape_mng.initShape(shape_view,cell);
+
+  //   // Cell cell = * icell;
+  //   // for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+  //   //   info() << "Nodes= " << m_node_coord[inode];
+  //   // }   
+    
+   
+
+  // }
+
+  // // VariableNodeReal3& node_coord = {0.,0.,0.};
+  // // ENUMERATE_CELL(icell,allCells()){
+  // //   Cell cell = *icell;
+  // //   info() << "Node0=" << node_coord[cell.node(0)];
+  // //   info() << "Node2=" << node_coord[cell.node(2)];
+  // //   Real3 middle = (node_coord[cell.node(3)] + node_coord[cell.node(4)]) / 2.0;
+  // // }
+  
+  // // // Arcane::geometric::GeomShapeMng& shape_mng = *mesh();
+  // // Arcane::geometric::GeomShapeMng shape_mng = mesh();
+  // // // Arcane::geometric::GeomShapeMng shape_mng(mesh());
+  // // Arcane::geometric::GeomShapeView shape;
+
+  // // Real3 my_point={0., 0., 0.};
+  
+  // // ENUMERATE_CELL(icell, allCells()){
+
+  // //   shape_mng.initShape(shape,*icell);
+
+  // //   info() << "mon point " << my_point << " is inside the cell " << shape.node(0) << shape.node(1) << shape.node(2) << shape.node(3) << " ? Answer: "; 
+
+  // //   // bool toto = ProjectionInfo::isInside(shape.node(0),shape.node(1),shape.node(2),my_point);
+  // //   // bool toto = isInside(shape.node(0),shape.node(1),shape.node(2),my_point);
+
+  // //   // info() << "mon point " << my_point << " is inside the cell " << shape.node(0) << shape.node(1) << shape.node(2) << shape.node(3) << " ? Answer: " << (isInside(shape.node(0),shape.node(1),shape.node(2),my_point) || isInside(shape.node(3),shape.node(1),shape.node(2),my_point)); 
+
+  // //   // Real3 middle = (shape.node(3) + shape.node(4)) / 2.0;
+
+  // // }
+
+
+  // ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
+
+  //   info() << "Particle " << part_i.localId() << " has cell : " << part_i->hasCell() ;
+
+  //   Particle particule = *part_i;
+
+  //   // Cell cell = * icell;
+
+  //   // particule.cell();
+    
+  //   // setParticleCell(particule, cellule);
+    
+  //   info() << "Particle " << part_i.localId() << " has cell : " << part_i->hasCell() ;
+    
+  // }
   
   // ENUMERATE_NODE ( inode, allNodes() ) {
   //   Node node = *inode;

@@ -29,10 +29,12 @@
   <mesh>
     <meshgenerator>
     <cartesian>
-       <nsd>1 1</nsd> 
-       <origine>0.0 0.0 0.0</origine>
-       <lx nx='100' prx='1.0'>1.</lx>
-       <ly ny='5' pry='1.0'>.1</ly>
+       <nsd>1 1</nsd>
+       <origine>.0 .0 0.0</origine>
+       <lx nx='5' prx='1.0'>1.</lx>
+       <ly ny='1' pry='1.0'>.1</ly>
+       <!-- <lx nx='100' prx='1.0'>1.</lx> -->
+       <!-- <ly ny='5' pry='1.0'>.1</ly> -->
      </cartesian>
      </meshgenerator>
     <initialisation>
@@ -124,6 +126,7 @@
   <ipg>
     <particle-injector-type name="OneParticle">   <!-- il faut indiquer le nom du service qu'on veut utiliser -->
       <init-velocity>500. 0. 0.</init-velocity>
+      <init-coord>.05 0.03 0.</init-coord>
       <init-time>3.3e-5</init-time>
     </particle-injector-type>
     <ipg-output name="VtkAscii">
