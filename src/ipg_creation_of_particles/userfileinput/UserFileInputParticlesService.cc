@@ -72,9 +72,8 @@ void UserFileInputParticlesService::createParticles()
     IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
     ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
     
-    UniqueArray<Int32> particles_to_move;
-
     // ### on récupère l'Id de toutes les particules à injecter
+    UniqueArray<Int32> particles_to_move;
     ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
       Real t_init = m_particle_init_time[part_i];
       if ((t_init >= m_global_time()-m_global_deltat()) && (t_init < m_global_time())) // note: m_global_time() contient t^{n+1} !
@@ -105,7 +104,7 @@ void UserFileInputParticlesService::createParticles()
     }
 
     if (!particles_to_move.empty()) {
-      // on vide le groupe des particules à qui il faut affecter une cell
+      // on vide le groupe des particules pour lesquelles il fallait affecter une cell
       toAssignCellParticlesGroup.removeItems(particles_to_move);
     }
 
