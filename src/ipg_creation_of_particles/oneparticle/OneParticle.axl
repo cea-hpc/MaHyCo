@@ -12,6 +12,7 @@
     <variable field-name="particle_radius" name="ParticleRadius" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_weight" name="ParticleWeight" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_density" name="ParticleDensity" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
     <!-- variables nodes, necessary to attach particule to cells -->
     <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
@@ -24,6 +25,10 @@
   <options>
     <simple name="init-temperature" type="real" default="42.">
       <description>Température initiale de la particule</description>
+    </simple>
+
+    <simple name="init-density" type="real" default="1.">
+      <description>Masse volumique initiale de la particule</description>
     </simple>
 
     <simple name="init-velocity" type="real3" default="0. 0. 0.">

@@ -33,7 +33,8 @@ UserFileInputParticlesService::UserFileInputParticlesService(const ServiceBuildI
    3-5) position initiale x y z
    6-8) vitesse initiale u_x u_y u_z
    9) rayon initial
-   10) température initiale
+   10) masse volumique initiale
+   11) température initiale
 
    Le fichier peut contenir des lignes commentées commençant par #
    et des lignes vides.
@@ -190,12 +191,12 @@ void UserFileInputParticlesService::initialize_data_particule()
       std::getline(user_file, one_particle);
     }
 
-    // we want a stringstream to use the >> operator to extract the 10 data separated by a space
+    // we want a stringstream to use the >> operator to extract the 11 data separated by a space
     std::stringstream s_one_particle(one_particle);
 
-    // initial time, weight of the particle, positions, velocity, radius, temperature
-    std::string ti, wi, xi, yi, zi, uxi, uyi, uzi, ri, Ti;
-    s_one_particle >> ti >> wi >> xi >> yi >> zi >> uxi >> uyi >> uzi >> ri >> Ti;
+    // initial time, weight of the particle, positions, velocity, radius, dnesity, temperature
+    std::string ti, wi, xi, yi, zi, uxi, uyi, uzi, ri, rhoi, Ti;
+    s_one_particle >> ti >> wi >> xi >> yi >> zi >> uxi >> uyi >> uzi >> ri >> rhoi >> Ti;
 
     // stockage des valeurs initiales
     m_particle_init_time[part_i] = stod(ti);
@@ -203,6 +204,7 @@ void UserFileInputParticlesService::initialize_data_particule()
     m_particle_coord[part_i] = Real3(stod(xi), stod(yi), stod(zi));
     m_particle_velocity[part_i] = Real3(stod(uxi), stod(uyi), stod(uzi));
     m_particle_radius[part_i] = stod(ri);
+    m_particle_density[part_i] = stod(rhoi);
     m_particle_temperature[part_i] = stod(Ti);
 
     if (stod(ti) > options()->getTMaxInjection())

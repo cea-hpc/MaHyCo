@@ -12,6 +12,7 @@
     <variable field-name="particle_radius" name="ParticleRadius" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_weight" name="ParticleWeight" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_density" name="ParticleDensity" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
     <!-- variables des particules utilisées uniquement dans ce service -->
     <variable field-name="particle_init_time" name="ParticleInitTime" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
@@ -34,7 +35,8 @@
       3-5) position initiale x y z
       6-8) vitesse initiale u_x u_y u_z
       9) rayon initial
-      10) température initiale
+      10) masse volumique initiale
+      11) température initiale
       Le fichier peut contenir des lignes commentées commençant par #
       et des lignes vides.
       </description>

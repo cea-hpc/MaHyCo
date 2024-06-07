@@ -32,6 +32,7 @@ void OneParticleService::createParticles()
       m_particle_temperature[part_i] = options()->getInitTemperature();
       m_particle_weight[part_i] = options()->getInitWeight();
       m_particle_radius[part_i] = options()->getInitRadius();
+      m_particle_density[part_i] = options()->getInitDensity();
     }
 
 
