@@ -30,7 +30,7 @@
     <meshgenerator>
     <cartesian>
        <nsd>1 1</nsd> 
-       <origine>-.1 -.1 0.0</origine>
+       <origine>-.1 -.05 0.0</origine>
        <lx nx='10' prx='1.0'>1.</lx>
        <ly ny='1' pry='1.0'>.1</ly>
      </cartesian>

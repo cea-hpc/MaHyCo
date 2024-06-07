@@ -53,7 +53,12 @@ private:
   non-active particle group, contains the particules given in the user file 
   as long as they have not yet been injected in the simulation as active particule
   */
-  ParticleGroup toBeCreatedParticlesGroup;    // fixme: pointeur ??
+  ParticleGroup toBeCreatedParticlesGroup;
+
+  /*
+  groupe temporaire de particules (particules pour lesquelles il faut affecter une cell)
+  */
+  ParticleGroup toAssignCellParticlesGroup;
 
   /*
   Add particles to the particle family
@@ -78,7 +83,7 @@ private:
   /*
   assigne les particules à la cellule qui les contient.
   */
-  void assignParticleToCell(IItemFamily* item_family, UniqueArray<ParticleEnumerator> particules_to_move, Int32UniqueArray particles_to_move_Id);
+  void assignParticleToCell(IItemFamily* item_family);
 
 };
 

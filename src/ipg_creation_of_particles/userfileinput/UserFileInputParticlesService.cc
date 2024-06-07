@@ -16,6 +16,8 @@ UserFileInputParticlesService::UserFileInputParticlesService(const ServiceBuildI
 
   // we create a new group for the particles read from the user file but not yet injected in the simulation
   toBeCreatedParticlesGroup = item_family->createGroup("toBeCreatedItem");
+  // we create a new for the particles to be assigned to a cell
+  toAssignCellParticlesGroup = item_family->createGroup("toAssignCellItem");
 }
 
 
@@ -70,17 +72,13 @@ void UserFileInputParticlesService::createParticles()
     IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
     ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
     
-    Int32UniqueArray particles_to_move;
-    UniqueArray<ParticleEnumerator> particules_to_move; // TODO: utiliser un seul des deux tableaux
+    UniqueArray<Int32> particles_to_move;
 
     // ### on récupère l'Id de toutes les particules à injecter
     ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
       Real t_init = m_particle_init_time[part_i];
-      if ((t_init >= m_global_time()-m_global_deltat()) && (t_init < m_global_time())){
-        // note: m_global_time() contient le temps t^{n+1} !!!
+      if ((t_init >= m_global_time()-m_global_deltat()) && (t_init < m_global_time())) // note: m_global_time() contient t^{n+1} !
         particles_to_move.add(part_i.localId());
-        particules_to_move.add(part_i);
-      }
     }
 
     // ### On change de groupe les particules pour lesquelles c'est nécessaire
@@ -91,18 +89,24 @@ void UserFileInputParticlesService::createParticles()
       activeParticlesGroup.addItems(particles_to_move);
       // on les retire du groupe des particules à créer
       toBeCreatedParticlesGroup.removeItems(particles_to_move);
+      // on les ajoute au groupe des particules pour lesquelles il faut affecter une cell
+      toAssignCellParticlesGroup.addItems(particles_to_move);
     }
 
     // ### on assigne les nouvelles particules actives à leur cellule
-    assignParticleToCell(item_family, particules_to_move, particles_to_move);
+    assignParticleToCell(item_family);
 
-
-    // ### on vérifie que toutes les (la) particules sont dans une cellule.
-    ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
+    // on vérifie que toutes les particules pour lesquelles il fallait affecter une cellule sont dans une cellule.
+    ENUMERATE_PARTICLE (part_i, toAssignCellParticlesGroup) {
       if (!(part_i->hasCell()))
         info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. ";
       else
         info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
+    }
+
+    if (!particles_to_move.empty()) {
+      // on vide le groupe des particules à qui il faut affecter une cell
+      toAssignCellParticlesGroup.removeItems(particles_to_move);
     }
 
     // ### we find the time of injection of the first particle
@@ -245,36 +249,33 @@ Real UserFileInputParticlesService::get_t_next_part()
 */
 /*---------------------------------------------------------------------------*/
 
-void UserFileInputParticlesService::assignParticleToCell(IItemFamily* item_family, UniqueArray<ParticleEnumerator> particules_to_move, Int32UniqueArray particles_to_move_Id)
+void UserFileInputParticlesService::assignParticleToCell(IItemFamily* item_family)
 {
 
   IParticleFamily* m_particles_family = item_family->toParticleFamily();
-  for (Integer ipart=0 ; ipart<particules_to_move.size() ; ipart++){
+  ENUMERATE_PARTICLE (part_i, toAssignCellParticlesGroup) {
 
-    info() << " ipart vaut " << ipart;
-    
-    ParticleEnumerator part_i = particules_to_move[ipart];
+    // on récupère les coordonnées de la particule
     Particle particule = *part_i;
+    Real3 particule_coord = m_particle_coord[part_i] ;
 
-    info() << " particle Id " << part_i.localId();
-    info() << " particle Id v2 " << particles_to_move_Id[ipart];
-
+    // on récupère les coordonnées des noeuds de toutes le cellules
     ENUMERATE_CELL ( icell, allCells() ) {
       Cell cell = * icell;
-      Real3 particule_coord = m_particle_coord[part_i] ;
-
       UniqueArray<Real3> nodes_coord;
       for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
         Real3 node_coord = m_node_coord[inode] ;
         nodes_coord.add(node_coord);
       }
-        
-      // if (isCoordInCell(particule_coord, cell))
+
+      // si la particule est géométriquement dans la cellule, on associe les deux
       if (isCoordInCell(particule_coord, nodes_coord))
         m_particles_family->setParticleCell(particule, cell);
     }
 
   }
+
+
 
 }
 
