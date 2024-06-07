@@ -3,7 +3,6 @@
 #ifndef UTILSIPG_H
 #define UTILSIPG_H
 
-
 /*---------------------------------------------------------------------------*/
 /*
   Verify if the given coordinates belongs (geometrically) to the given cell.

@@ -7,6 +7,8 @@
 #include "casTest/IInitialisations.h"
 #include "Remap/IRemap.h"
 
+#include "mathUtils.h"   //  Pi
+
 struct TypesMahyco
 {
   enum eBoundaryCondition
@@ -34,8 +36,6 @@ struct TypesMahyco
     Inconnu //!< Type inconnu
   };
 };
-
-const double Pi = 3.14159265359;
 
 enum Test {
     // cas test
