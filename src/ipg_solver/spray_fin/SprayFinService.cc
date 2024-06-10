@@ -23,95 +23,64 @@ void SprayFinService::initSolverParticles() {
 /*---------------------------------------------------------------------------*/
 void SprayFinService::correctFluidVelocity() {
 
-  const Real dt (m_global_deltat());
+  const Real dt (m_global_deltat());  //  dt^n
 
-  // 1 - trouver les particules appartenant à chaque cellule *duale*
-
+  // ### Ce qu'il faudrait faire idéalement :
+  // 1 - trouver les particules appartenant à chaque *cellule duale*
   // 2 - calcul de la force de trainée aux noeuds
-
   // 3 - MaJ de la vitesse du fluide aux noeuds
 
+  // ### Ce que l'on fait pour le moment :
+  // 1 - calcul du noeud le plus proche de la particule (ce n'est pas forcément juste suivant la définition de la cellule duale)
+  // 2 - calcul de la force de trainée aux noeuds
+  // 3 - MaJ de la vitesse du fluide aux noeuds
 
-  // // // // Arcane::geometric::GeomShapeMng shape_mng = mesh();
-  // // Arcane::geometric::GeomShapeMng shape_mng(mesh(), "coucou");
-  // // // // Arcane::geometric::GeomShapeMng shape_mng;
-  // // // // GeomShapeMng shape_mng;
-  // // Arcane::geometric::GeomShapeView shape_view;
-  // // shape_mng.initialize(); // il faut initialize avant initShape
-  
-  // ENUMERATE_CELL(icell,allCells()){
+  // 0 - Réinitialisation des vecteurs des forces et du denominateur.
+  m_force.fill ( Real3::zero() );
+  m_denom.fill ( Real3::zero() );
+  ENUMERATE_NODE(inode, allNodes()){
+    m_denom[inode] = 1.;
+  }
 
-  //   // // Arcane::geometric::GeomShapeMng shape_mng(mesh());
-  //   // // Arcane::geometric::GeomShapeView shape_view;
-  //   // // shape_mng.initialize(); // il faut initialize avant initShape
-  //   // Cell cell = *icell;
-  //   // // Initialise la vue \a shape_view sur la maille \a cell
-  //   // shape_mng.initShape(shape_view,cell);
+  ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
+    Particle particle = *ipart;
+    Cell cell = particle.cell();
 
-  //   // Cell cell = * icell;
-  //   // for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
-  //   //   info() << "Nodes= " << m_node_coord[inode];
-  //   // }   
-    
-   
+    // 1 - chercher à quel noeud appartient la particule
+    //     pour le moment, on considère que la particule appartient au noeud le plus proche
+    Real distance_min=1e30;
+    Node node_proche;
+    for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+      Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
+      if (distance < distance_min){
+        distance = distance_min;
+        node_proche=*inode;
+      }
+    }
 
-  // }
+    // 2 - calcul de la force de traînée aux noeuds
+    //     (ajout de la contribution de la particule à son noeud)
+    Real Np=m_particle_weight[ipart];
+    Real mp=4./3.*Pi*pow(m_particle_radius[ipart], 3.)*m_particle_density[ipart];
+    Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();  // TODO: eviter de répéter l'option gravity qui est deja dans mahyco.axl
+    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];    // WARNING: vérifier que m_node_volume[] est bien mis à jour par Mahyco !!
+    Real Cd=compute_Cd();
 
-  // // VariableNodeReal3& node_coord = {0.,0.,0.};
-  // // ENUMERATE_CELL(icell,allCells()){
-  // //   Cell cell = *icell;
-  // //   info() << "Node0=" << node_coord[cell.node(0)];
-  // //   info() << "Node2=" << node_coord[cell.node(2)];
-  // //   Real3 middle = (node_coord[cell.node(3)] + node_coord[cell.node(4)]) / 2.0;
-  // // }
-  
-  // // // Arcane::geometric::GeomShapeMng& shape_mng = *mesh();
-  // // Arcane::geometric::GeomShapeMng shape_mng = mesh();
-  // // // Arcane::geometric::GeomShapeMng shape_mng(mesh());
-  // // Arcane::geometric::GeomShapeView shape;
+    Real3 Dp;
+    Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
+    Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
+    Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
 
-  // // Real3 my_point={0., 0., 0.};
-  
-  // // ENUMERATE_CELL(icell, allCells()){
+    Real3 one={1., 1., 1.};
+    m_denom[node_proche] += dt/m_node_mass[node_proche]*Np*(mp*Dp)/(one + dt*Dp);
+    m_force[node_proche] += dt/m_node_mass[node_proche]*Np*(mp*Dp)/(one + dt*Dp)*up_chapo;
+  }
 
-  // //   shape_mng.initShape(shape,*icell);
-
-  // //   info() << "mon point " << my_point << " is inside the cell " << shape.node(0) << shape.node(1) << shape.node(2) << shape.node(3) << " ? Answer: "; 
-
-  // //   // bool toto = ProjectionInfo::isInside(shape.node(0),shape.node(1),shape.node(2),my_point);
-  // //   // bool toto = isInside(shape.node(0),shape.node(1),shape.node(2),my_point);
-
-  // //   // info() << "mon point " << my_point << " is inside the cell " << shape.node(0) << shape.node(1) << shape.node(2) << shape.node(3) << " ? Answer: " << (isInside(shape.node(0),shape.node(1),shape.node(2),my_point) || isInside(shape.node(3),shape.node(1),shape.node(2),my_point)); 
-
-  // //   // Real3 middle = (shape.node(3) + shape.node(4)) / 2.0;
-
-  // // }
-
-
-  // ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
-
-  //   info() << "Particle " << part_i.localId() << " has cell : " << part_i->hasCell() ;
-
-  //   Particle particule = *part_i;
-
-  //   // Cell cell = * icell;
-
-  //   // particule.cell();
-    
-  //   // setParticleCell(particule, cellule);
-    
-  //   info() << "Particle " << part_i.localId() << " has cell : " << part_i->hasCell() ;
-    
-  // }
-  
-  // ENUMERATE_NODE ( inode, allNodes() ) {
-  //   Node node = *inode;
-  //   m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
-  // }
-  // q. est-ce que je peux erase et utiliser m_force ?
-  // ou est-ce que je dois creer une nouvelle variable ?
-
-  
+  // 3 - MaJ de la vitesse du fluide
+  ENUMERATE_NODE(inode, allNodes()){
+    m_velocity[inode] += m_force[inode];
+    m_velocity[inode] /= m_denom[inode];
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -121,6 +90,37 @@ void SprayFinService::correctFluidVelocity() {
 /*---------------------------------------------------------------------------*/
 void SprayFinService::updateParticleVelocity() {
 
+  const Real dt (m_global_deltat());  //  dt^n
+
+  ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
+
+    Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();
+
+    Particle particle = *ipart;
+    Cell cell = particle.cell();
+    
+    // chercher à quel noeud appartient la particule
+    // pour le moment, on considère que la particule appartient au noeud le plus proche
+    Real distance_min=1e30;
+    Node node_proche;
+    for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+      Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
+      if (distance < distance_min){
+        distance = distance_min;
+        node_proche=*inode;
+      }
+    }
+
+    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
+    Real Cd=compute_Cd();
+    Real3 Dp;
+    Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
+    Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
+    Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
+
+    Real3 one={1., 1., 1.};
+    m_particle_velocity[ipart] = ( up_chapo + dt*Dp*m_velocity[node_proche] )/( one + dt*Dp );
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -140,6 +140,24 @@ void SprayFinService::updateParticlePosition() {
   }
 }
 
+/*---------------------------------------------------------------------------*/
+/** 
+      Calcul du coefficient de traînée.
+
+      Pour le moment, on se limite au cas Re_p -> infinity
+*/
+/*---------------------------------------------------------------------------*/
+
+Real SprayFinService::compute_Cd(){
+
+  // TODO if necessary: add fluid viscosity for case Re_p < 1000
+  
+  // Re_p = 2.*m_density*m_particle_radius/fluid_viscosity*abs(m_velocity_n[]-m_particle_velocity);
+  // if (Re_p < 1000.)
+  //   return 24./Re_p * (1. + 1./6.* pow(Re_p, 2./3.));
+  // else
+  return 0.424;
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

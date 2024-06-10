@@ -9,19 +9,46 @@
     <!-- variables particules -->
     <variable field-name="particle_coord" name="ParticleCoordinates" family-name="AllParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_velocity" name="ParticleVelocity" family-name="AllParticles" data-type="real3" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_radius" name="ParticleRadius" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_weight" name="ParticleWeight" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_density" name="ParticleDensity" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+
+    <variable field-name="denom" name="DenomTraineeIpg" data-type="real3" item-kind="node"
+              dim="0" dump="false" need-sync="false" />
+
+
     <!-- variables fluides -->
     <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
-	    dim="0" dump="true" need-sync="true" />
+              dim="0" dump="true" need-sync="true" />
+    <variable field-name="velocity_n" name="VelocityN" data-type="real3" item-kind="node"
+	            dim="0" dump="true" need-sync="true" />
+    <variable field-name="node_mass" name="NodeMass" data-type="real" item-kind="node"
+              dim="0" dump="true" need-sync="true" />
+    <variable field-name="node_volume" name="NodeVolum" data-type="real" item-kind="node"
+	            dim="0" dump="false" need-sync="false" />
+    <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	          dim="0" dump="true" need-sync="true" />
+  
+    <variable field-name="force" name="Force" data-type="real3" item-kind="node"
+              dim="0" dump="false" need-sync="false" />  
+
   </variables>
 
 
 
-  <!-- <options> -->
-  <!--   <simple name="ajout-pressure-gradient" type="bool" default="0"> -->
-  <!--     <description>Ajout du gradient de pression dans l'équation de l'accélération des particules.</description> -->
-  <!--   </simple> -->
+  <options>
+    <!--   <simple name="ajout-pressure-gradient" type="bool" default="0"> -->
+    <!--     <description>Ajout du gradient de pression dans l'équation de l'accélération des particules.</description> -->
+    <!--   </simple> -->
 
-  <!-- </options> -->
+    <!-- WARNING: l'option gravity est aussi dans mahyco.axl, 
+         il faut donc la déclarer deux fois dans le jeu de données si on l'utilise... -->
+    <simple name="gravity" type="real3" default="0. 0. 0.">
+      <description>Force de gravité </description>
+    </simple>
+
+  </options>
 
 </service>
 

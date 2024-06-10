@@ -6,11 +6,12 @@
 #include "arcane/IParticleFamily.h"
 #include "arcane/IMesh.h"
 #include "arcane/IItemFamily.h"
-// #include "arcane/utils/Real3.h"
+#include "arcane/utils/Real3.h"
 
 #include "ipg_solver/ISprayType.h"
 #include "ipg_solver/spray_fin/SprayFin_axl.h"
 
+#include "mathUtils.h"  // Pi
 
 
 using namespace Arcane;
@@ -57,6 +58,10 @@ public:
  private:
   IParticleFamily* m_particles_family;
   ParticleGroup activeParticlesGroup;
+  /** 
+      calcul du coefficient de traînée
+   */
+  virtual Real compute_Cd();
 };
 
 #endif
