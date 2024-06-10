@@ -10,6 +10,7 @@
     <variable field-name="particle_radius" name="ParticleRadius" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_weight" name="ParticleWeight" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
+    <variable field-name="particle_density" name="ParticleDensity" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
   </variables>
 
