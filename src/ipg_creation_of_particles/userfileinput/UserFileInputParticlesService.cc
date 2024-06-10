@@ -72,7 +72,7 @@ void UserFileInputParticlesService::createParticles()
 
     IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
     ParticleGroup activeParticlesGroup = item_family->findGroup("activeItem");
-    
+
     // ### on récupère l'Id de toutes les particules à injecter
     UniqueArray<Int32> particles_to_move;
     ENUMERATE_PARTICLE (part_i, toBeCreatedParticlesGroup) {
@@ -98,10 +98,12 @@ void UserFileInputParticlesService::createParticles()
 
     // on vérifie que toutes les particules pour lesquelles il fallait affecter une cellule sont dans une cellule.
     ENUMERATE_PARTICLE (part_i, toAssignCellParticlesGroup) {
-      if (!(part_i->hasCell()))
-        info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. ";
-      else
-        info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
+      if (!(part_i->hasCell())){
+        info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. We remove it from the group of active particles.";
+        activeParticlesGroup.removeItems(particles_to_move);
+      }
+      // else
+      //   info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
     }
 
     if (!particles_to_move.empty()) {

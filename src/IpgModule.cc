@@ -114,14 +114,6 @@ correctFluidVelocity()
 void IpgModule::
 writeParticleOutput()
 {
-
-  // Pour test des sorties uniquement, en attendant que les variables soient calculées correctement
-  ENUMERATE_PARTICLE(part_i, activeParticlesGroup) {
-    m_particle_weight[part_i] = part_i.localId();
-    m_particle_radius[part_i] = part_i.localId() * 2.0 ;
-    m_particle_temperature[part_i] = 42.;
-  }
-    
   options()->getIpgOutput()->writeOutput(m_particles_family->allItems());
 }
 
