@@ -157,7 +157,7 @@ updateParticleCell()
       // mais il n'y a pas de removeParticles dans arcane pour supprimer la particule de m_particle_family
       UniqueArray<Int32> particle_to_remove;
       if (particle_is_out){
-        info() << "Particle " << ipart.localId() << " with position " << m_particle_coord[ipart] << " is out of the domain and has been removed.";
+        info() << "Particle " << ipart.localId() << " with position " << m_particle_coord[ipart] << " is now out of the domain and has been removed.";
         particle_to_remove.add(ipart.localId());
         activeParticlesGroup.removeItems(particle_to_remove);
       }

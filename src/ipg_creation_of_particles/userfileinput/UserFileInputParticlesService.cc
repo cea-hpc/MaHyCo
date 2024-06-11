@@ -100,7 +100,9 @@ void UserFileInputParticlesService::createParticles()
     ENUMERATE_PARTICLE (part_i, toAssignCellParticlesGroup) {
       if (!(part_i->hasCell())){
         info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. We remove it from the group of active particles.";
-        activeParticlesGroup.removeItems(particles_to_move);
+        UniqueArray<Int32> particle_to_remove;
+        particle_to_remove.add(part_i.localId());
+        activeParticlesGroup.removeItems(particle_to_remove);
       }
       // else
       //   info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
