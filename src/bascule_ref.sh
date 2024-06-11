@@ -75,37 +75,37 @@ function main {
 
       if [ "$test1" != "" ] ; then  
         # cas parallèle avec 4 sd dans une direction
-	if [ "$test2" != "" ] ; then  
+	    if [ "$test2" != "" ] ; then  
           # Découpage 4x2 = 8 sd
           echo "----> Exécution du cas sur 8 procs..."
           mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
           RUN_PROC="cas sur 8 procs"
-	else
+	    else
           # Découpage 4x1 = 4 sd
           echo "----> Exécution du cas sur 4 procs..."
           mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
           RUN_PROC="cas sur 4 procs"
-	fi
-       else
-          # Découpage nsd "sans 4"
-          if [ "$test3" != "" ] ; then
-            # Découpage 2x2x2
-            echo "----> Exécution du cas sur 8 procs..."
-            mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
-            RUN_PROC="cas sur 8 procs"
-	  else 
-            if [ "$test4" != "" ] ; then  
-              # Découpage 2x2
-              echo "----> Exécution du cas sur 4 procs..."
-              mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
-              RUN_PROC="cas sur 4 procs"
-            else  
-              # nsd = rien => cas séquentiel
-              echo "----> Exécution du cas séquentiel..."
-              $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
-              RUN_PROC="cas sur 1 proc"
-            fi
-          fi  # test_3
+	    fi
+      else
+        # Découpage nsd "sans 4"
+        if [ "$test3" != "" ] ; then
+          # Découpage 2x2x2
+          echo "----> Exécution du cas sur 8 procs..."
+          mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          RUN_PROC="cas sur 8 procs"
+	    else 
+        if [ "$test4" != "" ] ; then  
+          # Découpage 2x2
+          echo "----> Exécution du cas sur 4 procs..."
+          mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          RUN_PROC="cas sur 4 procs"
+        else  
+          # nsd = rien => cas séquentiel
+          echo "----> Exécution du cas séquentiel..."
+          $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          RUN_PROC="cas sur 1 proc"
+        fi
+      fi  # test_3
 	fi  # test_1
 
 	# Lancement en protection - reprise
