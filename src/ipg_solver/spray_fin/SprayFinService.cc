@@ -64,7 +64,7 @@ void SprayFinService::correctFluidVelocity() {
     Real mp=4./3.*Pi*pow(m_particle_radius[ipart], 3.)*m_particle_density[ipart];
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();  // TODO: eviter de répéter l'option gravity qui est deja dans mahyco.axl
     Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];    // WARNING: vérifier que m_node_volume[] est bien mis à jour par Mahyco !!
-    Real Cd=compute_Cd();
+    Real Cd=computeCd();
 
     Real3 Dp;
     Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
@@ -112,7 +112,7 @@ void SprayFinService::updateParticleVelocity() {
     }
 
     Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
-    Real Cd=compute_Cd();
+    Real Cd=computeCd();
     Real3 Dp;
     Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
     Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
@@ -148,7 +148,7 @@ void SprayFinService::updateParticlePosition() {
 */
 /*---------------------------------------------------------------------------*/
 
-Real SprayFinService::compute_Cd(){
+Real SprayFinService::computeCd(){
 
   // TODO if necessary: add fluid viscosity for case Re_p < 1000
   

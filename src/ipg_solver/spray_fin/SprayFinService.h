@@ -63,7 +63,7 @@ private:
   /** 
       calcul du coefficient de traînée
    */
-  virtual Real compute_Cd();
+  virtual Real computeCd();
 
 };
 
