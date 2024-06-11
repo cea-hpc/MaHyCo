@@ -130,7 +130,7 @@ void POINTTRIPLEService::initVar(Integer dim, double* densite_initiale, double* 
 bool POINTTRIPLEService::hasReverseOption() { return options()->reverseOption;}
 Real POINTTRIPLEService::getReverseParameter() { return options()->parametre;}
 bool POINTTRIPLEService::isInternalModel() { return true; }
-void POINTTRIPLEService::initUtilisateur() { }
+void POINTTRIPLEService::initUtilisateur(Real3 vitesse_initiale) { }
 /*---------------------------------------------------------------------------*/
 
 ARCANE_REGISTER_SERVICE_POINTTRIPLE(POINTTRIPLE, POINTTRIPLEService);
