@@ -12,6 +12,7 @@
 #include "ipg_solver/spray_fin/SprayFin_axl.h"
 
 #include "mathUtils.h"  // Pi
+#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
 
 
 using namespace Arcane;
@@ -55,14 +56,18 @@ public:
    */
   virtual void updateParticlePosition();
 
- private:
+ 
+private:
   IParticleFamily* m_particles_family;
   ParticleGroup activeParticlesGroup;
   /** 
       calcul du coefficient de traînée
    */
   virtual Real compute_Cd();
+
 };
+
+
 
 #endif
 

@@ -9,6 +9,8 @@
 
 #include "Ipg_axl.h"
 
+#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
+
 using namespace Arcane;
 
 /**
@@ -49,6 +51,9 @@ class IpgModule
 
   /** Mise à jour de la position des particules */
   virtual void updateParticlePosition();
+
+  /** Mise à jour des cellules auxquelles appartiennent les particules */
+  virtual void updateParticleCell();
 
   /** Ecriture des sorties des particules */
   virtual void writeParticleOutput();

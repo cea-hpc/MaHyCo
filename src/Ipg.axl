@@ -12,6 +12,10 @@
     <variable field-name="particle_temperature" name="ParticleTemperature" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
     <variable field-name="particle_density" name="ParticleDensity" family-name="AllParticles" data-type="real" item-kind="particle" dim="0" dump="true"/>
 
+
+    <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	            dim="0" dump="true" need-sync="true" />
+
   </variables>
 
   
@@ -23,6 +27,7 @@
     <entry-point method-name="correctFluidVelocity" name="CorrectFluidVelocity" where="compute-loop" property="none" />
     <entry-point method-name="updateParticlePosition" name="UpdateParticlePosition" where="compute-loop" property="none" />
     <entry-point method-name="updateParticleVelocity" name="UpdateParticleVelocity" where="compute-loop" property="none" />
+    <entry-point method-name="updateParticleCell" name="UpdateParticleCell" where="compute-loop" property="none" />
     <entry-point method-name="writeParticleOutput" name="WriteParticleOutput" where="compute-loop" property="none" />
   </entry-points>
 

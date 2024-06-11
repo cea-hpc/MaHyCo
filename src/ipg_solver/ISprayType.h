@@ -41,6 +41,7 @@ public:
       mise à jour de la position des particules
    */
   virtual void updateParticlePosition() = 0;
+
 };
 
 #endif

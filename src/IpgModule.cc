@@ -106,6 +106,69 @@ correctFluidVelocity()
   options()->getSprayType()->correctFluidVelocity();
 }
 
+
+/*---------------------------------------------------------------------------*/
+/**
+ * \brief Mise à jour des cellules auxquelles appartiennent les particules
+ */
+/*---------------------------------------------------------------------------*/
+
+void IpgModule::
+updateParticleCell()
+{
+    ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
+
+    // on récupère les coordonnées de la particule et de sa cellule
+    Particle particle = *ipart;
+    Real3 particule_coord = m_particle_coord[ipart] ;
+    
+    Cell cell = particle.cell();
+    UniqueArray<Real3> nodes_coord;
+    for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+      Real3 node_coord = m_node_coord[inode] ;
+      nodes_coord.add(node_coord);
+    }
+
+    // on vérifie si la particule est géométriquement dans la cellule qui lui est associée
+    // si ce n'est pas le cas, on parcourt toutes les cellules pour lui associer la bonne
+    if (!(isCoordInCell(particule_coord, nodes_coord))){
+
+      // on doit également vérifier que la cellule n'es pas sortie du domaine
+      bool particle_is_out = 1;
+      
+      ENUMERATE_CELL ( icell, allCells() ) {
+        Cell cell = * icell;
+        UniqueArray<Real3> nodes_coord_new;
+        for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+          Real3 node_coord_new = m_node_coord[inode] ;
+          nodes_coord_new.add(node_coord_new);
+        }
+
+        // si la particule est géométriquement dans la cellule, on associe les deux
+        // et on précise que la particule n'est pas en dehors du domaine
+        if (isCoordInCell(particule_coord, nodes_coord_new)){
+          m_particles_family->setParticleCell(particle, cell);
+          particle_is_out=0;
+          info() << "Particle " << ipart.localId() << " with position " << m_particle_coord[ipart] << " has a new cell with nodes coordinates " << nodes_coord_new;
+        }
+      }
+
+      // si la particules est sortie, on la retire du groupe des particules actives
+      // mais il n'y a pas de removeParticles dans arcane pour supprimer la particule de m_particle_family
+      UniqueArray<Int32> particle_to_remove;
+      if (particle_is_out){
+        info() << "Particle " << ipart.localId() << " with position " << m_particle_coord[ipart] << " is out of the domain and has been removed.";
+        particle_to_remove.add(ipart.localId());
+        activeParticlesGroup.removeItems(particle_to_remove);
+      }
+
+    }
+  }
+
+}
+
+
+
 /*---------------------------------------------------------------------------*/
 /**
  * \brief Ecriture des sorties
