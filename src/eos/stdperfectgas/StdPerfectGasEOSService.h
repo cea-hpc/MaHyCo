@@ -49,17 +49,17 @@ public:
    *  Initialise l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et l'énergie interne. 
    */
-  virtual void initEOS(IMeshEnvironment* env);
+  virtual void initEOS(IMeshEnvironment* env) override;
   /** 
    *  Applique l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et la pression. 
    */
-  virtual void applyEOS(IMeshEnvironment* env);
+  virtual void applyEOS(IMeshEnvironment* env) override;
    /** 
    *  Applique l'équation d'état au groupe de mailles passé en argument
    *  et calcule la vitesse du son et la pression pour une cellule
    */
-  virtual void applyOneCellEOS(IMeshEnvironment* env, EnvCell ev);
+  virtual void applyOneCellEOS(IMeshEnvironment* env, EnvCell ev) override;
   /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
