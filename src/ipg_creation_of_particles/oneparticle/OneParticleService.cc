@@ -75,8 +75,12 @@ void OneParticleService::assignParticleToCell()
   // on vérifie que toutes les (la) particules sont dans une cellule.
   // les particules en dehors du domaine maillé n'en ont pas.
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
-    if (!(part_i->hasCell()))
-      info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. ";
+    if (!(part_i->hasCell())){
+      info() << "WARNING: Particle " << part_i.localId() << " located in " << m_particle_coord[part_i] << " has no cell. We remove it from the group of active particles.";
+      UniqueArray<Int32> particle_to_remove;
+      particle_to_remove.add(part_i.localId());
+      activeParticlesGroup.removeItems(particle_to_remove);
+    }
     else
       info() << "La particule " << part_i.localId() << " de coordonnées " << m_particle_coord[part_i] << " appartient à une cellule";
   }
