@@ -38,6 +38,8 @@ private:
   SharedArray<String> m_variable_list_real3;
   /** famille de particules*/
   IItemFamily* m_item_family;
+  /** compteur du nombre de sorties, pour nomer les fichiers de sortie */
+  Integer i_ipg_output;
 };
 
 #endif  // IPG_OUTPUT_VTKASCIISERVICE_H

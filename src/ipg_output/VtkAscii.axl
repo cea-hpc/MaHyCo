@@ -16,5 +16,11 @@
 		<simple name="variable" type="string" minOccurs="1" maxOccurs="unbounded">
 			<description>Nom des variables particules à sortir</description>
 		</simple>
+
+    <!-- fréquence des sorties -->
+    <simple name="output-frequency" type="real" default="0.">
+      <description>frequence des sorties </description>
+    </simple>
+
 	</options>
 </service>

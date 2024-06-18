@@ -33,6 +33,9 @@ void VtkAsciiService::initOutput()
        m_variable_list_real3.push_back(var_name);
      }
   }
+
+  // initialisation du compteur de sorties
+  i_ipg_output=0;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -46,87 +49,97 @@ void VtkAsciiService::initOutput()
 void VtkAsciiService::writeOutput(ParticleGroup particles)
 {
   const Real time = m_global_time();
-  ostringstream f;
-  f << "output/" << options()->getFilename() << "_" << time << ".vtp";
+  const Real time_old = m_global_time()-m_global_deltat();
+  const Real freq = options()->getOutputFrequency();
+  
+  if ( (i_ipg_output*freq < time) && (i_ipg_output*freq >= time_old)){
 
-  info()<< "écriture dans le fichier " << f.str();
+    ostringstream f;
+    // f << "output/" << options()->getFilename() << "_" << time << ".vtp";
+    f << "output/" << options()->getFilename() << "_" << i_ipg_output << ".vtp";
+    i_ipg_output++;
 
-  std::ofstream write_file(f.str());
+  
+    info()<< "écriture dans le fichier " << f.str();
 
-  if (!write_file.is_open()) {
-     std::cout << "ERREUR: Impossible d'ouvrir le fichier." << std::endl;
-  }
+    std::ofstream write_file(f.str());
 
-  int size = particles.size();
-
-  // Fonction d'écriture des variables réelles
-  std::function<void(const String&)> write_variable_real = [&](const String& var_name){
-    write_file << "      <DataArray type=\"Float32\" Name=\""<< var_name << "\" format=\"ascii\">\n";
-    write_file << "      ";
-    IVariable* ivar = m_item_family->findVariable(var_name);
-    VariableParticleReal var(ivar);
-    ENUMERATE_PARTICLE (i_part, particles) {
-      write_file << var[i_part] << " ";
+    if (!write_file.is_open()) {
+      std::cout << "ERREUR: Impossible d'ouvrir le fichier." << std::endl;
     }
-    write_file << "\n      </DataArray>\n";
-  };
 
-  // Fonction d'écriture des variables Real3
-  std::function<void(const String&)> write_variable_real3 = [&](const String& var_name){
-    write_file << "      <DataArray type=\"Float32\" Name=\""<< var_name << "\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-    write_file << "      ";
-    IVariable* ivar = m_item_family->findVariable(var_name);
-    VariableParticleReal3 var(ivar);
-    ENUMERATE_PARTICLE (i_part, particles) {
-      write_file << var[i_part].x << " " << var[i_part].y << " " << var[i_part].z << " \n";
-    }
-    write_file << "\n      </DataArray>\n";
-  };
+    int size = particles.size();
 
-  // Ecriture du fichier de sortie
-  write_file << "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\"> \n";
-  write_file << "<PolyData>\n";
-  write_file << "<Piece NumberOfPoints=\"" << size << "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
-  write_file << "    <PointData Scalars=\"Temperature\" Vectors=\"Velocity\">\n";
-  // champ vectoriel
+    // Fonction d'écriture des variables réelles
+    std::function<void(const String&)> write_variable_real = [&](const String& var_name){
+      write_file << "      <DataArray type=\"Float32\" Name=\""<< var_name << "\" format=\"ascii\">\n";
+      write_file << "      ";
+      IVariable* ivar = m_item_family->findVariable(var_name);
+      VariableParticleReal var(ivar);
+      ENUMERATE_PARTICLE (i_part, particles) {
+        write_file << var[i_part] << " ";
+      }
+      write_file << "\n      </DataArray>\n";
+    };
+
+    // Fonction d'écriture des variables Real3
+    std::function<void(const String&)> write_variable_real3 = [&](const String& var_name){
+      write_file << "      <DataArray type=\"Float32\" Name=\""<< var_name << "\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+      write_file << "      ";
+      IVariable* ivar = m_item_family->findVariable(var_name);
+      VariableParticleReal3 var(ivar);
+      ENUMERATE_PARTICLE (i_part, particles) {
+        write_file << var[i_part].x << " " << var[i_part].y << " " << var[i_part].z << " \n";
+      }
+      write_file << "\n      </DataArray>\n";
+    };
+
+    // Ecriture du fichier de sortie
+    write_file << "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\"> \n";
+    write_file << "<PolyData>\n";
+    write_file << "<Piece NumberOfPoints=\"" << size << "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
+    write_file << "    <PointData Scalars=\"Temperature\" Vectors=\"Velocity\">\n";
+    // champ vectoriel
     for (const String& name : m_variable_list_real3) {
-    write_variable_real3(name);
-  }
-  // champ scalaire
-  for (const String& name : m_variable_list_real) {
-    write_variable_real(name);
-  }
-  write_file << "    </PointData>\n";
-  write_file << "    <CellData>\n";
-  write_file << "    </CellData>\n";
-  write_file << "    <Points>\n";
- /* write_file << "      <DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\">\n";
-  // Coordonnées des particules
-  write_file << "        0 0 0\n";
-  write_file << "        1 1 0\n";
-  write_file << "        2 1 0\n";
-  write_file << "        2 4 0\n";
-  write_file << "        2 2 0\n";
-  write_file << "      </DataArray>\n";*/
-  write_variable_real3("ParticleCoordinates");
-  write_file << "    </Points>\n";
-  write_file << "    <Verts>\n";
-  write_file << "      <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
-  // liste des particules de 0 à size - 1
-  write_file << "        ";
-  for (int i=0 ; i < size; i++) {
-    write_file << i << " ";
-  }
-  write_file << "\n      </DataArray>\n";
-  write_file << "      <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
-  write_file << "       " << size << "\n";
-  write_file << "      </DataArray>\n";
-  write_file << "    </Verts>\n";
-  write_file << "  </Piece>\n";
-  write_file << "</PolyData>\n";
-  write_file << "</VTKFile>\n";
+      write_variable_real3(name);
+    }
+    // champ scalaire
+    for (const String& name : m_variable_list_real) {
+      write_variable_real(name);
+    }
+    write_file << "    </PointData>\n";
+    write_file << "    <CellData>\n";
+    write_file << "    </CellData>\n";
+    write_file << "    <Points>\n";
+    /* write_file << "      <DataArray type=\"Float64\" Name=\"Points\" NumberOfComponents=\"3\" format=\"ascii\">\n";
+    // Coordonnées des particules
+    write_file << "        0 0 0\n";
+    write_file << "        1 1 0\n";
+    write_file << "        2 1 0\n";
+    write_file << "        2 4 0\n";
+    write_file << "        2 2 0\n";
+    write_file << "      </DataArray>\n";*/
+    write_variable_real3("ParticleCoordinates");
+    write_file << "    </Points>\n";
+    write_file << "    <Verts>\n";
+    write_file << "      <DataArray type=\"Int64\" Name=\"connectivity\" format=\"ascii\">\n";
+    // liste des particules de 0 à size - 1
+    write_file << "        ";
+    for (int i=0 ; i < size; i++) {
+      write_file << i << " ";
+    }
+    write_file << "\n      </DataArray>\n";
+    write_file << "      <DataArray type=\"Int64\" Name=\"offsets\" format=\"ascii\">\n";
+    write_file << "       " << size << "\n";
+    write_file << "      </DataArray>\n";
+    write_file << "    </Verts>\n";
+    write_file << "  </Piece>\n";
+    write_file << "</PolyData>\n";
+    write_file << "</VTKFile>\n";
 
-  write_file.close();
+    write_file.close();
+
+  }
 }
 
 
