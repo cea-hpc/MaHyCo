@@ -35,7 +35,7 @@ void VtkAsciiService::initOutput()
   }
 
   // initialisation du compteur de sorties
-  i_ipg_output=0;
+  i_ipg_output=1;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -97,6 +97,9 @@ void VtkAsciiService::writeOutput(ParticleGroup particles)
     // Ecriture du fichier de sortie
     write_file << "<VTKFile type=\"PolyData\" version=\"1.0\" byte_order=\"LittleEndian\" header_type=\"UInt64\"> \n";
     write_file << "<PolyData>\n";
+    write_file.setf(std::ios_base::fixed, std::ios_base::floatfield ); // format for same number of digit than time in ensight.case
+    write_file << "<FieldData> <DataArray type=\"Float64\" Name=\"TimeValue\" NumberOfTuples=\"1\">" << std::setprecision(10) << m_global_time() << "</DataArray>  </FieldData>\n"; // output time
+    write_file.setf(std::ios_base::fmtflags(), std::ios_base::floatfield );  // format by default
     write_file << "<Piece NumberOfPoints=\"" << size << "\" NumberOfVerts=\"1\" NumberOfLines=\"0\" NumberOfStrips=\"0\" NumberOfPolys=\"0\">\n";
     write_file << "    <PointData Scalars=\"Temperature\" Vectors=\"Velocity\">\n";
     // champ vectoriel
