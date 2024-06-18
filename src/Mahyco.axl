@@ -533,7 +533,7 @@
     <simple name="Tdebut" type="real" default="0.">
       <description>Valeur du debut de la CDL de pression</description>
     </simple>
-    <simple name="Tfin" type="real" default="1000.">
+    <simple name="Tfin" type="real" default="1e10">
       <description>Valeur de la fin de la CDL de pression</description>
     </simple>
     <simple name="fichier" type="string" default="RIEN">
