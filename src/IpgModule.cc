@@ -177,7 +177,7 @@ updateParticleCell()
 void IpgModule::
 writeParticleOutput()
 {
-  options()->getIpgOutput()->writeOutput(m_particles_family->allItems());
+  options()->getIpgOutput()->writeOutput(activeParticlesGroup);
 }
 
 /*---------------------------------------------------------------------------*/
