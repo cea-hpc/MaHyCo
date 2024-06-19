@@ -1,15 +1,36 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 #include "NodeWatchingService.h"
+#include "arcane/IParallelMng.h"
 
 using namespace Arcane;
-using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
 /* Initialisation de la surveillance temporelle du noeud                     */
 /*---------------------------------------------------------------------------*/
 void NodeWatchingService::init()
 {
-   
+  Integer rank = subDomain()->parallelMng()->commRank();
+  Real3 borneSupNoeud = options()->borneSup; 
+  Real3 borneInfNoeud = options()->borneInf; 
+  // Sortie Time History
+  bool trouve = false;
+
+  m_noeud_th = -1;
+  ENUMERATE_NODE(inode, allNodes()){
+      Node node = *inode;
+      if ((borneInfNoeud.x < m_node_coord[node].x) && (m_node_coord[node].x < borneSupNoeud.x) 
+      && (borneInfNoeud.y < m_node_coord[node].y) && (m_node_coord[node].y < borneSupNoeud.y)
+      && (borneInfNoeud.z < m_node_coord[node].z) && (m_node_coord[node].z < borneSupNoeud.z)
+      && node.isOwn() ) {
+      m_noeud_th = node.localId();
+      trouve = true;
+      }
+  }
+  if (!trouve) {
+    std::cout << "Pas de noeud trouvé pour le time history dans ce sous-domaine ( m_noeud_th = " << m_noeud_th() << " )" << std::endl;
+  } else {
+    std::cout << " Noeud " << m_noeud_th() << " trouvé dans le sous-domaine " << rank << std::endl;
+  }
 }
 
 /*---------------------------------------------------------------------------*/
@@ -17,7 +38,28 @@ void NodeWatchingService::init()
 /*---------------------------------------------------------------------------*/
 void NodeWatchingService::write()
 {
+ 
+  std::ofstream fichier_noeud("time-history_noeud.txt", std::ofstream::app );
 
+  Integer period = options()->periode;
+  if (m_global_iteration()%period !=0) return;
+
+  if (fichier_noeud.is_open()) { 
+    ENUMERATE_NODE(inode, allNodes()){
+      Node node = *inode;
+      if ( m_noeud_th() == node.localId()) {
+          fichier_noeud << " Temps " << m_global_time() << " ";
+          fichier_noeud << m_noeud_th() << " ";
+          fichier_noeud << m_node_coord[node].x << " ";
+          fichier_noeud << m_node_coord[node].y << " ";
+          fichier_noeud << m_node_coord[node].z << " ";
+          fichier_noeud << m_velocity[node].x << " ";
+          fichier_noeud << m_velocity[node].y << " ";
+          fichier_noeud << m_velocity[node].z << " ";
+          fichier_noeud << std::endl;
+      }
+    }
+  }
 }
 
 

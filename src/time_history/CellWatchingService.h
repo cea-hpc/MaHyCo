@@ -1,38 +1,43 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-#ifndef NODEWATCHINGSERVICE_H
-#define NODEWATCHINGSERVICE_H
+#ifndef CELLWATCHINGSERVICE_H
+#define CELLWATCHINGSERVICE_H
 
 #include "arcane/ArcaneTypes.h"
 #include "arcane/utils/Real3.h"
 #include "arcane/core/materials/MeshMaterialVariableRef.h"
+#include "arcane/materials/IMeshMaterialMng.h"
 #include "time_history/ITimeHistoryCategory.h"
-#include "time_history/NodeWatching_axl.h"
+#include "time_history/CellWatching_axl.h"
 
 using namespace Arcane;
+using namespace Arcane::Materials;
 
 /**
  * Classe implémentant l'écriture des grandeurs sur un noeud au cours du temps
  */
-class NodeWatchingService 
-: public ArcaneNodeWatchingObject
+class CellWatchingService 
+: public ArcaneCellWatchingObject
 {
 public:
   /** Constructeur de la classe */
-  NodeWatchingService(const ServiceBuildInfo & sbi)
-    : ArcaneNodeWatchingObject(sbi) {}
+  CellWatchingService(const ServiceBuildInfo & sbi)
+    : ArcaneCellWatchingObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~NodeWatchingService() {};
+  virtual ~CellWatchingService() {};
 
 public:
   /** 
    *  Initialise l'écriture des grandeurs sur le noeud choisi
    */
-  virtual void init();
+  void init();
   /** 
    *  Ecriture des sorties
    */
-  virtual void write();  
+  void write(); 
+
+ private:
+  IMeshMaterialMng* mm;
 };
 
-#endif  // NODEWATCHINGSERVICE_H
+#endif  // CELLWATCHINGSERVICE_H

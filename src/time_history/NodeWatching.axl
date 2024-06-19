@@ -5,30 +5,28 @@
   <interface name="ITimeHistoryCategory" />
 
 	<variables>
-		<!-- DENSITY -->
-	<!--	<variable field-name="density" name="Density" data-type="real" item-kind="cell"
-			dim="0" material="true" dump="true" need-sync="true" />-->
-		
-	    
 	    <!-- 	VELOCITY -->
         <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
  	    dim="0" dump="true" need-sync="true" />
-	    
 	    <!-- 	NODE COORD	 -->
         <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
-	    
-
+	    <!-- Numero Noeud pour time-History --> 
+  		<variable field-name="noeud_th" name="NoeudTh" data-type="integer" dim="0" dump="true" />  
 	</variables>
 
 	<options>
-		<!-- - - - - - Module de cisaillment  - - - - -->
-		<simple name="elastic-cst" type="real" default="1.4">
-			<description>Valeur du Module de cisaillement</description>
-		</simple>
-		<!-- - - - - - limit Elastic - - - - -->
-		<simple name="limit-elastic" type="real" default="0.0">
-			<description>Valeur de la limite d'elasticit�</description>
-		</simple>
+    <!-- - - - - - periode - - - - -->
+    <simple name="periode" type="integer" default="10">
+        <description>periode (en iterations) des sorties </description>
+    </simple>
+	<!-- - - - - - borne sup - - - - -->
+    <simple name="borne-sup" type="real3" default="0. 0. 0.">
+        <description>coord supérieur </description>
+    </simple>
+    <!-- - - - - - borne sup - - - - -->
+    <simple name="borne-inf" type="real3" default="0. 0. 0.">
+        <description>coord inférieur </description>
+    </simple>
 	</options>
 </service>
