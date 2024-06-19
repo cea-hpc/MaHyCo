@@ -195,6 +195,10 @@ hydroStartInit()
 
     InitGeometricValues();
 
+    // reinit du node volume
+    m_node_volume.fill ( 0. );
+    Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+    
     // deplacé de hydrocontinueInit
     // calcul des volumes via les cqs, differents deu calcul dans computeGeometricValues ?
     ENUMERATE_CELL ( icell, allCells() ) {
@@ -203,11 +207,20 @@ hydroStartInit()
         Real volume = 0.0;
         for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
             volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
-            m_node_volume[cell.node ( inode )] += volume;
+            // m_node_volume[cell.node ( inode )] += volume;    // fixme: si le node_volume c'est bien le volume de la cellule dual, alors c'est faux.
         }
         volume /= m_dimension;
         m_cell_volume[icell] = volume;
+
+
+        // calcul du volume des cellules duales
+        // ce qu'on propose n'est qu'une première approximation, vraisemblablement
+        // fausse suivant la définition de la cellule duale
+        for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+          m_node_volume[inode]+=one_over_nbnode*volume;
+        }
     }
+
 }
 
 /**
@@ -1095,6 +1108,11 @@ computeGeometricValues()
     }
     m_cell_cqs.synchronize();
 
+
+    // reinit du node volume
+    m_node_volume.fill ( 0. );
+    Real one_over_nbnode = m_dimension == 2 ? .25  : .125 ;
+
     ENUMERATE_CELL ( icell, allCells() ) {
         Cell cell = * icell;
         // Calcule le volume de la maille
@@ -1104,12 +1122,19 @@ computeGeometricValues()
             for ( Integer inode = 0; inode < cell.nbNode(); ++inode ) {
                 volume += math::dot ( m_node_coord[cell.node ( inode )], m_cell_cqs[icell] [inode] );
                 // pinfo() << cell.localId() << " coor " << m_node_coord[cell.node(inode)] << " et " << m_cell_cqs[icell] [inode];
-                // m_node_volume[cell.node ( inode )] += volume;
+                // m_node_volume[cell.node ( inode )] += volume; // !!! here !!!  et remise à zero du node volume ????
             }
             volume /= m_dimension;
 
             m_cell_volume[cell] = volume;
-            
+
+            // calcul du volume des cellules duales
+            // ce qu'on propose n'est qu'une première approximation, vraisemblablement
+            // fausse suivant la définition de la cellule duale
+            for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+              m_node_volume[inode]+=one_over_nbnode*volume;
+            }
+
             if ( volume < 0. ) {
                 pinfo() << " ------------------------------------------------------------";
                 pinfo() << " Volume Négatif";
