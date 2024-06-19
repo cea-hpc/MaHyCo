@@ -42,4 +42,4 @@ cd ..
 - [ ] Corriger les cas qui ne sont pas répétables d'une exécution à l'autre
 - [ ] Vérifier les changements de résultats
 - [ ] Gérer dans ces deux scripts les cas qui tournent dans plusieurs modes d'exécution (seq, para, pr)
-- [ ] Paramétrer dans la ligne de commande lamise à jour auto des résultats, l'affichage ou non du diff et l'ouverture de paraview
+- [ ] Paramétrer dans la ligne de commande la mise à jour auto des résultats, l'affichage ou non du diff et l'ouverture de paraview
