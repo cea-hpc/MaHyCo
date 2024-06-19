@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="NodeWatching" version="1.0" type="caseoption">
+
+  <description>Jeu de donnees du service NodeWatching</description>
+  <interface name="ITimeHistoryCategory" />
+
+	<variables>
+		<!-- DENSITY -->
+	<!--	<variable field-name="density" name="Density" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />-->
+		
+	    
+	    <!-- 	VELOCITY -->
+        <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
+ 	    dim="0" dump="true" need-sync="true" />
+	    
+	    <!-- 	NODE COORD	 -->
+        <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
+	    
+
+	</variables>
+
+	<options>
+		<!-- - - - - - Module de cisaillment  - - - - -->
+		<simple name="elastic-cst" type="real" default="1.4">
+			<description>Valeur du Module de cisaillement</description>
+		</simple>
+		<!-- - - - - - limit Elastic - - - - -->
+		<simple name="limit-elastic" type="real" default="0.0">
+			<description>Valeur de la limite d'elasticit�</description>
+		</simple>
+	</options>
+</service>
