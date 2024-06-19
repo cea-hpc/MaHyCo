@@ -40,31 +40,46 @@ void EnvSummationService::write()
 
   IParallelMng* pm = subDomain()->parallelMng();
   Integer my_rank = pm->commRank();
+  String filename;
 
   // Création de l'objet permettant d'ajouter des valeurs dans un historique des valeurs.
   GlobalTimeHistoryAdder global_adder(subDomain()->timeHistoryMng());
 
   for (IMeshEnvironment* env : m_environments) {
     // Calcul de la moyenne des pressions du sous-domaine.
-    Real var_subdomain = 0;
+    Real var_pressure, var_density, var_mass = 0;
     Integer nb_envcells = 0;
     ENUMERATE_ENVCELL (envcell, env) {
       if ((*envcell).globalCell().isOwn()) {
-        var_subdomain += m_pressure[envcell];
+        var_pressure += m_pressure[envcell];
+        var_density += m_density[envcell];
+        var_mass += m_cell_mass[envcell];
         // todo : trier le tableau pour avoir une somme répétable
         nb_envcells += 1;
       }
     }
  
-    // Calcul de la pression moyenne globale.
-    var_subdomain = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_subdomain);
     nb_envcells = pm->reduce(IParallelMng::eReduceType::ReduceSum, nb_envcells);
     if (nb_envcells == 0) continue; // milieu vide dans tous les sous-domaines
-    var_subdomain /= nb_envcells;
+
+    // Calcul de la pression moyenne globale.
+    var_pressure = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_pressure);
+    var_density = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_density);
+    var_mass = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_mass);
+    
+    var_pressure /= nb_envcells;
+    var_density /= nb_envcells;
+    // todo : réfléchir aux moyennes qui sont faites (intensives vs extensives, ...)
  
-    // Ajout de la valeur avg_pressure_global dans l'historique "avg_pressure". Historique global.
-    String filename = String("pressure_") + env->name();
-    global_adder.addValue(TimeHistoryAddValueArg(filename), var_subdomain);
+    // Ajout des grandeurs dans l'historique global
+    filename = String("pressure_") + env->name();
+    global_adder.addValue(TimeHistoryAddValueArg(filename), var_pressure);
+
+    filename = String("density_") + env->name();
+    global_adder.addValue(TimeHistoryAddValueArg(filename), var_density);
+
+    filename = String("mass_") + env->name();
+    global_adder.addValue(TimeHistoryAddValueArg(filename), var_mass);
   }
 }
 

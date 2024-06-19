@@ -11,15 +11,9 @@
 		  <!-- PRESSURE -->
   		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 	    	dim="0" material="true" dump="true" need-sync="true" />
-		<!-- TEMPERATURE -->
-  		<variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
-	    	dim="0" material="true" dump="true" need-sync="true" />
-  		<!-- INTERNAL ENERGY	 -->
-  		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
-	    	dim="0" material="true" dump="true" need-sync="true" />
-		<!-- 	SOUND SPEED	 -->
-  		<variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
-	    	dim="0" material="true" dump="true" need-sync="true" />
+		<!-- CELL MASS -->
+        <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
+            dim="0" material="true" dump="true" need-sync="true" />
 	</variables>
 
 	<options>
