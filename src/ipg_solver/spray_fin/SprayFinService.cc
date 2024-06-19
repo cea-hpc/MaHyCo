@@ -135,22 +135,10 @@ void SprayFinService::updateParticlePosition() {
   
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * dt;
-    info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i]  << " vel/v0 = " << m_particle_velocity[part_i]/1.;
-    info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i]  << " A(x-x0) = " << 3.85*1e-5*(m_particle_coord[part_i].x-0.05);
+    // info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i];
+    // info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i];
   }
-
-
-  
-  // ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
-  //   ISubDomain* sd = subDomain();
-
-  //   // Création de l'objet permettant d'ajouter des valeurs dans un historique des valeurs.
-  //   GlobalTimeHistoryAdder global_adder(sd->timeHistoryMng());
  
-  //   // Ajout de la valeur avg_pressure_global dans l'historique "particle_coord". Historique global.
-  //   global_adder.addValue(TimeHistoryAddValueArg("particle_coord"), m_particle_coord[part_i]);
-  // }
-  
 }
 
 /*---------------------------------------------------------------------------*/
