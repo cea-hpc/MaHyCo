@@ -49,7 +49,7 @@ target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
 # Partie TimeHistory
-add_library(TimeHistory time_history/NodeWatchingService.cc time_history/CellWatchingService.cc)
+add_library(TimeHistory time_history/NodeWatchingService.cc time_history/CellWatchingService.cc time_history/EnvSummationService.cc)
 target_include_directories(TimeHistory PUBLIC .)
 target_link_libraries(TimeHistory PUBLIC arcane_core)
 
@@ -126,6 +126,7 @@ arcane_target_add_axl(Elasto elasto/NewHypoModel)
 
 arcane_target_add_axl(TimeHistory time_history/NodeWatching)
 arcane_target_add_axl(TimeHistory time_history/CellWatching)
+arcane_target_add_axl(TimeHistory time_history/EnvSummation)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
