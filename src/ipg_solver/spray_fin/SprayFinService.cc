@@ -13,7 +13,7 @@ void SprayFinService::initSolverParticles() {
   IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles");
   m_particles_family = item_family->toParticleFamily();
   activeParticlesGroup = item_family->findGroup("activeItem");
-
+  
 }
 
 /*---------------------------------------------------------------------------*/
@@ -53,7 +53,7 @@ void SprayFinService::correctFluidVelocity() {
     for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
       Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
       if (distance < distance_min){
-        distance = distance_min;
+        distance_min = distance;
         node_proche=*inode;
       }
     }
@@ -63,7 +63,7 @@ void SprayFinService::correctFluidVelocity() {
     Real Np=m_particle_weight[ipart];
     Real mp=4./3.*Pi*pow(m_particle_radius[ipart], 3.)*m_particle_density[ipart];
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();  // TODO: eviter de répéter l'option gravity qui est deja dans mahyco.axl
-    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];    // WARNING: vérifier que m_node_volume[] est bien mis à jour par Mahyco !!
+    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
     Real Cd=computeCd();
 
     Real3 Dp;
@@ -106,7 +106,7 @@ void SprayFinService::updateParticleVelocity() {
     for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
       Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
       if (distance < distance_min){
-        distance = distance_min;
+        distance_min = distance;
         node_proche=*inode;
       }
     }
@@ -135,9 +135,22 @@ void SprayFinService::updateParticlePosition() {
   
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * dt;
-    info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i];
-    info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i];
+    info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i]  << " vel/v0 = " << m_particle_velocity[part_i]/1.;
+    info() << "Particle " << part_i.localId() << " coord = " << m_particle_coord[part_i]  << " A(x-x0) = " << 3.85*1e-5*(m_particle_coord[part_i].x-0.05);
   }
+
+
+  
+  // ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
+  //   ISubDomain* sd = subDomain();
+
+  //   // Création de l'objet permettant d'ajouter des valeurs dans un historique des valeurs.
+  //   GlobalTimeHistoryAdder global_adder(sd->timeHistoryMng());
+ 
+  //   // Ajout de la valeur avg_pressure_global dans l'historique "particle_coord". Historique global.
+  //   global_adder.addValue(TimeHistoryAddValueArg("particle_coord"), m_particle_coord[part_i]);
+  // }
+  
 }
 
 /*---------------------------------------------------------------------------*/

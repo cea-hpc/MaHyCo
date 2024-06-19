@@ -111,6 +111,10 @@ add_library(VORTEX casTest/VORTEX/VORTEXService.cc)
 target_include_directories(VORTEX PUBLIC .)
 target_link_libraries(VORTEX PUBLIC arcane_core)
 
+add_library(UNIFORM casTest/UNIFORM/UNIFORMService.cc)
+target_include_directories(UNIFORM PUBLIC .)
+target_link_libraries(UNIFORM PUBLIC arcane_core)
+
 # Partie Cas Remap
 add_library(Remap Remap/RemapADIService.cc Remap/RemapALEService.cc Remap/Remap-ordre-3.cc Remap/UtilesRemap.cc Remap/RemapADIFinal.cc Remap/UtilesRemapALE.cc Remap/DualPhaseRemap.cc)
 target_include_directories(Remap PUBLIC .)
@@ -122,7 +126,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 #-----------------------------------------------------------------------------------------------------------------
 ### edition du lien pour associer toutes les bibliothèques
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput OneParticle UserFileInputParticles SprayFin RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput OneParticle UserFileInputParticles SprayFin RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX UNIFORM Remap)
 
 #-----------------------------------------------------------------------------------------------------------------
 
@@ -139,6 +143,7 @@ arcane_target_add_axl(ADVECTION casTest/ADVECTION/ADVECTION)
 arcane_target_add_axl(CHOCBULLE casTest/CHOCBULLE/CHOCBULLE)
 arcane_target_add_axl(INSTART casTest/INSTART/INSTART)
 arcane_target_add_axl(VORTEX casTest/VORTEX/VORTEX)
+arcane_target_add_axl(UNIFORM casTest/UNIFORM/UNIFORM)
 
 arcane_target_add_axl(Tabulee eos/tabulee/TabuleeEOS)
 arcane_target_add_axl(MieGruneisen eos/miegruneisen/MieGruneisenEOS)

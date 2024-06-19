@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<service name="UNIFORM" version="1.0" type="caseoption">
+
+	<description>Jeu de données du service UNIFORM : écoulement uniforme pour cas-tests basiques.</description>
+  <interface name="IInitialisations" />
+
+	<variables>
+    <variable field-name="materiau" name="Materiau" data-type="real" item-kind="cell"
+	            dim="0" dump="true" need-sync="true" />
+    <variable field-name="density" name="Density" data-type="real" item-kind="cell"
+	            dim="0" material="true" dump="true" need-sync="true" />
+    <variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
+	            dim="0" material="true" dump="true" need-sync="true" />
+    <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
+	            dim="0" dump="true" need-sync="true" />
+    <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+	            dim="0" material="true" dump="true" need-sync="true" />
+    
+  </variables>
+
+<options>
+   <!-- - - - - - cas test - - - - -->
+  <simple name="cas-test" type="integer" default="-1">
+    <description>Numéro du cas test</description>
+  </simple>
+  
+   <!-- - - - - - options reverse - - - - -->
+   <simple name="reverse-option" type="bool" default="false">
+    <description>
+     Option de retour arriere 
+    </description>
+  </simple>
+   <!-- - - - - - parametre du cas test - - - - -->
+  <simple name="parametre" type="real" default="0.">
+    <description>Parametre du cas test</description>
+  </simple>
+</options>
+</service>

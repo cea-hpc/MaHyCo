@@ -35,7 +35,7 @@ void VtkAsciiService::initOutput()
   }
 
   // initialisation du compteur de sorties
-  i_ipg_output=1;
+  i_ipg_output=0;
 }
 
 /*---------------------------------------------------------------------------*/

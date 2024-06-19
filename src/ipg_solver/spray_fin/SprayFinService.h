@@ -15,6 +15,10 @@
 #include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
 
 
+//#include <arcane/core/ITimeHistoryMng.h>
+//#include <arcane/core/GlobalTimeHistoryAdder.h>
+
+
 using namespace Arcane;
 
 

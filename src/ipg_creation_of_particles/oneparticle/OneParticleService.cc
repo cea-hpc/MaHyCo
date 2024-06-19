@@ -6,7 +6,6 @@ using namespace Arcane;
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
-
 void OneParticleService::createParticles()
 {
   // pour l'instant on ne crée qu'une seule particule.
