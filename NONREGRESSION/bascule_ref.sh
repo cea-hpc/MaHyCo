@@ -17,11 +17,21 @@ function helpme {
   echo ""
   echo "Ce script suppose que la compilation est faite dans le répertoire build/"
   echo "et que la non régression a tourné avec ctest pour produire le fichier list_of_cases_to_change"
+
+  echo "Pilotage par variable d'environnement :"
+  echo "AFFICHE_DIFF : affiche le diff lorsqu'il y a des écarts"
+  echo "OUVRE_PARAVIEW : ouvre paraview pour visualiser les écarts"
+  echo "BASCULE_FORCEE : accepte les changements de résultats sans poser la question, incompatible avec AFFICHE_DIFF et OUVRE_PARAVIEW"
 }
 
 # -----------------------------------------------------
 # Lancement de la procédure
 # $1 : chemin vers la racine mahyco
+#
+# Pilotage par variable d'environnement :
+# AFFICHE_DIFF : affiche le diff lorsqu'il y a des écarts
+# OUVRE_PARAVIEW : ouvre paraview pour visualiser les écarts
+# BASCULE_FORCEE : accepte les changements de résultats sans poser la question
 # -----------------------------------------------------
 function main {
   
@@ -114,29 +124,41 @@ function main {
 	#  $mahyco_root_dir/build/src/Mahyco -arcane_opt continue Donnees.arc
 	# avec mpiexec -n 4 ou 8
 
-        # Visualisation des résultats :
-        # TODO(MS) : paramétrer ça dans la ligne de commande
-        # echo "Lancement de paraview pour le cas "
-        # paraview $cas_dir/output/depouillement/ensight.case &
-	# paraview output/depouillement/ensight.case &
-        #echo "----> Affichage du diff output [cette exécution] et $cas_dir/output [référence]"
-        #diff -r output $cas_dir/output
+  # Visualisation des résultats :
+  if [ $OUVRE_PARAVIEW ]; then
+    echo "----> Lancement de paraview pour le cas "
+    rm _execution _reference # si jamais ils existent déjà, on supprime les liens symboliques
+    ln -s $cas_dir/output/depouillement _reference
+    ln -s output/depouillement _execution
+    paraview _execution/ensight.case &
+    paraview _reference/ensight.case
+    rm _execution _reference
+  fi
+
+  if [ $AFFICHE_DIFF ]; then 
+    echo "----> Affichage du diff output [cette exécution] et $cas_dir/output [référence]"
+    diff -r output $cas_dir/output
+  fi
         
 	echo "----> Changement des résultats sur le cas $cas, exécution $RUN_PROC"
-	echo "----> Basculer Yes/No ?"
-	#read reponse
-        reponse="Yes"  # pour mettre à jour les références de façon systématique
+  if [ $BASCULE_FORCEE ]; then
+    reponse="Yes"  # pour mettre à jour les références de façon systématique
+  else
+	  echo "----> Basculer Yes/No ?"
+	  read reponse  
+  fi
+
 	if  [[ "$reponse" == "Yes" ]]; then
 	    rm -rf $cas_dir/output
-            # Sauvegarde des résultats
+      # Sauvegarde des résultats
 	    mv output $cas_dir/output
-            # Suppression des éléments inutiles
+      # Suppression des éléments inutiles
 	    rm -rf $cas_dir/output/listing*
 	    rm -rf $cas_dir/output/checkpoint_info.xml
 	    rm -rf $cas_dir/output/protection
 	    rm -rf $cas_dir/output/courbes
-	fi
-    fi
+	  fi
+  fi
   done
 }
 

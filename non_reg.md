@@ -34,12 +34,15 @@ Les cas de `list_of_cases_to_change` doivent ensuite être vérifiés (et mis à
 
 ```sh
 cd ..
-./src/bascule_ref.sh .
+./NONREGRESSION/bascule_ref.sh .
 ```
+
+Le script `bascule_ref.sh` peut s'utiliser avec les variables d'environnement suivantes :
+- `AFFICHE_DIFF=1` : affichage du diff output / reference
+- `OUVRE_PARAVIEW=1` : ouvre paraview pour comparer visuellement les résultats
+- `BASCULE_FORCEE=1` : accepte les changements de résultats sans poser la question
 
 ## TODO
 
 - [ ] Corriger les cas qui ne sont pas répétables d'une exécution à l'autre
-- [ ] Vérifier les changements de résultats
 - [ ] Gérer dans ces deux scripts les cas qui tournent dans plusieurs modes d'exécution (seq, para, pr)
-- [ ] Paramétrer dans la ligne de commande la mise à jour auto des résultats, l'affichage ou non du diff et l'ouverture de paraview
