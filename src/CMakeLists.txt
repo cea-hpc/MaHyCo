@@ -101,7 +101,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto TimeHistory RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
