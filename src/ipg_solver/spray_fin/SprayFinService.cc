@@ -44,42 +44,19 @@ void SprayFinService::correctFluidVelocity() {
 
   ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
     Particle particle = *ipart;
-    Cell cell = particle.cell();
 
-    // 1 - chercher à quel noeud appartient la particule
+    // 1 - chercher à quel noeud (i.e. cellule duale) appartient la particule
     //     pour le moment, on considère que la particule appartient au noeud le plus proche
-    Real distance_min=1e30;
-    Node node_proche;
-    for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
-      Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
-      if (distance < distance_min){
-        distance_min = distance;
-        node_proche=*inode;
-      }
-    }
+    Node node_proche = findNodeOfParticle(particle);
 
     // 2 - calcul de la force de traînée aux noeuds
     //     (ajout de la contribution de la particule à son noeud)
     Real Np=m_particle_weight[ipart];
     Real mp=4./3.*Pi*pow(m_particle_radius[ipart], 3.)*m_particle_density[ipart];
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();  // TODO: eviter de répéter l'option gravity qui est deja dans mahyco.axl
-    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
-    Real Cd=computeCd();
-
-    Real3 Dp;
-
-    TypesIpg::eDrag type = options()->drag.type();
-    if (type == TypesIpg::LinearDrag){
-      Real coef=options()->drag.getCoef();
-      Dp = Real3(coef, coef, coef);
-    }
-    else {
-      Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
-      Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
-      Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
-    }
-
+    Real3 Dp = computeDp(particle, node_proche);
     Real3 one={1., 1., 1.};
+
     m_denom[node_proche] += dt/m_node_mass[node_proche]*Np*(mp*Dp)/(one + dt*Dp);
     m_force[node_proche] += dt/m_node_mass[node_proche]*Np*(mp*Dp)/(one + dt*Dp)*up_chapo;
   }
@@ -101,39 +78,12 @@ void SprayFinService::updateParticleVelocity() {
   const Real dt (m_global_deltat());  //  dt^n
 
   ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
-
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();
-
     Particle particle = *ipart;
-    Cell cell = particle.cell();
-    
-    // chercher à quel noeud appartient la particule
-    // pour le moment, on considère que la particule appartient au noeud le plus proche
-    Real distance_min=1e30;
-    Node node_proche;
-    for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
-      Real distance = (m_node_coord[inode] - m_particle_coord[ipart]).normL2();
-      if (distance < distance_min){
-        distance_min = distance;
-        node_proche=*inode;
-      }
-    }
-
-    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
-    Real Cd=computeCd();
-    Real3 Dp;
-    TypesIpg::eDrag type = options()->drag.type();
-    if (type == TypesIpg::LinearDrag){
-      Real coef=options()->drag.getCoef();
-      Dp = Real3(coef, coef, coef);
-    }
-    else {
-      Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
-      Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
-      Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
-    }
-
+    Node node_proche = findNodeOfParticle(particle); // cherche à quel noeud appartient la particule (noeud le + proche)
+    Real3 Dp = computeDp(particle, node_proche);
     Real3 one={1., 1., 1.};
+
     m_particle_velocity[ipart] = ( up_chapo + dt*Dp*m_velocity[node_proche] )/( one + dt*Dp );
   }
 }
@@ -174,6 +124,61 @@ Real SprayFinService::computeCd(){
   // else
   return 0.424;
 }
+
+/*---------------------------------------------------------------------------*/
+/** 
+      Calcul du préfacteur $D_p$ de la force de traînée $F = - D_p (u-u_p)$ due à une particule.
+*/
+/*---------------------------------------------------------------------------*/
+
+Real3 SprayFinService::computeDp(Particle particle, Node node_proche){
+
+  Real3 Dp;
+  TypesIpg::eDrag type = options()->drag.type();
+
+  if (type == TypesIpg::LinearDrag){   // linear drag
+    Real coef=options()->drag.getCoef();
+    Dp = Real3(coef, coef, coef);
+  }
+  else {  // quadratic drag
+
+    Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
+    Real Cd=computeCd();
+
+    Dp.x = 3./8.*fluid_node_density/m_particle_density[particle]*Cd/m_particle_radius[particle]*abs(m_velocity_n[node_proche].x-m_particle_velocity[particle].x);
+    Dp.y = 3./8.*fluid_node_density/m_particle_density[particle]*Cd/m_particle_radius[particle]*abs(m_velocity_n[node_proche].y-m_particle_velocity[particle].y);
+    Dp.z = 3./8.*fluid_node_density/m_particle_density[particle]*Cd/m_particle_radius[particle]*abs(m_velocity_n[node_proche].z-m_particle_velocity[particle].z);
+  }
+  return Dp;
+}
+
+/*---------------------------------------------------------------------------*/
+/*
+  Associe une particule à un noeud (== à une cellule duale)
+ */
+/*---------------------------------------------------------------------------*/
+
+Node SprayFinService::findNodeOfParticle(Particle particule){
+
+  // TODO: déplacer cette fonction dans ipg_creation_of_particles/utilsIpg.h
+  
+  Cell cell = particule.cell();
+
+  // chercher à quel noeud appartient la particule
+  // pour le moment, on considère que la particule appartient au noeud le plus proche
+  Real distance_min=1e30;
+  Node node_proche;
+  for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) {
+    /* Real distance = (node_coord[inode] - particle_coord[particule]).normL2(); */
+    Real distance = (m_node_coord[inode] - m_particle_coord[particule]).normL2();
+    if (distance < distance_min){
+      distance_min = distance;
+      node_proche=*inode;
+    }
+  }
+  return node_proche;
+}
+
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

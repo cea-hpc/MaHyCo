@@ -13,7 +13,7 @@
 #include "ipg_solver/spray_fin/SprayFin_axl.h"
 
 #include "mathUtils.h"  // Pi
-#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
+#include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell, associateParticleToNode
 
 //#include <arcane/core/ITimeHistoryMng.h>
 //#include <arcane/core/GlobalTimeHistoryAdder.h>
@@ -66,8 +66,18 @@ private:
   ParticleGroup activeParticlesGroup;
   /** 
       calcul du coefficient de traînée
-   */
+  */
   virtual Real computeCd();
+
+  /** 
+      calcul du préfacteur de la force de traînée due à une particule
+  */
+  virtual Real3 computeDp(Particle particle, Node node_proche);
+
+  /** 
+      associe une particule à un noeud (== à sa cellule duale)
+  */
+  virtual Node findNodeOfParticle(Particle particule);  // TODO: deplacer dans ipg_creation_of_particles/utilsIpg.h
 
 };
 

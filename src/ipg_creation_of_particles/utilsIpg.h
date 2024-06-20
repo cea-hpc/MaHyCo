@@ -16,22 +16,17 @@ bool isCoordInCell(Real3 particule_coord, UniqueArray<Real3> nodes_coord){
 
   bool incell=0;
 
-  // We use the following method :
+  // We use a ray-casting method :
   // let start from the particle coordinates and draw an infinite horizontal line to the right of the point.
   // The point belongs to the polygon if the line cross a face of the polygon an odd number of times
   // or if the point belongs to an edge/corner of the polygon.
   // otherwise, it is outside.
 
+  // TODO: version 3D et version 2D dans les plan (y,z) et (x,z)
+  //       (le code ci-dessous n'est valable qu'en 2D dans le plan (x,y)
 
-  // TODO: 3D version (le code ci-dessous n'est valable qu'en 2D dans le plan (x,y)
-  // A vérifier: il faut juste ajouter if( z_particle>zmin_face et z_particle<=zmax_face ) ?
-
-  // TODO: this method is identical for all service which create particles.
-  // So, it would be better to write it only once in a separate file.
-
-  // TODO: cas particulier ou la particule n'est attribuée à aucune cell:
+  // TODO: cas particulier où la particule n'est attribuée à aucune cell:
   // la particule est sur la face horizontale d'un élément qui n'a pas d'autre élément en dessous de lui.
-
 
   // initialisation: position du dernier node
   Real x1=nodes_coord[nodes_coord.size()-1].x, y1=nodes_coord[nodes_coord.size()-1].y;
@@ -65,6 +60,50 @@ bool isCoordInCell(Real3 particule_coord, UniqueArray<Real3> nodes_coord){
 
   return incell;
 }
+
+
+
+
+// fixme: below, I miss the correct include to have access to m_particle_coor[] and m_node_coord[]
+
+/* /\*---------------------------------------------------------------------------*\/ */
+/* /\* */
+/*   Associe une particule à un noeud (== à une cellule duale) */
+/*  *\/ */
+/* /\*---------------------------------------------------------------------------*\/ */
+
+/* Node findNodeOfParticle(Particle particule){ */
+
+/*   /\* /\\* IItemFamily* item_family = mesh()->findItemFamily (eItemKind::IK_Particle, "AllParticles"); *\\/ *\/ */
+/*   /\* /\\* IVariable* ivar = item_family->findVariable("ParticleCoordinates", true); *\\/ *\/ */
+/*   /\* IVariable* ivar = mesh()->findItemFamily(eItemKind::IK_Particle, "AllParticles")->findVariable("ParticleCoordinates", true); *\/ */
+/*   /\* VariableParticleReal3 m_particle_coord(ivar); *\/ */
+  
+  
+/*   Cell cell = particule.cell(); */
+
+/*   // chercher à quel noeud appartient la particule */
+/*   // pour le moment, on considère que la particule appartient au noeud le plus proche */
+/*   Real distance_min=1e30; */
+/*   Node node_proche; */
+/*   for ( NodeEnumerator inode ( cell.nodes() ); inode.hasNext(); ++inode ) { */
+/*     /\* Real distance = (node_coord[inode] - particle_coord[particule]).normL2(); *\/ */
+/*     Real distance = (m_node_coord[inode] - m_particle_coord[particule]).normL2(); */
+/*     if (distance < distance_min){ */
+/*       distance_min = distance; */
+/*       node_proche=*inode; */
+/*     } */
+/*   } */
+/*   return node_proche; */
+/* } */
+
+
+
+
+
+
+
+
 
 
 
