@@ -67,9 +67,17 @@ void SprayFinService::correctFluidVelocity() {
     Real Cd=computeCd();
 
     Real3 Dp;
-    Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
-    Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
-    Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
+
+    TypesIpg::eDrag type = options()->drag.type();
+    if (type == TypesIpg::LinearDrag){
+      Real coef=options()->drag.getCoef();
+      Dp = Real3(coef, coef, coef);
+    }
+    else {
+      Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
+      Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
+      Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
+    }
 
     Real3 one={1., 1., 1.};
     m_denom[node_proche] += dt/m_node_mass[node_proche]*Np*(mp*Dp)/(one + dt*Dp);
@@ -114,9 +122,16 @@ void SprayFinService::updateParticleVelocity() {
     Real fluid_node_density = m_node_mass[node_proche]/m_node_volume[node_proche];
     Real Cd=computeCd();
     Real3 Dp;
-    Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
-    Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
-    Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
+    TypesIpg::eDrag type = options()->drag.type();
+    if (type == TypesIpg::LinearDrag){
+      Real coef=options()->drag.getCoef();
+      Dp = Real3(coef, coef, coef);
+    }
+    else {
+      Dp.x = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].x-m_particle_velocity[ipart].x);
+      Dp.y = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].y-m_particle_velocity[ipart].y);
+      Dp.z = 3./8.*fluid_node_density/m_particle_density[ipart]*Cd/m_particle_radius[ipart]*abs(m_velocity_n[node_proche].z-m_particle_velocity[ipart].z);
+    }
 
     Real3 one={1., 1., 1.};
     m_particle_velocity[ipart] = ( up_chapo + dt*Dp*m_velocity[node_proche] )/( one + dt*Dp );

@@ -48,6 +48,23 @@
       <description>Force de gravité </description>
     </simple>
 
+    <!-- traînée linéaire ou quadratique -->
+    <complex name="drag" type="Drag" minOccurs="1" maxOccurs="1">
+      <description>Force de traînée.</description>
+
+      <enumeration name="type" type="TypesIpg::eDrag">
+        <description>Type de trainee : linéaire ou quadratique en la vitesse.</description>
+        <enumvalue genvalue="TypesIpg::LinearDrag" name="Linear" />
+        <enumvalue genvalue="TypesIpg::QuadraticDrag" name="Quadratic" />
+      </enumeration>
+
+      <simple name="coef" type="real" default="0.">
+        <description>Valeur du coefficient de trainee c pour la traînée *lineaire*. La force de traînée linéraire est $F_trainee = -c*(u_fluide - u_particle)$</description>
+      </simple>
+     
+    </complex>
+
+    
   </options>
 
 </service>

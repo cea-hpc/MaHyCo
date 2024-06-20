@@ -2,6 +2,7 @@
 #ifndef SPRAYFINSERVICE_H
 #define SPRAYFINSERVICE_H
 
+#include "TypesIpg.h"
 
 #include "arcane/IParticleFamily.h"
 #include "arcane/IMesh.h"
@@ -13,7 +14,6 @@
 
 #include "mathUtils.h"  // Pi
 #include "ipg_creation_of_particles/utilsIpg.h" // isCoordInCell
-
 
 //#include <arcane/core/ITimeHistoryMng.h>
 //#include <arcane/core/GlobalTimeHistoryAdder.h>
