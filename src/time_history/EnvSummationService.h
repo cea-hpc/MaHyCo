@@ -2,6 +2,7 @@
 #ifndef ENVSUMMATION_H
 #define ENVSUMMATION_H
 
+#include <memory>
 #include "arcane/ArcaneTypes.h"
 #include "arcane/utils/Real3.h"
 #include "arcane/core/materials/MeshMaterialVariableRef.h"
@@ -34,9 +35,20 @@ public:
    *  Ecriture des sorties
    */
   virtual void write(); 
+
+ private:
+  Real _computeAvgVarForEnv(
+    IParallelMng* pm, IMeshEnvironment* env, const Integer nb_envcells, MaterialVariableCellReal& variable);
+
+  Real _computeExtensiveVarForEnv(
+    IParallelMng* pm, IMeshEnvironment* env, MaterialVariableCellReal& variable, MaterialVariableCellReal& globalization_var);
  
  private:
-  UniqueArray<IMeshEnvironment*> m_environments;
+  UniqueArray<IMeshEnvironment*> m_environments;  /// liste des milieux à sortir
+
+  UniqueArray<MaterialVariableCellReal*> m_avg_var_list; /// += var / nb_cells
+  UniqueArray<MaterialVariableCellReal*> m_massic_var_list;  /// += mass * var / mass_tot
+  UniqueArray<MaterialVariableCellReal*> m_volumic_var_list;  /// += vol * var / vol_tot
 };
 
 #endif  // ENVSUMMATION_H

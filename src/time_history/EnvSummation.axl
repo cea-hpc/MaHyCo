@@ -11,9 +11,15 @@
 		  <!-- PRESSURE -->
   		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 	    	dim="0" material="true" dump="true" need-sync="true" />
+        <!-- INTERNAL ENERGY	 -->
+        <variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+	        dim="0" material="true" dump="true" need-sync="true" />
 		<!-- CELL MASS -->
         <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
             dim="0" material="true" dump="true" need-sync="true" />
+          <!-- CELL VOLUME	 -->
+        <variable field-name="cell_volume" name="CellVolume" data-type="real" item-kind="cell"
+	        dim="0" material="true" dump="true" need-sync="true" />
 	</variables>
 
 	<options>
@@ -24,6 +30,10 @@
     <!-- - - - - - liste des milieux à sortir - - - - -->
     <simple name="environment" type="string" minOccurs="0" maxOccurs="unbounded">
         <description>nom du milieu à écrire (par défaut, tous les milieux)</description>
+    </simple>
+    <!-- - - - - - liste des variables à sortir - - - - -->
+    <simple name="variable" type="string" minOccurs="1" maxOccurs="unbounded">
+        <description>nom des variables à écrire</description>
     </simple>
 
 	</options>

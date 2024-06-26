@@ -3,6 +3,8 @@
 #include "arcane/IParallelMng.h"
 #include "arcane/core/ITimeHistoryMng.h"
 #include "arcane/core/GlobalTimeHistoryAdder.h"
+#include "arcane/core/materials/EnvItemVector.h"
+
 
 using namespace Arcane;
 
@@ -13,8 +15,8 @@ void EnvSummationService::init()
 {
   auto* mm = IMeshMaterialMng::getReference ( mesh() );
 
-  UniqueArray<String> env_list = options()->environment.view();
-
+  // Récupération de la liste des milieux
+  UniqueArray<String> env_list(options()->environment.view());
   // Si aucun milieu renseigné, on écrit tous les milieux
   if (env_list.size() == 0) {
     ENUMERATE_ENV(env, mm) {
@@ -28,6 +30,28 @@ void EnvSummationService::init()
       m_environments.add(*env);
     }
   }
+
+  // Récupération de la liste des variables
+  UniqueArray<String> jdd_var_list(options()->variable.view());
+
+  // Par défaut, toutes les variables sont moyennées sans pondération
+  // (pour aller plus vite et brancher la non-régression)
+  // Il faudra à terme trouver un mécanisme pour choisir la bonne moyenne
+  // pour écrire les bilans
+  m_avg_var_list.add(&m_cell_mass); // sortie systématiquement
+  for (const String& var_name : jdd_var_list) {
+    if (var_name == "Density") {
+      m_volumic_var_list.add(&m_density);
+    } else if (var_name == "Pressure") {
+      m_avg_var_list.add(&m_pressure);
+    } else if (var_name == "InternalEnergy") {
+      m_massic_var_list.add(&m_internal_energy);
+    } else {
+      info() << "La variable " << var_name << " n'est pour l'instant pas prévue dans les sorties bilan par milieu";
+      // Quand la classe aura un peu évolué, ce sera une erreur. Pour l'instant, juste un print dans le listing
+    }
+  }
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -41,48 +65,91 @@ void EnvSummationService::write()
   IParallelMng* pm = subDomain()->parallelMng();
   Integer my_rank = pm->commRank();
   String filename;
+  Real global_var;
 
   // Création de l'objet permettant d'ajouter des valeurs dans un historique des valeurs.
   GlobalTimeHistoryAdder global_adder(subDomain()->timeHistoryMng());
 
   for (IMeshEnvironment* env : m_environments) {
-    // Calcul de la moyenne des pressions du sous-domaine.
-    Real var_pressure, var_density, var_mass = 0;
-    Integer nb_envcells = 0;
-    ENUMERATE_ENVCELL (envcell, env) {
-      if ((*envcell).globalCell().isOwn()) {
-        var_pressure += m_pressure[envcell];
-        var_density += m_density[envcell];
-        var_mass += m_cell_mass[envcell];
-        // todo : trier le tableau pour avoir une somme répétable
-        nb_envcells += 1;
-      }
-    }
- 
+
+    // Calcul du nombre de mailles dans le milieu
+    EnvCellVector own_envcells(allCells().own(), env);
+    Integer nb_envcells = own_envcells.view().nbItem();
     nb_envcells = pm->reduce(IParallelMng::eReduceType::ReduceSum, nb_envcells);
+
     if (nb_envcells == 0) continue; // milieu vide dans tous les sous-domaines
 
-    // Calcul de la pression moyenne globale.
-    var_pressure = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_pressure);
-    var_density = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_density);
-    var_mass = pm->reduce(IParallelMng::eReduceType::ReduceSum, var_mass);
-    
-    var_pressure /= nb_envcells;
-    var_density /= nb_envcells;
-    // todo : réfléchir aux moyennes qui sont faites (intensives vs extensives, ...)
- 
-    // Ajout des grandeurs dans l'historique global
-    filename = String("pressure_") + env->name();
-    global_adder.addValue(TimeHistoryAddValueArg(filename), var_pressure);
+    for (auto var : m_avg_var_list) {
+      global_var = _computeAvgVarForEnv(pm, env, nb_envcells, *var);
+      filename = var->globalVariable().name() + String("_") + env->name();
+      global_adder.addValue(TimeHistoryAddValueArg(filename), global_var);
+    }
 
-    filename = String("density_") + env->name();
-    global_adder.addValue(TimeHistoryAddValueArg(filename), var_density);
+    for (auto var : m_massic_var_list) {
+      global_var = _computeExtensiveVarForEnv(pm, env, *var, m_cell_mass);
+      filename = var->globalVariable().name() + String("_") + env->name();
+      global_adder.addValue(TimeHistoryAddValueArg(filename), global_var);
+    }
 
-    filename = String("mass_") + env->name();
-    global_adder.addValue(TimeHistoryAddValueArg(filename), var_mass);
+    for (auto var : m_volumic_var_list) {
+      global_var = _computeExtensiveVarForEnv(pm, env, *var, m_cell_volume);
+      filename = var->globalVariable().name() + String("_") + env->name();
+      global_adder.addValue(TimeHistoryAddValueArg(filename), global_var);
+    }
+
   }
 }
 
+/*---------------------------------------------------------------------------*/
+/* Ecriture des sorties temporelles pour la surveillance du milieu           */
+/*---------------------------------------------------------------------------*/
+Real EnvSummationService::_computeAvgVarForEnv(
+  IParallelMng* pm, IMeshEnvironment* env, const Integer nb_envcells, MaterialVariableCellReal& variable)
+{
+  // Calcul de la moyenne des pressions du sous-domaine.
+  Real accumulated_var = 0;
+  ENUMERATE_ENVCELL (envcell, env) {
+    if ((*envcell).globalCell().isOwn()) {
+      accumulated_var += variable[envcell];
+      // todo : trier le tableau pour avoir une somme répétable
+    }
+  }
+
+  // Calcul de la pression moyenne globale.
+  accumulated_var = pm->reduce(IParallelMng::eReduceType::ReduceSum, accumulated_var); 
+  accumulated_var /= nb_envcells;
+
+  return accumulated_var;
+}
+
+/*---------------------------------------------------------------------------*/
+/** Ecriture des sorties temporelles pour la surveillance du milieu  
+  * @param pm : gestionnaire du parallélisme Arcane
+  * @param variable : grandeur à écrire
+  * @param globalization_var : grandeur servant à la globalisation (masse ou volume)
+  */
+/*---------------------------------------------------------------------------*/
+Real EnvSummationService::_computeExtensiveVarForEnv(
+  IParallelMng* pm, IMeshEnvironment* env, MaterialVariableCellReal& variable, MaterialVariableCellReal& globalization_var)
+{
+  // Calcul de la moyenne des pressions du sous-domaine.
+  Real accumulated_var = 0;
+  Real accumulated_globalization_var = 0;
+  ENUMERATE_ENVCELL (envcell, env) {
+    if ((*envcell).globalCell().isOwn()) {
+      accumulated_var += variable[envcell] * globalization_var[envcell];
+      accumulated_globalization_var += globalization_var[envcell];
+      // todo : trier le tableau pour avoir une somme répétable
+    }
+  }
+
+  // Calcul de la pression moyenne globale.
+  accumulated_var = pm->reduce(IParallelMng::eReduceType::ReduceSum, accumulated_var); 
+  accumulated_globalization_var = pm->reduce(IParallelMng::eReduceType::ReduceSum, accumulated_globalization_var); 
+  accumulated_var /= accumulated_globalization_var;
+
+  return accumulated_var;
+}
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
