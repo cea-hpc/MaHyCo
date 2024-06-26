@@ -3,6 +3,9 @@
   <arcane>
     <title>Noh</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -39,6 +42,15 @@
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
+
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+  </time-history>
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>

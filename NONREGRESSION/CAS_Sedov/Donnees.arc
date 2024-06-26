@@ -46,6 +46,15 @@
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
 
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+  </time-history>
+
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
   <material><name>Air</name></material>

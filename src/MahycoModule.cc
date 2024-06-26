@@ -134,11 +134,6 @@ hydroStartInit()
             }
         }
     }
-
-    // initialisation du time-history
-    if ( options()->timeHistory.size() >0 ) {
-        initTH();
-    }
       
     info() << " - Appel aux eos ";
     if ( !options()->sansLagrange ) {
