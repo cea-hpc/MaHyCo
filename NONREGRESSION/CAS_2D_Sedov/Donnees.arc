@@ -4,7 +4,7 @@
     <title>CAS_2D_Sedov</title>
     <timeloop>MahycoLoop</timeloop>
     <modules>
-      <module name="TimeHistory" active="false" />
+      <module name="TimeHistory" active="true" />
     </modules>
   </arcane>
 
@@ -52,6 +52,10 @@
   </bilan> -->
     <bilan name="EnvSummation">
     <!-- <environment>ZoneAir</environment> -->
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
   </bilan>
   </time-history>
 
