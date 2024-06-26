@@ -8,7 +8,7 @@ import numpy as np
 import pathlib
 
 
-parser = argparse.ArgumentParser("Plot the TimeHistory file in argument")
+parser = argparse.ArgumentParser(description="Plot the TimeHistory file in argument")
 parser.add_argument("filepath", type=str, help="Path to the file to plot")
 args = parser.parse_args()
 
@@ -19,5 +19,5 @@ plt.figure()
 plt.plot(table[:, 0], table[:, 1])
 plt.xlabel("Time [s]")
 plt.ylabel(var_name)
-plt.title(title)
+plt.title(title, weight="bold")
 plt.show()
