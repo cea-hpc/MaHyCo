@@ -41,7 +41,7 @@ ce répertoire, un répertoire `courbes` contient les courbes
 par itérations et le répertoire `depouillement` le maillage et
 les variables pour le post-traitement.
 
-# Options en ligne de commande
+## Options en ligne de commande
 
 Vous pouvez ajouter les options suivantes pour chaque exemple. Les
 options doivent être ajoutées avant le jeu de données (qui doit
