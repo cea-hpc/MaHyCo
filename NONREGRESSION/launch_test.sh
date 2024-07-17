@@ -74,6 +74,7 @@ function launch_computation_para_8 {
 function compare_results {
   local readonly reference_dir=$1
 
+  # comparaison sur les sorties de dépouillement
   echo "Analyse des differences dans le fichier : ${PWD}/DIFF.txt"
   diff -r output/depouillement "$reference_dir/output/depouillement" > ${PWD}/DIFF.txt 2>&1
   if [[ $? -ne 0 ]]; then
@@ -81,6 +82,14 @@ function compare_results {
     echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
     return 1
   fi
+
+  # comparaison sur les sorties time history
+  #diff -r output/courbes/gnuplot "$reference_dir/output/courbes/gnuplot" > ${PWD}/DIFF.txt 2>&1
+  #if [[ $? -ne 0 ]]; then
+  #  echo "A problem occured during test comparison."
+  #  echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
+  #  return 1
+  #fi
 
   return 0
 }

@@ -13,7 +13,7 @@
 function helpme {
   echo "Procédure de lancement de la mise à jour des cas de non régression"
   echo "Depuis la racine, lancer :"
-  echo "./src/bascule_ref.sh ."
+  echo "./NONREGRESSION/bascule_ref.sh ."
   echo ""
   echo "Ce script suppose que la compilation est faite dans le répertoire build/"
   echo "et que la non régression a tourné avec ctest pour produire le fichier list_of_cases_to_change"
@@ -21,6 +21,7 @@ function helpme {
   echo "Pilotage par variable d'environnement :"
   echo "AFFICHE_DIFF : affiche le diff lorsqu'il y a des écarts"
   echo "OUVRE_PARAVIEW : ouvre paraview pour visualiser les écarts"
+  echo "PLOT_TIME_HISTORY_DIFF : trace les sorties bilan de time history (exécution et référence)"
   echo "BASCULE_FORCEE : accepte les changements de résultats sans poser la question, incompatible avec AFFICHE_DIFF et OUVRE_PARAVIEW"
 }
 
@@ -133,6 +134,11 @@ function main {
     paraview _execution/ensight.case &
     paraview _reference/ensight.case
     rm _execution _reference
+  fi
+
+  if [ $PLOT_TIME_HISTORY_DIFF ] ; then
+    echo "----> Tracé du time_history output [cette exécution] et $cas_dir/output [référence]"
+    #python3 $mahyco_root_dir/utils/plot...
   fi
 
   if [ $AFFICHE_DIFF ]; then 
