@@ -1,6 +1,8 @@
 # Indique qu'on veut des bibliothèques dynamiques (indispensable avec les services)
 set(BUILD_SHARED_LIBS TRUE)
 
+MESSAGE(STATUS "HOSTNAME = $ENV{HOSTNAME}")
+
 # Si aucun chemin versArcane n'est renseigné pour la compilation, on essaie des chemins
 # particuliers, sur PC portable et sur calculateur
 if (Arcane_ROOT STREQUAL "")

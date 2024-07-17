@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_2D_Sedov</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -27,10 +30,8 @@
        <nsd>1 1</nsd> 
        <origine>0.0 0.0 0.0</origine>
        <lx nx='60' prx='1.0'>1.2</lx>
-
        <ly ny='60' pry='1.0'>1.2</ly>
      </cartesian>
-
      </meshgenerator>
 
     <initialisation>
@@ -43,6 +44,20 @@
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
+
+  <time-history>
+  <!-- <bilan name="NodeWatching">
+  </bilan> -->
+  <!-- <bilan name="CellWatching">
+  </bilan> -->
+    <bilan name="EnvSummation">
+    <!-- <environment>ZoneAir</environment> -->
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+  </bilan>
+  </time-history>
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
