@@ -138,7 +138,10 @@ function main {
 
   if [ $PLOT_TIME_HISTORY_DIFF ] ; then
     echo "----> Tracé du time_history output [cette exécution] et $cas_dir/output [référence]"
-    #python3 $mahyco_root_dir/utils/plot...
+    module load python3
+    for f in $(ls $cas_dir/output/courbes/gnuplot); do
+      python3 $mahyco_root_dir/utils/plot_time_history.py output/courbes/gnuplot/$f --reference $cas_dir/output/courbes/gnuplot/$f  &
+    done
   fi
 
   if [ $AFFICHE_DIFF ]; then 
