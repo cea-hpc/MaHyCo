@@ -8,8 +8,12 @@ void SODService::initMatMono(Integer dim)  {
   }
 }
 
-void SODService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void SODService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
@@ -64,8 +68,12 @@ void SODService::initMat(Integer dim)  {
   }
 }
 
-void SODService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void SODService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
     
  if (options()->casTest == SodCaseX ||
