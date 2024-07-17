@@ -82,7 +82,7 @@
      <deltat-max>0.0001</deltat-max>
     <longueur-caracteristique>monodimX</longueur-caracteristique>
      
-    <final-time>3.e-5</final-time>
+    <final-time>2.5e-5</final-time>
     
    
     <boundary-condition>
