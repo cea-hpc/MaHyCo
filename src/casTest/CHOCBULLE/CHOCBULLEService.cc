@@ -8,8 +8,12 @@ void CHOCBULLEService::initMatMono(Integer dim)  {
   }
 }
 
-void CHOCBULLEService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void CHOCBULLEService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   /* Pas d'implémentation monoMat */
 }
@@ -188,8 +192,12 @@ void CHOCBULLEService::initMat(Integer dim)  {
   }
 }
 
-void CHOCBULLEService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void CHOCBULLEService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
 
     Integer nb_bulles_fichier(m_posr.size());
     Integer nb_bulles(options()->nombreBullesX * 
