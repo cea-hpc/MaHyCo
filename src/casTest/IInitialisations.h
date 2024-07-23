@@ -1,4 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #ifndef IINITIALISATION_H
 #define IINITIALISATION_H
 
