@@ -1,3 +1,7 @@
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef TYPESMAHYCO_H
 #define TYPESMAHYCO_H
 
@@ -11,15 +15,15 @@ struct TypesMahyco
 {
   enum eBoundaryCondition
   {
-    VelocityX, //!< Vitesse X fixée
-    VelocityY, //!< Vitesse Y fixée
-    VelocityZ, //!< Vitesse Z fixée
+    VelocityX, //!< Vitesse X fixee
+    VelocityY, //!< Vitesse Y fixee
+    VelocityZ, //!< Vitesse Z fixee
     OnFileVelocity, //!< Vitesse analytique
-    Density, //!< Densité fixée
-    Energy, //!< Energy fixée
+    Density, //!< Densite fixee
+    Energy, //!< Energy fixee
     SuperGaussianEnergy, 
-    Pressure, //!< Pression fixée
-    GeometricPressure, //!< Pression fixée
+    Pressure, //!< Pression fixee
+    GeometricPressure, //!< Pression fixee
     LinearPressure, //!< Pression linaire suivant X,Y,Z et t
     OnFilePressure, //!< Pression dans un fichier en fonction du temps
     SuperGaussianPressure, //!< Pression en supergaussienne suivant X,Y,Z
@@ -28,7 +32,7 @@ struct TypesMahyco
   }; 
   enum eEnergyDepot
   {
-    DepotConstant, //!< Energy fixée constante
+    DepotConstant, //!< Energy fixee constante
     DepotLineaire, //!< Energy linaire suivant X,Y,Z et t
     DepotSuperGaussian, //!< Energy en supergaussienne suivant X,Y,Z
     Inconnu //!< Type inconnu
