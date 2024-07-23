@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <service name="PerfectGasEOS" version="1.0" type="caseoption">
 
-	<description>Jeu de données du service PerfectGasEOS</description>
+	<description>Jeu de donnÃ©es du service PerfectGasEOS</description>
   <interface name="IEquationOfState" />
 
 	<variables>
@@ -97,11 +97,11 @@
 	<options>
 		<!-- - - - - - AdiabaticCst - - - - -->
 		<simple name="adiabatic-cst" type="real" default="1.4">
-			<description>Définition de la constante adiabatique</description>
+			<description>Definition de la constante adiabatique</description>
 		</simple>
 		<!-- - - - - - limit tension - - - - -->
 		<simple name="limit-tension" type="real" default="0.0">
-			<description>Définition de la tension limite</description>
+			<description>Definition de la tension limite</description>
 		</simple>
 	</options>
 </service>

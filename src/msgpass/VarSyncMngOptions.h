@@ -1,3 +1,6 @@
+// Copyright 2000-2024 CEA (www.cea.fr) 
+// See the top-level COPYRIGHT file for details. 
+// SPDX-License-Identifier: Apache-2.0
 #ifndef MSG_PASS_VAR_SYNC_MNG_OPTIONS_H
 #define MSG_PASS_VAR_SYNC_MNG_OPTIONS_H
 
