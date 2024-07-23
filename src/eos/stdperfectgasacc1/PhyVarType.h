@@ -1,3 +1,6 @@
+// Copyright 2000-2024 CEA (www.cea.fr) 
+// See the top-level COPYRIGHT file for details. 
+// SPDX-License-Identifier: Apache-2.0
 #ifndef _EOS_STDPERFECTGASACC1_PHY_VAR_TYPE_H
 #define _EOS_STDPERFECTGASACC1_PHY_VAR_TYPE_H
 

@@ -1,3 +1,6 @@
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #ifndef TYPESMAHYCO_H
 #define TYPESMAHYCO_H
 
@@ -10,9 +13,9 @@ struct TypesMahyco
 {
   enum eBoundaryCondition
   {
-    VelocityX, //!< Vitesse X fixée
-    VelocityY, //!< Vitesse Y fixée
-    VelocityZ, //!< Vitesse Z fixée
+    VelocityX, //!< Vitesse X fixee
+    VelocityY, //!< Vitesse Y fixee
+    VelocityZ, //!< Vitesse Z fixee
     Unknown //!< Type inconnu
   }; 
 };
