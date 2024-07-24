@@ -12,8 +12,8 @@ Written by CEA and Contributors
 
 All content is the property of the respective authors or their employers.
 
-Copyrights and patents in the Arcane project are retained by contributors.
-No copyright assignment is required to contribute to Arcane
+Copyrights and patents in the MaHyCo project are retained by contributors.
+No copyright assignment is required to contribute to MaHyCo
 
 SPDX usage
 ------------
@@ -25,14 +25,4 @@ License Identifiers that are available here: https://spdx.org/licenses/
 External Packages
 -------------------
 
-Arcane bundles the following external packages.
-These packages are covered by various permissive licenses.
-See the license included with each package for full details.
-
-PackageName: rapidjson (src/arcane/utils/internal/json)
-PackageHomePage: https://rapidjson.org
-PackageLicenseDeclared: MIT
-
-PackageName: MD5 algorithm (src/arcane/utils/MD5HashAlgorithm_Licensed.h)
-PackageHomePage: Free Software Foundation
-PackageLicenseDeclared: LGPL-2.1-or-later
+MaHyCo doesn't bundle with any external packages.
