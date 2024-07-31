@@ -165,7 +165,11 @@ function main {
 	    rm -rf $cas_dir/output/listing*
 	    rm -rf $cas_dir/output/checkpoint_info.xml
 	    rm -rf $cas_dir/output/protection
-	    rm -rf $cas_dir/output/courbes
+	    rm -rf $cas_dir/output/courbes/curves.acv
+	    rm -rf $cas_dir/output/courbes/gnuplot/*Time
+	    rm -rf $cas_dir/output/courbes/gnuplot/TotalMemory
+	    rm -rf $cas_dir/output/courbes/time_history.json
+	    rm -rf $cas_dir/output/courbes/time_history.xml
 	  fi
   fi
   done
