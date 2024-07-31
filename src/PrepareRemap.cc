@@ -238,15 +238,13 @@ void MahycoModule::remap() {
           // m_internal_energy_n[ev] = m_internal_energy[ev];
         }
     }
-    if (!options()->sansLagrange) {
-        for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
-        IMeshEnvironment* ienv = mm->environments()[index_env];
-        // Calcul de la pression et de la vitesse du son
-        options()->environment[index_env].eosModel()->applyEOS(ienv);
-        // Test endommagement --> Pression devient nulle ?
-        options()->environment[index_env].eosModel()->Endommagement(ienv);
-      }
-      computePressionMoyenne();
-   }
+    for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
+      IMeshEnvironment* ienv = mm->environments()[index_env];
+      // Calcul de la pression et de la vitesse du son
+      options()->environment[index_env].eosModel()->applyEOS(ienv);
+      // Test endommagement --> Pression devient nulle ?
+      options()->environment[index_env].eosModel()->Endommagement(ienv);
+    }
+    computePressionMoyenne();
   }
 }
