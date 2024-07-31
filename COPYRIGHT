@@ -1,0 +1,28 @@
+Intellectual Property Notice
+------------------------------
+
+MaHyCo is licensed under the Apache License, Version 2.0 (LICENSE-APACHE
+or http://www.apache.org/licenses/LICENSE-2.0).
+
+Written by CEA and Contributors
+
+(C) Copyright 2000-2024 CEA. All rights reserved.
+(C) CEA: Commissariat à l'Énergie Atomique et aux Énergies Alternatives
+    (https://www.cea.fr)
+
+All content is the property of the respective authors or their employers.
+
+Copyrights and patents in the MaHyCo project are retained by contributors.
+No copyright assignment is required to contribute to MaHyCo
+
+SPDX usage
+------------
+
+Individual files contain SPDX tags instead of the full license text.
+This enables machine processing of license information based on the SPDX
+License Identifiers that are available here: https://spdx.org/licenses/
+
+External Packages
+-------------------
+
+MaHyCo doesn't bundle with any external packages.
