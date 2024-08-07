@@ -85,12 +85,12 @@ function compare_results {
 
   # comparaison sur les sorties time history
   # on exclut les fichiers CpuTime, ElapsedTime, ... TotalMemory écrit par défaut dans les time history Arcane 
-  #diff -r --exclude="*Time*" --exclude="*Memory*" output/courbes/gnuplot/ "$reference_dir/output/courbes/gnuplot/" > ${PWD}/DIFF.txt 2>&1
-  #if [[ $? -ne 0 ]]; then
-  #  echo "A problem occured during test comparison (time history)."
-  #  echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
-  #  return 1
-  #fi
+  diff -r --exclude="*Time*" --exclude="*Memory*" output/courbes/gnuplot/ "$reference_dir/output/courbes/gnuplot/" > ${PWD}/DIFF.txt 2>&1
+  if [[ $? -ne 0 ]]; then
+    echo "A problem occured during test comparison (time history)."
+    echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
+    return 1
+  fi
 
   return 0
 }

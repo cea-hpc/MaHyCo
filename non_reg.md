@@ -20,9 +20,11 @@ Le lancement se fait via les fonctions
 + `launch_computation_para_4`
 + `launch_computation_para_8`
 
-Puis comparaison des résultats avec la fonction compare_results.
+Puis comparaison des résultats avec la fonction `compare_results`.
 
-`ctest` produit deux fichiers via l'appel du script launch_test.sh :
+La comparaison se base sur les fichiers de dépouillement et les sorties bilan par milieu (TimeHistory).
+
+L'appel au script `launch_test.sh` (via `ctest` notamment) produit deux listes de diagnostic contenant les cas en échec.
 - `list_of_pb_exec` : contient la liste des cas qui ont eu des erreurs lors de l'exécution (erreur Arcane, ...)
 - `list_of_cases_to_change` : contient la liste des cas qui changent les résultats (exécution ok mais comparaison ratée avec la référence)
 
@@ -33,16 +35,16 @@ Attention, cette liste ne contient que le nom des cas. Se référer au log de `c
 Les cas de `list_of_cases_to_change` doivent ensuite être vérifiés (et mis à jour) avec le script `bascule_ref.sh`.
 
 ```sh
-cd ..
+cd racine/mahyco
 ./NONREGRESSION/bascule_ref.sh .
 ```
 
 Le script `bascule_ref.sh` peut s'utiliser avec les variables d'environnement suivantes :
-- `AFFICHE_DIFF=1` : affichage du diff output / reference
-- `OUVRE_PARAVIEW=1` : ouvre paraview pour comparer visuellement les résultats
+- `AFFICHE_DIFF=1` : affichage du diff (texte) output / reference
+- `OUVRE_PARAVIEW=1` : ouvre paraview pour comparer visuellement les résultats output et reference
+- `PLOT_TIME_HISTORY_DIFF=1` : trace (avec matplotlib) les courbes TimeHistory output et reference pour comparaison
 - `BASCULE_FORCEE=1` : accepte les changements de résultats sans poser la question
 
-## TODO
+Attention, il se peut que la variable d'environnement `BASCULE_FORCEE` soit incompatible avec les autres variables. Je conseille de l'utiliser toute seule.
 
-- [ ] Corriger les cas qui ne sont pas répétables d'une exécution à l'autre
-- [ ] Gérer dans ces deux scripts les cas qui tournent dans plusieurs modes d'exécution (seq, para, pr)
+

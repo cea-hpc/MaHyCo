@@ -35,22 +35,17 @@ void RIDERService::initMat(Integer dim)
     Cell cell = *icell;
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
-      Real rnode = std::sqrt((m_node_coord[inode][0] - Xb[0]) *
-                                 (m_node_coord[inode][0] - Xb[0]) +
-                             (m_node_coord[inode][1] - Xb[1]) *
-                                 (m_node_coord[inode][1] - Xb[1]));
+      Real rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+                                 (m_node_coord[inode].x - Xb.x) +
+                             (m_node_coord[inode].y - Xb.y) *
+                                 (m_node_coord[inode].y - Xb.y));
       rmin = std::min(rmin, rnode);
       rmax = std::max(rmax, rnode);
     }
 
     // Air partout
     m_materiau[cell] = 0;
-    // bulle surchargera l'aire
-    // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
+    // bulle surchargera l'air
 
     if (rmax < rb) {
       // maille pure de bulle
@@ -92,10 +87,10 @@ void RIDERService::initVarMono(  Integer dim,
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
-      Real rnode = std::sqrt((m_node_coord[inode][0] - Xb[0]) *
-                                 (m_node_coord[inode][0] - Xb[0]) +
-                             (m_node_coord[inode][1] - Xb[1]) *
-                                 (m_node_coord[inode][1] - Xb[1]));
+      Real rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+                                 (m_node_coord[inode].x - Xb.x) +
+                             (m_node_coord[inode].y - Xb.y) *
+                                 (m_node_coord[inode].y - Xb.y));
       rmin = std::min(rmin, rnode);
       rmax = std::max(rmax, rnode);
     }
@@ -105,10 +100,10 @@ void RIDERService::initVarMono(  Integer dim,
     m_internal_energy[cell] = energie_initiale[0];
     // bulle surchargera l'air
     // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
+    double r = sqrt((m_cell_coord[cell].x - Xb.x) *
+                        (m_cell_coord[cell].x - Xb.x) +
+                    (m_cell_coord[cell].y - Xb.y) *
+                        (m_cell_coord[cell].y - Xb.y));
     if (options()->densiteInterieureInitialeLineaire())
       r_cell = r;
     else
@@ -203,10 +198,10 @@ void RIDERService::initVar(  Integer dim,
     // parametres maille
     Real rmin(10.), rmax(0.);
     ENUMERATE_NODE(inode, cell.nodes()) {
-      Real rnode = std::sqrt((m_node_coord[inode][0] - Xb[0]) *
-                                 (m_node_coord[inode][0] - Xb[0]) +
-                             (m_node_coord[inode][1] - Xb[1]) *
-                                 (m_node_coord[inode][1] - Xb[1]));
+      Real rnode = std::sqrt((m_node_coord[inode].x - Xb.x) *
+                                 (m_node_coord[inode].x - Xb.x) +
+                             (m_node_coord[inode].y - Xb.y) *
+                                 (m_node_coord[inode].y- Xb.y));
       rmin = std::min(rmin, rnode);
       rmax = std::max(rmax, rnode);
     }
@@ -217,10 +212,10 @@ void RIDERService::initVar(  Integer dim,
   
     // bulle surchargera l'air
     // centre de la bulle
-    double r = sqrt((m_cell_coord[cell][0] - Xb[0]) *
-                        (m_cell_coord[cell][0] - Xb[0]) +
-                    (m_cell_coord[cell][1] - Xb[1]) *
-                        (m_cell_coord[cell][1] - Xb[1]));
+    double r = sqrt((m_cell_coord[cell].x - Xb.x) *
+                        (m_cell_coord[cell].x - Xb.x) +
+                    (m_cell_coord[cell].y- Xb.y) *
+                        (m_cell_coord[cell].y - Xb.y));
     if (options()->densiteInterieureInitialeLineaire())
       r_cell = r;
     else
