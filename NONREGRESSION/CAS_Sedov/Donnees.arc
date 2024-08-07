@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_Sedov</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
