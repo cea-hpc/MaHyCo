@@ -30,7 +30,8 @@
     <format>
       <binary-file>false</binary-file>
     </format>
-    <output-history-period>500</output-history-period>
+    <output-history-period>1</output-history-period>
+    <output-period>500</output-period>
   </arcane-post-processing>
 
   <mesh nb-ghostlayer="2" ghostlayer-builder-version="3">
