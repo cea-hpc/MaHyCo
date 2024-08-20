@@ -15,8 +15,12 @@ void VORTEXService::initMat(Integer dim)  {
     return;
   } 
 }
-void VORTEXService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void VORTEXService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   Real3 Xb = {5.0, 0.0, 0.};
   Real beta = 5.;
@@ -54,8 +58,12 @@ void VORTEXService::initVarMono(Integer dim, double* densite_initiale, double* e
     if (m_node_coord[inode].y < 0.) pinfo() << "vit Y " << m_velocity[inode].y ;
   }
 }
-void VORTEXService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void VORTEXService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
 
   if (options()->casTest == Vortex)  {
     initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);

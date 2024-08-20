@@ -1,8 +1,9 @@
 #!/bin/bash
 # Launch the test and compares obtained results to expected ones
-set -euo pipefail 
+set -uo pipefail 
 #set -x 
 
+# -----------------------------------------------------------------------------
 # This function launch the computation by calling the executable with arguments
 # taken from args.txt file
 function launch_computation {
@@ -13,10 +14,12 @@ function launch_computation {
   ${mpi_launcher} -n 1 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
+    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
 }
+# -----------------------------------------------------------------------------
 # This function launch the computation by calling the executable with arguments
 # taken from args.txt file
 function launch_computation_seq_pr {
@@ -28,10 +31,12 @@ function launch_computation_seq_pr {
   ${mpi_launcher} -n 1 $1 -arcane_opt continue $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
+    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
 }
+# -----------------------------------------------------------------------------
 # This function launch the computation by calling the executable with arguments
 # taken from args.txt file
 function launch_computation_para_4 {
@@ -42,10 +47,12 @@ function launch_computation_para_4 {
   ${mpi_launcher} -n 4 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
+    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
 }
+# -----------------------------------------------------------------------------
 # This function launch the computation by calling the executable with arguments
 # taken from args.txt file
 function launch_computation_para_8 {
@@ -56,50 +63,38 @@ function launch_computation_para_8 {
   ${mpi_launcher} -n 8 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
+    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
 }
+# -----------------------------------------------------------------------------
 # This function compares the results obtained in the output directory with those
 # expected in the reference directory
 function compare_results {
   local readonly reference_dir=$1
-  local return_code=0
-  ls -l "$reference_dir/output"
-  echo "Differences dans le fichier : ${PWD}/DIFF.txt"
-  echo ${test_name} >>  $reference_dir/../../list_of_cases_to_change
-  diff -r output/depouillement "$reference_dir/output/depouillement" > DIFF.txt 2>&1
-#  if [[ -e ${PWD}/DIFF.txt  ]]; then
-#      echo "fichier existe "
-#      if [[ -s ${PWD}/DIFF.txt  ]]; then
-#        echo " Différence avec la reference : mise dans la list_of_cases_to_change"
-#        echo ${test_dir} >>  list_of_cases_to_change
-#      fi
-#  fi
+
+  # comparaison sur les sorties de dépouillement
+  echo "Analyse des differences dans le fichier : ${PWD}/DIFF.txt"
+  diff -r output/depouillement "$reference_dir/output/depouillement" > ${PWD}/DIFF.txt 2>&1
   if [[ $? -ne 0 ]]; then
-      echo "Test failure! Output is different from reference"
-      return_code=1
+    echo "A problem occured during test comparison (depouillement)."
+    echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
+    return 1
   fi
-  return ${return_code}
-}
-function bascule_results {
-  local readonly reference_dir=$1
-  local return_code=0
-  ls -l "$reference_dir/output"
-  echo "Differences dans le fichier ? : ${PWD}/DIFF.txt"
-  if [[  -e ${PWD}/DIFF.txt  ]]; then
-      echo "fichier existe "
-      if [[  -s ${PWD}/DIFF.txt  ]]; then
-        echo " Différence avec la reference : mise dans la list_of_cases_to_change"
-        echo ${test_dir} >>  list_of_cases_to_change
-      fi
-  fi
+
+  # comparaison sur les sorties time history
+  # on exclut les fichiers CpuTime, ElapsedTime, ... TotalMemory écrit par défaut dans les time history Arcane 
+  diff -r --exclude="*Time*" --exclude="*Memory*" output/courbes/gnuplot/ "$reference_dir/output/courbes/gnuplot/" > ${PWD}/DIFF.txt 2>&1
   if [[ $? -ne 0 ]]; then
-      echo "Test failure! Output is different from reference"
-      return_code=1
+    echo "A problem occured during test comparison (time history)."
+    echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
+    return 1
   fi
-  return ${return_code}
+
+  return 0
 }
+# -----------------------------------------------------------------------------
 # Main function. Calls launch_computation and compare_results
 # For each test a directory is created inside /tmp
 function main {
@@ -138,6 +133,7 @@ function main {
   pwd
   echo ${type}
   
+  # Préparation du cas test : recopie des fichiers de maillages, ...
   if [ -f $test_dir/*.coeff ]; then
     echo "fichier de coeff dans le cas"
     cp $test_dir/*.coeff . 2>/dev/null
@@ -163,6 +159,7 @@ function main {
     echo "pas fichier de maillage dans le cas"
   fi
   
+  # Exécution des cas
   if [ ${type}  = "para_8" ]
   then
       echo " lancement parallele sur 8 coeurs" 
@@ -184,6 +181,7 @@ function main {
     exit 1
   fi
 
+  # Comparaison des résultats
   compare_results ${test_dir}
   if [[ $? -ne 0 ]]; then
     echo "Aborting!"
@@ -191,14 +189,8 @@ function main {
   else
     echo "Success!"
   fi
-#  bascule_results ${test_dir}
-#   if [[ $? -ne 0 ]]; then
-#     echo "Aborting!"
-#     exit 2
-#   else
-#     echo "Success!"
-#   fi
   exit 0
 }
 
+# -----------------------------------------------------------------------------
 main $@

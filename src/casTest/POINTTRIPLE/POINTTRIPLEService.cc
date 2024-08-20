@@ -1,3 +1,6 @@
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #include "POINTTRIPLEService.h"
 
 void POINTTRIPLEService::initMatMono(Integer dim)  {
@@ -8,8 +11,12 @@ void POINTTRIPLEService::initMatMono(Integer dim)  {
   }
 }
 
-void POINTTRIPLEService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void POINTTRIPLEService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
@@ -55,8 +62,12 @@ void POINTTRIPLEService::initMat(Integer dim)  {
   }
 }
 
-void POINTTRIPLEService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void POINTTRIPLEService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
  if (options()->casTest == MonoTriplePoint) {  
    initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);

@@ -48,6 +48,11 @@ add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc elasto
 target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
+# Partie TimeHistory
+add_library(TimeHistory time_history/NodeWatchingService.cc time_history/CellWatchingService.cc time_history/EnvSummationService.cc)
+target_include_directories(TimeHistory PUBLIC .)
+target_link_libraries(TimeHistory PUBLIC arcane_core)
+
 # Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
@@ -96,7 +101,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto TimeHistory RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -118,6 +123,10 @@ arcane_target_add_axl(StiffenedGas eos/stiffenedgas/StiffenedGasEOS)
 arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
 arcane_target_add_axl(Elasto elasto/NewHypoModel)
+
+arcane_target_add_axl(TimeHistory time_history/NodeWatching)
+arcane_target_add_axl(TimeHistory time_history/CellWatching)
+arcane_target_add_axl(TimeHistory time_history/EnvSummation)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)
@@ -235,32 +244,53 @@ set(BASETMPDIR_NONREG "/tmp" CACHE PATH "Définit la base du répertoire tempora
 
 # sequentiel
 foreach( TEST_NAME ${TEST_NAMES} )
- add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${SEQ}_${TEST_NAME}" 
+           COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh 
+               ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME}
+               ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # protection-reprise
 foreach( TEST_NAME ${TEST_NAMES_PR} )
- add_test(NAME "${SEQPR}_${TEST_NAME}" COMMAND ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQPR} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${SEQPR}_${TEST_NAME}" 
+           COMMAND ${TEST_DIR}/../NONREGRESSION/launch_test.sh 
+                ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+                ${SEQPR} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # sur 4 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_4} )
- add_test(NAME "${PARA4}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${PARA4}_${TEST_NAME}" 
+          COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh 
+              ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+              ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 # sur 8 coeurs
 foreach( TEST_NAME ${TEST_NAMES_PARA_8} )
- add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${PARA8}_${TEST_NAME}" 
+           COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+               ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 
 if (IS_DIRECTORY ${CINETIQUE_SRC})
 foreach( TEST_NAME ${TEST_NAMES_CIN} )
- add_test(NAME "${SEQ}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${SEQ}_${TEST_NAME}" 
+           COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+               ${SEQ} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 foreach( TEST_NAME ${TEST_NAMES_PARA_4_CIN} )
- add_test(NAME "${PARA4}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${PARA4}_${TEST_NAME}" 
+           COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh
+               ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+               ${PARA4} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 foreach( TEST_NAME ${TEST_NAMES_PARA_8_CIN} )
- add_test(NAME "${PARA8}_${TEST_NAME}" COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
+  add_test(NAME "${PARA8}_${TEST_NAME}" 
+           COMMAND  ${TEST_DIR}/../NONREGRESSION/launch_test.sh 
+               ${CMAKE_CURRENT_BINARY_DIR}/Mahyco ${TEST_DIR}/../NONREGRESSION/${TEST_NAME} 
+               ${PARA8} ${MPI_LAUNCHER} ${BASETMPDIR_NONREG})
 endforeach()
 endif()

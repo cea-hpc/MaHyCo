@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_RiderDeformation</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -46,6 +49,15 @@
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
 
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+  </time-history>
+
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
   <material><name>Vide_mat</name></material>
@@ -55,24 +67,30 @@
     <material>Vide_mat</material>
     <densite-initiale>0.</densite-initiale>
     <pression-initiale>0.</pression-initiale>
-    <eos-model name="PerfectGas">
+    <eos-model name="Fictif">
       <adiabatic-cst>1.4</adiabatic-cst>
       <specific-heat>2.4</specific-heat>
-    </eos-model> 
+      <tdebut-pression>0.</tdebut-pression>
+      <tfin-pression>10</tfin-pression>
+      <valeur-debut-pression>0.</valeur-debut-pression>
+      <valeur-dependance-temps>0.</valeur-dependance-temps>
+      <temperature-ref>300.</temperature-ref>
+    </eos-model>
   </environment>
   <environment>
     <name>Bulle</name>
     <material>Bulle_mat</material>
     <densite-initiale>1.</densite-initiale>
     <pression-initiale>0.</pression-initiale>
-    <eos-model name="PerfectGas">
+    <eos-model name="Fictif">
       <adiabatic-cst>1.4</adiabatic-cst>
       <specific-heat>2.4</specific-heat>
-    <!-- <eos-model name="StiffenedGas">
-      <adiabatic-cst>1.4</adiabatic-cst>
-      <specific-heat>2.4</specific-heat>
-      <limit-tension>0.01</limit-tension> -->
-    </eos-model> 
+      <tdebut-pression>0.</tdebut-pression>
+      <tfin-pression>10</tfin-pression>
+      <valeur-debut-pression>0.</valeur-debut-pression>
+      <valeur-dependance-temps>0.</valeur-dependance-temps>
+      <temperature-ref>300.</temperature-ref>
+    </eos-model>
   </environment>
   
    <cas-model name="RIDER">

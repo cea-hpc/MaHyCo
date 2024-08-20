@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_lag_tache_focale</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -27,7 +30,8 @@
     <format>
       <binary-file>false</binary-file>
     </format>
-    <output-history-period>500</output-history-period>
+    <output-history-period>1</output-history-period>
+    <output-period>500</output-period>
   </arcane-post-processing>
 
   <mesh nb-ghostlayer="2" ghostlayer-builder-version="3">
@@ -49,6 +53,15 @@
     <do-dump-at-end>0</do-dump-at-end>
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
+
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+  </time-history>
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>

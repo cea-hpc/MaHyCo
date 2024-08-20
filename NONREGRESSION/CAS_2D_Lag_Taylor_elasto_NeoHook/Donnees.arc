@@ -3,6 +3,9 @@
   <arcane>
     <title>Sod</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -49,6 +52,15 @@
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
 
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+  </time-history>
+
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
   <material><name>Metal</name></material>
@@ -82,7 +94,7 @@
      <deltat-max>0.0001</deltat-max>
     <longueur-caracteristique>monodimX</longueur-caracteristique>
      
-    <final-time>3.e-5</final-time>
+    <final-time>2.5e-5</final-time>
     
    
     <boundary-condition>

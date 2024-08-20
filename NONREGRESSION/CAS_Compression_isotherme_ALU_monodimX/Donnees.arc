@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_Compression_isotherme_ALU_monodimX</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -57,6 +60,20 @@
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
 
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+    <bilan name="CellWatching">
+      <periode>10</periode>
+      <borne-inf>0.e-6 0.e-6 -1.</borne-inf>
+      <borne-sup>2.e-6 2.e-6 1.</borne-sup>
+    </bilan>
+  </time-history>
+
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
   <material><name>Al_mat</name></material>
@@ -98,13 +115,7 @@
     <longueur-caracteristique>monodimX</longueur-caracteristique>
     <cfl>0.1</cfl>
     <final-time>1.e-7</final-time>
-    
-    <time-history>
-    <periode>10</periode>
-    <borne-inf>0.e-6 0.e-6 -1.</borne-inf>
-    <borne-sup>2.e-6 2.e-6 1.</borne-sup>
-    </time-history>
-    
+       
     <boundary-condition>
       <surface>XMIN</surface>
       <type>LinearPressure</type>

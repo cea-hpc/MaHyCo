@@ -1,4 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #include "MahycoModule.h"
 /**
  *******************************************************************************
@@ -235,15 +238,14 @@ void MahycoModule::remap() {
           // m_internal_energy_n[ev] = m_internal_energy[ev];
         }
     }
-    if (!options()->sansLagrange) {
-        for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
-        IMeshEnvironment* ienv = mm->environments()[index_env];
-        // Calcul de la pression et de la vitesse du son
-        options()->environment[index_env].eosModel()->applyEOS(ienv);
-        // Test endommagement --> Pression devient nulle ?
-        options()->environment[index_env].eosModel()->Endommagement(ienv);
-      }
-      computePressionMoyenne();
-   }
+
+    for (Integer index_env=0; index_env < m_nb_env ; index_env++) {
+      IMeshEnvironment* ienv = mm->environments()[index_env];
+      // Calcul de la pression et de la vitesse du son
+      options()->environment[index_env].eosModel()->applyEOS(ienv);
+      // Test endommagement --> Pression devient nulle ?
+      options()->environment[index_env].eosModel()->Endommagement(ienv);
+    }
+    computePressionMoyenne();
   }
 }

@@ -65,8 +65,13 @@ void ADVECTIONService::initMat(Integer dim)  {
     } 
   }
 }
-void ADVECTIONService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, 
-                                   double* pression_initiale, double* temperature_initiale, Real3x3 vitesse_initiale )  {
+void ADVECTIONService::initVarMono(
+  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   Real3 Xb;
   if (options()->casTest < MonoAdvectionRotation) 
@@ -141,8 +146,12 @@ void ADVECTIONService::initVarMono(Integer dim, double* densite_initiale, double
     m_velocity_n[inode] = m_velocity[inode];
   }
 }
-void ADVECTIONService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, 
-                               double* pression_initiale, double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void ADVECTIONService::initVar( Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
 
   if (options()->casTest >= MonoAdvectionTx && options()->casTest <= MonoAdvectionRotation)  {
     initVarMono(dim, densite_initiale, energie_initiale, pression_initiale, temperature_initiale, vitesse_initiale);

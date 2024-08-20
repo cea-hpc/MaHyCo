@@ -6,11 +6,19 @@ void EXTERNALService::initMatMono(Integer dim)  {
 void EXTERNALService::initMat(Integer dim)  {
    
 }
-void EXTERNALService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void EXTERNALService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
 }
-void EXTERNALService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void EXTERNALService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
 
 }
 

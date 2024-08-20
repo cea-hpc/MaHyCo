@@ -36,8 +36,12 @@ void SEDOVService::initMat(Integer dim)  {
     }
   }
 } 
-void SEDOVService::initVarMono(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  {
+void SEDOVService::initVarMono(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  {
     
   Real3 Xb={0.0, 0.0, 0.};
   Real rhoInit = densite_initiale[0];
@@ -80,8 +84,12 @@ void SEDOVService::initVarMono(Integer dim, double* densite_initiale, double* en
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
-void SEDOVService::initVar(Integer dim, double* densite_initiale, double* energie_initiale, double* pression_initiale, 
-                                    double* temperature_initiale, Real3x3 vitesse_initiale)  { 
+void SEDOVService::initVar(  Integer dim, 
+  SharedArray<double> densite_initiale, 
+  SharedArray<double> energie_initiale, 
+  SharedArray<double> pression_initiale, 
+  SharedArray<double> temperature_initiale, 
+  SharedArray<Real3> vitesse_initiale)  { 
   // pour l'instant meme fonction  que la version MonoMat
 
   if (options()->casTest == Sedov) {

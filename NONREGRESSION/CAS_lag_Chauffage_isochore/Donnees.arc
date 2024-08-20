@@ -3,6 +3,9 @@
   <arcane>
     <title>CAS_lag_Chauffage_isochore</title>
     <timeloop>MahycoLoop</timeloop>
+    <modules>
+      <module name="TimeHistory" active="true" />
+    </modules>
   </arcane>
 
   <arcane-post-processing>
@@ -58,6 +61,20 @@
     <checkpoint-service name="ArcaneBasic2CheckpointWriter" />
   </arcane-checkpoint>
 
+  <time-history>
+    <bilan name="EnvSummation">
+      <variable>CellMass</variable>
+      <variable>Pressure</variable>
+      <variable>Density</variable>
+      <variable>InternalEnergy</variable>
+    </bilan>
+    <bilan name="CellWatching">
+      <periode>10000</periode>
+      <borne-inf>0.e-6 0.e-6 -1.</borne-inf>
+      <borne-sup>4.e-6 4.e-6 1.</borne-sup>
+    </bilan>
+  </time-history>
+
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
   <material><name>SN_mat</name></material>
@@ -91,12 +108,6 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
     <final-time>5.e-10</final-time>
-
-   <time-history>
-    <periode>10000</periode>
-    <borne-inf>0.e-6 0.e-6 -1.</borne-inf>
-    <borne-sup>4.e-6 4.e-6 1.</borne-sup>
-    </time-history>
 
     <boundary-condition>
       <surface>XMIN</surface>

@@ -1,4 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #include "MahycoModule.h"
 
 #include <arcane/MathUtils.h>
@@ -106,13 +109,14 @@ hydroStartInit()
     
     if (options()->casModel()->isInternalModel() == true) { 
         info() << " Initialisation des variables pour les cas test internes";
-        Real* densite_initiale = (double *)malloc(sizeof(double) * m_nb_env);
-        Real* pression_initiale = (double *)malloc(sizeof(double) * m_nb_env);
-        Real* energie_initiale = (double *)malloc(sizeof(double) * m_nb_env);
-        Real* temperature_initiale=  (double *)malloc(sizeof(double) * m_nb_env);
-        Real3x3 vitesse_initiale;
+        m_nb_env = mm->environments().size();
+        SharedArray<Real> densite_initiale(m_nb_env);
+        SharedArray<Real> pression_initiale(m_nb_env);
+        SharedArray<Real> energie_initiale(m_nb_env);
+        SharedArray<Real> temperature_initiale(m_nb_env);
+        SharedArray<Real3> vitesse_initiale(m_nb_env);
         
-        for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) {
+        for ( Integer i=0; i<m_nb_env; ++i ) {
             densite_initiale[i] = options()->environment[i].densiteInitiale;
             pression_initiale[i] = options()->environment[i].pressionInitiale;
             energie_initiale[i] = options()->environment[i].energieInitiale;
@@ -127,17 +131,12 @@ hydroStartInit()
         options()->casModel()->initVar ( m_dimension, densite_initiale, energie_initiale, 
                                         pression_initiale, temperature_initiale, vitesse_initiale );
     } else {
-        for ( Integer i=0,n=options()->environment().size(); i<n; ++i ) { 
+        for ( Integer i=0; i<m_nb_env; ++i ) { 
             if (options()->environment[i].initialisationUtilisateur) {
                 // Initialises les variables par programme (surcharge l'init d'arcane)
                 options()->casModel()->initUtilisateur(options()->environment[i].vitesseInitiale);
             }
         }
-    }
-
-    // initialisation du time-history
-    if ( options()->timeHistory.size() >0 ) {
-        initTH();
     }
       
     info() << " - Appel aux eos ";

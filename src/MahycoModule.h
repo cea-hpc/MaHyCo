@@ -1,4 +1,8 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
+
 #ifndef MAHYCOMODULE_H
 #define MAHYCOMODULE_H
 
@@ -305,11 +309,6 @@ class MahycoModule
   virtual void computeDeltaT();
   
   /**
-   * effectue des sorties sur les mailles en mode TH
-   * */
-  virtual void SortieHistory();
-  
-  /**
    * Calcul de quantites aux faces pour la projection :
    *    DxLagrange, du milieu, de la longueur des faces et de leur vitesse normale
    */
@@ -350,10 +349,6 @@ class MahycoModule
    * point d'entree pour la phase de projection
    **/
   virtual void remap();
-  /**
-   * Initialisation Time History
-   **/
-  virtual void initTH();
   
   /** lecture du fichier de pression(temps) pour les CDL */
   virtual void  lireFichierCDL( const std::string& nomFichier);
