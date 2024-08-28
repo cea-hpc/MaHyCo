@@ -74,7 +74,7 @@ void RemapADIService::computeDualGradPhi(Node inode,
  *    1_[x0,x1] ((x1 − x)y0 + (x − x0)y1)/(x1-x0)
  *    valant :
  *     y0 + 0.5 δ(y1 − y0)(x1 − x0)δ ou δ = S_[0,1]((X − x0)/(x1 − x0))
- *     zt S_[0,1](x) = min{max{x, 0}, 1}
+ *     et S_[0,1](x) = min{max{x, 0}, 1}
  * \param  X, x0, y0, x1, y1
  * \return  valeur de l'integral
  *******************************************************************************
@@ -158,6 +158,15 @@ Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
     Real lambdaplus = (h0 / 2. + hplus) / (h0 + hplus + hmoins);
     Real lambdamoins = (h0 / 2. + hmoins) / (h0 + hplus + hmoins);
     grady = lambdamoins * gradplus + lambdaplus * gradmoins;
+  } else if (projectionLimiterId == superQuadraticG) {
+    Real lambdaplus = (h0 / 2. + hplus) / (h0 + hplus + hmoins);
+    Real lambdamoins = (h0 / 2. + hmoins) / (h0 + hplus + hmoins);
+    if (lambdamoins * gradplus + lambdaplus * gradmoins == 0.) {
+      grady = 0.;
+    } else {
+      grady = (lambdamoins * gradplus*gradplus + lambdaplus * gradmoins*gradmoins)
+        / (lambdamoins * gradplus + lambdaplus * gradmoins);
+    }
   }
   // Cas ou on force la simple pente (monotonie et TVD) 
   // mais on veut rentrer dans le calcul des flux à l'ordre 2 en temps 
@@ -228,6 +237,49 @@ Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
              (2 * h0 + hmoins + hplus);
     y0moins = ((h0 + hmoins + hplus) * ymoins + h0 * yplus) /
               (2 * h0 + hmoins + hplus);
+  } else if (projectionLimiterId == superQuadraticG) {
+    // Changement de variables qui simplifie les calculs
+    double hm0 = hmoins + h0;
+    double hp0 = hplus + h0;
+    // On a le discriminant du 2nd degré delta = sqrt_delta**2*(yplus-ymoins)**2
+    if (hp0*hp0+2*h0*hm0-h0*h0 < 0) {
+      error() << "limiteur super quadratique: racine négative";
+      exit(1);
+    }
+    // sol1 = alpha1 ym + beta1 yp avec beta1 + alpha1 = 1
+    // sol2 = alpha2 ym + beta2 yp avec beta2 + alpha2 = 1
+    // *** y0moins
+    double sqrt_delta = hm0*hp0*sqrt(hm0*hm0+2*h0*hp0-h0*h0);
+    double denom = 2*hp0*(hm0*hm0 - hp0*hp0)+h0*(hm0*hm0+hp0*hp0);
+    if (denom == 0.0) {
+      error() << "limiteur super quadratique: dénominateur nul";
+      exit(1);
+    }
+    double alpha1 = (hm0*hm0*(h0+hp0)+sqrt_delta) / denom;
+    double alpha2 = (hm0*hm0*(h0+hp0)-sqrt_delta) / denom;
+    if (alpha1 >= 0 and alpha1 <= 1) {
+      y0moins = alpha1 * yplus + (1 - alpha1) * ymoins;
+    } else if (alpha2 >= 0 and alpha2 <= 1) {
+      y0moins = alpha2 * yplus + (1 - alpha2) * ymoins;
+    } else {
+      error() << "Limiteur super quadratic: 2 mauvaises solutions au polynome du 2nd degré de y0moins. alpha1 = " << alpha1 <<
+        " et alpha2 = " << alpha2;
+      exit(1);
+    }
+    // *** y0plus
+    sqrt_delta = hm0*hp0*sqrt(hp0*hp0+2*h0*hm0-h0*h0);
+    denom = 2*hm0*(hp0*hp0 - hm0*hm0)+h0*(hm0*hm0+hp0*hp0);
+    alpha1 = (hp0*hp0*(h0+hm0)+sqrt_delta) / denom;
+    alpha2 = (hp0*hp0*(h0+hm0)-sqrt_delta) / denom;
+    if (alpha1 >= 0 and alpha1 <= 1) {
+      y0plus = alpha1 * ymoins + (1 - alpha1) * yplus;
+    } else if (alpha2 >= 0 and alpha2 <= 1) {
+      y0plus = alpha2 * ymoins + (1 - alpha2) * yplus;
+    } else {
+      error() << "Limiteur super quadratic: 2 mauvaises solutions au polynome du 2nd degré de y0plus. alpha1 = " << alpha1 <<
+        " et alpha2 = " << alpha2;
+      exit(1);
+    }
   } else if (projectionLimiterId == 3000) {
     y0plus = yplus;
     y0moins = ymoins;
