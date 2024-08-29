@@ -47,8 +47,12 @@
 	    
         <!-- 	CELL CQS	 -->
         <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
-	    dim="1" dump="true" need-sync="true" /> 
-        
+		  dim="1" dump="true" need-sync="true" />
+	
+	<!-- 	CELL OLD CQS	 -->
+        <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
+		  dim="1" dump="true" need-sync="true" />
+	
         <!-- Gradient de vitesse -->
         <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
 	    dim="0" material="false" dump="true" need-sync="true" />
@@ -117,6 +121,10 @@
 		<!-- - - - - - limit Elastic - - - - -->
 		<simple name="limit-elastic" type="real" default="0.0">
 			<description>Valeur de la limite d'elasticité</description>
+		</simple>
+		<!-- - - - - - Ordre rotation  - - - - -->
+		<simple name="ordre-rotation" type="integer" default="1">
+			<description>Ordre de la rotation</description>
 		</simple>
 	</options>
 </service>

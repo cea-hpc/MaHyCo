@@ -705,6 +705,7 @@ void MahycoModule::
 applyBoundaryCondition()
 {
     debug() << my_rank << " : " << " Entree dans applyBoundaryCondition()";
+    Real Epsilon(1.e-8);
     for ( Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i ) {
         String NomBC = options()->boundaryCondition[i]->surface;
         FaceGroup face_group = mesh()->faceFamily()->findGroup ( NomBC );
@@ -713,13 +714,12 @@ applyBoundaryCondition()
 
         bool Novalue = false;
 
-        if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
+        if ( (m_global_time() - m_global_deltat() * (1 - Epsilon))  < options()->boundaryCondition[i]->Tdebut ) {
             Novalue=true;
         }
-        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+        if ( (m_global_time() - m_global_deltat()  * (1 - Epsilon)) > options()->boundaryCondition[i]->Tfin ) {
             Novalue=true;
         }
-
         if ( Novalue == false ) {
             // boucle sur les faces de la surface
             ENUMERATE_FACE ( j, face_group ) {
@@ -774,7 +774,7 @@ applyBoundaryConditionForCellVariables()
         if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
             value = 0.;
         }
-        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+        if ( m_global_time() >= options()->boundaryCondition[i]->Tfin ) {
             value = 0.;
         }
 
@@ -926,7 +926,7 @@ applyBoundaryConditionForCellVariables()
                         if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
                             value = 0.;
                         }
-                        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+                        if ( m_global_time() >= options()->boundaryCondition[i]->Tfin ) {
                             value = 0.;
                         }
 
