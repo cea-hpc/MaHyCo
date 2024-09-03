@@ -1219,6 +1219,7 @@ updateDensity()
     if ( options()->sansLagrange ) {
         return;
     }
+    CellToAllEnvCellConverter all_env_cell_converter ( mm );
     debug() << my_rank << " : " << " Entree dans updateDensity() ";
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
@@ -1246,16 +1247,21 @@ updateDensity()
     
     ENUMERATE_CELL ( icell,allCells() ) {
         Cell cell = * icell;
-        Real new_density = m_cell_mass[icell] / m_cell_volume[icell];
-        // nouvelle density
-        m_density[icell] = new_density;
+        AllEnvCell all_env_cell = all_env_cell_converter[cell];
+        if ( all_env_cell.nbEnvironment() !=1 ) {
+          m_density[cell] = 0;
+            ENUMERATE_CELL_ENVCELL ( ienvcell,all_env_cell ) {
+                EnvCell ev = *ienvcell;
+                m_density[cell] +=  m_fracvol[ev] * m_density[ev];
+            }
+        }
         // volume specifique moyen au temps n+1/2
-        m_tau_density[icell] =
-            0.5 * ( 1.0 / m_density_n[icell] + 1.0 / m_density[icell] );
+        m_tau_density[cell] =
+            0.5 * ( 1.0 / m_density_n[cell] + 1.0 / m_density[cell] );
         // divergence de la vitesse mode A1
-        m_div_u[icell] =
-            1.0 / m_global_deltat()  * ( 1.0 / m_density[icell] - 1.0 / m_density_n[icell] )
-            / m_tau_density[icell];
+        m_div_u[cell] =
+            1.0 / m_global_deltat()  * ( 1.0 / m_density[cell] - 1.0 / m_density_n[cell] )
+            / m_tau_density[cell];
     }
 
     m_density.synchronize();

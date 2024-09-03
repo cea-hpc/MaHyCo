@@ -81,6 +81,7 @@
       <valeur-debut-pression>3.e9</valeur-debut-pression>
       <valeur-dependance-temps>0.</valeur-dependance-temps>
       <temperature-ref>300.</temperature-ref>
+      <density-damage-thresold>1.</density-damage-thresold>
     </eos-model>
   </environment>
   
@@ -91,7 +92,7 @@
     <pression-initiale>1.e5</pression-initiale>
     <temperature-initiale>300.</temperature-initiale>
     <eos-model name="Tabulee">
-      <fichier-coeff>Al#_1TR_ses.txt</fichier-coeff>
+      <fichier-coeff>Al#_1TR_ses.txt</fichier-coeff> 
     </eos-model>
     <elasto-model name="NoModel">
         <elastic-cst>3.e10</elastic-cst>
@@ -124,11 +125,13 @@
       <tfin-pression>100000.</tfin-pression>
       <valeur-debut-pression>1.e5</valeur-debut-pression>
       <valeur-dependance-temps>0.</valeur-dependance-temps>
+      <density-damage-thresold>1.e-4</density-damage-thresold>
     </eos-model>
   </environment>
   
    <cas-model name="CHOCBULLE">
    <cas-test>47</cas-test>
+   <xdebut-fictif2>0.9</xdebut-fictif2>
    <nombre-bulles-x>0</nombre-bulles-x>
    <nombre-bulles-y>0</nombre-bulles-y>
    <position-premiere-bulle>0.3 0.1 0.0</position-premiere-bulle>
