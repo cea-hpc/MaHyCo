@@ -79,7 +79,9 @@ function main {
       echo "----> Découpage avec 4x2 sous-domaines ? $test2"
       test3=$(grep "2 2 2" Donnees.arc)
       echo "----> Découpage avec 2x2x2 sous-domaines ? $test3"
-      test4=$(grep "2 2" test)
+      testa=$(grep nsd Donnees.arc)
+      echo $testa > testb     
+      test4=$(grep "2 2" testb)
       echo "----> Découpage avec 2x2 sous-domaines ? $test4"
 
       # Exécution du cas test en choisissant le bon nombre de sous-domaines
