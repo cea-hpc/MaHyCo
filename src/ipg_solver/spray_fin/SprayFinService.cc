@@ -1,5 +1,5 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
-// Copyright 2000-2024 CEA (www.cea.fr) IFPEN (www.ifpenergiesnouvelles.com)
+// Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
 
@@ -101,7 +101,7 @@ void SprayFinService::updateParticlePosition() {
 
   // we need dt^{n+1/2}
   const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
-  
+
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * dt;
     // info() << "Particle " << part_i.localId() << " vel = " << m_particle_velocity[part_i];
