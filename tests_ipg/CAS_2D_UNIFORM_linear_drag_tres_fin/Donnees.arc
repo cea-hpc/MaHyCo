@@ -130,8 +130,11 @@
       <variable>ParticleTemperature</variable>
       <output-frequency>1e5</output-frequency>
     </ipg-output>
-    <spray-type name="SprayFin">
-      <drag> <type>Quadratic</type> </drag>
+    <spray-type name="SprayTresFin">
+      <drag>
+        <type>Linear</type>
+        <coef>3.85e-5</coef>
+      </drag>
     </spray-type>
     <one-particle-history>1</one-particle-history>
   </ipg>

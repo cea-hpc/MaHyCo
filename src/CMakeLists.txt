@@ -70,6 +70,10 @@ add_library(SprayFin ipg_solver/spray_fin/SprayFinService.cc)
 target_include_directories(SprayFin PUBLIC .)
 target_link_libraries(SprayFin PUBLIC arcane_core)
 
+add_library(SprayTresFin ipg_solver/spray_tres_fin/SprayTresFinService.cc)
+target_include_directories(SprayTresFin PUBLIC .)
+target_link_libraries(SprayTresFin PUBLIC arcane_core)
+
 # Partie Cas Test
 add_library(RIDER casTest/RIDER/RIDERService.cc)
 target_include_directories(RIDER PUBLIC .)
@@ -126,7 +130,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 #-----------------------------------------------------------------------------------------------------------------
 ### edition du lien pour associer toutes les bibliothèques
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput OneParticle UserFileInputParticles SprayFin RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX UNIFORM Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto IpgOutput OneParticle UserFileInputParticles SprayFin SprayTresFin RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX UNIFORM Remap)
 
 #-----------------------------------------------------------------------------------------------------------------
 
@@ -160,6 +164,7 @@ arcane_target_add_axl(IpgOutput ipg_output/VtkAscii)
 arcane_target_add_axl(OneParticle ipg_creation_of_particles/oneparticle/OneParticle)
 arcane_target_add_axl(UserFileInputParticles ipg_creation_of_particles/userfileinput/UserFileInputParticles)
 arcane_target_add_axl(SprayFin ipg_solver/spray_fin/SprayFin)
+arcane_target_add_axl(SprayTresFin ipg_solver/spray_tres_fin/SprayTresFin)
 
 arcane_target_add_axl(Remap Remap/RemapADI)
 arcane_target_add_axl(Remap Remap/RemapALE)

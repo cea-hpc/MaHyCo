@@ -73,7 +73,7 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
 
     <!-- temps final et timestep -->
-    <deltat-init>1e-1</deltat-init>
+    <deltat-init>1e-3</deltat-init>
     <deltat-min>1e-3</deltat-min>
     <deltat-max>1e4</deltat-max>
     <!-- <cfl>0.05</cfl> -->
@@ -118,7 +118,7 @@
   <ipg>
     <particle-injector-type name="OneParticle">
       <init-velocity>1. 0. 0.</init-velocity>
-      <init-coord>.05 4000. 0.</init-coord>
+      <init-coord>100. 4000. 0.</init-coord>
       <init-time>0.</init-time>
       <init-radius>1.</init-radius>
       <init-temperature>1.</init-temperature>

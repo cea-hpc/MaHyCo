@@ -130,7 +130,7 @@
       <variable>ParticleTemperature</variable>
       <output-frequency>1e5</output-frequency>
     </ipg-output>
-    <spray-type name="SprayFin">
+    <spray-type name="SprayTresFin">
       <drag> <type>Quadratic</type> </drag>
     </spray-type>
     <one-particle-history>1</one-particle-history>
