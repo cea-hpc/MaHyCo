@@ -102,6 +102,7 @@ enum Test {
     vanLeerG = 5,
     arithmeticG = 6,
     ultrabeeG = 7,
+    superQuadraticG = 8,
   }; 
 #endif
 
