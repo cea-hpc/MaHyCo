@@ -1279,7 +1279,7 @@ void MahycoModule::updateElasticityAndPlasticity()
         return;
     }
     // Calcul du gradient de vitesse
-    options()->environment[0].elastoModel()->ComputeVelocityGradient();
+    options()->environment[0].elastoModel()->ComputeVelocityGradient(m_global_deltat.value());
     // Calcul du tenseur de déformation et de rotation
     options()->environment[0].elastoModel()->ComputeDeformationAndRotation();
 
