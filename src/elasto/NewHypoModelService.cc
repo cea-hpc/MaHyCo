@@ -9,11 +9,16 @@ using namespace Arcane::Materials;
 
 void NewHypoModelService::initElasto(IMeshEnvironment* env)
 {
+     Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
      m_velocity_gradient.fill(Real3x3::zero());
      m_spin_rate.fill(Real3::zero());
      m_deformation_rate.fill(Real3x3::zero());
      m_strain_tensor.fill(Real3x3::zero());
      m_strain_tensor_n.fill(Real3x3::zero());
+  ENUMERATE_CELL(icell, allCells()){
+    Cell cell = * icell;
+    m_tensorF[cell] = Identity;
+  }
     
 }
 
@@ -21,11 +26,12 @@ void NewHypoModelService::initElasto(IMeshEnvironment* env)
 /* Calcul des gradients de vitesses à la cell */
 /*---------------------------------------------------------------------------*/
 
-void NewHypoModelService::ComputeVelocityGradient()
+void NewHypoModelService::ComputeVelocityGradient(Real delta_t)
 {
   Real3x3 velocity_gradient;
   Real3x3 displacement_gradient;
   Real volume;
+  Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
   ENUMERATE_CELL(icell, allCells()){
     Cell cell = * icell;
     velocity_gradient = Real3x3::zero();
@@ -35,15 +41,14 @@ void NewHypoModelService::ComputeVelocityGradient()
       const Real3 ui = m_displacement[cell.node(inode)];
       Real3 cqsndemi = .5*(m_cell_cqs_n[icell][inode]+m_cell_cqs[icell][inode]);
       velocity_gradient +=math::prodTens(vi, cqsndemi);
-      displacement_gradient +=math::prodTens(ui, cqsndemi);
+      // displacement_gradient +=math::prodTens(ui, cqsndemi);
     }
     
     volume = .5*(m_cell_volume_n[cell]+m_cell_volume[cell]);
     // m_velocity_gradient[cell] = velocity_gradient / m_cell_volume[cell];
     // m_displacement_gradient[cell] = displacement_gradient / m_cell_volume[cell];
     m_velocity_gradient[cell] = velocity_gradient / volume;
-    m_displacement_gradient[cell] = displacement_gradient / volume;
-    pinfo() << " volumes (new et old) " << m_cell_volume[cell] << " " << m_cell_volume_n[cell];
+    m_displacement_gradient[cell] =  Identity  + velocity_gradient / volume * delta_t;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -73,6 +78,7 @@ void NewHypoModelService::ComputeDeformationAndRotation()
     m_spin_rate[cell].y = KoneOverTwo * (m_velocity_gradient[cell].z.x - m_velocity_gradient[cell].x.z);
     m_spin_rate[cell].z = KoneOverTwo * (m_velocity_gradient[cell].x.y - m_velocity_gradient[cell].y.x);
     
+    /* 
     pinfo() << " m_velocity_gradient[cell].x.x " << m_velocity_gradient[cell].x.x;
     pinfo() << " m_velocity_gradient[cell].y.y " << m_velocity_gradient[cell].y.y;
     pinfo() << " m_velocity_gradient[cell].x.y " << m_velocity_gradient[cell].x.y;
@@ -91,21 +97,23 @@ void NewHypoModelService::ComputeDeformationAndRotation()
     pinfo() << " m_displacement_gradient[cell].y.y " << m_displacement_gradient[cell].y.y;
     pinfo() << " m_displacement_gradient[cell].x.y " << m_displacement_gradient[cell].x.y;
     pinfo() << " m_displacement_gradient[cell].y.x " << m_displacement_gradient[cell].y.x;
+    */
     
-    Real3x3  tensorF = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
-    tensorF +=  m_displacement_gradient[cell];
-    Real3x3  transpose_tensorF = math::transpose(tensorF);
-    m_gauchy_green_tensor[cell] = math::matrixProduct(tensorF, transpose_tensorF);
+    m_tensorF[cell] = math::matrixProduct(m_displacement_gradient[cell],m_tensorF[cell]);
+    Real3x3  transpose_tensorF = math::transpose(m_tensorF[cell]);
+    m_gauchy_green_tensor[cell] = math::matrixProduct(m_tensorF[cell], transpose_tensorF);
+    /*
     pinfo() << " Tensor F " ;
-    pinfo() << "tensorF.x.x " << tensorF.x.x;
-    pinfo() << "tensorF.y.y " << tensorF.y.y;
-    pinfo() << "tensorF.x.y " << tensorF.x.y;
-    pinfo() << "tensorF.y.x " << tensorF.y.x;
+    pinfo() << "tensorF.x.x " <<  m_tensorF[cell].x.x;
+    pinfo() << "tensorF.y.y " <<  m_tensorF[cell].y.y;
+    pinfo() << "tensorF.x.y " <<  m_tensorF[cell].x.y;
+    pinfo() << "tensorF.y.x " <<  m_tensorF[cell].y.x;
     pinfo() << " transpose_Tensor F " ;
     pinfo() << " transpose_tensorF.x.x " <<  transpose_tensorF.x.x;
     pinfo() << " transpose_tensorF.y.y " <<  transpose_tensorF.y.y;
     pinfo() << " transpose_tensorF.x.y " <<  transpose_tensorF.x.y;
     pinfo() << " transpose_tensorF.y.x " <<  transpose_tensorF.y.x;
+    */
     
   }
 }
@@ -118,6 +126,7 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
  Real mu = getElasticCst(env);
  Real trace;
  Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
+ Real3x3 strain_tensor_point(Real3x3::zero());
  Real FiveoverThree = 5./3.; 
  Real KoneOverThree = 1./3.;
  Real TwoOverThree = 2./3.;
@@ -128,7 +137,7 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     
-    Real J = m_density[ev] / m_density_0[ev] ;
+    Real J = m_density_0[ev] / m_density[ev] ;
     // calcul du nouveau tenseur
     // pour retrouver les résultats hypo s = s + 2 * mu (D-trace(D)/3) 
     // on pose 
@@ -143,47 +152,25 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     Real3x3 devB = m_gauchy_green_tensor[cell] - KoneOverThree * traceB * Identity;
     
     
-    m_strain_tensor[ev] = m_strain_tensor_n[ev] + mu_over_J * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity
-                                                                - FiveoverThree * traceD * devB) * delta_t ;
-    pinfo() << " traceD " << traceD;
-    pinfo() << " Matrice B ";
-    pinfo() << "m_gauchy_green_tensor[cell].x.x " << m_gauchy_green_tensor[cell].x.x;
-    pinfo() << "m_gauchy_green_tensor[cell].y.y " << m_gauchy_green_tensor[cell].y.y;
-    pinfo() << "m_gauchy_green_tensor[cell].x.y " << m_gauchy_green_tensor[cell].x.y;
-    pinfo() << "m_gauchy_green_tensor[cell].y.x " << m_gauchy_green_tensor[cell].y.x;
-    pinfo() << " traceB " << traceB;
-    
-    trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
-    pinfo() << " avant trace ";
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-    pinfo() << " trace " << trace/3.;
+    strain_tensor_point = mu_over_J * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity
+                                                              - FiveoverThree * traceD * devB) * delta_t ;
+    // simplifié : m_strain_tensor[ev] = m_strain_tensor_n[ev] + mu * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity) * delta_t ;
 
-    // doit-on enlever la trace ?
-    pinfo() << " avant rotation ";
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-    pinfo() << " trace " << trace/3.;
-    
+   
     /* rotation sur le résultat */
     if (dim == 2) {
-        Real sxx = m_strain_tensor[ev].x.x;
-        Real sxy = m_strain_tensor[ev].x.y;
-        Real syy = m_strain_tensor[ev].y.y;
-        Real syx = m_strain_tensor[ev].y.x;
+        Real sxx = m_strain_tensor_n[ev].x.x;
+        Real sxy = m_strain_tensor_n[ev].x.y;
+        Real syy = m_strain_tensor_n[ev].y.y;
+        Real syx = m_strain_tensor_n[ev].y.x;
 
         if (order ==1 ) {
-        
           // utilisation poduit tensoriel ?
-          m_strain_tensor[ev].x.x += 2 * delta_t * sxy * m_spin_rate[cell].z;
-          m_strain_tensor[ev].y.y -= 2 * delta_t * sxy * m_spin_rate[cell].z;
-          m_strain_tensor[ev].x.y -= delta_t *(sxx - syy) * m_spin_rate[cell].z;
+          strain_tensor_point.x.x += 2 * delta_t * sxy * m_spin_rate[cell].z;
+          strain_tensor_point.y.y -= 2 * delta_t * sxy * m_spin_rate[cell].z;
+          strain_tensor_point.x.y -= delta_t *(sxx - syy) * m_spin_rate[cell].z;
           // symetrie
-          m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
+          strain_tensor_point.y.x =  strain_tensor_point.x.y;
         } else {
           // prise en compte consistante de la rotation
           //Q  = (Id +0.5dt*rotz) /  (Id -0.5dt*rotz)
@@ -202,90 +189,45 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
           Real blxy = sxx*qyx+ sxy*qyy;
           Real blyx = syx*qxx+ syy*qxy;
           Real blyy = syx*qyx+ syy*qyy;
-          m_strain_tensor[ev].x.x = qxx*blxx+qxy*blyx;
-          m_strain_tensor[ev].y.y = qyx*blxy+qyy*blyy;
-          m_strain_tensor[ev].x.y = qxx*blxy+qxy*blyy;
+          strain_tensor_point.x.x = qxx*blxx+qxy*blyx;
+          strain_tensor_point.y.y = qyx*blxy+qyy*blyy;
+          strain_tensor_point.x.y = qxx*blxy+qxy*blyy;
           // symetrie
-          m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
+          strain_tensor_point.y.x = strain_tensor_point.x.y;
         }
-
-        /*
-        trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
-        pinfo() << " apres rotation ";
-        pinfo() << " Effet sur xx et yy " << 2 * delta_t * m_strain_tensor[ev].x.y * m_spin_rate[cell].z;
-        pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-        pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-        pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-        pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-        pinfo() << " trace " << trace/3.;
-        pinfo() << " -------------------------------------------";
-        pinfo() << " Solution analytique ";
-        Real A(0.),l(0.), val(0.), val0(0.);
-        Real Epsilon(1.e-8);
-        Real Temps = (m_global_time() - m_global_deltat() * (1 - Epsilon));
-        Real h(1.);
-        Real Sf(0.6),Uf(0.5);
-        Real Sb=Sf/h;
-        Real Ub=Uf/h; 
-        if (m_global_time() >= 0. &&  Temps <= 1.) {
-          val0 =  math::log(1.+Uf/h);
-          pinfo() << " FIN ETAPE 1";
-          pinfo() << " Tensor.x.x analytique " << -(2./3.)*val0;
-          pinfo() << " Tensor.y.y analytique " << (4./3.)*val0;
-          val = 0.;
-          pinfo() << " Tensor.x.y analytique " << val;
-        }  else if ( Temps > 1.  &&  Temps <= 2.) {   
-          val0 = math::log(1.+Uf/h);
-          A = mu*(1.+math::log(1.+Uf/h));
-          val = A*(1.-cos(Sf/(h+Uf)));
-          pinfo() << " FIN ETAPE 2";
-          pinfo() << " Tensor.x.x analytique " << -(2./3.)*(val0)+val;
-          pinfo() << " Tensor.y.y analytique " << (4./3.)*(val0)-val;
-          val = A * sin(Sf/(h+Uf));
-          pinfo() << " Tensor.x.y analytique " << val;
-        } else if ( Temps > 2. &&  Temps <= 3.) {
-          A = mu*(1+math::log(1.+Uf/h));
-          val = A*(1-cos(Sf/(h+Uf)));
-          pinfo() << " FIN ETAPE 3";
-          pinfo() << " Tensor.x.x analytique " << val;
-          pinfo() << " Tensor.y.y analytique " << -val;
-          val = A * sin(Sf/(h+Uf));
-          pinfo() << " Tensor.x.y analytique " << val;
-        } else if ( Temps > 3.) {
-          val = 1-cos(Sb) + (1+math::log(1+Ub))*((1-cos((Sb)/(1+Ub)))*cos(Sb) - sin((Sb)/(1+Ub))*sin(Sb));
-          pinfo() << " FIN ETAPE 4";
-          pinfo() << " Tensor.x.x analytique " << val;
-          pinfo() << " Tensor.y.y analytique " << -val;
-          val = -sin(Sb) + (1.+math::log(1.+ Ub))*(sin(Sb/(1.+Ub))*cos(Sb)+(1-cos(Sb/(1+Ub)))*sin(Sb));
-          pinfo() << " Tensor.x.y analytique " << val;
-        }
-        */
     } else {
-        Real sxx = m_strain_tensor[ev].x.x;
-        Real sxy = m_strain_tensor[ev].x.y;
-        Real syy = m_strain_tensor[ev].y.y;
-        Real szz = m_strain_tensor[ev].z.z;
-        Real syz = m_strain_tensor[ev].y.z;
-        Real szx = m_strain_tensor[ev].z.x;
+        Real sxx = m_strain_tensor_n[ev].x.x;
+        Real sxy = m_strain_tensor_n[ev].x.y;
+        Real syy = m_strain_tensor_n[ev].y.y;
+        Real szz = m_strain_tensor_n[ev].z.z;
+        Real syz = m_strain_tensor_n[ev].y.z;
+        Real szx = m_strain_tensor_n[ev].z.x;
         // cela reste à trace nulle
         // verifier le signe --> correction faite comme en 2D
-        m_strain_tensor[ev].x.x -= 2 * delta_t * (szx * m_spin_rate[cell].y - sxy * m_spin_rate[cell].z);
-        m_strain_tensor[ev].y.y -= 2 * delta_t * (sxy * m_spin_rate[cell].z - syz * m_spin_rate[cell].x);
-        m_strain_tensor[ev].z.z -= 2 * delta_t * (syz * m_spin_rate[cell].x - szx * m_spin_rate[cell].y);
-        m_strain_tensor[ev].x.y -= delta_t * (sxx - syy) * m_spin_rate[cell].z 
+        strain_tensor_point.x.x -= 2 * delta_t * (szx * m_spin_rate[cell].y - sxy * m_spin_rate[cell].z);
+        strain_tensor_point.y.y -= 2 * delta_t * (sxy * m_spin_rate[cell].z - syz * m_spin_rate[cell].x);
+        strain_tensor_point.z.z -= 2 * delta_t * (syz * m_spin_rate[cell].x - szx * m_spin_rate[cell].y);
+        strain_tensor_point.x.y -= delta_t * (sxx - syy) * m_spin_rate[cell].z 
         - delta_t * syz * m_spin_rate[cell].y
         - delta_t * szx * m_spin_rate[cell].x;
-        m_strain_tensor[ev].y.z -= delta_t * (syy - szz) * m_spin_rate[cell].x 
+        strain_tensor_point.y.z -= delta_t * (syy - szz) * m_spin_rate[cell].x 
         - delta_t * szx * m_spin_rate[cell].z
         - delta_t * sxy * m_spin_rate[cell].y;
-        m_strain_tensor[ev].z.x -= delta_t * (szz - sxx) * m_spin_rate[cell].y 
+        strain_tensor_point.z.x -= delta_t * (szz - sxx) * m_spin_rate[cell].y 
         - delta_t * sxy * m_spin_rate[cell].x
         - delta_t * syz * m_spin_rate[cell].z;
         // symetrie
-        m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
-        m_strain_tensor[ev].z.y = m_strain_tensor[ev].y.z;
-        m_strain_tensor[ev].x.z = m_strain_tensor[ev].z.x;
+        strain_tensor_point.y.x = strain_tensor_point.x.y;
+        strain_tensor_point.z.y = strain_tensor_point.y.z;
+        strain_tensor_point.x.z = strain_tensor_point.z.x;
     }
+    m_strain_tensor[ev] =  m_strain_tensor_n[ev] + strain_tensor_point;
+    /* 
+    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
+    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
+    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
+    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
+   */
   }
 }
 /*---------------------------------------------------------------------------*/

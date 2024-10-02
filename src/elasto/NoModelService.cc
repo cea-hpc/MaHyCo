@@ -21,7 +21,7 @@ void NoModelService::initElasto(IMeshEnvironment* env)
 /* Calcul des gradients de vitesses à la cell */
 /*---------------------------------------------------------------------------*/
 
-void NoModelService::ComputeVelocityGradient()
+void NoModelService::ComputeVelocityGradient(Real delta_t)
 {
 
 }

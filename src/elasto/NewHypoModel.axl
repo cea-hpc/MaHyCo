@@ -65,11 +65,15 @@
         <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
 	    dim="0" material="false" dump="true" need-sync="true" />
 	    
-	    <!-- Gradient de deplacement -->
+        <!-- Gradient de deplacement -->
         <variable field-name="displacement_gradient" name="DisplacementGradient" data-type="real3x3" item-kind="cell"
-	    dim="0" material="false" dump="true" need-sync="true" />
-	    
-	    <!-- Tenseur gauchy-Green -->
+		  dim="0" material="false" dump="true" need-sync="true" />
+	
+        <!-- Tenseur deformation -->
+        <variable field-name="tensorF" name="TensorF" data-type="real3x3" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	
+	<!-- Tenseur gauchy-Green -->
         <variable field-name="gauchy_green_tensor" name="GauchyGreenTensor" data-type="real3x3" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    

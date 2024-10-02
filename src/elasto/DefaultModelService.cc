@@ -21,7 +21,7 @@ void DefaultModelService::initElasto(IMeshEnvironment* env)
 /* Calcul des gradients de vitesses à la cell */
 /*---------------------------------------------------------------------------*/
 
-void DefaultModelService::ComputeVelocityGradient()
+void DefaultModelService::ComputeVelocityGradient(Real delta_t)
 {
   Real3x3 velocity_gradient;
   Real volume;
@@ -40,7 +40,6 @@ void DefaultModelService::ComputeVelocityGradient()
     volume = .5*(m_cell_volume_n[cell]+m_cell_volume[cell]);
     // m_velocity_gradient[cell] = velocity_gradient / m_cell_volume[cell];
     m_velocity_gradient[cell] = velocity_gradient / volume;
-    pinfo() << " volumes (new et old) " << m_cell_volume[cell] << " " << m_cell_volume_n[cell];
     
   }
 }
@@ -71,6 +70,7 @@ void DefaultModelService::ComputeDeformationAndRotation()
     m_spin_rate[cell].y = KoneOverTwo * (m_velocity_gradient[cell].z.x - m_velocity_gradient[cell].x.z);
     m_spin_rate[cell].z = KoneOverTwo * (m_velocity_gradient[cell].x.y - m_velocity_gradient[cell].y.x);
 
+    /* 
     pinfo() << " m_velocity_gradient[cell].x.x " << m_velocity_gradient[cell].x.x;
     pinfo() << " m_velocity_gradient[cell].y.y " << m_velocity_gradient[cell].y.y;
     pinfo() << " m_velocity_gradient[cell].x.y " << m_velocity_gradient[cell].x.y;
@@ -83,6 +83,7 @@ void DefaultModelService::ComputeDeformationAndRotation()
 
     pinfo() << " m_spin_rate[cell].z " << m_spin_rate[cell].z;
     pinfo() << "  m_deformation_rate[cell].z.z " <<m_deformation_rate[cell].z.z;
+    */
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -93,7 +94,10 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
  Integer order(options()->ordreRotation);
  Real mu = getElasticCst(env);
  Real trace;
- Real3x3 identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
+ Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
+ Real3x3 strain_tensor_point(Real3x3::zero()); 
+ Real KoneOverThree = 1./3.;
+ // Real3x3 devD(Real3x3::zero());
  ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -102,47 +106,29 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     // calcul du nouveau tenseur
-    m_strain_tensor[ev] = m_strain_tensor_n[ev] + 2*mu*m_deformation_rate[cell] * delta_t;
     
-    // trace
-    // trace = 2* mu * (m_deformation_rate[cell].x.x + m_deformation_rate[cell].y.y + m_deformation_rate[cell].z.z) * delta_t;
-    trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
+    trace = (m_deformation_rate[cell].x.x + m_deformation_rate[cell].y.y + m_deformation_rate[cell].z.z) ;
+    // devD =  2* mu *( m_deformation_rate[cell] -  KoneOverThree * trace * Identity)* delta_t ;
 
-    pinfo() << " avant trace ";
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-    pinfo() << " trace " << trace/3.;
-    // on retire la trace sur les élément diagonaux
-    m_strain_tensor[ev] -= trace * identity /3.;
-
-    
-    trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
-    pinfo() << " avant rotation ";
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-    pinfo() << " trace " << trace/3.;
+    strain_tensor_point = 2* mu *( m_deformation_rate[cell] -  KoneOverThree * trace * Identity)* delta_t ;
     
     // rotation sur le résultat
     if (dim == 2) {
-        Real sxx = m_strain_tensor[ev].x.x;
-        Real sxy = m_strain_tensor[ev].x.y;
-        Real syy = m_strain_tensor[ev].y.y;
-        Real syx = m_strain_tensor[ev].y.x;
+        Real sxx = m_strain_tensor_n[ev].x.x;
+        Real sxy = m_strain_tensor_n[ev].x.y;
+        Real syy = m_strain_tensor_n[ev].y.y;
+        Real syx = m_strain_tensor_n[ev].y.x;
 
         if (order == 1 ) {
           // prise en compte simplifié de la rotation
           // Les teres d'ordre superieur à deux sont négligés
           // Q  = (Id + dt*rotz)
           // ou rotz est la matrice associée au vecteur instantané de rotation 
-          m_strain_tensor[ev].x.x += 2 * delta_t * sxy * m_spin_rate[cell].z;
-          m_strain_tensor[ev].y.y -= 2 * delta_t * sxy * m_spin_rate[cell].z;
-          m_strain_tensor[ev].x.y -= delta_t *(sxx - syy) * m_spin_rate[cell].z;
+          strain_tensor_point.x.x += 2 * delta_t * sxy * m_spin_rate[cell].z;
+          strain_tensor_point.y.y -= 2 * delta_t * sxy * m_spin_rate[cell].z;
+          strain_tensor_point.x.y -= delta_t *(sxx - syy) * m_spin_rate[cell].z;
           // symetrie
-          m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
+          strain_tensor_point.y.x = strain_tensor_point.x.y;
         } else {        
           // prise en compte consistante de la rotation
           //Q  = (Id +0.5dt*rotz) /  (Id -0.5dt*rotz)
@@ -161,22 +147,13 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
           Real blxy = sxx*qyx+ sxy*qyy;
           Real blyx = syx*qxx+ syy*qxy;
           Real blyy = syx*qyx+ syy*qyy;
-          m_strain_tensor[ev].x.x = qxx*blxx+qxy*blyx;
-          m_strain_tensor[ev].y.y = qyx*blxy+qyy*blyy;
-          m_strain_tensor[ev].x.y = qxx*blxy+qxy*blyy;
+          strain_tensor_point.x.x = qxx*blxx+qxy*blyx;
+          strain_tensor_point.y.y = qyx*blxy+qyy*blyy;
+          strain_tensor_point.x.y = qxx*blxy+qxy*blyy;
           // symetrie
-          m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
+          strain_tensor_point.y.x = strain_tensor_point.x.y;
         }
-        
-        
-        trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
-        pinfo() << " apres rotation ";
-        pinfo() << " Effet sur xx et yy " << 2 * delta_t * sxy * m_spin_rate[cell].z;
-        pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-        pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-        pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-        pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-        pinfo() << " trace " << trace/3.;
+        /*
         pinfo() << " -------------------------------------------";
         pinfo() << " Solution analytique ";
         Real A(0.),l(0.), val(0.), val0(0.);
@@ -217,34 +194,46 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
           pinfo() << " Tensor.y.y analytique " << -val;
           val = -sin(Sb) + (1.+math::log(1.+ Ub))*(sin(Sb/(1.+Ub))*cos(Sb)+(1-cos(Sb/(1+Ub)))*sin(Sb));
           pinfo() << " Tensor.x.y analytique " << val; 
-        }                    
+          }   
+        */                 
         
     } else {
-        Real sxx = m_strain_tensor[ev].x.x;
-        Real sxy = m_strain_tensor[ev].x.y;
-        Real syy = m_strain_tensor[ev].y.y;
-        Real szz = m_strain_tensor[ev].z.z;
-        Real syz = m_strain_tensor[ev].y.z;
-        Real szx = m_strain_tensor[ev].z.x;
+        Real sxx = m_strain_tensor_n[ev].x.x;
+        Real sxy = m_strain_tensor_n[ev].x.y;
+        Real syy = m_strain_tensor_n[ev].y.y;
+        Real szz = m_strain_tensor_n[ev].z.z;
+        Real syz = m_strain_tensor_n[ev].y.z;
+        Real szx = m_strain_tensor_n[ev].z.x;
         // cela reste à trace nulle
         // verifier le signe -- correction en 2D
-        m_strain_tensor[ev].x.x -= 2 * delta_t * (szx * m_spin_rate[cell].y - sxy * m_spin_rate[cell].z);
-        m_strain_tensor[ev].y.y -= 2 * delta_t * (sxy * m_spin_rate[cell].z - syz * m_spin_rate[cell].x);
-        m_strain_tensor[ev].z.z -= 2 * delta_t * (syz * m_spin_rate[cell].x - szx * m_spin_rate[cell].y);
-        m_strain_tensor[ev].x.y -= delta_t * (sxx - syy) * m_spin_rate[cell].z 
+        strain_tensor_point.x.x -= 2 * delta_t * (szx * m_spin_rate[cell].y - sxy * m_spin_rate[cell].z);
+        strain_tensor_point.y.y -= 2 * delta_t * (sxy * m_spin_rate[cell].z - syz * m_spin_rate[cell].x);
+        strain_tensor_point.z.z -= 2 * delta_t * (syz * m_spin_rate[cell].x - szx * m_spin_rate[cell].y);
+        strain_tensor_point.x.y -= delta_t * (sxx - syy) * m_spin_rate[cell].z 
         - delta_t * syz * m_spin_rate[cell].y
         - delta_t * szx * m_spin_rate[cell].x;
-        m_strain_tensor[ev].y.z -= delta_t * (syy - szz) * m_spin_rate[cell].x 
+        strain_tensor_point.y.z -= delta_t * (syy - szz) * m_spin_rate[cell].x 
         - delta_t * szx * m_spin_rate[cell].z
         - delta_t * sxy * m_spin_rate[cell].y;
-        m_strain_tensor[ev].z.x -= delta_t * (szz - sxx) * m_spin_rate[cell].y 
+        strain_tensor_point.z.x -= delta_t * (szz - sxx) * m_spin_rate[cell].y 
         - delta_t * sxy * m_spin_rate[cell].x
         - delta_t * syz * m_spin_rate[cell].z;
         // symetrie
-        m_strain_tensor[ev].y.x = m_strain_tensor[ev].x.y;
-        m_strain_tensor[ev].z.y = m_strain_tensor[ev].y.z;
-        m_strain_tensor[ev].x.z = m_strain_tensor[ev].z.x;
+        strain_tensor_point.y.x = strain_tensor_point.x.y;
+        strain_tensor_point.z.y = strain_tensor_point.y.z;
+        strain_tensor_point.x.z = strain_tensor_point.z.x;
     }
+    m_strain_tensor[ev] =  m_strain_tensor_n[ev] + strain_tensor_point;
+
+    trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
+    /* 
+    pinfo() << " trace " << trace/3.;
+    
+    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
+    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
+    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
+    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
+    */
   }
 }
 /*---------------------------------------------------------------------------*/

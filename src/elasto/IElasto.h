@@ -45,7 +45,7 @@ public:
   /** 
    *  Calcul des gradients de vitesse
    */
-  virtual void ComputeVelocityGradient() = 0;
+  virtual void ComputeVelocityGradient(Real delta_t) = 0;
     /** 
    *  Calcul du tenseur de déformation et de rotation
    */
