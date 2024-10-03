@@ -37,7 +37,8 @@ void SprayTresFinService::correctFluidVelocity() {
 /*---------------------------------------------------------------------------*/
 void SprayTresFinService::updateParticleVelocity() {
 
-  const Real dt (m_global_deltat());  //  dt^n
+  // dt^n
+  const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
 
   ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();
@@ -57,8 +58,8 @@ void SprayTresFinService::updateParticleVelocity() {
 /*---------------------------------------------------------------------------*/
 void SprayTresFinService::updateParticlePosition() {
 
-  // we need dt^{n+1/2}
-  const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
+  // dt^{n+1/2}
+  const Real dt (m_global_deltat());
 
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * dt;

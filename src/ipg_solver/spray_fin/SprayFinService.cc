@@ -27,7 +27,8 @@ void SprayFinService::initSolverParticles() {
 /*---------------------------------------------------------------------------*/
 void SprayFinService::correctFluidVelocity() {
 
-  const Real dt (m_global_deltat());  //  dt^n
+  // dt^n
+  const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
 
   // ### Ce qu'il faudrait faire idéalement :
   // 1 - trouver les particules appartenant à chaque *cellule duale*
@@ -79,7 +80,8 @@ void SprayFinService::correctFluidVelocity() {
 /*---------------------------------------------------------------------------*/
 void SprayFinService::updateParticleVelocity() {
 
-  const Real dt (m_global_deltat());  //  dt^n
+  // dt^n
+  const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
 
   ENUMERATE_PARTICLE (ipart, activeParticlesGroup) {
     Real3 up_chapo = m_particle_velocity[ipart] + dt*options()->getGravity();
@@ -99,8 +101,8 @@ void SprayFinService::updateParticleVelocity() {
 /*---------------------------------------------------------------------------*/
 void SprayFinService::updateParticlePosition() {
 
-  // we need dt^{n+1/2}
-  const Real dt ( 0.5 * ( m_global_old_deltat() + m_global_deltat() ) );
+  // dt^{n+1/2}
+  const Real dt (m_global_deltat());
 
   ENUMERATE_PARTICLE (part_i, activeParticlesGroup) {
     m_particle_coord[part_i] += m_particle_velocity[part_i] * dt;
