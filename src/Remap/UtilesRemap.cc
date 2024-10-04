@@ -248,35 +248,37 @@ Real RemapADIService::computeY0(int projectionLimiterId, Real y0, Real yplus,
     }
     // sol1 = alpha1 ym + beta1 yp avec beta1 + alpha1 = 1
     // sol2 = alpha2 ym + beta2 yp avec beta2 + alpha2 = 1
-    // *** y0moins
-    double sqrt_delta = hm0*hp0*sqrt(hm0*hm0+2*h0*hp0-h0*h0);
-    double denom = 2*hp0*(hm0*hm0 - hp0*hp0)+h0*(hm0*hm0+hp0*hp0);
-    if (denom == 0.0) {
-      error() << "limiteur super quadratique: dénominateur nul";
-      exit(1);
-    }
-    double alpha1 = (hm0*hm0*(h0+hp0)+sqrt_delta) / denom;
-    double alpha2 = (hm0*hm0*(h0+hp0)-sqrt_delta) / denom;
-    if (alpha1 >= 0 and alpha1 <= 1) {
-      y0moins = alpha1 * yplus + (1 - alpha1) * ymoins;
-    } else if (alpha2 >= 0 and alpha2 <= 1) {
-      y0moins = alpha2 * yplus + (1 - alpha2) * ymoins;
-    } else {
-      error() << "Limiteur super quadratic: 2 mauvaises solutions au polynome du 2nd degré de y0moins. alpha1 = " << alpha1 <<
-        " et alpha2 = " << alpha2;
-      exit(1);
-    }
     // *** y0plus
-    sqrt_delta = hm0*hp0*sqrt(hp0*hp0+2*h0*hm0-h0*h0);
-    denom = 2*hm0*(hp0*hp0 - hm0*hm0)+h0*(hm0*hm0+hp0*hp0);
-    alpha1 = (hp0*hp0*(h0+hm0)+sqrt_delta) / denom;
-    alpha2 = (hp0*hp0*(h0+hm0)-sqrt_delta) / denom;
+    double sqrt_delta = hm0*hp0*std::sqrt((h0 - 2*hp0)*(-4*std::pow(h0,3) - 2*std::pow(hp0,3) + h0*hp0*(-8*hm0 + hp0) + 4*std::pow(h0,2)*(2*hm0 + hp0)));
+    double denom = 4*hm0*hp0*(hm0*hm0 - hp0*hp0) + 2*h0*h0*(hm0*hm0 + hp0*hp0) - 2*h0*(2*std::pow(hm0,3) + hm0*hm0*hp0 - hm0*hp0*hp0 + 2*std::pow(hp0,3));
+    double a = (2*h0+hm0)*(h0-2*hp0)*hp0*hp0;
+    double alpha1 = (a + sqrt_delta) / denom;
+    double alpha2 = (a - sqrt_delta) / denom;
     if (alpha1 >= 0 and alpha1 <= 1) {
       y0plus = alpha1 * ymoins + (1 - alpha1) * yplus;
     } else if (alpha2 >= 0 and alpha2 <= 1) {
       y0plus = alpha2 * ymoins + (1 - alpha2) * yplus;
     } else {
       error() << "Limiteur super quadratic: 2 mauvaises solutions au polynome du 2nd degré de y0plus. alpha1 = " << alpha1 <<
+        " et alpha2 = " << alpha2;
+      exit(1);
+    }
+    // *** y0moins
+    sqrt_delta = hm0*hp0*std::sqrt((h0 - 2*hm0)*(-4*std::pow(h0,3) - 2*std::pow(hm0,3) + h0*hm0*(hm0 - 8*hp0) + 4*h0*h0*(hm0 + 2*hp0)));
+    denom = 4*std::pow(hm0,3)*hp0 - 4*hm0*std::pow(hp0,3) - 2*h0*h0*(hm0*hm0 + hp0*hp0) + 2*h0*(2*std::pow(hm0,3) - hm0*hm0*hp0 + hm0*hp0*hp0 + 2*std::pow(hp0,3));
+    if (denom == 0.0) {
+      error() << "limiteur super quadratique: dénominateur nul";
+      exit(1);
+    }
+    a = (h0-2*hm0)*(2*h0+hp0)*hm0*hm0;
+    alpha1 = (-a+sqrt_delta) / denom;
+    alpha2 = (-a-sqrt_delta) / denom;
+    if (alpha1 >= 0 and alpha1 <= 1) {
+      y0moins = alpha1 * yplus + (1 - alpha1) * ymoins;
+    } else if (alpha2 >= 0 and alpha2 <= 1) {
+      y0moins = alpha2 * yplus + (1 - alpha2) * ymoins;
+    } else {
+      error() << "Limiteur super quadratic: 2 mauvaises solutions au polynome du 2nd degré de y0moins. alpha1 = " << alpha1 <<
         " et alpha2 = " << alpha2;
       exit(1);
     }
