@@ -97,6 +97,9 @@
   <!-- Deplacement -->
   <variable field-name="displacement" name="Displacement" data-type="real3" item-kind="node"
 	    dim="0" material="false" dump="true" need-sync="true" />
+  <!-- hourglass_velocity_correction -->
+  <variable field-name="hourglass_velocity_correction"   name="hourglassCorr" data-type="real3" item-kind="node"
+	    dim="0" dump="true" need-sync="true" />
   <!-- 	NODE MASS	 -->
   <variable field-name="node_mass" name="NodeMass" data-type="real" item-kind="node"
 	    dim="0" dump="true" need-sync="true" />
@@ -395,6 +398,13 @@
   <!-- - - - options pseudo-centree - - - - -->
   <simple name="pseudo-centree" type="bool">
     <description>Option pseudo-centree </description>
+  </simple>
+  
+  <!-- - - - - - coefficient anti-dérive - - - - -->
+  <simple name="coef-antiderive" type="real" default="0.">
+    <description>
+      Coefficient de l'antidérive pour les calculs lagrangiens
+    </description>
   </simple>
   
   <!-- - - - options longueur caracteristic - - - - -->
