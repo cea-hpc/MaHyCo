@@ -41,12 +41,9 @@ void NewHypoModelService::ComputeVelocityGradient(Real delta_t)
       const Real3 ui = m_displacement[cell.node(inode)];
       Real3 cqsndemi = .5*(m_cell_cqs_n[icell][inode]+m_cell_cqs[icell][inode]);
       velocity_gradient +=math::prodTens(vi, cqsndemi);
-      // displacement_gradient +=math::prodTens(ui, cqsndemi);
     }
     
     volume = .5*(m_cell_volume_n[cell]+m_cell_volume[cell]);
-    // m_velocity_gradient[cell] = velocity_gradient / m_cell_volume[cell];
-    // m_displacement_gradient[cell] = displacement_gradient / m_cell_volume[cell];
     m_velocity_gradient[cell] = velocity_gradient / volume;
     m_displacement_gradient[cell] =  Identity  + velocity_gradient / volume * delta_t;
   }
@@ -77,43 +74,10 @@ void NewHypoModelService::ComputeDeformationAndRotation()
     m_spin_rate[cell].x = KoneOverTwo * (m_velocity_gradient[cell].y.z - m_velocity_gradient[cell].z.y);
     m_spin_rate[cell].y = KoneOverTwo * (m_velocity_gradient[cell].z.x - m_velocity_gradient[cell].x.z);
     m_spin_rate[cell].z = KoneOverTwo * (m_velocity_gradient[cell].x.y - m_velocity_gradient[cell].y.x);
-    
-    /* 
-    pinfo() << " m_velocity_gradient[cell].x.x " << m_velocity_gradient[cell].x.x;
-    pinfo() << " m_velocity_gradient[cell].y.y " << m_velocity_gradient[cell].y.y;
-    pinfo() << " m_velocity_gradient[cell].x.y " << m_velocity_gradient[cell].x.y;
-    pinfo() << " m_velocity_gradient[cell].y.x " << m_velocity_gradient[cell].y.x;
-
-    pinfo() << " m_deformation_rate[cell].x.x " << m_deformation_rate[cell].x.x;
-    pinfo() << " m_deformation_rate[cell].y.y " << m_deformation_rate[cell].y.y;
-    pinfo() << " m_deformation_rate[cell].x.y " << m_deformation_rate[cell].x.y;
-    pinfo() << " m_deformation_rate[cell].y.x " << m_deformation_rate[cell].y.x;
-
-    pinfo() << " m_spin_rate[cell].z " << m_spin_rate[cell].z;
-    pinfo() << "  m_deformation_rate[cell].z.z " <<m_deformation_rate[cell].z.z;
-
-    pinfo() << " Gradient de déplacement " ;
-    pinfo() << " m_displacement_gradient[cell].x.x " << m_displacement_gradient[cell].x.x;
-    pinfo() << " m_displacement_gradient[cell].y.y " << m_displacement_gradient[cell].y.y;
-    pinfo() << " m_displacement_gradient[cell].x.y " << m_displacement_gradient[cell].x.y;
-    pinfo() << " m_displacement_gradient[cell].y.x " << m_displacement_gradient[cell].y.x;
-    */
-    
+  
     m_tensorF[cell] = math::matrixProduct(m_displacement_gradient[cell],m_tensorF[cell]);
     Real3x3  transpose_tensorF = math::transpose(m_tensorF[cell]);
     m_gauchy_green_tensor[cell] = math::matrixProduct(m_tensorF[cell], transpose_tensorF);
-    /*
-    pinfo() << " Tensor F " ;
-    pinfo() << "tensorF.x.x " <<  m_tensorF[cell].x.x;
-    pinfo() << "tensorF.y.y " <<  m_tensorF[cell].y.y;
-    pinfo() << "tensorF.x.y " <<  m_tensorF[cell].x.y;
-    pinfo() << "tensorF.y.x " <<  m_tensorF[cell].y.x;
-    pinfo() << " transpose_Tensor F " ;
-    pinfo() << " transpose_tensorF.x.x " <<  transpose_tensorF.x.x;
-    pinfo() << " transpose_tensorF.y.y " <<  transpose_tensorF.y.y;
-    pinfo() << " transpose_tensorF.x.y " <<  transpose_tensorF.x.y;
-    pinfo() << " transpose_tensorF.y.x " <<  transpose_tensorF.y.x;
-    */
     
   }
 }
@@ -138,6 +102,8 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     
     Real J = m_density_0[ev] / m_density[ev] ;
+    // Comparaison avec F
+    Real Jprime = determinant(m_tensorF[cell]);
     // calcul du nouveau tenseur
     // pour retrouver les résultats hypo s = s + 2 * mu (D-trace(D)/3) 
     // on pose 
@@ -222,12 +188,7 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
         strain_tensor_point.x.z = strain_tensor_point.z.x;
     }
     m_strain_tensor[ev] =  m_strain_tensor_n[ev] + strain_tensor_point;
-    /* 
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-   */
+
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -246,21 +207,29 @@ void NewHypoModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
     Real coeff(1.);
     Real intensite_deviateur(0.);
     if (dim == 2) {
+      // invariant ici 0.5 (sij::sij) que l'on compare à (y**2)/3
+      // ce qui revient à comparer sij::sij à 2 (y**2)/3
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.y,2.);
         intensite_deviateur += m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
         intensite_deviateur += math::pow(m_strain_tensor[ev].x.y,2.);
+        // ou plus simple
+        // intensite_deviateur  = 0.5 * math::doubleContraction(m_strain_tensor[ev],m_strain_tensor[ev]);
+        
     } else {
+      // invariant ici 0.5 (sij::sij)
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.y,2.);
-        intensite_deviateur += math::pow(m_strain_tensor[ev].z.z,2.);
-        intensite_deviateur +=  m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
+        intensite_deviateur += m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
         intensite_deviateur += math::pow(m_strain_tensor[ev].x.y,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.z,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].z.x,2.);
+        // ou plus simple
+        // intensite_deviateur  = 0.5 * math::doubleContraction(m_strain_tensor[ev],m_strain_tensor[ev]);
+        
     }
-    if ( intensite_deviateur > 2.*math::pow(yield_strength,2.)/3.) {
-        coeff = yield_strength/math::sqrt(3.*intensite_deviateur/2.); 
+    if ( intensite_deviateur > math::pow(yield_strength,2.)/3.) {
+        coeff = yield_strength/math::sqrt(3.*intensite_deviateur); 
         // retour radial
         m_strain_tensor[ev] *= coeff;
         // vitesse de déformation plastique
@@ -269,7 +238,7 @@ void NewHypoModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
         // deformation plastique
         m_plastic_deformation[ev] += m_plastic_deformation_velocity[ev];
         
-        intensite_deviateur = 2.*math::pow(yield_strength,2.)/3.;
+        intensite_deviateur = math::pow(yield_strength,2.)/3.;
     }
     // pour les sorties
     m_strain_tensor_xx[cell] = - m_strain_tensor[ev].x.x;

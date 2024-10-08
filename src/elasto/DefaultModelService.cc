@@ -32,13 +32,10 @@ void DefaultModelService::ComputeVelocityGradient(Real delta_t)
     velocity_gradient = Real3x3::zero();
     for (Integer inode = 0; inode < cell.nbNode(); ++inode) {
       const Real3 vi = m_velocity[cell.node(inode)];
-      // const Real3 xi = .5*(m_node_coord[cell.node(inode)]+m_node_coord_n[cell.node(inode)]);
       Real3 cqsndemi = .5*(m_cell_cqs_n[icell][inode]+m_cell_cqs[icell][inode]);
-      // cqsndemi = m_cell_cqs[icell][inode];
       velocity_gradient += math::prodTens(vi,cqsndemi);
     }
     volume = .5*(m_cell_volume_n[cell]+m_cell_volume[cell]);
-    // m_velocity_gradient[cell] = velocity_gradient / m_cell_volume[cell];
     m_velocity_gradient[cell] = velocity_gradient / volume;
     
   }
@@ -69,21 +66,7 @@ void DefaultModelService::ComputeDeformationAndRotation()
     m_spin_rate[cell].x = KoneOverTwo * (m_velocity_gradient[cell].y.z - m_velocity_gradient[cell].z.y);
     m_spin_rate[cell].y = KoneOverTwo * (m_velocity_gradient[cell].z.x - m_velocity_gradient[cell].x.z);
     m_spin_rate[cell].z = KoneOverTwo * (m_velocity_gradient[cell].x.y - m_velocity_gradient[cell].y.x);
-
-    /* 
-    pinfo() << " m_velocity_gradient[cell].x.x " << m_velocity_gradient[cell].x.x;
-    pinfo() << " m_velocity_gradient[cell].y.y " << m_velocity_gradient[cell].y.y;
-    pinfo() << " m_velocity_gradient[cell].x.y " << m_velocity_gradient[cell].x.y;
-    pinfo() << " m_velocity_gradient[cell].y.x " << m_velocity_gradient[cell].y.x;
-
-    pinfo() << " m_deformation_rate[cell].x.x " << m_deformation_rate[cell].x.x;
-    pinfo() << " m_deformation_rate[cell].y.y " << m_deformation_rate[cell].y.y;
-    pinfo() << " m_deformation_rate[cell].x.y " << m_deformation_rate[cell].x.y;
-    pinfo() << " m_deformation_rate[cell].y.x " << m_deformation_rate[cell].y.x;
-
-    pinfo() << " m_spin_rate[cell].z " << m_spin_rate[cell].z;
-    pinfo() << "  m_deformation_rate[cell].z.z " <<m_deformation_rate[cell].z.z;
-    */
+    
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -105,10 +88,7 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
 
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
-    // calcul du nouveau tenseur
-    
-    trace = (m_deformation_rate[cell].x.x + m_deformation_rate[cell].y.y + m_deformation_rate[cell].z.z) ;
-    // devD =  2* mu *( m_deformation_rate[cell] -  KoneOverThree * trace * Identity)* delta_t ;
+    // calcul du nouveau tenseur via strain_tensor_point (incrément du déviateur 2.*mu*dev D + rotation 
 
     strain_tensor_point = 2* mu *( m_deformation_rate[cell] -  KoneOverThree * trace * Identity)* delta_t ;
     
@@ -152,51 +132,7 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
           strain_tensor_point.x.y = qxx*blxy+qxy*blyy;
           // symetrie
           strain_tensor_point.y.x = strain_tensor_point.x.y;
-        }
-        /*
-        pinfo() << " -------------------------------------------";
-        pinfo() << " Solution analytique ";
-        Real A(0.),l(0.), val(0.), val0(0.);
-        Real Epsilon(1.e-8);
-        Real Temps = (m_global_time() - m_global_deltat() * (1 - Epsilon));
-        Real h(1.);
-        Real Sf(0.6),Uf(0.5);
-        Real Sb=Sf/h;
-        Real Ub=Uf/h; 
-        if (m_global_time() >= 0. &&  Temps <= 1.) {
-          val0 =  math::log(1.+Uf/h);
-          pinfo() << " FIN ETAPE 1";
-          pinfo() << " Tensor.x.x analytique " << -(2./3.)*val0;
-          pinfo() << " Tensor.y.y analytique " << (4./3.)*val0;
-          val = 0.;
-          pinfo() << " Tensor.x.y analytique " << val;
-        }  else if ( Temps > 1.  &&  Temps <= 2.) {   
-          val0 = math::log(1.+Uf/h);
-          A = mu*(1.+math::log(1.+Uf/h));
-          val = A*(1.-cos(Sf/(h+Uf)));
-          pinfo() << " FIN ETAPE 2";
-          pinfo() << " Tensor.x.x analytique " << -(2./3.)*(val0)+val;
-          pinfo() << " Tensor.y.y analytique " << (4./3.)*(val0)-val;
-          val = A * sin(Sf/(h+Uf));
-          pinfo() << " Tensor.x.y analytique " << val;
-        } else if ( Temps > 2. &&  Temps <= 3.) {
-          A = mu*(1+math::log(1.+Uf/h));
-          val = A*(1-cos(Sf/(h+Uf)));
-          pinfo() << " FIN ETAPE 3";
-          pinfo() << " Tensor.x.x analytique " << val;
-          pinfo() << " Tensor.y.y analytique " << -val;
-          val = A * sin(Sf/(h+Uf));
-          pinfo() << " Tensor.x.y analytique " << val;
-        } else if ( Temps > 3.) {
-          val = 1-cos(Sb) + (1+math::log(1+Ub))*((1-cos((Sb)/(1+Ub)))*cos(Sb) - sin((Sb)/(1+Ub))*sin(Sb));
-          pinfo() << " FIN ETAPE 4";
-          pinfo() << " Tensor.x.x analytique " << val;
-          pinfo() << " Tensor.y.y analytique " << -val;
-          val = -sin(Sb) + (1.+math::log(1.+ Ub))*(sin(Sb/(1.+Ub))*cos(Sb)+(1-cos(Sb/(1+Ub)))*sin(Sb));
-          pinfo() << " Tensor.x.y analytique " << val; 
-          }   
-        */                 
-        
+        }        
     } else {
         Real sxx = m_strain_tensor_n[ev].x.x;
         Real sxy = m_strain_tensor_n[ev].x.y;
@@ -225,15 +161,7 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     }
     m_strain_tensor[ev] =  m_strain_tensor_n[ev] + strain_tensor_point;
 
-    trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z);
-    /* 
-    pinfo() << " trace " << trace/3.;
-    
-    pinfo() << " m_strain_tensor[ev].x.x " << m_strain_tensor[ev].x.x;
-    pinfo() << " m_strain_tensor[ev].y.y " << m_strain_tensor[ev].y.y;
-    pinfo() << " m_strain_tensor[ev].x.y " << m_strain_tensor[ev].x.y;
-    pinfo() << " m_strain_tensor[ev].y.x " << m_strain_tensor[ev].y.x;
-    */
+    // vérification de la trace = (m_strain_tensor[ev].x.x + m_strain_tensor[ev].y.y + m_strain_tensor[ev].z.z) nulle ?
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -252,21 +180,27 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
     Real coeff(1.);
     Real intensite_deviateur(0.);
     if (dim == 2) {
+      // invariant ici 0.5 (sij::sij) que l'on compare à (y**2)/3
+      // ce qui revient à comparer sij::sij à 2 (y**2)/3
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.y,2.);
         intensite_deviateur += m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
         intensite_deviateur += math::pow(m_strain_tensor[ev].x.y,2.);
+        // ou plus simple
+        // intensite_deviateur  = 0.5 * math::doubleContraction(m_strain_tensor[ev],m_strain_tensor[ev]);
+       
     } else {
         intensite_deviateur  = math::pow(m_strain_tensor[ev].x.x,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.y,2.);
-        intensite_deviateur += math::pow(m_strain_tensor[ev].z.z,2.);
-        intensite_deviateur +=  m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
+        intensite_deviateur += m_strain_tensor[ev].x.x * m_strain_tensor[ev].y.y;
         intensite_deviateur += math::pow(m_strain_tensor[ev].x.y,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].y.z,2.);
         intensite_deviateur += math::pow(m_strain_tensor[ev].z.x,2.);
+        // ou plus simple
+        // intensite_deviateur  = 0.5 * math::doubleContraction(m_strain_tensor[ev],m_strain_tensor[ev]);
     }
-    if ( intensite_deviateur > 2.*math::pow(yield_strength,2.)/3.) {
-        coeff = yield_strength/math::sqrt(3.*intensite_deviateur/2.); 
+    if ( intensite_deviateur > math::pow(yield_strength,2.)/3.) {
+        coeff = yield_strength/math::sqrt(3.*intensite_deviateur); 
         // retour radial
         m_strain_tensor[ev] *= coeff;
         // vitesse de déformation plastique
@@ -275,7 +209,7 @@ void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
         // deformation plastique
         m_plastic_deformation[ev] += m_plastic_deformation_velocity[ev];
         
-        intensite_deviateur = 2.*math::pow(yield_strength,2.)/3.;
+        intensite_deviateur = math::pow(yield_strength,2.)/3.;
     }
     // pour les sorties
     m_strain_tensor_xx[cell] = - m_strain_tensor[ev].x.x;
