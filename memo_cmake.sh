@@ -18,7 +18,7 @@ if [ "$host" = "c-inti.mg1.ccc.ocre.cea.fr" ]; then
          -DArcane_ROOT="/ccc/home/cont001/arcaneuser/arcaneuser/products/Rhel_8__x86_64/arcane/3.12.18.0/release/" \
          #-DArcane_ROOT="$HOME/local_arcane" \
          -DCINETIQUE_SRC="$HOME/workspace/Cinetique_chgt_phase/"
-    
+
     cmake --build . -- -j16 
     cd $OWN_CCCWORKDIR/MaHyCo/build
     
