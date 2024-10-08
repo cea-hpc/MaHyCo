@@ -102,8 +102,8 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     
     Real J = m_density_0[ev] / m_density[ev] ;
-    // Comparaison avec F
-    Real Jprime = determinant(m_tensorF[cell]);
+    // Comparaison avec F : det F = J
+    // Real Jprime = math::determinant(m_tensorF[cell]);
     // calcul du nouveau tenseur
     // pour retrouver les résultats hypo s = s + 2 * mu (D-trace(D)/3) 
     // on pose 
