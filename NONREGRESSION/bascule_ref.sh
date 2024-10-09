@@ -4,7 +4,7 @@
 # Lancement :
 # cd mahyco
 # un fichier list_of_cases_to_change a été créé par ctest au préalable
-# ./src/bascule_ref.sh .
+# ./NONREGRESSION/bascule_ref.sh PATH_DU_BUILD PATH_DE_NONREGRESSION
 #
 
 # -----------------------------------------------------
@@ -37,7 +37,7 @@ function helpme {
 function main {
   
   local readonly mahyco_root_dir=$1
-  local readonly test_dir=$mahyco_root_dir/NONREGRESSION
+  local readonly test_dir=$2/NONREGRESSION
 
   if [ $mahyco_root_dir == "-h" ] ; then 
     helpme
@@ -70,6 +70,8 @@ function main {
       echo "- Lancement du cas : $cas"
       echo "----> Répertoire du cas test = $test_dir/$cas"
       cp $cas_dir/Donnees.arc .
+      cp $cas_dir/*.msh .
+      cp  $cas_dir/*.coeff .
 
       # Lecture du découpage en sous-domaines
       test1=$(grep nsd Donnees.arc | grep 4)
@@ -82,6 +84,7 @@ function main {
       test4=$(grep "2 2" test)
       echo "----> Découpage avec 2x2 sous-domaines ? $test4"
 
+      ls -l $mahyco_root_dir/build/src/Mahyco
       # Exécution du cas test en choisissant le bon nombre de sous-domaines
 
       if [ "$test1" != "" ] ; then  
@@ -89,12 +92,14 @@ function main {
 	    if [ "$test2" != "" ] ; then  
           # Découpage 4x2 = 8 sd
           echo "----> Exécution du cas sur 8 procs..."
-          mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc
+#         > /dev/null
           RUN_PROC="cas sur 8 procs"
 	    else
           # Découpage 4x1 = 4 sd
           echo "----> Exécution du cas sur 4 procs..."
-          mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc
+#	  > /dev/null
           RUN_PROC="cas sur 4 procs"
 	    fi
       else
@@ -102,18 +107,21 @@ function main {
         if [ "$test3" != "" ] ; then
           # Découpage 2x2x2
           echo "----> Exécution du cas sur 8 procs..."
-          mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          mpiexec -n 8 $mahyco_root_dir/build/src/Mahyco Donnees.arc
+#          > /dev/null
           RUN_PROC="cas sur 8 procs"
 	    else 
         if [ "$test4" != "" ] ; then  
           # Découpage 2x2
           echo "----> Exécution du cas sur 4 procs..."
-          mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          mpiexec -n 4 $mahyco_root_dir/build/src/Mahyco Donnees.arc
+#         > /dev/null
           RUN_PROC="cas sur 4 procs"
         else  
           # nsd = rien => cas séquentiel
           echo "----> Exécution du cas séquentiel..."
-          $mahyco_root_dir/build/src/Mahyco Donnees.arc > /dev/null
+          $mahyco_root_dir/build/src/Mahyco Donnees.arc
+#	  > /dev/null
           RUN_PROC="cas sur 1 proc"
         fi
       fi  # test_3

@@ -87,12 +87,13 @@
   </environment>
   
     <with-projection>false</with-projection>
+    <coef-antiderive>0.01</coef-antiderive>
     <pseudo-centree>0</pseudo-centree>
     <schema-csts>0</schema-csts>
      <deltat-init>0.0000001</deltat-init>
      <deltat-min>0.0000000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
-    <longueur-caracteristique>monodimX</longueur-caracteristique>
+    <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>       <cfl>0.1</cfl>
      
     <final-time>3.e-5</final-time>
     

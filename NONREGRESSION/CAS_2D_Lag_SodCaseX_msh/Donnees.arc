@@ -39,7 +39,7 @@
         <variable nom="Materiau" valeur="1." groupe="ZD_mat" />
       </initialisation>
     </mesh>
-    <!-- </meshes> -->
+    <!-- nsd 4 -->
 
   <arcane-checkpoint>
     <period>0</period>
@@ -79,6 +79,7 @@
   </environment>
   
     <with-projection>false</with-projection>
+    <coef-antiderive>0.01</coef-antiderive>
     <pseudo-centree>0</pseudo-centree>
     <schema-csts>0</schema-csts>
      <deltat-init>0.00001</deltat-init>
