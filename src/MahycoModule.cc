@@ -492,11 +492,6 @@ updateVelocity()
     ENUMERATE_NODE ( inode, allNodes() ) {
         Node node = *inode;
         m_velocity[inode] += (dt / m_node_mass[inode]) * m_force[inode];
-        /* if (node.uniqueId() ==  177437 || node.uniqueId() ==  177438 || node.uniqueId() == 178439  || node.uniqueId() == 178438 ) {
-            pinfo() << my_rank << " " << node.uniqueId() << " Vitesse " << m_velocity[node];
-            pinfo() << my_rank << " " << node.uniqueId() << " Masse " << m_node_mass[inode];
-            pinfo() << my_rank << " " << node.uniqueId() << " Force " << m_force[inode];
-        } */
     }
      
     Real3 g = options()->gravity;
@@ -504,6 +499,63 @@ updateVelocity()
         Node node = *inode;
         m_velocity[inode] +=  dt * g;
     }
+    // Calcul des corrections d'anti-dérive si on est en Lagrange : withProjection == false
+    // et si le coefficient d'anti-dérive n'est pas nulle
+    if ( !options()->withProjection && options()->coefAntiderive !=0.) {
+      m_hourglass_velocity_correction.fill (Real3(0.0, 0.0, 0.0));
+      Real coeff(options()->coefAntiderive);
+      if (m_dimension == 2) {
+        ENUMERATE_CELL ( icell, allCells() ) {
+          Cell cell = * icell;
+          Node n0 = cell.node(0);
+          Node n1 = cell.node(1);
+          Node n2 = cell.node(2);
+          Node n3 = cell.node(3);
+          Real3 psi = coeff * (m_velocity[n0] + m_velocity[n2] - m_velocity[n1] - m_velocity[n3]);
+          m_hourglass_velocity_correction[n0] += 1. /  n0.nbCell() *  psi ;
+          m_hourglass_velocity_correction[n1] -= 1. /  n1.nbCell() *  psi ;
+          m_hourglass_velocity_correction[n2] += 1. /  n2.nbCell() *  psi ;
+          m_hourglass_velocity_correction[n3] -= 1. /  n3.nbCell() *  psi ;
+        }
+      } else {
+          ENUMERATE_CELL ( icell, allCells() ) {
+            Cell cell = * icell;
+            Node n0 = cell.node(0);
+            Node n1 = cell.node(1);
+            Node n2 = cell.node(2);
+            Node n3 = cell.node(3);
+            Node n4 = cell.node(4);
+            Node n5 = cell.node(5);
+            Node n6 = cell.node(6);
+            Node n7 = cell.node(7);
+            Real3 psi1 = coeff * (m_velocity[n0] + m_velocity[n1] - m_velocity[n2] - m_velocity[n3]
+                                  - m_velocity[n4] - m_velocity[n5] + m_velocity[n6] + m_velocity[n7]);
+          
+            Real3 psi2 = coeff * (m_velocity[n0] - m_velocity[n1] - m_velocity[n2] + m_velocity[n3]
+                                  - m_velocity[n4] + m_velocity[n5] + m_velocity[n6] - m_velocity[n7]);
+          
+            Real3 psi3 = coeff * (m_velocity[n0] - m_velocity[n1] + m_velocity[n2] - m_velocity[n3]
+                                  + m_velocity[n4] - m_velocity[n5] + m_velocity[n6] - m_velocity[n7]);
+          
+            Real3 psi4 = coeff * (-m_velocity[n0] + m_velocity[n1] - m_velocity[n2] + m_velocity[n3]
+                                  + m_velocity[n4] - m_velocity[n5] + m_velocity[n6] - m_velocity[n7]);
+          
+            m_hourglass_velocity_correction[n0] += 1. /  n0.nbCell() *  (psi1  + psi2 + psi3 - psi4) ;
+            m_hourglass_velocity_correction[n1] += 1. /  n1.nbCell() *  (psi1  - psi2 - psi3 + psi4) ;
+            m_hourglass_velocity_correction[n2] += 1. /  n2.nbCell() *  (-psi1 - psi2 + psi3 - psi4) ;
+            m_hourglass_velocity_correction[n3] += 1. /  n3.nbCell() *  (-psi1 + psi2 - psi3 + psi4) ;
+            m_hourglass_velocity_correction[n4] += 1. /  n4.nbCell() *  (-psi1 - psi2 + psi3 + psi4) ;
+            m_hourglass_velocity_correction[n5] += 1. /  n5.nbCell() *  (-psi1 + psi2 - psi3 - psi4) ;
+            m_hourglass_velocity_correction[n6] += 1. /  n6.nbCell() *  (psi1  + psi2 + psi3 + psi4) ;
+            m_hourglass_velocity_correction[n7] += 1. /  n7.nbCell() *  (psi1  - psi2 - psi3 - psi4) ;
+          }
+      }
+      ENUMERATE_NODE ( inode, allNodes() ) {
+        Node node = *inode;
+        m_velocity[inode] -=  m_hourglass_velocity_correction[inode];
+      }
+    }      
+    
     m_velocity.synchronize();
     
     // pinfo() << my_rank << " : " << " Fin dans updateVelocity()";
@@ -705,6 +757,7 @@ void MahycoModule::
 applyBoundaryCondition()
 {
     debug() << my_rank << " : " << " Entree dans applyBoundaryCondition()";
+    Real Epsilon(1.e-8);
     for ( Integer i = 0, nb = options()->boundaryCondition.size(); i < nb; ++i ) {
         String NomBC = options()->boundaryCondition[i]->surface;
         FaceGroup face_group = mesh()->faceFamily()->findGroup ( NomBC );
@@ -713,13 +766,12 @@ applyBoundaryCondition()
 
         bool Novalue = false;
 
-        if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
+        if ( (m_global_time() - m_global_deltat() * (1 - Epsilon))  < options()->boundaryCondition[i]->Tdebut ) {
             Novalue=true;
         }
-        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+        if ( (m_global_time() - m_global_deltat()  * (1 - Epsilon)) > options()->boundaryCondition[i]->Tfin ) {
             Novalue=true;
         }
-
         if ( Novalue == false ) {
             // boucle sur les faces de la surface
             ENUMERATE_FACE ( j, face_group ) {
@@ -774,7 +826,7 @@ applyBoundaryConditionForCellVariables()
         if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
             value = 0.;
         }
-        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+        if ( m_global_time() >= options()->boundaryCondition[i]->Tfin ) {
             value = 0.;
         }
 
@@ -926,7 +978,7 @@ applyBoundaryConditionForCellVariables()
                         if ( m_global_time() < options()->boundaryCondition[i]->Tdebut ) {
                             value = 0.;
                         }
-                        if ( m_global_time() > options()->boundaryCondition[i]->Tfin ) {
+                        if ( m_global_time() >= options()->boundaryCondition[i]->Tfin ) {
                             value = 0.;
                         }
 
@@ -1279,7 +1331,7 @@ void MahycoModule::updateElasticityAndPlasticity()
         return;
     }
     // Calcul du gradient de vitesse
-    options()->environment[0].elastoModel()->ComputeVelocityGradient();
+    options()->environment[0].elastoModel()->ComputeVelocityGradient(m_global_deltat.value());
     // Calcul du tenseur de déformation et de rotation
     options()->environment[0].elastoModel()->ComputeDeformationAndRotation();
 
