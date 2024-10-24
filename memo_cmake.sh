@@ -30,7 +30,7 @@ else
     rm -rf build
     mkdir build
     cd build
-    cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane/" -DCINETIQUE_SRC="$HOME/Workspace/Cinetique_chgt_phase/"
+    cmake $HOME/Workspace/MaHyCo_ssh/MaHyCo -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="/usr/local/arcane/" -DCINETIQUE_SRC="$HOME/Workspace/Cinetique_chgt_phase/"
     #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane/"
     #cmake .. -DCMAKE_BUILD_TYPE=Release -DArcane_ROOT="$HOME/Workspace/arcane_cuda/"
     cmake --build . -- -j16 
