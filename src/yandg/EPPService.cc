@@ -10,11 +10,11 @@ using namespace Arcane::Materials;
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-Real EPPService::getShearModulus(IMeshEnvironment* env) { 
-    info() << "Constante-elastique" << options()->elasticCst();
+Real EPPService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
+    // info() << options()->elasticCst();
     return options()->elasticCst();}
-Real EPPService::getElasticLimit(IMeshEnvironment* env) { 
-    
+Real EPPService::getElasticLimit(IMeshEnvironment* env, EnvCell ev) {
+    // info() << options()->limitElastic();
     return options()->limitElastic();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

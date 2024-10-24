@@ -8,7 +8,11 @@
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- DENSITY 0 -->
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
@@ -92,29 +96,29 @@
 
 	<options>
 		<!-- - - - - - Parametres  - - - - -->
-		<simple name="Y0" type="real" default="4.e+9">
-			<description>Valeur de la limite elastique 0</description>
+		<simple name="Y0" type="real" default="6.e+7">
+			<description>Valeur de la limite elastique 0 (joules/m3)</description>
 		</simple>
-		<simple name="Beta" type="real" default="5.55e+3">
-			<description>Valeur </description>
+		<simple name="Beta" type="real" default="4.e+3">
+			<description>Valeur (sans unité)</description>
 		</simple>
-		<simple name="n" type="real" default="0.1">
-			<description>Valeur </description>
+		<simple name="n" type="real" default="0.27">
+			<description>Valeur (sans unité)</description>
 		</simple>
 		<simple name="Epsilon_init" type="real" default="0.">
-			<description>Valeur </description>
+			<description>Valeur (sans unité)</description>
 		</simple>
-		<simple name="Mu0" type="real" default="2.76e+11">
-			<description>Valeur </description>
+		<simple name="Mu0" type="real" default="2.71e+10">
+			<description>Valeur (joules/m3)</description>
 		</simple>
-		<simple name="GPP" type="real" default="1.79952">
-			<description>Valeur du coeeficient pression</description>
+		<simple name="GPP" type="real" default="1.7669">
+			<description>Valeur du coeeficient pression (sans unité) </description>
 		</simple>
-		<simple name="GPT" type="real" default="-1.70016e+08">
-			<description>Valeur du coeeficient température</description>
+		<simple name="GPT" type="real" default="-1.66936e+07">
+			<description>Valeur du coeeficient température (joules/m3.K)</description>
 		</simple>
-		<simple name="Ymax" type="real" default="5.e+09">
-			<description>Valeur du coeeficient température</description>
+		<simple name="Ymax" type="real" default="4.8e+08">
+			<description>Valeur du coeeficient température (joules/m3) </description>
 		</simple>
 	</options>
 	

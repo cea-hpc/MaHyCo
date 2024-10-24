@@ -29,11 +29,11 @@ public:
    /** 
    *  Renvoie la constante Mu de l'environnement. 
    */
-  virtual Real getShearModulus(IMeshEnvironment* env);
+  virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
   /** 
    *  Renvoie la La limite de l'environnement. 
    */
-  virtual Real getElasticLimit(IMeshEnvironment* env);
+  virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev);
 };
 
 #endif

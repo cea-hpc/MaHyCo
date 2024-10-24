@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="EPP" version="1.0" type="caseoption">
+<service name="JC" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service EPP</description>
+  <description>Jeu de données du service JC</description>
   <interface name="IYandG" />
 
 	<variables>
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- DENSITY 0 -->
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
@@ -16,7 +20,11 @@
 		<!-- INTERNAL ENERGY	 -->
 		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- INTERNAL ENERGY0	 -->
+		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- 	SOUND SPEED	 -->
 		<variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
@@ -91,13 +99,33 @@
 	</variables>
 
 	<options>
-		<!-- - - - - - Module de cisaillment  - - - - -->
-		<simple name="elastic-cst" type="real" default="2.94e+10">
-			<description>Valeur du Module de cisaillement (joules/m3) </description>
+		<!-- - - - - - Parametres  - - - - -->
+		<simple name="A" type="real" default="1.29e+8">
+			<description>Valeur du parametre A (joules/m3) </description>
 		</simple>
-		<!-- - - - - - limit Elastic - - - - -->
-		<simple name="limit-elastic" type="real" default="3.e+8">
-			<description>Valeur de la limite d'elasticité (joules/m3)  </description>
+		<simple name="B" type="real" default="2.e+8">
+			<description>Valeur du parametre B (joules/m3)</description>
+		</simple>
+		<simple name="C" type="real" default="3.e-2">
+			<description>Valeur du parametre C (sans unité)</description>
+		</simple>
+		<simple name="n" type="real" default="0.45">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="m" type="real" default="1.">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="Epsilon_init" type="real" default="0.01">
+			<description>Valeur (seconde^(-1))</description>
+		</simple>
+		<simple name="Mu0" type="real" default="2.71e+10">
+			<description>Valeur du cisaillement standard (joules/m3)</description>
+		</simple>
+		<simple name="Tm" type="real" default="933.">
+			<description>Valeur du coeeficient température (K) </description>
+		</simple>
+		<simple name="Eint_fus" type="real" default="6.6e+5">
+			<description>Valeur de l'énergie de fusion (joules/kg) </description>
 		</simple>
 	</options>
 	

@@ -78,8 +78,7 @@ void DefaultModelService::ComputeDeformationAndRotation()
 void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t, Integer dim)
 {
  Integer order(options()->ordreRotation);
- // Real mu = getElasticCst(env);
- Real mu = options()->yandgModel()->getShearModulus(env);
+
  Real trace;
  Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
  Real3x3 strain_tensor_point(Real3x3::zero()); 
@@ -89,7 +88,7 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
   {
     EnvCell ev = *ienvcell;   
     Cell cell = ev.globalCell();
-
+    Real mu = options()->yandgModel()->getShearModulus(env, ev);
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     // calcul du nouveau tenseur via strain_tensor_point (incrément du déviateur 2.*mu*dev D + rotation 
@@ -174,12 +173,13 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
 void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t, Integer dim)
 {
  // yield strength
- Real mu = options()->yandgModel()->getShearModulus(env);
- Real yield_strength = options()->yandgModel()->getElasticLimit(env);
+
  ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
     Cell cell = ev.globalCell();
+    Real mu = options()->yandgModel()->getShearModulus(env, ev);
+    Real yield_strength = options()->yandgModel()->getElasticLimit(env, ev);
     // coeff retour radial
     Real coeff(1.);
     Real intensite_deviateur(0.);
