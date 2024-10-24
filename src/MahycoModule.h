@@ -9,6 +9,9 @@
 #include "TypesMahyco.h"
 
 #include <arcane/geometry/IGeometryMng.h>
+// #include <arcane/materials/MeshBlockBuildInfo.h>
+// #include <arcane/materials/MeshEnvironmentBuildInfo.h>
+#include <arcane/core/materials/MaterialsCoreGlobal.h>
 // Ajout au PIF
 #include "arcane/utils/List.h"
 #include "arcane/utils/OStringStream.h"
@@ -34,6 +37,8 @@
 #include "arcane/Concurrency.h"
 #include "arcane/VariableView.h"
 
+
+
 #include "arcane/materials/IMeshMaterialMng.h"
 #include "arcane/materials/IMeshMaterial.h"
 #include "arcane/materials/IMeshEnvironment.h"
@@ -44,14 +49,7 @@
 #include "arcane/materials/MaterialVariableBuildInfo.h"
 #include "arcane/materials/MeshBlockBuildInfo.h"
 #include "arcane/materials/MeshEnvironmentBuildInfo.h"
-#include "arcane/materials/MeshMaterialVariableDependInfo.h"
 #include "arcane/materials/CellToAllEnvCellConverter.h"
-#include "arcane/materials/MatCellVector.h"
-#include "arcane/materials/EnvCellVector.h"
-#include "arcane/materials/MatConcurrency.h"
-#include "arcane/materials/MeshMaterialIndirectModifier.h"
-#include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
-#include "arcane/materials/ComponentSimd.h"
 
 #include "arcane/cea/ICartesianMesh.h"
 #include "arcane/cea/CellDirectionMng.h"
