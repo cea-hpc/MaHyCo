@@ -22,7 +22,7 @@ limitations under the License.
 #include "arcane/ArcaneTypes.h"
 #include "arcane/utils/Real3.h"
 #include "arcane/core/materials/MeshMaterialVariableRef.h"
-#include "arcane/materials/IMeshMaterialMng.h"
+#include "arcane/core/materials/IMeshMaterialMng.h"
 #include "time_history/ITimeHistoryCategory.h"
 #include "time_history/CellWatching_axl.h"
 

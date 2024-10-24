@@ -1,4 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #include "DefaultModelService.h"
 
 using namespace Arcane;
@@ -75,7 +78,8 @@ void DefaultModelService::ComputeDeformationAndRotation()
 void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t, Integer dim)
 {
  Integer order(options()->ordreRotation);
- Real mu = getElasticCst(env);
+ // Real mu = getElasticCst(env);
+ Real mu = options()->yandgModel()->getShearModulus(env);
  Real trace;
  Real3x3 Identity = Real3x3(Real3(1.0, 0.0, 0.0), Real3(0.0, 1.0, 0.0), Real3(0.0, 0.0, 1.0));
  Real3x3 strain_tensor_point(Real3x3::zero()); 
@@ -170,8 +174,8 @@ void DefaultModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
 void DefaultModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t, Integer dim)
 {
  // yield strength
- Real mu = getElasticCst(env);
- Real yield_strength = getLimitElasticCst(env);
+ Real mu = options()->yandgModel()->getShearModulus(env);
+ Real yield_strength = options()->yandgModel()->getElasticLimit(env);
  ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
@@ -236,10 +240,6 @@ void DefaultModelService::ComputeElastoEnergie(IMeshEnvironment* env, Real delta
         / m_cell_mass[ev];
   }
 }
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-Real DefaultModelService::getElasticCst(IMeshEnvironment* env) { return options()->elasticCst();}
-Real DefaultModelService::getLimitElasticCst(IMeshEnvironment* env) { return options()->limitElastic();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
