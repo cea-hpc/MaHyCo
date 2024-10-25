@@ -51,18 +51,10 @@ class StiffenedGasEOSService
    *  si la maille est endessous de la tension limite. 
    */
   virtual void Endommagement(IMeshEnvironment* env);
-  /** 
+    /** 
    *  Renvoie la constante adiabatic de l'environnement. 
    */
   virtual Real getAdiabaticCst(IMeshEnvironment* env);
-  /** 
-   *  Renvoie la constante tension limit de l'environnement. 
-   */
-  virtual Real getTensionLimitCst(IMeshEnvironment* env);
-  /** 
-   *  Renvoie la chaleur spécifique de l'environnement. 
-   */
-  virtual Real getSpecificHeatCst(IMeshEnvironment* env);
   /** 
    *  Renvoie le rapport seuil de densité  
    */

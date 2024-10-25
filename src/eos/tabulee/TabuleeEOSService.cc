@@ -482,10 +482,7 @@ bool TabuleeEOSService::calculPetE(double d0, double t0, double& p0, double& e0,
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 Real TabuleeEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
-Real TabuleeEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
-Real TabuleeEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 Real TabuleeEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
+/*--------------------------------------------- */
+/*--------------------------------------------- */
 ARCANE_REGISTER_SERVICE_TABULEEEOS(Tabulee, TabuleeEOSService);

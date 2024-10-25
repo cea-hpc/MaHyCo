@@ -166,7 +166,7 @@
 		</simple>
 		<!-- - - - - - specific heat - - - - -->
 		<simple name="specific-heat" type="real" default="0.0">
-			<description>Définition de la chaleur spécifique</description>
+			<description>Capacité thermique isochore (cv)</description>
 		</simple>
 		<!-- - - - - -  fichier_de_coeff - - - - -->
 		 <simple name="fichier-coeff" type="string" default=""> 
