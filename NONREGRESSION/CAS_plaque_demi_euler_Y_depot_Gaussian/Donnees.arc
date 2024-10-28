@@ -72,18 +72,21 @@
     <densite-initiale>2710.00</densite-initiale>
     <pression-initiale>1.e5</pression-initiale>
     <eos-model name="MieGruneisen">
-      <adiabatic-cst>2.1</adiabatic-cst>
-      <rho0>2710.</rho0>
-      <c-cst>7.84e10</c-cst>
-      <d-cst>4.89e10</d-cst>
-      <s-cst>-6.04e10</s-cst>
-      <specific-heat>1000.</specific-heat>
+      <adiabatic-cst>2.</adiabatic-cst>
+      <rho0>2785.</rho0>
+      <s1>1.339</s1>
+      <s2>0.</s2>
+      <s3>0.</s3>
+      <gamma0>1.6</gamma0>
+      <a>0.48</a>
+      <c0>5328.</c0>
+      <energie-ref>0.</energie-ref>
+      <specific-heat>897.</specific-heat>
+      <temperature-ref>300.</temperature-ref>
     </eos-model>
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.2</quadratic-pseudo-coeff>
     <elasto-model name="NoModel">
-        <elastic-cst>3.e10</elastic-cst>
-        <limit-elastic>1.e9</limit-elastic>
     </elasto-model>
     <energy-depot>
     	<valeur-source-energie>3.7e16</valeur-source-energie>
