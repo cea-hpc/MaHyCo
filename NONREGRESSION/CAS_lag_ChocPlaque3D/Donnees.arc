@@ -38,7 +38,6 @@
     <format>
       <binary-file>false</binary-file>
     </format>
-    <output-history-period>500</output-history-period>
   </arcane-post-processing>
 
   <mesh>
@@ -69,6 +68,10 @@
       <variable>Density</variable>
       <variable>InternalEnergy</variable>
     </bilan>
+     <bilan name="CellWatching">
+     <borne-inf>0.e-6 0.e-6 1.8e-5</borne-inf>
+     <borne-sup>0.5e-6 0.5e-6 1.84e-5</borne-sup>
+    </bilan>
   </time-history>
 
   <!-- Configuration du module hydrodynamique -->
@@ -87,7 +90,7 @@
      <yandg-model name="EPP">
         <elastic-cst>3.e10</elastic-cst>
         <limit-elastic>1.e9</limit-elastic>
-     </yandg-model">
+     </yandg-model>
     </elasto-model>
     <linear-pseudo-coeff>0.15 </linear-pseudo-coeff>
     <quadratic-pseudo-coeff>0.5 </quadratic-pseudo-coeff>
@@ -109,12 +112,6 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
     <final-time>5.e-10</final-time>
-    
-    <time-history>
-    <periode>1</periode>
-    <borne-inf>0.e-6 0.e-6 1.8e-5</borne-inf>
-    <borne-sup>0.5e-6 0.5e-6 1.84e-5</borne-sup>
-    </time-history>
     
     <boundary-condition>
       <surface>ZMAX</surface>

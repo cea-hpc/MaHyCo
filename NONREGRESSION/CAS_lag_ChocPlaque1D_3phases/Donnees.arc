@@ -63,6 +63,14 @@
       <variable>Density</variable>
       <variable>InternalEnergy</variable>
     </bilan>
+    <bilan name="CellWatching">
+      <borne-inf>90.e-6 5.e-6 0.</borne-inf>
+    <borne-sup>91.e-6 6.e-6 0.</borne-sup>
+    </bilan>
+    <bilan name="NodeWatching">
+    <borne-inf>499e-6 -1 -1.</borne-inf>
+    <borne-sup>501e-6 1. 1.</borne-sup>
+    </bilan>
   </time-history>
 
   <!-- Configuration du module hydrodynamique -->
@@ -78,8 +86,6 @@
         <fichier-coeff>ee.CineTest22#.Sn.00#.coeff</fichier-coeff>
     </eos-model> 
     <elasto-model name="NoModel">
-        <elastic-cst>3.e10</elastic-cst>
-        <limit-elastic>1.e9</limit-elastic>
     </elasto-model>
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.</quadratic-pseudo-coeff>
@@ -101,14 +107,6 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
     <final-time>4.e-10</final-time>
-    
-    <time-history>
-    <periode>5000</periode>
-    <borne-inf>90.e-6 5.e-6 0.</borne-inf>
-    <borne-sup>91.e-6 6.e-6 0.</borne-sup>
-    <borne-inf-noeud>499e-6 -1 -1.</borne-inf-noeud>
-    <borne-sup-noeud>501e-6 1. 1.</borne-sup-noeud>
-    </time-history>
     
     <boundary-condition>
       <surface>XMIN</surface>

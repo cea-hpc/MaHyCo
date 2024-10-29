@@ -172,13 +172,17 @@
 	</variables>
 
 	<options>
+	        <!-- - - - - - AdiabaticCst - - - - -->
+		<simple name="adiabatic-cst" type="real" default="1.4">
+			<description>Définition de la constante adiabatique</description>
+		</simple>
 		<!-- - - - - -  fichier_de_coeff - - - - -->
 		 <simple name="fichier-coeff" type="string" default=""> 
 		     <description>Nom du fichier de coefficient</description> 
 		 </simple>
 		<!-- - - - - - tension-damage thresold - - - - -->
 		<simple name="tension-damage-thresold" type="real" default="-1.e12">
-			<description>Définition de pression minimal avant endommagement</description>
+		<description>Définition de pression minimal avant endommagement</description>
 		</simple>
 		<!-- - - - - - density-damage thresold - - - - -->
 		<simple name="density-damage-thresold" type="real" default="0.">
