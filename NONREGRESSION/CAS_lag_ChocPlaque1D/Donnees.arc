@@ -62,6 +62,14 @@
       <variable>Density</variable>
       <variable>InternalEnergy</variable>
     </bilan>
+    <bilan name="CellWatching">
+    <borne-inf>0.8e-6 -1 -1.</borne-inf>
+    <borne-sup>0.82e-6 1. 1.</borne-sup>
+    </bilan>
+    <bilan name="NodeWatching">
+    <borne-inf>1.99e-6 -1 -1.</borne-inf>
+    <borne-sup>2.01e-6 1. 1.</borne-sup>
+    </bilan>
   </time-history>
 
   <!-- Configuration du module hydrodynamique -->
@@ -97,15 +105,7 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
     <final-time>1.e-12</final-time>
-    
-    <time-history>
-    <periode>5000</periode>
-    <borne-inf>0.8e-6 -1 -1.</borne-inf>
-    <borne-sup>0.82e-6 1. 1.</borne-sup>
-    <borne-inf-noeud>1.99e-6 -1 -1.</borne-inf-noeud>
-    <borne-sup-noeud>2.01e-6 1. 1.</borne-sup-noeud>
-    </time-history>
-    
+      
     <boundary-condition>
       <surface>XMIN</surface>
       <type>Vx</type>

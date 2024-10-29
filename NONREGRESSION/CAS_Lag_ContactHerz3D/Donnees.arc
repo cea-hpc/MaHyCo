@@ -67,29 +67,43 @@
       <variable>Density</variable>
       <variable>InternalEnergy</variable>
     </bilan>
+     <bilan name="CellWatching">
+    <borne-sup>91.e-6 6.e-6 0.</borne-sup>
+    <borne-inf>90.e-6 5.e-6 0.</borne-inf>
+    </bilan>
   </time-history>
 
   <!-- Configuration du module hydrodynamique -->
   <mahyco>
-  <material><name>AL_mat</name></material>
+   <material><name>CU_mat</name></material>
   <environment>
-    <name>ALU</name>
-    <material>AL_mat</material>
-    <!--<densite-initiale>7286.62</densite-initiale>-->
-    <densite-initiale>7290.00</densite-initiale>
+    <name>CU</name>
+    <material>CU_mat</material>
+    <densite-initiale>8930.00</densite-initiale>
     <pression-initiale>1.e5</pression-initiale>
-    <!--<energie-initiale>7.738376</energie-initiale>-->
-    <!--<energie-initiale>7.47539332</energie-initiale>-->
-    <!-- <energie-initiale>7.8112</energie-initiale> donne 1e5 en pression -->
-    <!-- <energie-initiale>-1.7090e+3</energie-initiale>  celui du lagrange à 1e5 avec la sesame -->
-    <energie-initiale>6.091459</energie-initiale>  <!-- celui de l'euler à 2.6593 avec le lagrange en sesame donnant P=2.65e+7 -->
-    <eos-model name="Autre">
-        <fichier-coeff>ee.CineTest22#.Sn.00#.coeff</fichier-coeff>
-    </eos-model> 
+    <eos-model name="MieGruneisen">
+      <adiabatic-cst>2.02</adiabatic-cst>
+      <rho0>8930.</rho0>
+      <s1>1.489</s1>
+      <s2>0.</s2>
+      <s3>0.</s3>
+      <gamma0>2.02</gamma0>
+      <a>0.47</a>
+      <c0>3940.</c0>
+      <energie-ref>0.</energie-ref>
+      <specific-heat>385.</specific-heat>
+      <temperature-ref>300.</temperature-ref>
+    </eos-model>
     <elasto-model name="DefaultModel">
-      <yandg-model name="EPP">
-        <elastic-cst>3.e10</elastic-cst>
-        <limit-elastic>1.e9</limit-elastic>
+      <yandg-model name="SCG">
+      <Y0>1.2e8</Y0>
+      <Beta>36</Beta>
+      <n>0.45</n>
+      <Epsilon_init>0.</Epsilon_init>
+      <Mu0>4.77e10</Mu0>
+      <GPP>1.3356</GPP>
+      <GPT>-1.8126e+7</GPT>
+      <Ymax>6.4e8</Ymax>
       </yandg-model>
     </elasto-model> 
   </environment>
@@ -110,12 +124,6 @@
     <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
      
     <final-time>2.e-9</final-time>
-    
-    <time-history>
-    <periode>500000</periode>
-    <borne-sup>91.e-6 6.e-6 0.</borne-sup>
-    <borne-inf>90.e-6 5.e-6 0.</borne-inf>
-    </time-history>
     
     <boundary-condition>
       <surface>ZMAX</surface>
