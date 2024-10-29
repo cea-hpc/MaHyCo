@@ -72,6 +72,7 @@ void TabuleeEOSService::initEOS(IMeshEnvironment* env)
             
             m_pressure[ev] = p0 ;
             m_internal_energy[ev] = e0 ;
+            m_internal_energy_0[ev] = e0 ;
             
             calculPetE( d0 + 1.e-7,  t0,  p0,  e0,  interp );
             
@@ -83,6 +84,7 @@ void TabuleeEOSService::initEOS(IMeshEnvironment* env)
             
         }
     }
+    
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -482,10 +484,7 @@ bool TabuleeEOSService::calculPetE(double d0, double t0, double& p0, double& e0,
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 Real TabuleeEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
-Real TabuleeEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
-Real TabuleeEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 Real TabuleeEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
+/*--------------------------------------------- */
+/*--------------------------------------------- */
 ARCANE_REGISTER_SERVICE_TABULEEEOS(Tabulee, TabuleeEOSService);

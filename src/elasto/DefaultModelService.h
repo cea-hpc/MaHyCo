@@ -1,29 +1,15 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #ifndef DEFAULTMODELSERVICE_H
 #define DEFAULTMODELSERVICE_H
 
 #include "elasto/IElasto.h"
+#include "yandg/IYandG.h"
 #include "elasto/DefaultModel_axl.h"
-#include "arcane/materials/IMeshMaterialMng.h"
-#include "arcane/materials/IMeshMaterial.h"
-#include "arcane/materials/IMeshEnvironment.h"
-#include "arcane/materials/IMeshBlock.h"
-#include "arcane/materials/MeshMaterialModifier.h"
-#include "arcane/materials/MeshMaterialVariableRef.h"
-#include "arcane/materials/MeshEnvironmentVariableRef.h"
-#include "arcane/materials/MaterialVariableBuildInfo.h"
-#include "arcane/materials/MeshBlockBuildInfo.h"
-#include "arcane/materials/MeshEnvironmentBuildInfo.h"
-#include "arcane/materials/MeshMaterialVariableDependInfo.h"
-#include "arcane/materials/CellToAllEnvCellConverter.h"
-#include "arcane/materials/MatCellVector.h"
-#include "arcane/materials/EnvCellVector.h"
-#include "arcane/materials/MatConcurrency.h"
-#include "arcane/materials/MeshMaterialIndirectModifier.h"
-#include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
-#include "arcane/materials/ComponentSimd.h"
+
 using namespace Arcane;
-using namespace Arcane::Materials;
 
 /**
  * Représente le modèle d'élastop-plasticité
@@ -64,15 +50,6 @@ public:
    *  Calcul du travail elasto-plastique
    */
   virtual void ComputeElastoEnergie(IMeshEnvironment* env, Real delta_t);
-  /** 
-   *  Renvoie la constante Mu de l'environnement. 
-   */
-  virtual Real getElasticCst(IMeshEnvironment* env);
-  /** 
-   *  Renvoie la La limite de l'environnement. 
-   */
-  virtual Real getLimitElasticCst(IMeshEnvironment* env);
-  
 };
 
 #endif

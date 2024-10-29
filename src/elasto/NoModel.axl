@@ -91,13 +91,8 @@
 	</variables>
 
 	<options>
-		<!-- - - - - - Module de cisaillment  - - - - -->
-		<simple name="elastic-cst" type="real" default="1.4">
-			<description>Valeur du Module de cisaillement</description>
-		</simple>
-		<!-- - - - - - limit Elastic - - - - -->
-		<simple name="limit-elastic" type="real" default="0.0">
-			<description>Valeur de la limite d'elasticité</description>
-		</simple>
+        <service-instance name="yandg-model" type="IYandG" default="EPP">
+            <description>Service d'élasto-plasticité</description>
+        </service-instance> 
 	</options>
 </service>

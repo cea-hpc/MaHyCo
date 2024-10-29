@@ -1516,8 +1516,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()
     if ( !csts ) {
         ENUMERATE_ENV ( ienv,mm ) {
             IMeshEnvironment* env = *ienv;
-            Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst ( env );
-            Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst ( env );
             ENUMERATE_ENVCELL ( ienvcell,env ) {
                 EnvCell ev = *ienvcell;
                 Real pseudo ( 0. );
@@ -1536,9 +1534,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()
                 double m   = m_cell_mass[ev];
                 double rn1 = m_density[ev];
                 double en  = m_internal_energy_n[ev];
-                double g = adiabatic_cst;
-                double t = tension_limit;
-                // les iterations denewton
                 double epsilon = options()->threshold;
                 double itermax = 50;
                 double enew=0, e=m_internal_energy[ev], p=pn, c, dpde;
@@ -1565,8 +1560,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()
     } else {
         ENUMERATE_ENV ( ienv,mm ) {
             IMeshEnvironment* env = *ienv;
-            Real adiabatic_cst = options()->environment[env->id()].eosModel()->getAdiabaticCst ( env );
-            Real tension_limit = options()->environment[env->id()].eosModel()->getTensionLimitCst ( env );
             ENUMERATE_ENVCELL ( ienvcell,env ) {
                 EnvCell ev = *ienvcell;
                 Cell cell=ev.globalCell();
@@ -1591,8 +1584,6 @@ void MahycoModule::updateEnergyAndPressurebyNewton()
                 double m   = m_cell_mass[ev];
                 double rn1 = m_density[ev];
                 double en  = m_internal_energy_n[ev];
-                double g = adiabatic_cst;
-                double t = tension_limit;
                 double cn1 = cqs_v_nplus1;
                 double cn = cqs_v_n;
                 double cdn = cqs_delta_v;

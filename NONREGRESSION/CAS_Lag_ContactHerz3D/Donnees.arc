@@ -87,8 +87,10 @@
         <fichier-coeff>ee.CineTest22#.Sn.00#.coeff</fichier-coeff>
     </eos-model> 
     <elasto-model name="DefaultModel">
+      <yandg-model name="EPP">
         <elastic-cst>3.e10</elastic-cst>
         <limit-elastic>1.e9</limit-elastic>
+      </yandg-model>
     </elasto-model> 
   </environment>
   

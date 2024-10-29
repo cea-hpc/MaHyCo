@@ -94,8 +94,6 @@
       <fichier-coeff>Al#_1TR_ses.txt</fichier-coeff>
     </eos-model>
     <elasto-model name="NoModel">
-        <elastic-cst>3.e10</elastic-cst>
-        <limit-elastic>1.e9</limit-elastic>
     </elasto-model>
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.</quadratic-pseudo-coeff>

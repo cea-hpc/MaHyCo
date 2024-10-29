@@ -35,6 +35,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- INTERNAL ENERGY_0	 -->
+		<variable
+			field-name="internal_energy_0"
+			name="InternalEnergy0"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 		<!-- CELL VOLUME	 -->
 		<variable
 			field-name="cell_volume"
@@ -153,7 +163,7 @@
 		</simple>
 		<!-- - - - - - specific heat - - - - -->
 		<simple name="specific-heat" type="real" default="0.0">
-			<description>Définition de la chaleur spécifique</description>
+			<description>Capacité thermique isochore (cv)</description>
 		</simple>
 		<!-- - - - - - damage thresold - - - - -->
 		<simple name="tension-damage-thresold" type="real" default="-1.e12">

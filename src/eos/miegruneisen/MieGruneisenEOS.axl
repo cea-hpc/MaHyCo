@@ -35,6 +35,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- INTERNAL ENERGY_0	 -->
+		<variable
+			field-name="internal_energy_0"
+			name="InternalEnergy0"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 		<!-- CELL VOLUME	 -->
 		<variable
 			field-name="cell_volume"
@@ -151,25 +161,45 @@
 		<simple name="limit-tension" type="real" default="0.0">
 			<description>Définition de la tension limite</description>
 		</simple>
-		<!-- - - - - - specific heat - - - - -->
+		<!-- - - - - - capacité thermique - - - - -->
 		<simple name="specific-heat" type="real" default="0.0">
-			<description>Définition de la chaleur spécifique</description>
+			<description>Capacité thermique isochore (cv)</description>
 		</simple>
 		<!-- - - - - - Densité standard - - - - -->
 		<simple name="rho0" type="real" default="0.0">
 			<description>Valeur de la densité de reférence</description>
 		</simple>
-		<!-- - - - - - Parametre C - - - - -->
-		<simple name="c-cst" type="real" default="0.0">
-			<description>Valeur de la densité de reférence</description>
+		<!-- - - - - - Parametre S1 - - - - -->
+		<simple name="s1" type="real" default="1.4">
+			<description>Valeur du coefficent linéaire</description>
 		</simple>
-		<!-- - - - - - Parametre D - - - - -->
-		<simple name="d-cst" type="real" default="0.0">
-			<description>Valeur de la densité de reférence</description>
+		<!-- - - - - - Parametre S2 - - - - -->
+		<simple name="s2" type="real" default="0.0">
+			<description>Valeur du coefficent quadratique</description>
 		</simple>
-		<!-- - - - - - Parametre S - - - - -->
-		<simple name="s-cst" type="real" default="0.0">
-			<description>Valeur de la densité de reférence</description>
+		<!-- - - - - - Parametre S3 - - - - -->
+		<simple name="s3" type="real" default="0.0">
+			<description>Valeur du coefficent cubique</description>
+		</simple>
+		<!-- - - - - - Parametre Gruneisen - - - - -->
+		<simple name="gamma0" type="real" default="1.97 ">
+			<description>Valeur du coefficent de Gruneisen à pression nulle</description>
+		</simple>
+		<!-- - - - - - Parametre a - - - - -->
+		<simple name="a" type="real" default="0.48 ">
+			<description> Correction du premier ordre en volume </description>
+		</simple>
+		<!-- - - - - - Parametre Co - - - - -->
+		<simple name="c0" type="real" default="5240 ">
+			<description> Vitesse du son elastique </description>
+		</simple>
+		<!-- - - - - - Parametre eref - - - - -->
+		<simple name="energie-ref" type="real" default="0.0">
+			<description>Valeur de l'energie de reférence</description>
+		</simple>
+		 <!-- - - - - - Parametre tref - - - - -->
+		<simple name="temperature-ref" type="real" default="300.0">
+			<description>Valeur de la temperature de reférence</description>
 		</simple>
 		<!-- - - - - - damage thresold - - - - -->
 		<simple name="tension-damage-thresold" type="real" default="-1.e12">
@@ -187,13 +217,5 @@
 		 <simple name="init-formulation" type="string" default="VP"> 
 		     <description>Formulation EOS</description> 
 		 </simple>
-		 <!-- - - - - - Parametre eref - - - - -->
-		<simple name="energie-ref" type="real" default="0.0">
-			<description>Valeur de l'energie de reférence</description>
-		</simple>
-		 <!-- - - - - - Parametre eref - - - - -->
-		<simple name="temperature-ref" type="real" default="300.0">
-			<description>Valeur de la temperature de reférence</description>
-		</simple>
 	</options>
 </service>

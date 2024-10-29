@@ -72,17 +72,23 @@
     <eos-model name="MieGruneisen">
       <adiabatic-cst>1.6</adiabatic-cst>
       <rho0>8129.</rho0>
-      <c-cst>1.58</c-cst>
-      <d-cst>0.</d-cst>
-      <s-cst>0.</s-cst>
+      <s1>1.58</s1>
+      <s2>0.</s2>
+      <s3>0.</s3>
+      <gamma0>1.6</gamma0>
+      <a>0.5</a>
+      <c0>3980.</c0>
+      <energie-ref>0.</energie-ref>
       <specific-heat>502.</specific-heat>
       <temperature-ref>300.</temperature-ref>
     </eos-model>
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.2</quadratic-pseudo-coeff>
     <elasto-model name="DefaultModel">
+      <yandg-model name="EPP">
         <elastic-cst>6.4e10</elastic-cst>
         <limit-elastic>3.e8</limit-elastic>
+      </yandg-model>
     </elasto-model> 
   </environment>
   
@@ -93,8 +99,8 @@
      <deltat-init>0.0000001</deltat-init>
      <deltat-min>0.0000000001</deltat-min>
      <deltat-max>0.0001</deltat-max>
-    <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>       <cfl>0.1</cfl>
-     
+    <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
+    <cfl>0.05</cfl> 
     <final-time>3.e-5</final-time>
     
    

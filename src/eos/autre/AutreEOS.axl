@@ -35,6 +35,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- INTERNAL ENERGY_0	 -->
+		<variable
+			field-name="internal_energy_0"
+			name="InternalEnergy0"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 		<!-- CELL VOLUME	 -->
 		<variable
 			field-name="cell_volume"
@@ -162,18 +172,6 @@
 	</variables>
 
 	<options>
-		<!-- - - - - - AdiabaticCst - - - - -->
-		<simple name="adiabatic-cst" type="real" default="1.4">
-			<description>Définition de la constante adiabatique</description>
-		</simple>
-		<!-- - - - - - limit tension - - - - -->
-		<simple name="limit-tension" type="real" default="0.0">
-			<description>Définition de la tension limite</description>
-		</simple>
-		<!-- - - - - - specific heat - - - - -->
-		<simple name="specific-heat" type="real" default="0.0">
-			<description>Définition de la chaleur spécifique</description>
-		</simple>
 		<!-- - - - - -  fichier_de_coeff - - - - -->
 		 <simple name="fichier-coeff" type="string" default=""> 
 		     <description>Nom du fichier de coefficient</description> 

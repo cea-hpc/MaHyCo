@@ -14,19 +14,21 @@ using namespace Arcane::Materials;
 void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
 {
   // Initialise l'énergie et la vitesse du son
-  Real limit_tension = getTensionLimitCst(env);
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+     // Cv et indice adiabatique
+  Real cv  = options()->specificHeat;
+  Real gamma = options()->adiabaticCst;
+  Real limit_tension = options()->limitTension;
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
     Real pressure = m_pressure[ev];
     Real density = m_density[ev];
-    m_internal_energy[ev] = (pressure + (adiabatic_cst * limit_tension)) / ((adiabatic_cst - 1.) * density);
-    m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
+    m_internal_energy[ev] = (pressure + (gamma * limit_tension)) / ((gamma - 1.) * density);
+    m_sound_speed[ev] = sqrt((gamma/density)*(pressure+limit_tension));
     m_density_0[ev] = m_density[ev];
     // calcul de la temperature de la constante (on prend celle de l'air : 287.)
     m_temperature[ev] = pressure / (287. * density);
+    m_internal_energy_0[ev] =  m_internal_energy[ev];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -40,21 +42,21 @@ void StiffenedGasEOSService::ReinitEOS(IMeshEnvironment* env)
 
 void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
 {
-  // Calcul de la pression et de la vitesse du son
-  Real limit_tension = getTensionLimitCst(env);
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+  // Cv et indice adiabatique
+  Real cv  = options()->specificHeat;
+  Real gamma = options()->adiabaticCst;
+  Real limit_tension = options()->limitTension;
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
     if (m_maille_endo[ev.globalCell()] == 0) {
         Real internal_energy = m_internal_energy[ev];
         Real density = m_density[ev];
-        Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);
+        Real pressure = ((gamma - 1.) * density * internal_energy) - (gamma * limit_tension);
         m_pressure[ev] = pressure;
-        m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
-        m_dpde[ev] = (adiabatic_cst - 1.) * density;
-        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
+        m_sound_speed[ev] = sqrt((gamma/density)*(pressure+limit_tension));
+        m_dpde[ev] = (gamma - 1.) * density;
+        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
     }
   }
 }
@@ -65,17 +67,17 @@ void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
   if (m_maille_endo[ev.globalCell()] == 1) return;
   
-  // Calcul de la pression et de la vitesse du son
-  Real limit_tension = getTensionLimitCst(env);
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+  // Cv et indice adiabatique
+  Real cv  = options()->specificHeat;
+  Real gamma = options()->adiabaticCst;
+  Real limit_tension = options()->limitTension;
   Real internal_energy = m_internal_energy[ev];
   Real density = m_density[ev];
-  Real pressure = ((adiabatic_cst - 1.) * density * internal_energy) - (adiabatic_cst * limit_tension);
+  Real pressure = ((gamma - 1.) * density * internal_energy) - (gamma * limit_tension);
   m_pressure[ev] = pressure;
-  m_sound_speed[ev] = sqrt((adiabatic_cst/density)*(pressure+limit_tension));
-  m_dpde[ev] = (adiabatic_cst - 1.) * density;
-  m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
+  m_sound_speed[ev] = sqrt((gamma/density)*(pressure+limit_tension));
+  m_dpde[ev] = (gamma - 1.) * density;
+  m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
@@ -110,10 +112,7 @@ void StiffenedGasEOSService::Endommagement(IMeshEnvironment* env)
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 Real StiffenedGasEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
-Real StiffenedGasEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
-Real StiffenedGasEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 Real StiffenedGasEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-
+/*--------------------------------------------- */
+/*--------------------------------------------- */
 ARCANE_REGISTER_SERVICE_STIFFENEDGASEOS(StiffenedGas, StiffenedGasEOSService);

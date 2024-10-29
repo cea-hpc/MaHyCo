@@ -58,6 +58,9 @@
   <!-- INTERNAL ENERGY	 -->
   <variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
+  <!-- INTERNAL ENERGY0	 -->
+  <variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
   <!-- DPDE -->
   <variable field-name="dpde" name="DpDe" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />

@@ -1,4 +1,7 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
+// Copyright 2000-2024 CEA (www.cea.fr)
+// See the top-level COPYRIGHT file for details.
+// SPDX-License-Identifier: Apache-2.0
 #include "NoModelService.h"
 
 using namespace Arcane;
@@ -54,10 +57,6 @@ void NoModelService::ComputeElastoEnergie(IMeshEnvironment* env, Real delta_t)
 {
 
 }
-/*---------------------------------------------------------------------------*/
-/*---------------------------------------------------------------------------*/
-Real NoModelService::getElasticCst(IMeshEnvironment* env) { return options()->elasticCst();}
-Real NoModelService::getLimitElasticCst(IMeshEnvironment* env) { return options()->limitElastic();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

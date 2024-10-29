@@ -11,9 +11,8 @@ using namespace Arcane::Materials;
 
 void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
 {
-  // Récupère les constantes adiabatique et de chaleur spécifique
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+  // Récupère le cv 
+  Real cv = options()->specificHeat;
   Real eref = options()->energieRef();
   Real tref = options()->temperatureRef();
   // Initialise l'énergie et la vitesse du son pour chaque maille de l'environnement
@@ -25,11 +24,12 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
     Real J = options()->rho0 / density ;
     Real mu = 1./J -1.;
     // Affiche l'identifiant local de la maille, la pression et la densité
-    m_internal_energy[ev] = (pressure - options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3)) / (adiabatic_cst * density);
-    m_sound_speed[ev] = math::sqrt(options()->cCst / options()->rho0);
+    m_internal_energy[ev] =  m_pressure[ev] / options()->gamma0;
+    m_sound_speed[ev] = 1;
     if (eref == 0) eref = m_internal_energy[ev];
-    m_temperature[ev] = (m_internal_energy[ev] - eref) / specific_heat + tref;
+    m_temperature[ev] = (m_internal_energy[ev] - eref) / cv + tref;
     m_density_0[ev] = m_density[ev];
+     m_internal_energy_0[ev] =  m_internal_energy[ev];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -43,9 +43,8 @@ void MieGruneisenEOSService::ReinitEOS(IMeshEnvironment* env)
 
 void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
 {
-  // Récupère les constantes adiabatique et de chaleur spécifique
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+  // Récupère le cv 
+  Real cv = options()->specificHeat;
   // Calcul de la pression et de la vitesse du son pour chaque maille de l'environnement
   ENUMERATE_ENVCELL(ienvcell,env)
   {
@@ -57,16 +56,26 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
         if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
         Real J = options()->rho0 / density ;
         Real mu = 1./J -1.;
-        m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
-        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
-        m_dpde[ev] = adiabatic_cst * density;  
+        Real gruneisen = options()->gamma0 * J + options()->a * (1-J);
+        Real numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+        Real denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+        m_pressure[ev] = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        // calcul de la temperature en fonction de la Capacité thermique isochore
+        m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
+        m_dpde[ev] = (options()->gamma0 + options()->a * mu);
         // vitesse du son 
         J = options()->rho0 / (density - 1.e-7);
         mu = 1./J -1.;
-        Real pres1  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
+        gruneisen = options()->gamma0 * J + options()->a * (1-J);
+        numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+        denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+        Real pres1 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
         J = options()->rho0 / (density + 1.e-7);
         mu = 1./J -1.;
-        Real pres2  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;        
+        gruneisen = options()->gamma0 * J + options()->a * (1-J);
+        numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+        denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+        Real pres2 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];       
         if ((pres2 -  pres1) > 0.) {
             m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
         } else m_sound_speed[ev] = 1.e4;
@@ -79,26 +88,28 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
 void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
 {
   if (m_maille_endo[ev.globalCell()] == 1) return;
-  // Récupère les constantes adiabatique et de chaleur spécifique
-  Real adiabatic_cst = getAdiabaticCst(env);
-  Real specific_heat = getSpecificHeatCst(env);
+  // Récupère le cv 
+  Real cv = options()->specificHeat;
   // Calcul de la pression,la vitesse du son  et le gradient de pression pour une maille donnée
   Real internal_energy = m_internal_energy[ev];
   Real density = m_density[ev];
   if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
   Real J = options()->rho0 / density ;
     Real mu = 1./J -1.;
-    m_pressure[ev] = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
-    // calcul de la temperature en fonction de la chaleur specifique
-    m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / specific_heat + m_temperature_n[ev];
-    m_dpde[ev] = adiabatic_cst * density;
+    Real gruneisen = options()->gamma0 * J + options()->a * (1-J);
+    Real numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+    Real     denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+    m_pressure[ev] = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+    // calcul de la temperature en fonction de la Capacité thermique isochore
+    m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
+    m_dpde[ev] = (options()->gamma0 + options()->a * mu);
     // vitesse du son 
     J = options()->rho0 / (density - 1.e-7);
     mu = 1./J -1.;
-    Real pres1  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;
+    Real pres1  = 1.;
     J = options()->rho0 / (density + 1.e-7);
     mu = 1./J -1.;
-    Real pres2  = options()->cCst * mu + options()->dCst * pow(mu,2.) + options()->sCst * pow(mu,3) +   adiabatic_cst * density * internal_energy;        
+    Real pres2  = 1;     
     if ((pres2 -  pres1) > 0.) {
         m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
     } else m_sound_speed[ev] = 1.e4;
@@ -136,10 +147,9 @@ void MieGruneisenEOSService::Endommagement(IMeshEnvironment* env)
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 Real MieGruneisenEOSService::getAdiabaticCst(IMeshEnvironment* env) { return options()->adiabaticCst();}
-Real MieGruneisenEOSService::getTensionLimitCst(IMeshEnvironment* env) { return options()->limitTension();}
-Real MieGruneisenEOSService::getSpecificHeatCst(IMeshEnvironment* env) { return options()->specificHeat();}
 Real MieGruneisenEOSService::getdensityDamageThresold(IMeshEnvironment* env) { return options()->densityDamageThresold();}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+ 
 
 ARCANE_REGISTER_SERVICE_MIEGRUNEISENEOS(MieGruneisen, MieGruneisenEOSService);
