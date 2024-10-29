@@ -35,6 +35,16 @@
 			material="true" 
 			dump="true"
 			need-sync="true" />
+		<!-- INTERNAL ENERGY_0	 -->
+		<variable
+			field-name="internal_energy_0"
+			name="InternalEnergy0"
+			data-type="real"
+			item-kind="cell"
+			dim="0"
+			material="true" 
+			dump="true"
+			need-sync="true" />
 		<!-- CELL VOLUME	 -->
 		<variable
 			field-name="cell_volume"

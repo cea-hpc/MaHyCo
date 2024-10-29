@@ -29,7 +29,7 @@ void FictifEOSService::initEOS(IMeshEnvironment* env)
     if (eref == 0) eref = m_internal_energy[ev];
     m_temperature[ev] = (m_internal_energy[ev] - eref) / cv + tref;
     m_density_0[ev] = m_density[ev];
-    
+    m_internal_energy_0[ev] =  m_internal_energy[ev];
   }
 }
 /*---------------------------------------------------------------------------*/

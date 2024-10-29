@@ -127,6 +127,7 @@ void AutreEOSService::initEOS(IMeshEnvironment* env)
     m_pressure[ev] = m_Pres[imail] / CONVERSION_PRESSION;
     m_internal_energy[ev] = m_ene[imail] / CONVERSION_ENERGIE;
     m_density_0[ev] = m_density[ev];
+    m_internal_energy_0[ev] =  m_internal_energy[ev];
     imail++;
   }
   

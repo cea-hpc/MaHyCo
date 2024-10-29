@@ -16,11 +16,12 @@ Real SCGService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
     Real mu0 = options()->Mu0;
     Real eta = m_density[ev] / m_density_0[ev];
     Real KoneOverThree = 1./3.;
-    Real Coeff_press = gpp * std::max( 0., m_pressure[ev]) / pow(eta, KoneOverThree);
+    Real Coeff_press = gpp * std::max( 0., m_pressure[ev]) / (mu0*pow(eta, KoneOverThree));
     Real Coeff_temp = gpt * std::max( 0., m_temperature[ev] - 300.) / mu0;
     Real Coeff = (1 + Coeff_press + Coeff_temp);
     Real mu = Coeff * mu0;
-    info() << "mu" << mu;
+    // info() << "mu" << mu << " temp " << m_temperature[ev] << " press " << m_pressure[ev] << " densité " <<  m_density[ev];
+    // info() << " Coeff_press " <<  Coeff_press << " Coeff_temp " << Coeff_temp;
     return mu;
 }
 Real SCGService::getElasticLimit(IMeshEnvironment* env, EnvCell ev) {
@@ -34,7 +35,7 @@ Real SCGService::getElasticLimit(IMeshEnvironment* env, EnvCell ev) {
     Real mu0 = options()->Mu0;
     Real eta = m_density[ev] / m_density_0[ev];
     Real KoneOverThree = 1./3.;
-    Real Coeff_press = gpp * std::max( 0., m_pressure[ev]) / pow(eta, KoneOverThree);
+    Real Coeff_press = gpp * std::max( 0., m_pressure[ev]) / (mu0*pow(eta, KoneOverThree));
     Real Coeff_temp = gpt * std::max( 0., m_temperature[ev] - 300.) / mu0;
     Real Coeff = (1 + Coeff_press + Coeff_temp);
     Real unplusbeta = (1+beta*std::max(0., (m_plastic_deformation[ev] + eps) ));

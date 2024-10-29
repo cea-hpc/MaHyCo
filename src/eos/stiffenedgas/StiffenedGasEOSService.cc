@@ -28,6 +28,7 @@ void StiffenedGasEOSService::initEOS(IMeshEnvironment* env)
     m_density_0[ev] = m_density[ev];
     // calcul de la temperature de la constante (on prend celle de l'air : 287.)
     m_temperature[ev] = pressure / (287. * density);
+    m_internal_energy_0[ev] =  m_internal_energy[ev];
   }
 }
 /*---------------------------------------------------------------------------*/

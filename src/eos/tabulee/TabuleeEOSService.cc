@@ -72,6 +72,7 @@ void TabuleeEOSService::initEOS(IMeshEnvironment* env)
             
             m_pressure[ev] = p0 ;
             m_internal_energy[ev] = e0 ;
+            m_internal_energy_0[ev] = e0 ;
             
             calculPetE( d0 + 1.e-7,  t0,  p0,  e0,  interp );
             
@@ -83,6 +84,7 @@ void TabuleeEOSService::initEOS(IMeshEnvironment* env)
             
         }
     }
+    
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
