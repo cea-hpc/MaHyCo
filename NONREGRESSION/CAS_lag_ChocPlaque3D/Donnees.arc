@@ -10,7 +10,6 @@
 
   <arcane-post-processing>
   <save-init>true</save-init>
-    <output-period>10</output-period>
     <output>
       <variable>CellMass</variable>
       <variable>Pressure</variable>
