@@ -162,7 +162,7 @@
 			<description>Définition de la tension limite</description>
 		</simple>
 		<!-- - - - - - capacité thermique - - - - -->
-		<simple name="specific-heat" type="real" default="0.0">
+		<simple name="specific-heat" type="real" default="921.">
 			<description>Capacité thermique isochore (cv)</description>
 		</simple>
 		<!-- - - - - - Densité standard - - - - -->
