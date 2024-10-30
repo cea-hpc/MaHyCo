@@ -6,6 +6,7 @@
   <a href="https://github.com/cea-hpc/MaHyCo">
     <img alt="MaHyCo" src="https://github.com/cea-hpc/MaHyCo/blob/master/logo_MaHyCo.png" width="400px">
   </a>
+  <p align="center"><strong>Maquette Hydrodynamique Collaborative</strong></p>
   <p align="center">Finite volume code for solving hydrodynamic equations: Lagrangian or Eulerian simulations</p>
 </p>
 
