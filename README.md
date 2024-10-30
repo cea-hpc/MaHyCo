@@ -1,11 +1,10 @@
-# Logo
-
 <p align="center">
-  <a href="https://github.com/cea-hpc/MaHyCo">
+  <a href="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png">
     <img alt="MaHyCo" src="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png" width="602px">
   </a>
   <p align="center">Finite volume code for solving hydrodynamic equations: Lagrangian or Eulerian simulations</p>
 </p>
+
 ## Installation
 
 Pour utiliser Mahyco, recopier ce répertoire 'Mahyco'
