@@ -1,5 +1,9 @@
+
+<img src="https://www.cea.fr/PublishingImages/cea.jpg" height="50" align="right" />
+
+
 <p align="center">
-  <a href="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png">
+  <a href="https://github.com/cea-hpc/MaHyCo">
     <img alt="MaHyCo" src="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png" width="602px">
   </a>
   <p align="center">Finite volume code for solving hydrodynamic equations: Lagrangian or Eulerian simulations</p>
