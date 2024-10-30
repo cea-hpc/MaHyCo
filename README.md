@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/cea-hpc/MaHyCo">
-    <img alt="MaHyCo" src="https://github.com/cea-hpc/MaHyCo/blob/master/logo_MaHyCo.png" height="50" >
+    <img alt="MaHyCo" src="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png" width="500px">
   </a>
   <p align="center">Finite volume code for solving hydrodynamic equations: Lagrangian or Eulerian simulations</p>
 </p>
