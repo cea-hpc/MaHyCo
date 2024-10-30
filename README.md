@@ -1,3 +1,9 @@
+# Logo
+<p align="center">
+    <img alt="Logo" src="https://github.com/cea-hpc/MaHyCo/logo_MaHyCo.png" width="400px">
+  </a>
+</p>
+
 ## Installation
 
 Pour utiliser Mahyco, recopier ce répertoire 'Mahyco'
