@@ -49,7 +49,7 @@ target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
 # Partie Constante Elastoplastique
-add_library(YandG yandg/EPPService.cc yandg/SCGService.cc yandg/JCService.cc)
+add_library(YandG yandg/EPPService.cc yandg/SCGService.cc yandg/JCService.cc yandg/MTSService.cc)
 target_include_directories(YandG PUBLIC .)
 target_link_libraries(YandG PUBLIC arcane_core)
 
@@ -132,6 +132,8 @@ arcane_target_add_axl(Elasto elasto/NewHypoModel)
 arcane_target_add_axl(YandG yandg/EPP )
 arcane_target_add_axl(YandG yandg/SCG)
 arcane_target_add_axl(YandG yandg/JC)
+arcane_target_add_axl(YandG yandg/MTS)
+
 
 arcane_target_add_axl(TimeHistory time_history/NodeWatching)
 arcane_target_add_axl(TimeHistory time_history/CellWatching)
