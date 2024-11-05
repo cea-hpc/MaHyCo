@@ -35,12 +35,7 @@ public:
    */
   virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev);
 
-private:
-   Real f_ram(Real x) {
-     if (x < 0.0) return 1.;
-     else if (x > 1.0) return 0.;
-     else return (1.0+2.0*pow(x,3)-3.0*pow(x,2));
-    };
+
 };
 
 #endif

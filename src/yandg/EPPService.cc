@@ -11,11 +11,20 @@ using namespace Arcane::Materials;
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 Real EPPService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
-    // info() << options()->elasticCst();
-    return options()->elasticCst();}
+    Real mu =  options()->elasticCst();
+    // adoucissement thermique en energie interne
+    /* 
+    Real enerfus = options()->Eint_fus;
+    Real ener_sol = m_internal_energy_0[ev];
+    Real x = (m_internal_energy[ev] - ener_sol)/(enerfus - ener_sol);
+    mu *=f_ram(x); 
+    */
+    return mu;
+}
 Real EPPService::getElasticLimit(IMeshEnvironment* env, EnvCell ev) {
-    // info() << options()->limitElastic();
-    return options()->limitElastic();}
+    Real yelas =  options()->limitElastic();
+    return yelas;
+}
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 

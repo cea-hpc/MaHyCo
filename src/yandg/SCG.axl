@@ -20,6 +20,10 @@
 		<!-- INTERNAL ENERGY	 -->
 		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
+
+		<!-- INTERNAL ENERGY0	 -->
+		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
 			
 		<!-- 	SOUND SPEED	 -->
 		<variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
@@ -119,6 +123,9 @@
 		</simple>
 		<simple name="Ymax" type="real" default="4.8e+08">
 			<description>Valeur du coeeficient température (joules/m3) </description>
+		</simple>
+		<simple name="Eint_fus" type="real" default="6.6e+5">
+			<description>Valeur de l'énergie de fusion (joules/kg) </description>
 		</simple>
 	</options>
 	

@@ -15,12 +15,17 @@ Real SCGService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
     Real gpt = options()->GPT;
     Real mu0 = options()->Mu0;
     Real eta = m_density[ev] / m_density_0[ev];
+    Real enerfus = options()->Eint_fus;
+    Real ener_sol = m_internal_energy_0[ev];
     Real KoneOverThree = 1./3.;
     Real Coeff_press = gpp * std::max( 0., m_pressure[ev]) / (mu0*pow(eta, KoneOverThree));
     Real Coeff_temp = gpt * std::max( 0., m_temperature[ev] - 300.) / mu0;
     Real Coeff = (1 + Coeff_press + Coeff_temp);
-    Real mu = Coeff * mu0;
-    // info() << "mu" << mu << " temp " << m_temperature[ev] << " press " << m_pressure[ev] << " densité " <<  m_density[ev];
+    // adoucissement thermique en energie interne
+    Real x = (m_internal_energy[ev] - ener_sol)/(enerfus - ener_sol);
+    Real mu = f_ram(x) *Coeff * mu0;
+    if (f_ram(x) == 0.)  info() << "mu" << mu << " x " << x << "f_ram(x)" << f_ram(x) ;
+    // " temp " << m_temperature[ev] << " press " << m_pressure[ev] << " densité " <<  m_density[ev];
     // info() << " Coeff_press " <<  Coeff_press << " Coeff_temp " << Coeff_temp;
     return mu;
 }

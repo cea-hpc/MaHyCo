@@ -39,7 +39,12 @@ public:
    *  Renvoie la La limite de l'environnement. 
    */
   virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev) = 0;
-  
+
+   Real f_ram(Real x) {
+     if (x < 0.0) return 1.;
+     else if (x > 1.0) return 0.;
+     else return (1.0+2.0*pow(x,3)-3.0*pow(x,2));
+    };  
 };
 
 #endif
