@@ -1,9 +1,0 @@
-{
- "arcane-curves": {
-  "version": 1,
-  "curves": [{
-    "name": "GlobalTime",
-    "unique-name": "GlobalTime"
-   }]
- }
-}

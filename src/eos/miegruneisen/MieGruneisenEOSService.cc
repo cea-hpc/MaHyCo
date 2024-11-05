@@ -25,11 +25,11 @@ void MieGruneisenEOSService::initEOS(IMeshEnvironment* env)
     Real mu = 1./J -1.;
     // Affiche l'identifiant local de la maille, la pression et la densité
     m_internal_energy[ev] =  m_pressure[ev] / options()->gamma0;
-    m_sound_speed[ev] = 1;
+    m_sound_speed[ev] = options()->c0;
     if (eref == 0) eref = m_internal_energy[ev];
     m_temperature[ev] = (m_internal_energy[ev] - eref) / cv + tref;
     m_density_0[ev] = m_density[ev];
-     m_internal_energy_0[ev] =  m_internal_energy[ev];
+    m_internal_energy_0[ev] =  m_internal_energy[ev];
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -49,33 +49,45 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
   ENUMERATE_ENVCELL(ienvcell,env)
   {
     EnvCell ev = *ienvcell;   
-    
+    Real numerateur(0.), denominateur(0.), gruneisen(0.), pres1(0.), pres2(0.);
     if (m_maille_endo[ev.globalCell()] == 0) {
         Real internal_energy = m_internal_energy[ev];
         Real density = m_density[ev];
         if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
         Real J = options()->rho0 / density ;
         Real mu = 1./J -1.;
-        Real gruneisen = options()->gamma0 * J + options()->a * (1-J);
-        Real numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
-        Real denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
-        m_pressure[ev] = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        gruneisen = options()->gamma0 * J + options()->a * (1-J);
+        if (  mu > 0.)  {
+          numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+          denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+          m_pressure[ev] = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } else  {
+          m_pressure[ev] = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } 
         // calcul de la temperature en fonction de la Capacité thermique isochore
         m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
         m_dpde[ev] = (options()->gamma0 + options()->a * mu);
         // vitesse du son 
         J = options()->rho0 / (density - 1.e-7);
         mu = 1./J -1.;
-        gruneisen = options()->gamma0 * J + options()->a * (1-J);
-        numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
-        denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
-        Real pres1 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        if (  mu > 0.)  {
+          gruneisen = options()->gamma0 * J + options()->a * (1-J);
+          numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+          denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+          pres1 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } else  {
+          pres1 = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } 
         J = options()->rho0 / (density + 1.e-7);
         mu = 1./J -1.;
-        gruneisen = options()->gamma0 * J + options()->a * (1-J);
-        numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
-        denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
-        Real pres2 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];       
+        if (  mu > 0.)  {
+          gruneisen = options()->gamma0 * J + options()->a * (1-J);
+          numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+          denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+          pres2 = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } else  {
+          pres2 = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+        } 
         if ((pres2 -  pres1) > 0.) {
             m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
         } else m_sound_speed[ev] = 1.e4;
@@ -93,26 +105,43 @@ void MieGruneisenEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   // Calcul de la pression,la vitesse du son  et le gradient de pression pour une maille donnée
   Real internal_energy = m_internal_energy[ev];
   Real density = m_density[ev];
+  Real numerateur(0.), denominateur(0.), gruneisen(0.), pres1(0.), pres2(0.);
   if (density == 0.) info() << ev.globalCell().localId() << " densité " << density;
   Real J = options()->rho0 / density ;
-    Real mu = 1./J -1.;
-    Real gruneisen = options()->gamma0 * J + options()->a * (1-J);
-    Real numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
-    Real     denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+  Real mu = 1./J -1.;
+  gruneisen = options()->gamma0 * J + options()->a * (1-J);
+  if (  mu > 0.)  {
+    numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+    denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
     m_pressure[ev] = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
-    // calcul de la temperature en fonction de la Capacité thermique isochore
-    m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
-    m_dpde[ev] = (options()->gamma0 + options()->a * mu);
-    // vitesse du son 
-    J = options()->rho0 / (density - 1.e-7);
-    mu = 1./J -1.;
-    Real pres1  = 1.;
-    J = options()->rho0 / (density + 1.e-7);
-    mu = 1./J -1.;
-    Real pres2  = 1;     
-    if ((pres2 -  pres1) > 0.) {
-        m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
-    } else m_sound_speed[ev] = 1.e4;
+  } else  {
+    m_pressure[ev] = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+  } 
+  // calcul de la temperature en fonction de la Capacité thermique isochore
+  m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
+  m_dpde[ev] = (options()->gamma0 + options()->a * mu);
+  // vitesse du son 
+  J = options()->rho0 / (density - 1.e-7);
+  mu = 1./J -1.;
+  if (  mu > 0.)  {
+    numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+    denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+    pres1  = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+  } else  {
+    pres1 = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+  } 
+  J = options()->rho0 / (density + 1.e-7);
+  mu = 1./J -1.;
+  if (  mu > 0.)  {
+    numerateur  = options()->rho0 * pow(options()->c0, 2) * mu * ( 1 + ( 1. -  options()->gamma0/2.) * mu - options()->a * pow(mu, 2)/2.);
+    denominateur = pow(( 1. - (options()->s1 -1.) * mu - options()->s2 * pow(mu, 2)/ (1+mu) - options()->s2  * pow(mu, 3)/pow(1.+mu, 2)), 2);
+    pres2  = numerateur / denominateur + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+  } else  {
+    pres2 = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
+  } 
+  if ((pres2 -  pres1) > 0.) {
+    m_sound_speed[ev] = math::sqrt((pres2 -  pres1)/2.e-7);
+  } else m_sound_speed[ev] = 1.e4;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/

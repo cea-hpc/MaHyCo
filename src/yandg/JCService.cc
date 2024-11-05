@@ -18,7 +18,7 @@ Real JCService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
     Real x = (m_internal_energy[ev] - ener_sol)/(enerfus - ener_sol);
     // adoucissement thermique en energie interne
     Real mu = f_ram(x) * mu0;
-    info() << "mu" << mu << " x  " << x << " f_ram(x) " << f_ram(x);
+    if (x > 1) info() << "mu" << mu << " x  " << x << " f_ram(x) " << f_ram(x);
     return mu;
 }
 Real JCService::getElasticLimit(IMeshEnvironment* env, EnvCell ev) {

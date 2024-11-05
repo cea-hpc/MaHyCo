@@ -104,6 +104,7 @@
       <GPP>1.3356</GPP>
       <GPT>-1.8126e+7</GPT>
       <Ymax>6.4e8</Ymax>
+      <Eint_fus>460e3</Eint_fus>
       </yandg-model>
     </elasto-model> 
   </environment>

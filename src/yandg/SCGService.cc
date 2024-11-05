@@ -24,7 +24,8 @@ Real SCGService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
     // adoucissement thermique en energie interne
     Real x = (m_internal_energy[ev] - ener_sol)/(enerfus - ener_sol);
     Real mu = f_ram(x) *Coeff * mu0;
-    // info() << "mu" << mu << " temp " << m_temperature[ev] << " press " << m_pressure[ev] << " densité " <<  m_density[ev];
+    if (f_ram(x) == 0.)  info() << "mu" << mu << " x " << x << "f_ram(x)" << f_ram(x) ;
+    // " temp " << m_temperature[ev] << " press " << m_pressure[ev] << " densité " <<  m_density[ev];
     // info() << " Coeff_press " <<  Coeff_press << " Coeff_temp " << Coeff_temp;
     return mu;
 }
