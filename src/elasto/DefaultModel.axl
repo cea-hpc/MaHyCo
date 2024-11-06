@@ -119,9 +119,13 @@
 			<description>Ordre de la rotation</description>
 		</simple>
 	
-        <service-instance name="yandg-model" type="IYandG" default="EPP">
-            <description>Service d'élasto-plasticité</description>
-        </service-instance>  
+        <service-instance name="elasto-mu-model" type="IElastoMu" default="EPP">
+            <description>Service d'élasto-plasticité : calcul du module de cisaillement</description>
+        </service-instance>
+	
+        <service-instance name="elasto-y-model" type="IElastoY" default="EPP">
+            <description>Service d'élasto-plasticité : calcul de la limite d'elasticité</description>
+        </service-instance> 
     
 	</options>
 </service>

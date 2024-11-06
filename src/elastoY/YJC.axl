@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="MTS" version="1.0" type="caseoption">
+<service name="YJC" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service MTS</description>
-  <interface name="IYandG" />
+  <description>Jeu de données du service JC</description>
+  <interface name="IElastoY" />
 
 	<variables>
 		<!-- DENSITY -->
@@ -24,7 +24,7 @@
 		<!-- INTERNAL ENERGY0	 -->
 		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
 		<!-- 	SOUND SPEED	 -->
 		<variable field-name="sound_speed" name="SoundSpeed" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
@@ -100,38 +100,29 @@
 
 	<options>
 		<!-- - - - - - Parametres  - - - - -->
-		<simple name="T0" type="real" default="83.">
-			<description>Température de référence</description>
+		<simple name="A" type="real" default="1.29e+8">
+			<description>Valeur du parametre A (joules/m3) </description>
 		</simple>
-		<simple name="D" type="real" default="3.173e+9">
-			<description>Valeur du matériaux(sans unité) </description>
+		<simple name="B" type="real" default="2.e+8">
+			<description>Valeur du parametre B (joules/m3)</description>
 		</simple>
-		<simple name="Mu0" type="real" default="40.811e+9">
-			<description>Valeur du module de cisaillement à 0 K (Gpa) </description>
+		<simple name="C" type="real" default="3.e-2">
+			<description>Valeur du parametre C (sans unité)</description>
 		</simple>
-		<simple name="Sigma-a" type="real" default="80.e+6">
-			<description>fonction de la microstructure matérielle telle que la taille des grains et la densité de dislocation</description>
+		<simple name="n" type="real" default="0.45">
+			<description>Valeur (sans unité)</description>
 		</simple>
-		<simple name="Epsilon-0" type="real" default="5.e6">
-			<description></description>
+		<simple name="m" type="real" default="1.">
+			<description>Valeur (sans unité)</description>
 		</simple>
-		<simple name="g-0" type="real" default="0.425">
-			<description></description>
+		<simple name="Epsilon_init" type="real" default="0.01">
+			<description>Valeur (seconde^(-1))</description>
 		</simple>
-		<simple name="kb" type="real" default="1.38064852e-23">
-			<description>Constante de Boltzman (J/K)</description>
+		<simple name="Mu0" type="real" default="2.71e+10">
+			<description>Valeur du cisaillement standard (joules/m3)</description>
 		</simple>
-		<simple name="Pi" type="real" default="1.">
-			<description>Paramêtre du modèle</description>
-		</simple>
-		<simple name="Qi" type="real" default="1.5">
-			<description>Paramêtre du modèle</description>
-		</simple>
-		<simple name="Sigma-i-sur-mu0" type="real" default="0.007">
-			<description>Paramêtre du modèle</description>
-		</simple>
-		<simple name="b" type="real" default="2.86e-10">
-			<description>Paramêtre du modèle</description>
+		<simple name="Tm" type="real" default="933.">
+			<description>Valeur du coeeficient température (K) </description>
 		</simple>
 		<simple name="Eint_fus" type="real" default="6.6e+5">
 			<description>Valeur de l'énergie de fusion (joules/kg) </description>

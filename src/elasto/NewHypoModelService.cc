@@ -102,7 +102,7 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     EnvCell ev = *ienvcell;   
     Cell cell = ev.globalCell();
 
-    Real mu = options()->yandgModel()->getShearModulus(env, ev);
+    Real mu = options()->elastoMuModel()->getShearModulus(env, ev);
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     
@@ -208,8 +208,8 @@ void NewHypoModelService::ComputePlasticity(IMeshEnvironment* env, Real delta_t,
     Cell cell = ev.globalCell();
 
     // yield strength
-    Real mu = options()->yandgModel()->getShearModulus(env, ev);
-    Real yield_strength = options()->yandgModel()->getElasticLimit(env, ev);
+    Real mu = options()->elastoMuModel()->getShearModulus(env, ev);
+    Real yield_strength = options()->elastoYModel()->getElasticLimit(env, ev);
     // coeff retour radial
     Real coeff(1.);
     Real intensite_deviateur(0.);

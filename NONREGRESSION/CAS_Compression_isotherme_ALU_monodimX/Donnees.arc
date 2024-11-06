@@ -98,10 +98,12 @@
     <linear-pseudo-coeff>0.5</linear-pseudo-coeff>
     <quadratic-pseudo-coeff>1.2</quadratic-pseudo-coeff>
     <elasto-model name="DefaultModel">
-      <yandg-model name="EPP">
+      <elasto-mu-model name="EPP">
         <elastic-cst>2.69e10</elastic-cst>
+      </elasto-mu-model>
+      <elasto-y-model name="YEPP">
         <limit-elastic>2.9e8</limit-elastic>
-      </yandg-model>
+      </elasto-y-model>
     </elasto-model> 
   </environment>
   

@@ -2,11 +2,12 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef EPPSERVICE_H
-#define EPPSERVICE_H
 
-#include "yandg/IYandG.h"
-#include "yandg/EPP_axl.h"
+#ifndef YMTSSERVICE_H
+#define YMTSSERVICE_H
+
+#include "elastoY/IElastoY.h"
+#include "elastoY/YMTS_axl.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -14,22 +15,18 @@ using namespace Arcane::Materials;
 /**
  * Représente le modèle d'élastop-plasticité
  */
-class EPPService 
-: public ArcaneEPPObject
+class YMTSService 
+: public ArcaneYMTSObject
 {
 public:
   /** Constructeur de la classe */
-  EPPService(const ServiceBuildInfo & sbi)
-    : ArcaneEPPObject(sbi) {}
+  YMTSService(const ServiceBuildInfo & sbi)
+    : ArcaneYMTSObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~EPPService() {};
+  virtual ~YMTSService() {};
 
 public:
-   /** 
-   *  Renvoie la constante Mu de l'environnement. 
-   */
-  virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
   /** 
    *  Renvoie la La limite de l'environnement. 
    */

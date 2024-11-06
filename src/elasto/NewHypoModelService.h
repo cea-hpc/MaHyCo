@@ -6,7 +6,8 @@
 #define NEWHYPOMODELSERVICE_H
 
 #include "elasto/IElasto.h"
-#include "yandg/IYandG.h"
+#include "elastoMu/IElastoMu.h"
+#include "elastoY/IElastoY.h"
 #include "elasto/NewHypoModel_axl.h"
 
 using namespace Arcane;

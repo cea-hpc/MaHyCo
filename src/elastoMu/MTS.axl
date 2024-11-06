@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="EPP" version="1.0" type="caseoption">
+<service name="MTS" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service EPP</description>
-  <interface name="IYandG" />
+  <description>Jeu de données du service MTS</description>
+  <interface name="IElastoMu" />
 
 	<variables>
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- DENSITY 0 -->
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
@@ -95,13 +99,15 @@
 	</variables>
 
 	<options>
-		<!-- - - - - - Module de cisaillment  - - - - -->
-		<simple name="elastic-cst" type="real" default="2.94e+10">
-			<description>Valeur du Module de cisaillement (joules/m3) </description>
+		<!-- - - - - - Parametres  - - - - -->
+		<simple name="T0" type="real" default="83.">
+			<description>Température de référence</description>
 		</simple>
-		<!-- - - - - - limit Elastic - - - - -->
-		<simple name="limit-elastic" type="real" default="3.e+8">
-			<description>Valeur de la limite d'elasticité (joules/m3)  </description>
+		<simple name="D" type="real" default="3.173e+9">
+			<description>Valeur du matériaux(sans unité) </description>
+		</simple>
+		<simple name="Mu0" type="real" default="40.811e+9">
+			<description>Valeur du module de cisaillement à 0 K (Gpa) </description>
 		</simple>
 		<simple name="Eint_fus" type="real" default="6.6e+5">
 			<description>Valeur de l'énergie de fusion (joules/kg) </description>

@@ -6,7 +6,8 @@
 #define DEFAULTMODELSERVICE_H
 
 #include "elasto/IElasto.h"
-#include "yandg/IYandG.h"
+#include "elastoMu/IElastoMu.h"
+#include "elastoY/IElastoY.h"
 #include "elasto/DefaultModel_axl.h"
 
 using namespace Arcane;

@@ -6,7 +6,8 @@
 #define NOMODELSERVICE_H
 
 #include "elasto/IElasto.h"
-#include "yandg/IYandG.h"
+#include "elastoMu/IElastoMu.h"
+#include "elastoY/IElastoY.h"
 #include "elasto/NoModel_axl.h"
 
 using namespace Arcane;

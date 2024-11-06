@@ -95,7 +95,13 @@
       <temperature-ref>300.</temperature-ref>
     </eos-model>
     <elasto-model name="DefaultModel">
-      <yandg-model name="SCG">
+      <elasto-mu-model name="SCG">
+      <Mu0>4.77e10</Mu0>
+      <GPP>1.3356</GPP>
+      <GPT>-1.8126e+7</GPT>
+      <Eint_fus>460e3</Eint_fus>
+      </elasto-mu-model>
+      <elasto-y-model name="YSCG">
       <Y0>1.2e8</Y0>
       <Beta>36</Beta>
       <n>0.45</n>
@@ -105,7 +111,7 @@
       <GPT>-1.8126e+7</GPT>
       <Ymax>6.4e8</Ymax>
       <Eint_fus>460e3</Eint_fus>
-      </yandg-model>
+      </elasto-y-model>
     </elasto-model> 
   </environment>
   

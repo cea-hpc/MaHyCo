@@ -1,24 +1,28 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="NewHypoModel" version="1.0" type="caseoption">
+<service name="YSCG" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service DefaulModelElasto</description>
-  <interface name="IElasto" />
+  <description>Jeu de données du service SCG</description>
+  <interface name="IElastoY" />
 
 	<variables>
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-        
+
 		<!-- DENSITY 0 -->
-        <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-	    
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
 		    
 		<!-- INTERNAL ENERGY	 -->
 		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+
+		<!-- INTERNAL ENERGY0	 -->
+		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
 			
 		<!-- 	SOUND SPEED	 -->
@@ -36,10 +40,6 @@
 	    <!-- 	VELOCITY -->
         <variable field-name="velocity" name="Velocity" data-type="real3" item-kind="node"
  	    dim="0" dump="true" need-sync="true" />
- 	    
-        <!-- Deplacement -->
-        <variable field-name="displacement" name="Displacement" data-type="real3" item-kind="node"
-	    dim="0" material="false" dump="true" need-sync="true" />
 	    
 	    <!-- 	NODE COORD	 -->
         <variable field-name="node_coord" name="NodeCoord" data-type="real3" item-kind="node"
@@ -56,26 +56,10 @@
         <!-- 	CELL CQS	 -->
         <variable field-name="cell_cqs" name="CellCQS" data-type="real3" item-kind="cell"
 	    dim="1" dump="true" need-sync="true" /> 
-	
-	<!-- 	CELL OLD CQS	 -->
-        <variable field-name="cell_cqs_n" name="CellCQSN" data-type="real3" item-kind="cell"
-		  dim="1" dump="true" need-sync="true" />
         
         <!-- Gradient de vitesse -->
         <variable field-name="velocity_gradient" name="VelocityGradient" data-type="real3x3" item-kind="cell"
 	    dim="0" material="false" dump="true" need-sync="true" />
-	    
-        <!-- Gradient de deplacement -->
-        <variable field-name="displacement_gradient" name="DisplacementGradient" data-type="real3x3" item-kind="cell"
-		  dim="0" material="false" dump="true" need-sync="true" />
-	
-        <!-- Tenseur deformation -->
-        <variable field-name="tensorF" name="TensorF" data-type="real3x3" item-kind="cell"
-		  dim="0" material="true" dump="true" need-sync="true" />
-	
-	<!-- Tenseur gauchy-Green -->
-        <variable field-name="gauchy_green_tensor" name="GauchyGreenTensor" data-type="real3x3" item-kind="cell"
-	    dim="0" material="true" dump="true" need-sync="true" />
 	    
         <!-- Tenseur de rotation -->
         <variable field-name="spin_rate" name="SpinRate" data-type="real3" item-kind="cell"
@@ -104,47 +88,45 @@
         <!-- Composante XX du Tenseur (déviateur) des contraintes -->
         <variable field-name="strain_tensor_xx" name="StrainTensorXX" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-    
-        <!-- Composante YY du Tenseur (déviateur) des contraintes -->
-        <variable field-name="strain_tensor_yy" name="StrainTensorYY" data-type="real" item-kind="cell"
-        dim="0" material="true" dump="true" need-sync="true" />
-        
-        
-        <!-- Composante XY du Tenseur (déviateur) des contraintes -->
-        <variable field-name="strain_tensor_xy" name="StrainTensorXY" data-type="real" item-kind="cell"
-        dim="0" material="true" dump="true" need-sync="true" />
-        
-        
-        <!-- Composante XZ du Tenseur (déviateur) des contraintes -->
-        <variable field-name="strain_tensor_xz" name="StrainTensorXZ" data-type="real" item-kind="cell"
-        dim="0" material="true" dump="true" need-sync="true" />
-        
-        
-        <!-- Composante YZ du Tenseur (déviateur) des contraintes -->
-        <variable field-name="strain_tensor_yz" name="StrainTensorYZ" data-type="real" item-kind="cell"
-        dim="0" material="true" dump="true" need-sync="true" />
-        
-        <!-- Norme du Tenseur (déviateur) des contraintes-->
-        <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
-        dim="0" material="true" dump="true" need-sync="true" />
 	    
-	    <!-- FORCE	 -->
+	    <!-- Norme du Tenseur (déviateur) des contraintes-->
+        <variable field-name="strain_norm" name="strainNorm" data-type="real" item-kind="cell"
+        dim="0" material="false" dump="true" need-sync="true" />
+	    
+        <!-- FORCE	 -->
         <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
 	</variables>
 
 	<options>
-		<!-- - - - - - Ordre rotation  - - - - -->
-		<simple name="ordre-rotation" type="integer" default="1">
-			<description>Ordre de la rotation</description>
+		<!-- - - - - - Parametres  - - - - -->
+		<simple name="Y0" type="real" default="6.e+7">
+			<description>Valeur de la limite elastique 0 (joules/m3)</description>
 		</simple>
-		
-	<service-instance name="elasto-mu-model" type="IElastoMu" default="EPP">
-            <description>Service d'élasto-plasticité : calcul du module de cisaillement</description>
-        </service-instance>
-	
-        <service-instance name="elasto-y-model" type="IElastoY" default="EPP">
-            <description>Service d'élasto-plasticité : calcul de la limite d'elasticité</description>
-        </service-instance> 
+		<simple name="Beta" type="real" default="4.e+3">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="n" type="real" default="0.27">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="Epsilon_init" type="real" default="0.">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="Mu0" type="real" default="2.71e+10">
+			<description>Valeur (joules/m3)</description>
+		</simple>
+		<simple name="GPP" type="real" default="1.7669">
+			<description>Valeur du coeeficient pression (sans unité) </description>
+		</simple>
+		<simple name="GPT" type="real" default="-1.66936e+07">
+			<description>Valeur du coeeficient température (joules/m3.K)</description>
+		</simple>
+		<simple name="Ymax" type="real" default="4.8e+08">
+			<description>Valeur du coeeficient température (joules/m3) </description>
+		</simple>
+		<simple name="Eint_fus" type="real" default="6.6e+5">
+			<description>Valeur de l'énergie de fusion (joules/kg) </description>
+		</simple>
 	</options>
+	
 </service>

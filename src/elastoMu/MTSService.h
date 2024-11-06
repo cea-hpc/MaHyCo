@@ -2,11 +2,11 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef SCGSERVICE_H
-#define SCGSERVICE_H
+#ifndef MTSSERVICE_H
+#define MTSSERVICE_H
 
-#include "yandg/IYandG.h"
-#include "yandg/SCG_axl.h"
+#include "elastoMu/IElastoMu.h"
+#include "elastoMu/MTS_axl.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -14,26 +14,22 @@ using namespace Arcane::Materials;
 /**
  * Représente le modèle d'élastop-plasticité
  */
-class SCGService 
-: public ArcaneSCGObject
+class MTSService 
+: public ArcaneMTSObject
 {
 public:
   /** Constructeur de la classe */
-  SCGService(const ServiceBuildInfo & sbi)
-    : ArcaneSCGObject(sbi) {}
+  MTSService(const ServiceBuildInfo & sbi)
+    : ArcaneMTSObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~SCGService() {};
+  virtual ~MTSService() {};
 
 public:
    /** 
    *  Renvoie la constante Mu de l'environnement. 
    */
   virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
-  /** 
-   *  Renvoie la La limite de l'environnement. 
-   */
-  virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev);
 };
 
 #endif
