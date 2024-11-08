@@ -27,9 +27,13 @@ public:
 
 public:
    /** 
-   *  Renvoie la constante Mu de l'environnement. 
+   *  Renvoie le module de cisaillement (Mu) de l'environnement. 
    */
   virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
+   /** 
+   *  Renvoie la dérivé (par rapport à la température) du module de cisaillement (Mu) de l'environnement. 
+   */
+  virtual Real getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev);
 };
 
 #endif

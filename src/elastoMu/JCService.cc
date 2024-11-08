@@ -19,10 +19,13 @@ Real JCService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
     Real x = (m_internal_energy[ev] - ener_sol)/(enerfus - ener_sol);
     // adoucissement thermique en energie interne
     Real mu = f_ram(x) * mu0;
-    if (x > 1) info() << "mu" << mu << " x  " << x << " f_ram(x) " << f_ram(x);
+    // if (x > 1) info() << "mu" << mu << " x  " << x << " f_ram(x) " << f_ram(x);
     return mu;
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
+Real JCService::getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev) {
+  // adoucissement thermique avec cv constant ? --> mu0 * cv / (enerfus - ener_sol);
+    return 0.;
+}
 ARCANE_REGISTER_SERVICE_JC(JC, JCService);

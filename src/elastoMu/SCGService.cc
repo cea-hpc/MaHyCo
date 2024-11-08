@@ -32,5 +32,9 @@ Real SCGService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
+Real SCGService::getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev) {
+    Real gpt = options()->GPT;
+    // terme d'adoucissement thermique dans la dérivée ?
+    return gpt;
+}
 ARCANE_REGISTER_SERVICE_SCG(SCG, SCGService);

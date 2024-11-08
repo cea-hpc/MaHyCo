@@ -31,10 +31,14 @@ public:
   virtual ~IElastoMu() {};
   
 public:
-  /** 
-   *  Renvoie la constante Mu de l'environnement. 
+   /** 
+   *  Renvoie le module de cisaillement (Mu) de l'environnement. 
    */
   virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev) = 0;
+   /** 
+   *  Renvoie la dérivé (par rapport à la température) du module de cisaillement (Mu) de l'environnement. 
+   */
+  virtual Real getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev) = 0;
 
    Real f_ram(Real x) {
      if (x < 0.0) return 1.;

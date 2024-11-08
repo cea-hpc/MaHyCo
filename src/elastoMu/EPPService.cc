@@ -23,5 +23,7 @@ Real EPPService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
+Real EPPService::getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev) {
+    return 0.;
+}
 ARCANE_REGISTER_SERVICE_EPP(EPP, EPPService);

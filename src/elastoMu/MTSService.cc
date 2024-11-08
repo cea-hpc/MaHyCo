@@ -27,5 +27,10 @@ Real MTSService::getShearModulus(IMeshEnvironment* env, EnvCell ev) {
 }
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
+Real MTSService::getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev) {
+    Real D = options()->D;
+    Real T0 = options()->T0;
+    Real muprime = -D*T0*(exp(T0 /  m_temperature[ev])) /  pow(m_temperature[ev],2.) / pow((exp(T0 /  m_temperature[ev]) -1),2.);
+    return muprime;
+}
 ARCANE_REGISTER_SERVICE_MTS(MTS, MTSService);

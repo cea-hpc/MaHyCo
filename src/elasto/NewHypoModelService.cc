@@ -103,6 +103,8 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     Cell cell = ev.globalCell();
 
     Real mu = options()->elastoMuModel()->getShearModulus(env, ev);
+    Real muprime = options()->elastoMuModel()->getShearModulusDerivate(env, ev);
+    
     // sauvegarde du tenseur de l'iteration précédente
     m_strain_tensor_n[ev] = m_strain_tensor[ev];
     
@@ -123,10 +125,12 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     Real3x3 devB = m_gauchy_green_tensor[cell] - KoneOverThree * traceB * Identity;
     
     
+    // Terme de déformation
     strain_tensor_point = mu_over_J * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity
                                                               - FiveoverThree * traceD * devB) * delta_t ;
     // simplifié : m_strain_tensor[ev] = m_strain_tensor_n[ev] + mu * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity) * delta_t ;
-
+    // Terme thermique mu'*dT/dt * devB * dt
+    // strain_tensor_point +=  muprime * (m_temperature[ev] - m_temperature_n[ev]) *   devB;
    
     /* rotation sur le résultat */
     if (dim == 2) {

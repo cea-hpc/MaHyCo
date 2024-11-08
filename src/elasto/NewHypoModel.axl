@@ -28,7 +28,11 @@
         <!-- Temperature -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-	    
+
+	<!-- TEMPERATURE OLD -->
+	<variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	
         <!-- CELL MASS -->
         <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
