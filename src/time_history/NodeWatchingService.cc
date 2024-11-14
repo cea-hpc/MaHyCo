@@ -56,24 +56,24 @@ void NodeWatchingService::init()
 void NodeWatchingService::write()
 {
  
-  std::ofstream fichier_noeud("time-history_noeud.txt", std::ofstream::app );
+  std::ofstream fichier_noeud("time-history_noeud.cvs", std::ofstream::app );
 
   Integer period = options()->periode;
   if (m_global_iteration()%period !=0) return;
 
-  if (fichier_noeud.is_open()) { 
+  if (fichier_noeud.is_open()) {
+    fichier_noeud << " Temps,noeud,x,y,z,vx,vy,vz"  << std::endl;
     ENUMERATE_NODE(inode, allNodes()){
       Node node = *inode;
       if ( m_noeud_th() == node.localId()) {
-          fichier_noeud << " Temps " << m_global_time() << " ";
-          fichier_noeud << m_noeud_th() << " ";
-          fichier_noeud << m_node_coord[node].x << " ";
-          fichier_noeud << m_node_coord[node].y << " ";
-          fichier_noeud << m_node_coord[node].z << " ";
-          fichier_noeud << m_velocity[node].x << " ";
-          fichier_noeud << m_velocity[node].y << " ";
-          fichier_noeud << m_velocity[node].z << " ";
-          fichier_noeud << std::endl;
+          fichier_noeud << m_global_time() << ",";
+          fichier_noeud << m_noeud_th() << ",";
+          fichier_noeud << m_node_coord[node].x << ",";
+          fichier_noeud << m_node_coord[node].y << ",";
+          fichier_noeud << m_node_coord[node].z << ",";
+          fichier_noeud << m_velocity[node].x << ",";
+          fichier_noeud << m_velocity[node].y << ",";
+          fichier_noeud << m_velocity[node].z << std::endl;
       }
     }
   }
