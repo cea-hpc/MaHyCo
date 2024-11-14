@@ -48,6 +48,8 @@ void NodeWatchingService::init()
   } else {
     std::cout << " Noeud " << m_noeud_th() << " trouvé dans le sous-domaine " << rank << std::endl;
   }
+  std::ofstream fichier_noeud("time-history_noeud.cvs", std::ofstream::app );
+  fichier_noeud << "Temps,noeud,x,y,z,vx,vy,vz"  << std::endl; 
 }
 
 /*---------------------------------------------------------------------------*/
@@ -62,7 +64,6 @@ void NodeWatchingService::write()
   if (m_global_iteration()%period !=0) return;
 
   if (fichier_noeud.is_open()) {
-    fichier_noeud << " Temps,noeud,x,y,z,vx,vy,vz"  << std::endl;
     ENUMERATE_NODE(inode, allNodes()){
       Node node = *inode;
       if ( m_noeud_th() == node.localId()) {

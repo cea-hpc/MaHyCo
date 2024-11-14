@@ -49,8 +49,9 @@ void CellWatchingService::init()
       std::cout << "Pas de maille trouvé pour le time history dans ce sous-domaine ( m_maille_th = " << m_maille_th() << " )" << std::endl;
   } else {
       std::cout << " Maille " << m_maille_th() << " trouvé dans le sous-domaine " << rank << std::endl;
-  }   
-  
+  }
+  std::ofstream fichier("time-history.csv", std::ofstream::app );   
+  fichier << "Temps,maille,densité,energie_interne,pression,temperature,vitesse_son,fraction_ph1,fraction_ph2,fraction_ph3,norm_s,sxx,syy,sxy,syz,sxz,sxx_therm,syy_therm,sxy_therm,syz_therm,sxz_therm,sxx_deform,syy_deform,sxy_deform,syz_deform,sxz_deform"  << std::endl;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -63,7 +64,6 @@ void CellWatchingService::write()
   if (m_global_iteration()%period !=0) return;
 
   if (fichier.is_open()) {
-    fichier << " Temps, densité,energie_interne,pression,temperature,vitesse_son,fraction_ph1,fraction_ph2,fraction_ph3,norm_s,sxx,syy,sxy,syz,sxz"  << std::endl;
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
       ENUMERATE_ENVCELL(ienvcell,env) {
@@ -86,7 +86,17 @@ void CellWatchingService::write()
           fichier << m_strain_tensor_yy[ev] << ",";
           fichier << m_strain_tensor_xy[ev] << ",";
           fichier << m_strain_tensor_yz[ev] << ",";
-          fichier << m_strain_tensor_xz[ev] << std::endl;
+          fichier << m_strain_tensor_xz[ev] << ",";
+          fichier << m_strain_tensor_therm_xx[ev] << ",";
+          fichier << m_strain_tensor_therm_yy[ev] << ",";
+          fichier << m_strain_tensor_therm_xy[ev] << ",";
+          fichier << m_strain_tensor_therm_yz[ev] << ",";
+          fichier << m_strain_tensor_therm_xz[ev] << ",";
+          fichier << m_strain_tensor_deform_xx[ev] << ",";
+          fichier << m_strain_tensor_deform_yy[ev] << ",";
+          fichier << m_strain_tensor_deform_xy[ev] << ",";
+          fichier << m_strain_tensor_deform_yz[ev] << ",";
+          fichier << m_strain_tensor_deform_xz[ev] << std::endl;
         }
       }
     }   
