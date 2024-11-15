@@ -351,7 +351,7 @@ saveValuesAtN()
         m_cell_volume_n[cell] = m_cell_volume[cell];
         m_density_n[cell] = m_density[cell];
         m_internal_energy_n[cell] = m_internal_energy[cell];
-        m_temperature_n[cell] = m_temperature[cell];
+        // m_temperature_n[cell] = m_temperature[cell]; fait dans l'EOS
     }
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
@@ -364,7 +364,7 @@ saveValuesAtN()
             m_cell_volume_n[ev] = m_cell_volume[ev];
             m_density_n[ev] = m_density[ev];
             m_internal_energy_n[ev] = m_internal_energy[ev];
-            m_temperature_n[ev] = m_temperature[ev];
+            // m_temperature_n[ev] = m_temperature[ev]; fait dans l'EOS
         }
     }
 
@@ -1490,7 +1490,7 @@ void MahycoModule::updateEnergyAndPressureExplicite()
     ENUMERATE_ENV ( ienv,mm ) {
         IMeshEnvironment* env = *ienv;
         ENUMERATE_ENVCELL ( ienvcell,env ) {
-            EnvCell ev = *ienvcell;
+            EnvCell ev = *ienvcell;      
             m_internal_energy[ev] -=
                 ( m_pressure_n[ev] + m_pseudo_viscosity[ev] ) * ( 1.0 / m_density[ev] - 1.0 / m_density_n[ev] );
         }
