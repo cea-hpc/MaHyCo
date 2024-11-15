@@ -135,6 +135,7 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
                                                               - FiveoverThree * traceD * devB) * delta_t ;
     // simplifié : m_strain_tensor[ev] = m_strain_tensor_n[ev] + mu * ( DB + BD - TwoOverThree * math::doubleContraction(m_gauchy_green_tensor[cell], m_deformation_rate[cell]) * Identity) * delta_t ;
     // Terme thermique mu'*dT/dt * devB * dt
+    // pinfo() << " Muprime " << muprime << " DT " <<  (m_temperature[ev] - m_temperature_n[ev]);
     strain_tensor_point_thermique =  muprime * (m_temperature[ev] - m_temperature_n[ev]) *   devB;
 
 
@@ -205,20 +206,20 @@ void NewHypoModelService::ComputeElasticity(IMeshEnvironment* env, Real delta_t,
     }
     m_strain_tensor[ev] =  m_strain_tensor_n[ev]  + strain_tensor_point +  strain_tensor_point_thermique;
 
-    // pour les sorties
-    m_strain_tensor_therm_xx[cell] += strain_tensor_point_thermique.x.x;
-    m_strain_tensor_therm_yy[cell] += strain_tensor_point_thermique.y.y;
-    m_strain_tensor_therm_xy[cell] += strain_tensor_point_thermique.x.y;
-    m_strain_tensor_therm_yx[cell] += strain_tensor_point_thermique.y.x;
-    m_strain_tensor_therm_xz[cell] += strain_tensor_point_thermique.x.z;
-    m_strain_tensor_therm_yz[cell] += strain_tensor_point_thermique.y.z;
+    // pour les sorties (meme sens que  m_strain_tensor_..) --> signe -
+    m_strain_tensor_therm_xx[cell] -= strain_tensor_point_thermique.x.x;
+    m_strain_tensor_therm_yy[cell] -= strain_tensor_point_thermique.y.y;
+    m_strain_tensor_therm_xy[cell] -= strain_tensor_point_thermique.x.y;
+    m_strain_tensor_therm_yx[cell] -= strain_tensor_point_thermique.y.x;
+    m_strain_tensor_therm_xz[cell] -= strain_tensor_point_thermique.x.z;
+    m_strain_tensor_therm_yz[cell] -= strain_tensor_point_thermique.y.z;
     
-    m_strain_tensor_deform_xx[cell] += strain_tensor_point_deform.x.x;
-    m_strain_tensor_deform_yy[cell] += strain_tensor_point_deform.y.y;
-    m_strain_tensor_deform_xy[cell] += strain_tensor_point_deform.x.y;
-    m_strain_tensor_deform_yx[cell] += strain_tensor_point_deform.y.x;
-    m_strain_tensor_deform_xz[cell] += strain_tensor_point_deform.x.z;
-    m_strain_tensor_deform_yz[cell] += strain_tensor_point_deform.y.z;
+    m_strain_tensor_deform_xx[cell] -= strain_tensor_point_deform.x.x;
+    m_strain_tensor_deform_yy[cell] -= strain_tensor_point_deform.y.y;
+    m_strain_tensor_deform_xy[cell] -= strain_tensor_point_deform.x.y;
+    m_strain_tensor_deform_yx[cell] -= strain_tensor_point_deform.y.x;
+    m_strain_tensor_deform_xz[cell] -= strain_tensor_point_deform.x.z;
+    m_strain_tensor_deform_yz[cell] -= strain_tensor_point_deform.y.z;
   }
 }
 /*---------------------------------------------------------------------------*/
@@ -293,9 +294,12 @@ void NewHypoModelService::ComputeElastoEnergie(IMeshEnvironment* env, Real delta
     EnvCell ev = *ienvcell;  
     Cell cell = ev.globalCell();
     
+    // pinfo() << " Energie av " <<   m_internal_energy[ev];
     m_internal_energy[ev] += KoneOverFour * delta_t * (m_cell_volume[ev] + m_cell_volume_n[ev]) * 
         math::doubleContraction(m_strain_tensor[ev], m_deformation_rate[cell])
         / m_cell_mass[ev];
+    //pinfo() << " Energie ap " <<   m_internal_energy[ev];
+    
   }
 }
 /*---------------------------------------------------------------------------*/
