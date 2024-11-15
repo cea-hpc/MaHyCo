@@ -97,6 +97,7 @@
     <with-projection>false</with-projection>
     <coef-antiderive>0.01</coef-antiderive>
     <pseudo-centree>0</pseudo-centree>
+    <pression-explicite>true</pression-explicite>
     <schema-csts>0</schema-csts>
      <deltat-init>0.0000001</deltat-init>
      <deltat-min>0.0000000001</deltat-min>
