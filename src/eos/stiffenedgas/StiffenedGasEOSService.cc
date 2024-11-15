@@ -56,6 +56,7 @@ void StiffenedGasEOSService::applyEOS(IMeshEnvironment* env)
         m_pressure[ev] = pressure;
         m_sound_speed[ev] = sqrt((gamma/density)*(pressure+limit_tension));
         m_dpde[ev] = (gamma - 1.) * density;
+        m_temperature_n[ev] = m_temperature[ev];
         m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
     }
   }
@@ -77,6 +78,7 @@ void StiffenedGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_pressure[ev] = pressure;
   m_sound_speed[ev] = sqrt((gamma/density)*(pressure+limit_tension));
   m_dpde[ev] = (gamma - 1.) * density;
+        m_temperature_n[ev] = m_temperature[ev];
   m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
 }
 /*---------------------------------------------------------------------------*/
