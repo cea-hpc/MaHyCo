@@ -1,0 +1,25 @@
+<?xml version='1.0' ?>
+<curves>
+<curve name='CellMass_Bulle'/>
+<curve name='CellMass_Fictif'/>
+<curve name='CellMass_Fictif2'/>
+<curve name='CellMass_Plaque'/>
+<curve name='CpuTime'/>
+<curve name='Density_Bulle'/>
+<curve name='Density_Fictif'/>
+<curve name='Density_Fictif2'/>
+<curve name='Density_Plaque'/>
+<curve name='ElapsedTime'/>
+<curve name='GlobalCpuTime'/>
+<curve name='GlobalElapsedTime'/>
+<curve name='GlobalTime'/>
+<curve name='InternalEnergy_Bulle'/>
+<curve name='InternalEnergy_Fictif'/>
+<curve name='InternalEnergy_Fictif2'/>
+<curve name='InternalEnergy_Plaque'/>
+<curve name='Pressure_Bulle'/>
+<curve name='Pressure_Fictif'/>
+<curve name='Pressure_Fictif2'/>
+<curve name='Pressure_Plaque'/>
+<curve name='TotalMemory'/>
+</curves>

@@ -20,6 +20,7 @@
       <variable>PseudoViscosity</variable>
       <variable>Materiau</variable>
       <variable>SoundSpeed</variable>
+      <variable>Temperature</variable>
       <variable>VelocityGradient</variable>
       <variable>DeformationRate</variable>
       <variable>StrainTensorXX</variable>
@@ -95,6 +96,7 @@
   </environment>
   
     <with-projection>false</with-projection>
+    <pression-explicite>true</pression-explicite>
     <coef-antiderive>0.01</coef-antiderive>
     <pseudo-centree>0</pseudo-centree>
     <schema-csts>0</schema-csts>

@@ -65,6 +65,7 @@ void MieGruneisenEOSService::applyEOS(IMeshEnvironment* env)
           m_pressure[ev] = options()->rho0 * pow(options()->c0, 2) * mu + (options()->gamma0 + options()->a * mu) * m_internal_energy[ev];
         } 
         // calcul de la temperature en fonction de la Capacité thermique isochore
+        m_temperature_n[ev] = m_temperature[ev];
         m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
         m_dpde[ev] = (options()->gamma0 + options()->a * mu);
         // vitesse du son 

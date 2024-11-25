@@ -93,11 +93,11 @@
         <variable field-name="strain_tensor" name="StrainTensor" data-type="real3x3" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    
-	    <!-- Tenseur (déviateur) des contraintes à N -->
+	<!-- Tenseur (déviateur) des contraintes à N -->
         <variable field-name="strain_tensor_n" name="StrainTensorN" data-type="real3x3" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    	    	    
-	    <!-- Vitesse de déformation Plastic -->
+	<!-- Vitesse de déformation Plastic -->
         <variable field-name="plastic_deformation_velocity" name="PlasticDeformationVelocity" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
 	    
@@ -112,27 +112,77 @@
         <!-- Composante YY du Tenseur (déviateur) des contraintes -->
         <variable field-name="strain_tensor_yy" name="StrainTensorYY" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
-        
-        
+                
         <!-- Composante XY du Tenseur (déviateur) des contraintes -->
         <variable field-name="strain_tensor_xy" name="StrainTensorXY" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
-        
-        
+
+	<!-- Composante XY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_yx" name="StrainTensorYX" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+               
         <!-- Composante XZ du Tenseur (déviateur) des contraintes -->
         <variable field-name="strain_tensor_xz" name="StrainTensorXZ" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
-        
-        
+               
         <!-- Composante YZ du Tenseur (déviateur) des contraintes -->
         <variable field-name="strain_tensor_yz" name="StrainTensorYZ" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	
+        <!-- Composante XX du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_xx" name="StrainTensorThermXX" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    
+        <!-- Composante YY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_yy" name="StrainTensorThermYY" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
+
+	<!-- Composante YY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_yx" name="StrainTensorThermYX" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+
+	<!-- Composante XY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_xy" name="StrainTensorThermXY" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+               
+        <!-- Composante XZ du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_xz" name="StrainTensorThermXZ" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+               
+        <!-- Composante YZ du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_therm_yz" name="StrainTensorThermYZ" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+
+	<!-- Composante XX du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_xx" name="StrainTensorDeformXX" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+    
+        <!-- Composante YY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_yy" name="StrainTensorDeformYY" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+                
+        <!-- Composante XY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_xy" name="StrainTensorDeformXY" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	
+        <!-- Composante XY du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_yx" name="StrainTensorDeformYX" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+
+	<!-- Composante XZ du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_xz" name="StrainTensorDeformXZ" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+               
+        <!-- Composante YZ du Tenseur (déviateur) des contraintes -->
+        <variable field-name="strain_tensor_deform_yz" name="StrainTensorDeformYZ" data-type="real" item-kind="cell"
+        dim="0" material="true" dump="true" need-sync="true" />
+        
         
         <!-- Norme du Tenseur (déviateur) des contraintes-->
         <variable field-name="strain_norm" name="StrainNorm" data-type="real" item-kind="cell"
         dim="0" material="true" dump="true" need-sync="true" />
 	    
-	    <!-- FORCE	 -->
+	<!-- FORCE	 -->
         <variable field-name="force" name="Force" data-type="real3" item-kind="node"
 	    dim="0" dump="false" need-sync="false" />
 	</variables>

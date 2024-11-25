@@ -1,0 +1,36 @@
+{
+ "arcane-curves": {
+  "version": 1,
+  "curves": [{
+    "name": "CellMass_ALU",
+    "unique-name": "CellMass_ALU"
+   }, {
+    "name": "CpuTime",
+    "unique-name": "CpuTime"
+   }, {
+    "name": "Density_ALU",
+    "unique-name": "Density_ALU"
+   }, {
+    "name": "ElapsedTime",
+    "unique-name": "ElapsedTime"
+   }, {
+    "name": "GlobalCpuTime",
+    "unique-name": "GlobalCpuTime"
+   }, {
+    "name": "GlobalElapsedTime",
+    "unique-name": "GlobalElapsedTime"
+   }, {
+    "name": "GlobalTime",
+    "unique-name": "GlobalTime"
+   }, {
+    "name": "InternalEnergy_ALU",
+    "unique-name": "InternalEnergy_ALU"
+   }, {
+    "name": "Pressure_ALU",
+    "unique-name": "Pressure_ALU"
+   }, {
+    "name": "TotalMemory",
+    "unique-name": "TotalMemory"
+   }]
+ }
+}

@@ -1,0 +1,13 @@
+<?xml version='1.0' ?>
+<curves>
+<curve name='CellMass_ALU'/>
+<curve name='CpuTime'/>
+<curve name='Density_ALU'/>
+<curve name='ElapsedTime'/>
+<curve name='GlobalCpuTime'/>
+<curve name='GlobalElapsedTime'/>
+<curve name='GlobalTime'/>
+<curve name='InternalEnergy_ALU'/>
+<curve name='Pressure_ALU'/>
+<curve name='TotalMemory'/>
+</curves>

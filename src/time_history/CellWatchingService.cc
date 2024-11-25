@@ -49,8 +49,9 @@ void CellWatchingService::init()
       std::cout << "Pas de maille trouvé pour le time history dans ce sous-domaine ( m_maille_th = " << m_maille_th() << " )" << std::endl;
   } else {
       std::cout << " Maille " << m_maille_th() << " trouvé dans le sous-domaine " << rank << std::endl;
-  }   
-  
+  }
+  std::ofstream fichier("time-history.csv", std::ofstream::app );   
+  fichier << "Temps,maille,densité,energie_interne,pression,temperature,vitesse_son,fraction_ph1,fraction_ph2,fraction_ph3,norm_s,sxx,syy,sxy,syz,sxz,sxx_therm,syy_therm,sxy_therm,syz_therm,sxz_therm,sxx_deform,syy_deform,sxy_deform,syz_deform,sxz_deform"  << std::endl;
 }
 
 /*---------------------------------------------------------------------------*/
@@ -58,36 +59,44 @@ void CellWatchingService::init()
 /*---------------------------------------------------------------------------*/
 void CellWatchingService::write()
 {
-  std::ofstream fichier("time-history.txt", std::ofstream::app );
+  std::ofstream fichier("time-history.csv", std::ofstream::app );
   Integer period = options()->periode;
   if (m_global_iteration()%period !=0) return;
 
-  if (fichier.is_open()) { 
+  if (fichier.is_open()) {
     ENUMERATE_ENV(ienv,mm){
       IMeshEnvironment* env = *ienv;
       ENUMERATE_ENVCELL(ienvcell,env) {
         EnvCell ev = *ienvcell;   
         Cell cell = ev.globalCell();
-        
         if ( m_maille_th() == cell.localId()) {
-          fichier << " Temps " << m_global_time() << " ";
-          fichier << m_maille_th() << " ";
+          fichier << m_global_time() << ",";
+          fichier << m_maille_th() << ",";
           // fichier << m_cell_coord[cell] << " ";
-          fichier << m_density[ev] << " ";
-          fichier << m_internal_energy[ev] << " ";
-          fichier << m_pressure[ev] << " ";
-          fichier << m_temperature[ev] << " ";
-          fichier << m_sound_speed[ev] << " ";
-          fichier << m_frac_phase1[ev] << " ";
-          fichier << m_frac_phase2[ev] << " ";
-          fichier << m_frac_phase3[ev] << " ";
-          fichier << m_strain_norm[ev] << " ";
-          fichier << m_strain_tensor_xx[ev] << " ";
-          fichier << m_strain_tensor_yy[ev] << " ";
-          fichier << m_strain_tensor_xy[ev] << " ";
-          fichier << m_strain_tensor_yz[ev] << " ";
-          fichier << m_strain_tensor_xz[ev] << " ";
-          fichier << std::endl;
+          fichier << m_density[ev] << ",";
+          fichier << m_internal_energy[ev] << ",";
+          fichier << m_pressure[ev] << ",";
+          fichier << m_temperature[ev] << ",";
+          fichier << m_sound_speed[ev] << ",";
+          fichier << m_frac_phase1[ev] << ",";
+          fichier << m_frac_phase2[ev] << ",";
+          fichier << m_frac_phase3[ev] << ",";
+          fichier << m_strain_norm[ev] << ",";
+          fichier << m_strain_tensor_xx[ev] << ",";
+          fichier << m_strain_tensor_yy[ev] << ",";
+          fichier << m_strain_tensor_xy[ev] << ",";
+          fichier << m_strain_tensor_yz[ev] << ",";
+          fichier << m_strain_tensor_xz[ev] << ",";
+          fichier << m_strain_tensor_therm_xx[ev] << ",";
+          fichier << m_strain_tensor_therm_yy[ev] << ",";
+          fichier << m_strain_tensor_therm_xy[ev] << ",";
+          fichier << m_strain_tensor_therm_yz[ev] << ",";
+          fichier << m_strain_tensor_therm_xz[ev] << ",";
+          fichier << m_strain_tensor_deform_xx[ev] << ",";
+          fichier << m_strain_tensor_deform_yy[ev] << ",";
+          fichier << m_strain_tensor_deform_xy[ev] << ",";
+          fichier << m_strain_tensor_deform_yz[ev] << ",";
+          fichier << m_strain_tensor_deform_xz[ev] << std::endl;
         }
       }
     }   

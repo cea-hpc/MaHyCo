@@ -1,0 +1,13 @@
+<?xml version='1.0' ?>
+<curves>
+<curve name='CellMass_Acier'/>
+<curve name='CpuTime'/>
+<curve name='Density_Acier'/>
+<curve name='ElapsedTime'/>
+<curve name='GlobalCpuTime'/>
+<curve name='GlobalElapsedTime'/>
+<curve name='GlobalTime'/>
+<curve name='InternalEnergy_Acier'/>
+<curve name='Pressure_Acier'/>
+<curve name='TotalMemory'/>
+</curves>

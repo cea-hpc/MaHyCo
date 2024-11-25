@@ -60,6 +60,7 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
         m_sound_speed[ev] = sqrt(gamma * pressure / density);
         m_dpde[ev] = (gamma - 1.) * density;
         // calcul de la temperature en fonction de la Capacité thermique isochore
+        m_temperature_n[ev] = m_temperature[ev];
         m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
     }
   }
@@ -82,6 +83,7 @@ void PerfectGasEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
   m_sound_speed[ev] = sqrt(gamma * pressure / density);
   m_dpde[ev] = (gamma - 1.) * density;
   // calcul de la temperature en fonction de la Capacité thermique isochore
+  m_temperature_n[ev] = m_temperature[ev];
   m_temperature[ev] = (m_internal_energy[ev] - m_internal_energy_n[ev]) / cv + m_temperature_n[ev];
 }
 /*---------------------------------------------------------------------------*/

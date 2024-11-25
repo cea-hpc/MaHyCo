@@ -152,6 +152,8 @@
    </remap>
    
     <pseudo-centree>0</pseudo-centree>
+    <with-newton>false</with-newton>
+    <pression-explicite>true</pression-explicite>
     <schema-csts>0</schema-csts>
      <deltat-init>1.e-8</deltat-init>
      <deltat-min>1.e-11</deltat-min>

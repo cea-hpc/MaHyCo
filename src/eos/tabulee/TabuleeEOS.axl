@@ -133,6 +133,9 @@
             dim="0" material="true" dump="true" need-sync="true" />  
         <!-- TEMPERATURE -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	<!-- TEMPERATURE_N -->
+        <variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
             dim="0" material="true" dump="true" need-sync="true" />
 	    <!-- DENSITY 0 -->
         <variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"

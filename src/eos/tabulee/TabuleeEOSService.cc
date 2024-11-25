@@ -115,6 +115,8 @@ void TabuleeEOSService::applyEOS(IMeshEnvironment* env)
         // e0 = std::max(std::min(m_internal_energy[ev], emax/2), emin); 
         
        
+        m_temperature_n[ev] = m_temperature[ev];
+        
         d0 = m_density[ev];  
         e0 = m_internal_energy[ev]; 
         
@@ -149,6 +151,8 @@ void TabuleeEOSService::applyOneCellEOS(IMeshEnvironment* env, EnvCell ev)
     // d0 = std::max(std::min(m_density[ev], dmax/2), dmin);  
     // e0 = std::max(std::min(m_internal_energy[ev], emax/2), emin);
        
+    m_temperature_n[ev] = m_temperature[ev];
+    
     d0 = m_density[ev];  
     e0 = m_internal_energy[ev]; 
     
