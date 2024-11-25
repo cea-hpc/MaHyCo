@@ -14,6 +14,7 @@ scalar per element:    1   InternalEnergy InternalEnergy/InternalEnergy******
 scalar per element:    1   PseudoViscosity PseudoViscosity/PseudoViscosity******
 scalar per element:    1   Materiau Materiau/Materiau******
 scalar per element:    1   SoundSpeed SoundSpeed/SoundSpeed******
+scalar per element:    1   Temperature Temperature/Temperature******
 scalar per element:    1   StrainTensorXX StrainTensorXX/StrainTensorXX******
 scalar per element:    1   StrainTensorXY StrainTensorXY/StrainTensorXY******
 scalar per element:    1   StrainTensorYY StrainTensorYY/StrainTensorYY******
@@ -27,5 +28,5 @@ filename start number: 0
 filename increment:    1
 time values:
 0
-2.99994217341669e-05
+2.99994284904737e-05
 

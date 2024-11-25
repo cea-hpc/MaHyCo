@@ -1,0 +1,36 @@
+{
+ "arcane-curves": {
+  "version": 1,
+  "curves": [{
+    "name": "CellMass_Acier",
+    "unique-name": "CellMass_Acier"
+   }, {
+    "name": "CpuTime",
+    "unique-name": "CpuTime"
+   }, {
+    "name": "Density_Acier",
+    "unique-name": "Density_Acier"
+   }, {
+    "name": "ElapsedTime",
+    "unique-name": "ElapsedTime"
+   }, {
+    "name": "GlobalCpuTime",
+    "unique-name": "GlobalCpuTime"
+   }, {
+    "name": "GlobalElapsedTime",
+    "unique-name": "GlobalElapsedTime"
+   }, {
+    "name": "GlobalTime",
+    "unique-name": "GlobalTime"
+   }, {
+    "name": "InternalEnergy_Acier",
+    "unique-name": "InternalEnergy_Acier"
+   }, {
+    "name": "Pressure_Acier",
+    "unique-name": "Pressure_Acier"
+   }, {
+    "name": "TotalMemory",
+    "unique-name": "TotalMemory"
+   }]
+ }
+}
