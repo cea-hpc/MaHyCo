@@ -2,11 +2,11 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef JCSERVICE_H
-#define JCSERVICE_H
+#ifndef YSCGSERVICE_H
+#define YSCGSERVICE_H
 
-#include "yandg/IYandG.h"
-#include "yandg/JC_axl.h"
+#include "elastoY/IElastoY.h"
+#include "elastoY/YSCG_axl.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -14,28 +14,22 @@ using namespace Arcane::Materials;
 /**
  * Représente le modèle d'élastop-plasticité
  */
-class JCService 
-: public ArcaneJCObject
+class YSCGService 
+: public ArcaneYSCGObject
 {
 public:
   /** Constructeur de la classe */
-  JCService(const ServiceBuildInfo & sbi)
-    : ArcaneJCObject(sbi) {}
+  YSCGService(const ServiceBuildInfo & sbi)
+    : ArcaneYSCGObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~JCService() {};
+  virtual ~YSCGService() {};
 
 public:
-   /** 
-   *  Renvoie la constante Mu de l'environnement. 
-   */
-  virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
   /** 
    *  Renvoie la La limite de l'environnement. 
    */
   virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev);
-
-
 };
 
 #endif

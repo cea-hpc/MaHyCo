@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="NoModel" version="1.0" type="caseoption">
+<service name="YMTS" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service NoModelElasto</description>
-  <interface name="IElasto" />
+  <description>Jeu de données du service MTS</description>
+  <interface name="IElastoY" />
 
 	<variables>
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- DENSITY 0 -->
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
 		    
 		<!-- INTERNAL ENERGY	 -->
 		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+
+		<!-- INTERNAL ENERGY0	 -->
+		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
 			
 		<!-- 	SOUND SPEED	 -->
@@ -91,12 +99,43 @@
 	</variables>
 
 	<options>
-        <service-instance name="elasto-mu-model" type="IElastoMu" default="EPP">
-            <description>Service d'élasto-plasticité : calcul du module de cisaillement</description>
-        </service-instance>
-	
-        <service-instance name="elasto-y-model" type="IElastoY" default="YEPP">
-            <description>Service d'élasto-plasticité : calcul de la limite d'elasticité</description>
-        </service-instance> 
+		<!-- - - - - - Parametres  - - - - -->
+		<simple name="T0" type="real" default="83.">
+			<description>Température de référence</description>
+		</simple>
+		<simple name="D" type="real" default="3.173e+9">
+			<description>Valeur du matériaux(sans unité) </description>
+		</simple>
+		<simple name="Mu0" type="real" default="40.811e+9">
+			<description>Valeur du module de cisaillement à 0 K (Gpa) </description>
+		</simple>
+		<simple name="Sigma-a" type="real" default="80.e+6">
+			<description>fonction de la microstructure matérielle telle que la taille des grains et la densité de dislocation</description>
+		</simple>
+		<simple name="Epsilon-0" type="real" default="5.e6">
+			<description></description>
+		</simple>
+		<simple name="g-0" type="real" default="0.425">
+			<description></description>
+		</simple>
+		<simple name="kb" type="real" default="1.38064852e-23">
+			<description>Constante de Boltzman (J/K)</description>
+		</simple>
+		<simple name="Pi" type="real" default="1.">
+			<description>Paramêtre du modèle</description>
+		</simple>
+		<simple name="Qi" type="real" default="1.5">
+			<description>Paramêtre du modèle</description>
+		</simple>
+		<simple name="Sigma-i-sur-mu0" type="real" default="0.007">
+			<description>Paramêtre du modèle</description>
+		</simple>
+		<simple name="b" type="real" default="2.86e-10">
+			<description>Paramêtre du modèle</description>
+		</simple>
+		<simple name="Eint_fus" type="real" default="6.6e+5">
+			<description>Valeur de l'énergie de fusion (joules/kg) </description>
+		</simple>
 	</options>
+	
 </service>

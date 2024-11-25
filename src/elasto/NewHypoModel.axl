@@ -28,7 +28,11 @@
         <!-- Temperature -->
         <variable field-name="temperature" name="Temperature" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
-	    
+
+	<!-- TEMPERATURE OLD -->
+	<variable field-name="temperature_n" name="TemperatureN" data-type="real" item-kind="cell"
+		  dim="0" material="true" dump="true" need-sync="true" />
+	
         <!-- CELL MASS -->
         <variable field-name="cell_mass" name="CellMass" data-type="real" item-kind="cell"
 	    dim="0" material="true" dump="true" need-sync="true" />
@@ -138,10 +142,13 @@
 		<simple name="ordre-rotation" type="integer" default="1">
 			<description>Ordre de la rotation</description>
 		</simple>
+		
+	<service-instance name="elasto-mu-model" type="IElastoMu" default="EPP">
+            <description>Service d'élasto-plasticité : calcul du module de cisaillement</description>
+        </service-instance>
 	
-        <service-instance name="yandg-model" type="IYandG" default="EPP">
-            <description>Service d'élasto-plasticité</description>
-        </service-instance>  
-	
+        <service-instance name="elasto-y-model" type="IElastoY" default="EPP">
+            <description>Service d'élasto-plasticité : calcul de la limite d'elasticité</description>
+        </service-instance> 
 	</options>
 </service>

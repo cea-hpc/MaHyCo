@@ -2,11 +2,11 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef MTSSERVICE_H
-#define MTSSERVICE_H
+#ifndef EPPSERVICE_H
+#define EPPSERVICE_H
 
-#include "yandg/IYandG.h"
-#include "yandg/MTS_axl.h"
+#include "elastoMu/IElastoMu.h"
+#include "elastoMu/EPP_axl.h"
 
 using namespace Arcane;
 using namespace Arcane::Materials;
@@ -14,26 +14,26 @@ using namespace Arcane::Materials;
 /**
  * Représente le modèle d'élastop-plasticité
  */
-class MTSService 
-: public ArcaneMTSObject
+class EPPService 
+: public ArcaneEPPObject
 {
 public:
   /** Constructeur de la classe */
-  MTSService(const ServiceBuildInfo & sbi)
-    : ArcaneMTSObject(sbi) {}
+  EPPService(const ServiceBuildInfo & sbi)
+    : ArcaneEPPObject(sbi) {}
   
   /** Destructeur de la classe */
-  virtual ~MTSService() {};
+  virtual ~EPPService() {};
 
 public:
    /** 
-   *  Renvoie la constante Mu de l'environnement. 
+   *  Renvoie le module de cisaillement (Mu) de l'environnement. 
    */
   virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev);
-  /** 
-   *  Renvoie la La limite de l'environnement. 
+   /** 
+   *  Renvoie la dérivé (par rapport à la température) du module de cisaillement (Mu) de l'environnement. 
    */
-  virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev);
+  virtual Real getShearModulusDerivate(IMeshEnvironment* env, EnvCell ev);
 };
 
 #endif

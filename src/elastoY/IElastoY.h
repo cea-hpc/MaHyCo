@@ -2,8 +2,8 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef IYANDG_H
-#define IYANDG_H
+#ifndef IELASTOY_H
+#define IELASTOY_H
 
 #include <arcane/ItemTypes.h>
 
@@ -22,29 +22,25 @@ using namespace Arcane::Materials;
 /**
  * Interface du service du modèle de calcul de l'équation d'état.
  */
-class IYandG
+class IElastoY
 {
 public:
   /** Constructeur de la classe */
-  IYandG() {};
+  IElastoY() {};
   /** Destructeur de la classe */
-  virtual ~IYandG() {};
+  virtual ~IElastoY() {};
   
 public:
-  /** 
-   *  Renvoie la constante Mu de l'environnement. 
-   */
-  virtual Real getShearModulus(IMeshEnvironment* env, EnvCell ev) = 0;
   /** 
    *  Renvoie la La limite de l'environnement. 
    */
   virtual Real getElasticLimit(IMeshEnvironment* env, EnvCell ev) = 0;
 
-   Real f_ram(Real x) {
+  Real f_ram(Real x) {
      if (x < 0.0) return 1.;
      else if (x > 1.0) return 0.;
      else return (1.0+2.0*pow(x,3)-3.0*pow(x,2));
-    };  
+  };  
 };
 
 #endif

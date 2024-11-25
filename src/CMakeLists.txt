@@ -48,10 +48,15 @@ add_library(Elasto elasto/DefaultModelService.cc elasto/NoModelService.cc elasto
 target_include_directories(Elasto PUBLIC .)
 target_link_libraries(Elasto PUBLIC arcane_core)
 
-# Partie Constante Elastoplastique
-add_library(YandG yandg/EPPService.cc yandg/SCGService.cc yandg/JCService.cc yandg/MTSService.cc)
-target_include_directories(YandG PUBLIC .)
-target_link_libraries(YandG PUBLIC arcane_core)
+# Partie Constante Elastoplastique_Y
+add_library(ElastoY elastoY/YEPPService.cc elastoY/YSCGService.cc elastoY/YJCService.cc elastoY/YMTSService.cc)
+target_include_directories(ElastoY PUBLIC .)
+target_link_libraries(ElastoY PUBLIC arcane_core)
+
+# Partie Constante Elastoplastique_MU
+add_library(ElastoMu elastoMu/EPPService.cc elastoMu/SCGService.cc elastoMu/JCService.cc elastoMu/MTSService.cc)
+target_include_directories(ElastoMu PUBLIC .)
+target_link_libraries(ElastoMu PUBLIC arcane_core)
 
 # Partie TimeHistory
 add_library(TimeHistory time_history/NodeWatchingService.cc time_history/CellWatchingService.cc time_history/EnvSummationService.cc)
@@ -106,7 +111,7 @@ target_link_libraries(Remap PUBLIC arcane_core)
 
 #include_directories(${MyLib_INCLUDE_DIRS})
 
-target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto YandG TimeHistory RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
+target_link_libraries(${EXAMPLE_NAME} PRIVATE Tabulee MieGruneisen PerfectGas Fictif StiffenedGas ${AUTRE_EOS} Elasto ElastoY ElastoMu TimeHistory RIDER POINTTRIPLE ADVECTION SOD SEDOV EXTERNAL CHOCBULLE INSTART ONECELL VORTEX Remap)
 
 arcane_target_add_axl(RIDER casTest/RIDER/RIDER)
 arcane_target_add_axl(SOD casTest/SOD/SOD)
@@ -129,10 +134,15 @@ arcane_target_add_axl(Elasto elasto/DefaultModel)
 arcane_target_add_axl(Elasto elasto/NoModel)
 arcane_target_add_axl(Elasto elasto/NewHypoModel)
 
-arcane_target_add_axl(YandG yandg/EPP )
-arcane_target_add_axl(YandG yandg/SCG)
-arcane_target_add_axl(YandG yandg/JC)
-arcane_target_add_axl(YandG yandg/MTS)
+arcane_target_add_axl(ElastoY elastoY/YEPP )
+arcane_target_add_axl(ElastoY elastoY/YSCG)
+arcane_target_add_axl(ElastoY elastoY/YJC)
+arcane_target_add_axl(ElastoY elastoY/YMTS)
+
+arcane_target_add_axl(ElastoMu elastoMu/EPP )
+arcane_target_add_axl(ElastoMu elastoMu/SCG)
+arcane_target_add_axl(ElastoMu elastoMu/JC)
+arcane_target_add_axl(ElastoMu elastoMu/MTS)
 
 
 arcane_target_add_axl(TimeHistory time_history/NodeWatching)

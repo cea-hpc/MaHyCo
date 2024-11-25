@@ -1,20 +1,28 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
-<service name="NoModel" version="1.0" type="caseoption">
+<service name="YSCG" version="1.0" type="caseoption">
 
-  <description>Jeu de données du service NoModelElasto</description>
-  <interface name="IElasto" />
+  <description>Jeu de données du service SCG</description>
+  <interface name="IElastoY" />
 
 	<variables>
 		<!-- DENSITY -->
 		<variable field-name="density" name="Density" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
-			
+
+		<!-- DENSITY 0 -->
+		<variable field-name="density_0" name="Density0" data-type="real" item-kind="cell"
+	    dim="0" material="true" dump="true" need-sync="true" />
+
 		<!-- PRESSURE -->
 		<variable field-name="pressure" name="Pressure" data-type="real" item-kind="cell"
 		    dim="0" material="true" dump="true" need-sync="true" />
 		    
 		<!-- INTERNAL ENERGY	 -->
 		<variable field-name="internal_energy" name="InternalEnergy" data-type="real" item-kind="cell"
+			dim="0" material="true" dump="true" need-sync="true" />
+
+		<!-- INTERNAL ENERGY0	 -->
+		<variable field-name="internal_energy_0" name="InternalEnergy0" data-type="real" item-kind="cell"
 			dim="0" material="true" dump="true" need-sync="true" />
 			
 		<!-- 	SOUND SPEED	 -->
@@ -91,12 +99,34 @@
 	</variables>
 
 	<options>
-        <service-instance name="elasto-mu-model" type="IElastoMu" default="EPP">
-            <description>Service d'élasto-plasticité : calcul du module de cisaillement</description>
-        </service-instance>
-	
-        <service-instance name="elasto-y-model" type="IElastoY" default="YEPP">
-            <description>Service d'élasto-plasticité : calcul de la limite d'elasticité</description>
-        </service-instance> 
+		<!-- - - - - - Parametres  - - - - -->
+		<simple name="Y0" type="real" default="6.e+7">
+			<description>Valeur de la limite elastique 0 (joules/m3)</description>
+		</simple>
+		<simple name="Beta" type="real" default="4.e+3">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="n" type="real" default="0.27">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="Epsilon_init" type="real" default="0.">
+			<description>Valeur (sans unité)</description>
+		</simple>
+		<simple name="Mu0" type="real" default="2.71e+10">
+			<description>Valeur (joules/m3)</description>
+		</simple>
+		<simple name="GPP" type="real" default="1.7669">
+			<description>Valeur du coeeficient pression (sans unité) </description>
+		</simple>
+		<simple name="GPT" type="real" default="-1.66936e+07">
+			<description>Valeur du coeeficient température (joules/m3.K)</description>
+		</simple>
+		<simple name="Ymax" type="real" default="4.8e+08">
+			<description>Valeur du coeeficient température (joules/m3) </description>
+		</simple>
+		<simple name="Eint_fus" type="real" default="6.6e+5">
+			<description>Valeur de l'énergie de fusion (joules/kg) </description>
+		</simple>
 	</options>
+	
 </service>
