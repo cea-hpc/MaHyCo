@@ -94,30 +94,6 @@ copyVarToRawData(Arcane::Materials::MaterialVariableCellReal var, const StdMatCe
   }
 }
 
-/* To access to MatCellVectorView on accelerator */
-class MatCellContainer : 
-  public Arcane::Accelerator::impl::MatCommandContainerBase
-{
- public:
-  using MatCellVectorView = Arcane::Materials::MatCellVectorView;
-  using ComponentItemVectorView = Arcane::Materials::ComponentItemVectorView;
-  using IMeshEnvironment = Arcane::Materials::IMeshEnvironment;
-  using ComponentItemLocalId = Arcane::Materials::ComponentItemLocalId;
-  using MatVarIndex = Arcane::Materials::MatVarIndex;
-
- public:
-  explicit MatCellContainer(MatCellVectorView view) :
-    Arcane::Accelerator::impl::MatCommandContainerBase(view)
-  {
-  }
-
-  //! Accesseur pour le i-ème élément de la liste
-  constexpr ARCCORE_HOST_DEVICE ComponentItemLocalId operator[](Arcane::Int32 i) const
-  {   
-    return { ComponentItemLocalId(m_matvar_indexes[i]) };
-  }   
-};
-
 // Arcane var => raw_data, implem GPU API
 void PhyVarType::
 copyVarToRawData(Arcane::Materials::MaterialVariableCellReal var, const Arcane::Materials::MatCellVectorView* mat_cell_vector)
@@ -127,7 +103,7 @@ copyVarToRawData(Arcane::Materials::MaterialVariableCellReal var, const Arcane::
   auto command = ax::makeCommand(var.globalVariable().subDomain()->acceleratorMng()->defaultQueue());
   auto in_var = ax::viewIn(command, var);
   Arcane::Span<Arcane::Real> out_raw_data(raw_data.data(), raw_data.size());
-  MatCellContainer mat_cell_cont(*mat_cell_vector);
+  MatCellVectorView mat_cell_cont(*mat_cell_vector);
 
   auto nelt = mat_cell_vector->nbItem();
 
@@ -135,7 +111,7 @@ copyVarToRawData(Arcane::Materials::MaterialVariableCellReal var, const Arcane::
   {
     auto i = iter()[0];
 
-    auto mc = mat_cell_cont[i];
+    auto mc = mat_cell_cont.matCell(i);
     out_raw_data[i] = in_var[mc];
   };
 
@@ -160,7 +136,7 @@ copyRawDataToVar(Arcane::Materials::MaterialVariableCellReal var, const Arcane::
   auto command = ax::makeCommand(var.globalVariable().subDomain()->acceleratorMng()->defaultQueue());
   auto out_var = ax::viewOut(command, var);
   Arcane::Span<const Arcane::Real> in_raw_data(raw_data.data(), raw_data.size());
-  MatCellContainer mat_cell_cont(*mat_cell_vector);
+  MatCellVectorView mat_cell_cont(*mat_cell_vector);
 
   auto nelt = mat_cell_vector->nbItem();
 
@@ -168,7 +144,7 @@ copyRawDataToVar(Arcane::Materials::MaterialVariableCellReal var, const Arcane::
   {
     auto i = iter()[0];
 
-    auto mc = mat_cell_cont[i];
+    auto mc = mat_cell_cont.matCell(i);
     out_var[mc] = in_raw_data[i];
   };
 
