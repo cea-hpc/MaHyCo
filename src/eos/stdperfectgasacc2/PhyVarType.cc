@@ -13,7 +13,31 @@
 
 namespace Stdperfectgasacc2 {
 
+/*---------------------------------------------------------------------------*/
+/* To access to MatCellVectorView on accelerator */
+/*---------------------------------------------------------------------------*/
+class MatCellContainer : 
+  public Accelerator::impl::MatCommandContainerBase
+{
+ public:
+  using MatCellVectorView = Arcane::Materials::MatCellVectorView;
+  using ComponentItemVectorView = Arcane::Materials::ComponentItemVectorView;
+  using IMeshEnvironment = Arcane::Materials::IMeshEnvironment;
+  using ComponentItemLocalId = Arcane::Materials::ComponentItemLocalId;
+  using MatVarIndex = Arcane::Materials::MatVarIndex;
 
+ public:
+  explicit MatCellContainer(Arcane::Materials::MatCellVectorView view) :
+    Accelerator::impl::MatCommandContainerBase(view)
+  {
+  }
+
+  //! Accesseur pour le i-ème élément de la liste
+  constexpr ARCCORE_HOST_DEVICE ComponentItemLocalId operator[](Arcane::Int32 i) const
+  {   
+    return { ComponentItemLocalId(m_matvar_indexes[i]) };
+  }   
+};
 
 /*---------------------------------------------------------------------------*/
 /* PhyMatVarData */
@@ -54,15 +78,15 @@ asyncCopyVarToRawData(ax::RunQueue* async_queue)
   auto command = ax::makeCommand(async_queue);
   auto in_var = ax::viewIn(command, m_var);
   Arcane::Span<Arcane::Real> out_raw_data(m_raw_data);
-  MatCellVectorView mat_cell_cont(*m_mat_cell_vector);
+  MatCellContainer mat_cell_cont(*m_mat_cell_vector);
 
-  auto nelt = mat_cell_cont.nbItem();
+  auto nelt = mat_cell_cont.size();
 
-  command << RUNCOMMAND_LOOP1(iter, nelt)
+  command << RUNCOMMAND_LOOP1(iter, nelt) 
   {
     auto i = iter()[0];
 
-    auto mc = mat_cell_cont.matCell(i);
+    auto mc = mat_cell_cont[i];
     out_raw_data[i] = in_var[mc];
   };
 
@@ -78,15 +102,15 @@ asyncCopyRawDataToVar(ax::RunQueue* async_queue)
   auto command = ax::makeCommand(async_queue);
   auto out_var = ax::viewOut(command, m_var);
   Arcane::Span<const Arcane::Real> in_raw_data(m_raw_data);
-  MatCellVectorView mat_cell_cont(*m_mat_cell_vector);
+  MatCellContainer mat_cell_cont(*m_mat_cell_vector);
 
-  auto nelt = mat_cell_cont.nbItem();
+  auto nelt = mat_cell_cont.size();
 
   command << RUNCOMMAND_LOOP1(iter, nelt) 
   {
     auto i = iter()[0];
 
-    auto mc = mat_cell_cont.matCell(i);
+    auto mc = mat_cell_cont[i];
     out_var[mc] = in_raw_data[i];
   };
 
