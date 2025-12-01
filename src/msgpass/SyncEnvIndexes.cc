@@ -3,6 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 #include "msgpass/SyncEnvIndexes.h"
 
+#include "accenv/SingletonIAccEnv.h"
+
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 SyncEnvIndexes::SyncEnvIndexes(MatVarSpace mvs, IMeshMaterialMng* mm,
@@ -95,12 +97,22 @@ void SyncEnvIndexes::updateEnvIndexes()
     MultiArray2View<MatVarIndex> ghost_mvi_pn(m_buf_ghost_mvi.view(),
         m_indexes_ghost_mvi_pn.constView(), m_nb_ghost_mvi_pn.constView());
 
+
+    auto acc_env = SingletonIAccEnv::accEnv(m_mesh_material_mng->mesh()->subDomain());
+    auto queue = acc_env->newQueue();
+
     // On convertit les MatVarIndex(es) en MatVarIndex(es)
-    auto mvi2mvi = [](ConstArrayView<MatVarIndex> lmvis, ArrayView<MatVarIndex> levis)
+    auto mvi2mvi = [=](ConstArrayView<MatVarIndex> lmvis, ArrayView<MatVarIndex> levis)
     {
-      for(Integer i=0 ; i<lmvis.size() ; ++i) {
-        levis[i] = lmvis[i];
-      }
+      auto command = makeCommand(queue);
+
+      Span<MatVarIndex> out_levis(levis.data(), levis.size());
+      Span<const MatVarIndex> in_lmvis (lmvis.data(), lmvis.size());
+
+      command << RUNCOMMAND_LOOP1(iter, lmvis.size()) {
+        auto [index] = iter();
+	out_levis[index] = in_lmvis[index];
+      };
     };
 
     for(Integer inei=0 ; inei<m_nb_nei ; ++inei) {
