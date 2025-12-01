@@ -12,7 +12,7 @@
 
 /** Constructeur de la classe */
 RemapArcaneService::RemapArcaneService(const ServiceBuildInfo & sbi)
-  : ArcaneRemapArcaneObject(sbi) {
+  : ArcaneRemapArcaneObject(sbi), m_idx_selecter(subDomain()) {
   m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
 }
 
