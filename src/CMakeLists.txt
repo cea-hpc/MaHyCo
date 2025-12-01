@@ -16,11 +16,6 @@ if (Arcane_VERSION VERSION_LESS "3.12.18")
     " Version 3.12.17+ is required")
 endif()
 
-if (Arcane_VERSION VERSION_GREATER "3.13.4")
-  message(FATAL_ERROR "Arcane version '${Arcane_VERSION}' is incompatible."
-    " Version 3.13.4 is required")
-endif()
-
 if (WANT_CUDA AND NOT ARCANE_HAS_CUDA)
     MESSAGE(FATAL_ERROR "WANT_CUDA enabled but Arcane was compiled without CUDA support.")
 endif()
