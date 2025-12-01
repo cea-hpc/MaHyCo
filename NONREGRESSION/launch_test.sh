@@ -21,7 +21,7 @@ function launch_computation {
   ${mpi_launcher_opt} -n 1 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "seq-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -44,7 +44,7 @@ function launch_computation_seq_pr {
   ${mpi_launcher_opt} -n 1 $1 -arcane_opt continue $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "seq_pr-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -67,7 +67,7 @@ function launch_computation_para_4 {
   ${mpi_launcher_opt} -n 4 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "para_4-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -90,7 +90,7 @@ function launch_computation_para_8 {
   ${mpi_launcher_opt} -n 8 $1 $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "para_8-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -113,7 +113,7 @@ function launch_computation_cuda_1 {
   ${mpi_launcher_opt} -n 1 $1 -A,AcceleratorRuntime=cuda $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "cuda_1-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -135,7 +135,7 @@ function launch_computation_cuda_4 {
   ${mpi_launcher_opt} -n 4 $1 -A,AcceleratorRuntime=cuda $data_dir/Donnees.arc
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test execution."
-    echo $(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
+    echo "cuda_4-"$(basename ${data_dir}) >>  $data_dir/../../list_of_pb_exec
     return_code=1
   fi
   return ${return_code}
@@ -145,13 +145,14 @@ function launch_computation_cuda_4 {
 # expected in the reference directory
 function compare_results {
   local readonly reference_dir=$1
+  local readonly type=$2
 
   # comparaison sur les sorties de dépouillement
   echo "Analyse des differences dans le fichier : ${PWD}/DIFF.txt"
-  diff -r output/depouillement "$reference_dir/output/depouillement" > ${PWD}/DIFF.txt 2>&1
+  diff -r output/depouillement "$reference_dir/output_${type}/depouillement" > ${PWD}/DIFF.txt 2>&1
   if [[ $? -ne 0 ]]; then
     echo "A problem occured during test comparison (depouillement)."
-    echo $(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
+    echo ${type}-$(basename ${test_dir}) >>  $reference_dir/../../list_of_cases_to_change
     return 1
   fi
 
@@ -226,7 +227,7 @@ function main {
   fi
 
   # Comparaison des résultats
-  compare_results ${test_dir}
+  compare_results ${test_dir} ${type}
   if [[ $? -ne 0 ]]; then
     echo "Aborting!"
     exit 2
