@@ -31,11 +31,8 @@
 #include "arcane/materials/ComponentSimd.h"
 
 #include "RemapArcane_axl.h"
-#include "cartesian/interface/CartesianConnectivity.h"
-#include "cartesian/interface/CellDirectionMng.h"
-#include "cartesian/interface/FaceDirectionMng.h"
-#include "cartesian/interface/ICartesianMesh.h"
-#include "cartesian/interface/NodeDirectionMng.h"
+
+#include "accenv/IndexSelecter.h"
 
 #include "arcane/cartesianmesh/ICartesianMesh.h"
 
@@ -61,7 +58,6 @@ public:
     double inf, sup;
   };
   Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
-  //CartesianInterface::ICartesianMesh* m_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:
@@ -254,6 +250,8 @@ private:
   
   // Pour l'utilisation des accélérateurs
   IAccEnv* m_acc_env=nullptr;
+
+  Accenv::IndexSelecter m_idx_selecter; // pour sélectionner les mailles à ajouter/supprimer
 };
 
 /**

@@ -7,8 +7,6 @@
 #include "accenv/IAccEnv.h"
 #include "arcane/utils/FatalErrorException.h"
 
-#include "cartesian/FactCartDirectionMng.h"
-
 #include "arcane/cea/FaceDirectionMng.h"
 #include "arcane/cea/NodeDirectionMng.h"
 #include "arcane/cea/CartesianConnectivity.h"
@@ -35,7 +33,6 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   Real deltat = m_global_deltat();
   
   auto queue = m_acc_env->newQueue();
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
@@ -54,17 +51,13 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     }
     else { // (options()->projectionLimiteurId > minmodG) PAS SUR GPU
       m_dual_grad_phi.fill(0.0);
-      //Cartesian::NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
       ENUMERATE_NODE(inode, ndm.innerNodes()) {
         Node node = *inode;
-        //Cartesian::DirNode dir_node(ndm[inode]);
         Arcane::DirNode dir_node(ndm[inode]);
         Node backnode = dir_node.previous();
-        //Cartesian::DirNode dir_backnode(ndm[backnode]);
         Arcane::DirNode dir_backnode(ndm[backnode]);
         Node backbacknode = dir_backnode.previous();
         Node frontnode = dir_node.next();
-        //Cartesian::DirNode dir_frontnode(ndm[frontnode]);
         Arcane::DirNode dir_frontnode(ndm[frontnode]);
         Node frontfrontnode = dir_frontnode.next();
         
@@ -97,7 +90,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
   Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
   
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   
   ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface;       
@@ -149,10 +142,6 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
   {
     auto command_f = makeCommand(queue);
     
-    //auto cart_fdm = fact_cart.faceDirection(idir);
-    //auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    //auto face_group = cart_fdm.allFaces();
-    
     auto in_dual_phi_flux      = ax::viewIn(command_f, m_dual_phi_flux    );
     
     auto out_back_flux_contrib_env   = ax::viewOut(command_f, m_back_flux_contrib_env );
@@ -162,21 +151,15 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     // 4 cellules dans une direction pour les noeuds ==> 0.25 en 3D
     Real oneovernbcell = ( mesh()->dimension() == 2 ? 0.5 : 0.25 );
     
-    //command_f.addKernelName("fcontrib") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
     command_f.addKernelName("fcontrib") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.allFaces()) {
-      //auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
       
       // Acces mailles gauche/droite 
-      //auto f2cid = f2cid_stm.face(fid, idx);
-      //CellLocalId backCid(f2cid.previousCell());
-      //CellLocalId frontCid(f2cid.nextCell());
-
       DirFaceLocalId dir_face(fdm.dirFaceId(fid));
       CellLocalId backCid  = dir_face.previousCell();
       CellLocalId frontCid = dir_face.nextCell();
       
       // Si face au bord gauche, on ne prend pas en compte la backCell
-      if (!ItemId::null(backCid)) {
+      if (!backCid.isNull()) {
         Int16 index_face_backCid = 0;
         for( FaceLocalId backCid_fid : cfc.faces(backCid) ){
           if (backCid_fid == fid) {
@@ -191,7 +174,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
       }
       
       // Si face au bord droit, on ne prend pas en compte la frontCell
-      if (!ItemId::null(frontCid)) {
+      if (!frontCid.isNull()) {
         Int16 index_face_frontCid = 0;
         for( FaceLocalId frontCid_fid : cfc.faces(frontCid) ){
           if (frontCid_fid == fid) {
@@ -219,24 +202,10 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_back_flux_mass_env  = ax::viewInOut(command,m_back_flux_mass_env );
     auto inout_front_flux_mass_env = ax::viewInOut(command,m_front_flux_mass_env);
     
-    //auto cart_cell_dm = fact_cart.cellDirection(idir);
-    //auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
-
-    //auto node_dm = fact_cart.nodeDirection(idir);
-    //auto n2nid_stm = node_dm.node2NodeIdStencil();
-    //auto node_group = node_dm.allNodes();
-
-    // Direction transverse en 2D
-    //Integer dir1 = (idir+1)%2;
-    //Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
-    //Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
-  
     // Connectivité cartésienne Arcane
     CartesianConnectivityLocalId cc = m_arcane_cartesian_mesh->connectivity();
 
-    //command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
     command.addKernelName("ncontrib") << RUNCOMMAND_ENUMERATE(Node, nid, ndm.allNodes()) {
-      //auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
 
       for (Integer index_env=0; index_env < nb_env; index_env++) {
         inout_back_flux_mass_env[nid][index_env] =0.;
@@ -294,24 +263,8 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
 
     // Connectivité cartésienne Arcane
     CartesianConnectivityLocalId cc = m_arcane_cartesian_mesh->connectivity();
-    
-    //auto cart_cell_dm = fact_cart.cellDirection(idir);
-    //auto c2cid_stm = cart_cell_dm.cell2CellIdStencil();
 
-    //auto node_dm = fact_cart.nodeDirection(idir);
-    //auto n2nid_stm = node_dm.node2NodeIdStencil();
-    //auto node_group = node_dm.allNodes();
-
-    // Directions transverses en 3D
-    //Integer dir1 = (idir+1)%3;
-    //Integer dir2 = (idir+2)%3;
-    //Integer ncells0 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(0);
-    //Integer ncells1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(1);
-    //Integer ncells2 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(2);
-
-    //command.addKernelName("ncontrib") << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
     command.addKernelName("ncontrib") << RUNCOMMAND_ENUMERATE(Node, nid, ndm.allNodes()) {
-      //auto [nid, idx] = n2nid_stm.idIdx(iter); // node id + (i,j,k) du noeud
 
       for (Integer index_env=0; index_env < nb_env; index_env++) {
         inout_back_flux_mass_env[nid][index_env] =0.;
@@ -413,11 +366,6 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     auto command = makeCommand(queue);
     
-    //auto cart_ndm = fact_cart.nodeDirection(idir);
-    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
-    
-    //auto node_group = cart_ndm.innerNodes();
-    
     auto in_back_flux_mass  = ax::viewIn(command, m_back_flux_mass );
     auto in_front_flux_mass = ax::viewIn(command, m_front_flux_mass);
     auto in_dual_grad_phi   = ax::viewIn(command, m_dual_grad_phi  );
@@ -427,16 +375,9 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
     
-    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
     command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
-      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
       
       // Acces noeuds gauche/droite qui existent forcement
-      //auto n2nid = n2nid_stm.stencilNode<1>(nid, idx);
-      
-      //NodeLocalId backNid(n2nid.previousId()); // back node
-      //NodeLocalId frontNid(n2nid.nextId()); // front node
-      
       DirNodeLocalId dir_node(ndm.dirNodeId(nid));
       NodeLocalId backNid  = dir_node.previous();
       NodeLocalId frontNid = dir_node.next();
@@ -559,17 +500,10 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
     
     Real thresold = m_arithmetic_thresold;
     
-    //auto cart_ndm = fact_cart.nodeDirection(idir);
-    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
-    
-    //auto node_group = cart_ndm.innerNodes();
-    
     auto inout_u_dual_lagrange   = ax::viewInOut(command, m_u_dual_lagrange  );
     auto inout_phi_dual_lagrange = ax::viewInOut(command, m_phi_dual_lagrange);
     
-    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
     command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
-      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille      
       // filtre des valeurs abherentes
       if (abs(inout_u_dual_lagrange[nid][0]) < thresold) inout_u_dual_lagrange[nid][0]=0.;
       if (abs(inout_u_dual_lagrange[nid][1]) < thresold) inout_u_dual_lagrange[nid][1]=0.;
@@ -776,7 +710,6 @@ template<typename LimType>
 void RemapArcaneService::
 computeDualGradPhi_LimC(Integer idir) {
   PROF_ACC_BEGIN(__FUNCTION__);
-  //Cartesian::FactCartDirectionMng fact_cart(mesh());
   
   Arcane::NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
   
@@ -784,25 +717,12 @@ computeDualGradPhi_LimC(Integer idir) {
   {
     auto command = makeCommand(queue);
     
-    //auto cart_ndm = fact_cart.nodeDirection(idir);
-    //auto n2nid_stm = cart_ndm.node2NodeIdStencil();
-    
-    //auto node_group = cart_ndm.innerNodes();
-    
     auto in_phi_dual_lagrange = ax::viewIn(command, m_phi_dual_lagrange);
     auto in_node_coord        = ax::viewIn(command, m_node_coord);
     
     auto out_dual_grad_phi = ax::viewOut(command, m_dual_grad_phi);
     
-    //command << RUNCOMMAND_LOOP(iter, node_group.loopRanges()) {
     command << RUNCOMMAND_ENUMERATE(Node, nid, ndm.innerNodes()) {
-      //auto [nid, idx] = n2nid_stm.idIdx(iter); // id maille + (i,j,k) maille
-      
-      // Acces noeuds gauche/droite qui existent forcement
-      //auto n2nid = n2nid_stm.stencilNode<2>(nid, idx);
-      
-      //NodeLocalId backNid(n2nid.previousId()); // back node
-      //NodeLocalId frontNid(n2nid.nextId()); // front node
       // TODO : Pk backbackNid et frontfrontNid si on ne s'en sert pas ? Voir code CPU après 
       //NodeLocalId backbackNid(n2nid.prev_previousId()); // back back node
       //NodeLocalId frontfrontNid(n2nid.next_nextId()); // front front node
@@ -848,7 +768,7 @@ computeDualGradPhi_LimC(Integer idir) {
   
   
   
-//   NodeDirectionMng ndm(m_cartesian_mesh->nodeDirection(idir));
+//   NodeDirectionMng ndm(m_arcane_cartesian_mesh->nodeDirection(idir));
 //   
 //   ENUMERATE_NODE(inode, ndm.innerNodes()) {
 //     
