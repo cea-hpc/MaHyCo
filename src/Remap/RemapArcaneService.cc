@@ -5,7 +5,6 @@
 #include "RemapArcaneService.h"
 #include "accenv/AcceleratorUtils.h"
 #include <arcane/ServiceBuilder.h>
-#include "cartesian/FactCartDirectionMng.h"
 #include <accenv/IAccEnv.h>
 #include "arcane/cea/CellDirectionMng.h"
 #include "arcane/cea/FaceDirectionMng.h"
@@ -30,7 +29,6 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
     
     Integer idir(-1);
     m_arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
-    //m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
 
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
@@ -100,7 +98,7 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
   debug() << " Entree dans computeGradPhiFace()";
 #if 0
   
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   
   ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface; 
@@ -128,7 +126,6 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
 
 #else
 
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
 
   auto queue_dfac = m_acc_env->newQueue();
@@ -183,41 +180,23 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
     {
       auto command_p = makeCommand(queue_hcell);
 
-      //auto cart_fdm = fact_cart.faceDirection(idir);
-
-      //auto f2cid_stm = cart_fdm.face2CellIdStencil();
-      //auto face_group = cart_fdm.innerFaces();
-
       auto in_face_coord   = ax::viewIn(command_p, m_face_coord);
       auto in_cell_coord   = ax::viewIn(command_p, m_cell_coord);
       auto inout_h_cell_lagrange = ax::viewInOut(command_p, m_h_cell_lagrange);
 
       // D'abord contribution dans toutes les mailles précédentes
       command_p.addKernelName("hcell_prev") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
-      //command_p.addKernelName("hcell_prev") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      //  auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
 
         // Acces mailles gauche 
         DirFaceLocalId dir_face(fdm.dirFaceId(fid));
         CellLocalId pcid = dir_face.previousCell();
 
-        // Acces maille gauche
-        //auto f2cid = f2cid_stm.face(fid, idx);
-        //CellLocalId pcid(f2cid.previousCell());
-
         // somme des distances entre le milieu de la maille et le milieu de la face
         inout_h_cell_lagrange[pcid] =  (in_face_coord[fid] - in_cell_coord[pcid]).normL2();
       };
 
-      //const Integer last_idx = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
       // Puis, contrib dans toutes les mailles suivantes
-      //command_p.addKernelName("hcell_next") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
       command_p.addKernelName("hcell_next") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
-        //auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
-
-        // Acces maille droite
-        //auto f2cid = f2cid_stm.face(fid, idx);
-        //CellLocalId ncid(f2cid.nextCell());
 
         // Aces mailles droite 
         DirFaceLocalId dir_face(fdm.dirFaceId(fid));
@@ -353,7 +332,6 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
   rqueue2->barrier();
 #endif
 
-  //CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
 #if 0
@@ -552,9 +530,7 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
   
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
-  //CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
   Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
-  //CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
   Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
   Integer order2 = options()->ordreProjection - 1;
