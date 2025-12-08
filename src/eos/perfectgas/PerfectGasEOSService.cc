@@ -76,70 +76,33 @@ void PerfectGasEOSService::applyEOS(IMeshEnvironment* env)
     }
   });
 #else
-  // Mailles pures
-  auto queue_pur = m_acc_env->newQueue();
-  queue_pur.setAsync(true);
+
+  auto queue = m_acc_env->newQueue();
   {
-    auto command = makeCommand(queue_pur);
+    auto command = makeCommand(queue);
 
-    // Nombre de mailles pures de l'environnement
-    Integer nb_pur = env->pureEnvItems().nbItem();
+    auto in_density         = ax::viewIn (command, m_density);
+    auto in_internal_energy = ax::viewIn (command, m_internal_energy);
 
-    // Pour les mailles pures, valueIndexes() est la liste des ids locaux des mailles
-    Span<const Int32> in_cell_id(env->pureEnvItems().valueIndexes());
+    auto out_pressure       = ax::viewOut(command, m_pressure);
+    auto out_sound_speed    = ax::viewOut(command, m_sound_speed);
+    auto out_dpde           = ax::viewOut(command, m_dpde);
 
-    auto in_density         = ax::viewIn(command, m_density.globalVariable());
-    auto in_internal_energy = ax::viewIn(command, m_internal_energy.globalVariable());
-
-    auto out_pressure    = ax::viewOut(command, m_pressure.globalVariable());
-    auto out_sound_speed = ax::viewOut(command, m_sound_speed.globalVariable());
-    auto out_dpde        = ax::viewOut(command, m_dpde.globalVariable());
-
-    command << RUNCOMMAND_LOOP1(iter, nb_pur) {
-      auto [ipur] = iter(); // ipur \in [0,nb_pur[
-      CellLocalId cid(in_cell_id[ipur]); // accés indirect à la valeur de la maille
+    command << RUNCOMMAND_MAT_ENUMERATE(EnvCell, evi, env) {
 
       Real pressure, sound_speed, dpde;
 
       compute_pressure_sndspd_PG(adiabatic_cst,
-          in_density[cid], in_internal_energy[cid],
+          in_density[evi], in_internal_energy[evi],
           pressure, sound_speed, dpde);
 
-      out_pressure[cid] = pressure;
-      out_sound_speed[cid] = sound_speed;
-      out_dpde[cid] = dpde;
+      out_pressure[evi] = pressure;
+      out_sound_speed[evi] = sound_speed;
+      out_dpde[evi] = dpde;
 
-    }; // non-bloquant et asynchrone par rapport au CPU et autres queues
+    };
   }
 
-  // Mailles mixtes
-  auto queue_mix = m_acc_env->newQueue();
-  queue_mix.setAsync(true);
-  {
-    auto command = makeCommand(queue_mix);
-
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
-
-    Span<const Real> in_density         (envView(m_density, env));
-    Span<const Real> in_internal_energy (envView(m_internal_energy, env));
-
-    Span<Real> out_pressure    (envView(m_pressure, env));
-    Span<Real> out_sound_speed (envView(m_sound_speed, env));
-    Span<Real> out_dpde        (envView(m_dpde, env));
-
-    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-
-      compute_pressure_sndspd_PG(adiabatic_cst,
-          in_density[imix], in_internal_energy[imix],
-          out_pressure[imix], out_sound_speed[imix], out_dpde[imix]);
-
-    }; // non-bloquant et asynchrone par rapport au CPU et autres queues
-  }
-  queue_pur.barrier();
-  queue_mix.barrier();
 #endif
   PROF_ACC_END;
 }
