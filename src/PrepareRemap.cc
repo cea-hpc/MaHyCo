@@ -309,15 +309,12 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
 	}
       };
     }
-  }
 
-  {
-    auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
     ENUMERATE_ENV(ienv,mm) {
       IMeshEnvironment* env = *ienv;
       
-      // Les recopies par environnement dont indépendantes, on peut utiliser menv_queue
-      auto command = makeCommand(menv_queue->queue(env->id()));
+      // Les kernels sont lancés environnement par environnement les uns après les autres
+      auto command = makeCommand(queue);
       
       auto in_pseudo_viscosity = ax::viewIn(command, m_pseudo_viscosity);
       auto in_cell_volume      = ax::viewIn(command, m_cell_volume);
@@ -332,6 +329,7 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
 	Int32 index = evgi.index();
         EnvCell ev(envcells.envCell(index));
         Integer index_env = ev.environmentId();
+
 
         // volumes matériels (partiels)
         out_u_lagrange[cid][index_env] = in_cell_volume[evi];
@@ -350,7 +348,6 @@ void MahycoModule::computeVariablesForRemap_PBorn0()
 
       }; // bloquant
     }
-    menv_queue->waitAllQueues();
   }
   
   
