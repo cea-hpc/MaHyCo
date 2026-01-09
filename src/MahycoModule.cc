@@ -14,6 +14,7 @@
 
 #include <arcane/ServiceBuilder.h>
 
+#include <arcane/core/materials/CellToAllEnvCellConverter.h>
 #include "accenv/SingletonIAccEnv.h"
 
 using namespace Arcane;
@@ -399,24 +400,25 @@ saveValuesAtN()
 
   {
     auto command = makeCommand(queue_cell);
+    CellToAllEnvCellConverter c2a(mm);
 
-    auto in_pseudo_viscosity = ax::viewIn(command,m_pseudo_viscosity.globalVariable());
-    auto in_pressure         = ax::viewIn(command,m_pressure.globalVariable());
-    auto in_cell_volume      = ax::viewIn(command,m_cell_volume.globalVariable());
-    auto in_density          = ax::viewIn(command,m_density.globalVariable());
-    auto in_internal_energy  = ax::viewIn(command,m_internal_energy.globalVariable());
+    auto in_pseudo_viscosity = ax::viewIn(command,m_pseudo_viscosity);
+    auto in_pressure         = ax::viewIn(command,m_pressure);
+    auto in_cell_volume      = ax::viewIn(command,m_cell_volume);
+    auto in_density          = ax::viewIn(command,m_density);
+    auto in_internal_energy  = ax::viewIn(command,m_internal_energy);
     auto in_cell_cqs         = ax::viewIn(command,m_cell_cqs);
 
-    auto inout_pseudo_viscosity_n = ax::viewInOut(command,m_pseudo_viscosity_n.globalVariable());
+    auto inout_pseudo_viscosity_n = ax::viewInOut(command,m_pseudo_viscosity_n);
 
-    auto out_pseudo_viscosity_nmoins1 = ax::viewOut(command,m_pseudo_viscosity_nmoins1.globalVariable());
-    auto out_pressure_n         = ax::viewOut(command,m_pressure_n.globalVariable());
-    auto out_cell_volume_n      = ax::viewOut(command,m_cell_volume_n.globalVariable());
-    auto out_density_n          = ax::viewOut(command,m_density_n.globalVariable());
-    auto out_internal_energy_n  = ax::viewOut(command,m_internal_energy_n.globalVariable());
+    auto out_pseudo_viscosity_nmoins1 = ax::viewOut(command,m_pseudo_viscosity_nmoins1);
+    auto out_pressure_n         = ax::viewOut(command,m_pressure_n);
+    auto out_cell_volume_n      = ax::viewOut(command,m_cell_volume_n);
+    auto out_density_n          = ax::viewOut(command,m_density_n);
+    auto out_internal_energy_n  = ax::viewOut(command,m_internal_energy_n);
     auto out_cell_cqs_n         = ax::viewInOut(command,m_cell_cqs_n);
 
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
       out_pseudo_viscosity_nmoins1[cid] = inout_pseudo_viscosity_n[cid];
       inout_pseudo_viscosity_n[cid] = in_pseudo_viscosity[cid];
       out_pressure_n[cid] = in_pressure[cid];
@@ -425,10 +427,22 @@ saveValuesAtN()
       out_internal_energy_n[cid] = in_internal_energy[cid];
 
       out_cell_cqs_n[cid].copy(in_cell_cqs[cid]);
+
+      const AllEnvCell & allenvcell_conv{c2a[cid]};
+      if (allenvcell_conv.nbEnvironment() > 1) 
+      {
+        ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
+          out_pseudo_viscosity_nmoins1[envcell_i] = inout_pseudo_viscosity_n[envcell_i];
+          inout_pseudo_viscosity_n[envcell_i] = in_pseudo_viscosity[envcell_i];
+          out_pressure_n[envcell_i] = in_pressure[envcell_i];
+          out_cell_volume_n[envcell_i] = in_cell_volume[envcell_i];
+          out_density_n[envcell_i] = in_density[envcell_i];
+          out_internal_energy_n[envcell_i] = in_internal_energy[envcell_i];
+        }
+      }
     }; // asynchrone
   }
 
-  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -441,42 +455,6 @@ saveValuesAtN()
       m_density_n[ev] = m_density[ev];
       m_internal_energy_n[ev] = m_internal_energy[ev];
     }
-  }
-#else
-  // Les recopies par environnement dont indépendantes, on peut utiliser menv_queue
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-
-    auto command = makeCommand(menv_queue->queue(env->id()));
-
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
-
-    Span<const Real> in_pseudo_viscosity(envView(m_pseudo_viscosity, env));
-    Span<const Real> in_pressure        (envView(m_pressure, env));
-    Span<const Real> in_cell_volume     (envView(m_cell_volume, env));
-    Span<const Real> in_density         (envView(m_density, env));
-    Span<const Real> in_internal_energy (envView(m_internal_energy, env));
-
-    Span<Real> inout_pseudo_viscosity_n(envView(m_pseudo_viscosity_n, env));
-
-    Span<Real> out_pseudo_viscosity_nmoins1(envView(m_pseudo_viscosity_nmoins1, env));
-    Span<Real> out_pressure_n         (envView(m_pressure_n, env));
-    Span<Real> out_cell_volume_n      (envView(m_cell_volume_n, env));
-    Span<Real> out_density_n          (envView(m_density_n, env));
-    Span<Real> out_internal_energy_n  (envView(m_internal_energy_n, env));
-
-    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-
-      out_pseudo_viscosity_nmoins1[imix] = inout_pseudo_viscosity_n[imix];
-      inout_pseudo_viscosity_n[imix] = in_pseudo_viscosity[imix];
-      out_pressure_n[imix] = in_pressure[imix];
-      out_cell_volume_n[imix] = in_cell_volume[imix];
-      out_density_n[imix] = in_density[imix];
-      out_internal_energy_n[imix] = in_internal_energy[imix];
-    }; // asynchrone par rapport au CPU
   }
 #endif
 
@@ -506,7 +484,6 @@ saveValuesAtN()
   }
 
   queue_cell.barrier();
-  menv_queue->waitAllQueues();
   queue_node.barrier();
  
   PROF_ACC_END;
