@@ -483,9 +483,14 @@ void MahycoModule::remap() {
     out_materiau          [cid] = 0.;
 
     const AllEnvCell & allenvcell_conv{c2a[cid]};
+
     ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
       EnvCell envcell{*envcell_i};
       Integer env_id = envcell.environmentId();
+      if (allenvcell_conv.nbEnvironment() == 1) 
+      {
+        out_materiau[cid] = env_id;
+      }
       if (allenvcell_conv.nbEnvironment() > 1) 
       {
         out_pseudo_viscosity_n[envcell_i] = 0.;
