@@ -474,20 +474,29 @@ void MahycoModule::remap() {
   auto out_materiau           = ax::viewOut(command,m_materiau);
 
   command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
-    out_materiau[cid] = 0;
+    out_pseudo_viscosity_n[cid] = 0.;
+    out_pressure_n        [cid] = 0.;
+    out_cell_volume_n     [cid] = 0.;
+    out_density_n         [cid] = 0.;
+    out_internal_energy_n [cid] = 0.;
+    out_tau_density       [cid] = 0.;
+    out_materiau          [cid] = 0.;
+
     const AllEnvCell & allenvcell_conv{c2a[cid]};
     ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
       EnvCell envcell{*envcell_i};
       Integer env_id = envcell.environmentId();
-      
-      out_pseudo_viscosity_n[envcell_i] = 0.;
-      out_pressure_n        [envcell_i] = 0.;
-      out_cell_volume_n     [envcell_i] = 0.;
-      out_density_n         [envcell_i] = 0.;
-      out_internal_energy_n [envcell_i] = 0.;
-      out_tau_density       [envcell_i] = 0.;
-      
-      out_materiau[cid] += env_id*in_fracvol[envcell_i];
+      if (allenvcell_conv.nbEnvironment() > 1) 
+      {
+        out_pseudo_viscosity_n[envcell_i] = 0.;
+        out_pressure_n        [envcell_i] = 0.;
+        out_cell_volume_n     [envcell_i] = 0.;
+        out_density_n         [envcell_i] = 0.;
+        out_internal_energy_n [envcell_i] = 0.;
+        out_tau_density       [envcell_i] = 0.;
+        
+        out_materiau[cid] += env_id*in_fracvol[envcell_i];
+      }
     }
   };
 #endif
