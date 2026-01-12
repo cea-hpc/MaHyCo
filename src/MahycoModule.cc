@@ -536,6 +536,7 @@ computeArtificialViscosity()
   // A la fin de la boucle, toutes les mailles pures sont calculées 
   // et les emplacements des grandeurs globales pour les mailles mixtes sont à 0
   
+  CellToAllEnvCellConverter c2a(mm);
   auto queue = m_acc_env->newQueue();
   queue.setAsync(true); // la queue est asynchrone par rapport à l'hôte, 
   // cependant tous les kernels lancés sur cette queue s'exécutent séquentiellement les uns après les autres
@@ -547,72 +548,34 @@ computeArtificialViscosity()
 
     auto in_env_id               = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto in_div_u                = ax::viewIn(command, m_div_u);
+    auto in_fracvol              = ax::viewIn(command, m_fracvol);
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
-    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
-    auto in_tau_density          = ax::viewIn(command, m_tau_density.globalVariable());
+    auto in_sound_speed          = ax::viewIn(command, m_sound_speed);
+    auto in_tau_density          = ax::viewIn(command, m_tau_density);
     auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
 
-    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
+    auto inout_pseudo_viscosity = ax::viewInOut(command, m_pseudo_viscosity);
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
-      out_pseudo_viscosity[cid] = 0.;
-      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
-      if (env_id>=0 && in_div_u[cid] < 0.0) {
-        CellLocalId ev_cid(cid); // exactement même valeur mais permet de distinguer ce qui relève du partiel et du global
-        Real adiabatic_cst = in_adiabatic_cst_env(env_id);
-        out_pseudo_viscosity[ev_cid] = 1. / in_tau_density[ev_cid]
-          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
-             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
-             * in_div_u[cid] * in_div_u[cid]);
+      inout_pseudo_viscosity[cid] = 0.;
+      const AllEnvCell & allenvcell_conv{c2a[cid]};
+      if (in_div_u[cid] < 0.0) {
+        ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
+          EnvCell envcell{*envcell_i};
+          Integer env_id = envcell.environmentId();
+          Real adiabatic_cst = in_adiabatic_cst_env(env_id);
+          inout_pseudo_viscosity[envcell_i] = 1. / in_tau_density[envcell_i]
+            * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
+               + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
+               * in_div_u[cid] * in_div_u[cid]);
+          if (allenvcell_conv.nbEnvironment() > 1) {
+            inout_pseudo_viscosity[cid] += inout_pseudo_viscosity[envcell_i] * in_fracvol[envcell_i]; 
+	  }
+	}
       }
     };
   }
   
-  // Traitement des mailles mixtes
-  // Pour chaque env traité l'un après l'autre, on récupère les mailles mixtes
-  // Pour chaque maille mixte, on calcule pseudo_viscosity 
-  // et on accumule cette valeur *fracvol dans la grandeur globale
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-
-    auto command = makeCommand(queue);
-
-    Real adiabatic_cst = m_adiabatic_cst_env(env->id());
-    auto in_div_u                = ax::viewIn(command, m_div_u);
-    auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
-    auto in_sound_speed          = ax::viewIn(command, m_sound_speed.globalVariable());
-
-    auto out_pseudo_viscosity = ax::viewOut(command, m_pseudo_viscosity.globalVariable());
-
-    // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<const Real>    in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
-    Span<const Real>    in_tau_density(envView(m_tau_density, env));
-    Span<Real> inout_pseudo_viscosity(envView(m_pseudo_viscosity, env));
-
-
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
-
-    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
-
-      // On calcule la valeur partielle sur la maille mixte
-      inout_pseudo_viscosity[imix] = 0.;
-      if (in_div_u[cid] < 0.0) {
-        inout_pseudo_viscosity[imix] = 1. / in_tau_density[imix]
-          * (-0.5 * in_caracteristic_length[cid] * in_sound_speed[cid] * in_div_u[cid]
-             + (adiabatic_cst + 1) / 2.0 * in_caracteristic_length[cid] * in_caracteristic_length[cid]
-             * in_div_u[cid] * in_div_u[cid]);
-      }
-
-      // Contribution à la grandeur globale, 
-      // out_pseudo_viscosity[cid] a été initialisée lors de la boucle sur maille pure
-      out_pseudo_viscosity[cid] += inout_pseudo_viscosity[imix] * in_fracvol[imix]; 
-    };
-  }
   queue.barrier(); // attente de fin des exécutions sur GPU
 #endif
   PROF_ACC_END;
