@@ -1296,36 +1296,28 @@ computeGeometricValues()
     subDomain()->timeLoopMng()->stopComputeLoop(true);
   }
 
-  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId(); // Vérifie que m_acc_env->multiEnvMng()->globalCell() est correct
-
   // maille mixte
   // moyenne sur la maille
-  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
-  ENUMERATE_ENV(ienv, mm) {
-    IMeshEnvironment* env = *ienv;
+  auto queue = m_acc_env->newQueue();
+  
+  CellToAllEnvCellConverter c2a(mm);
+  
+  auto command = makeCommand(queue);
 
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
+  auto inout_cell_volume  = ax::viewInOut(command,m_cell_volume); 
+  auto in_fracvol  = ax::viewIn(command,m_fracvol); 
 
-    // Des sortes de vues sur les valeurs impures pour l'environnement env
-    Span<Real> out_cell_volume(envView(m_cell_volume, env));
-    Span<const Real> in_fracvol(envView(m_fracvol, env));
-    Span<const Integer> in_global_cell(envView(m_acc_env->multiEnvMng()->globalCell(), env));
+  command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
 
-    // Les kernels sont lancés de manière asynchrone environnement par environnement
-    auto command = makeCommand(menv_queue->queue(env->id()));
+    const AllEnvCell & allenvcell_conv{c2a[cid]};
 
-    auto in_cell_volume_g  = ax::viewIn(command,m_cell_volume.globalVariable()); 
-
-    command << RUNCOMMAND_LOOP1(iter,nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
-      out_cell_volume[imix] = in_fracvol[imix] * in_cell_volume_g[cid];
-    };
-  }
-
-  menv_queue->waitAllQueues();
+    ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
+      if (allenvcell_conv.nbEnvironment() > 1) 
+      {
+        inout_cell_volume[envcell_i] = in_fracvol[envcell_i] * inout_cell_volume[cid];
+      }
+    }
+  };
   PROF_ACC_END;
 }
 
