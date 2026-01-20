@@ -1359,41 +1359,54 @@ updateDensity()
   debug() << my_rank << " : " << " Entree dans updateDensity() ";
 
   // On lance de manière asynchrone les calculs des valeurs globales/pures sur GPU sur queue_glob
-  auto queue_glob = m_acc_env->newQueue();
-  queue_glob.setAsync(true);
+  auto queue = m_acc_env->newQueue();
   {
-    auto command = makeCommand(queue_glob);
+    CellToAllEnvCellConverter c2a(mm);
+    auto command = makeCommand(queue);
 
     Real inv_deltat = 1.0/m_global_deltat(); // ne pas appeler de méthodes de this dans le kernel
 
-    auto in_cell_mass_g   = ax::viewIn(command, m_cell_mass.globalVariable());
-    auto in_cell_volume_g = ax::viewIn(command, m_cell_volume.globalVariable());
-    auto in_density_n_g   = ax::viewIn(command, m_density_n.globalVariable());
+    auto in_cell_mass   = ax::viewIn(command, m_cell_mass);
+    auto in_cell_volume = ax::viewIn(command, m_cell_volume);
+    auto in_density_n   = ax::viewIn(command, m_density_n);
 
-    auto iou_density_g     = ax::viewInOut(command, m_density.globalVariable());
-    auto iou_tau_density_g = ax::viewInOut(command, m_tau_density.globalVariable());
+    auto iou_density     = ax::viewInOut(command, m_density);
+    auto iou_tau_density = ax::viewInOut(command, m_tau_density);
 
     auto out_div_u = ax::viewOut(command, m_div_u);
 
-    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()){
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, allCells()) {
 
       Real new_density, tau_density;
-      compute_density_tau(in_density_n_g[cid], 
-          in_cell_mass_g[cid], in_cell_volume_g[cid], 
+      compute_density_tau(in_density_n[cid], 
+          in_cell_mass[cid], in_cell_volume[cid], 
           /*OUT*/new_density, /*OUT*/tau_density);
 
-      iou_density_g[cid] = new_density;
-      iou_tau_density_g[cid] = tau_density;
+      iou_density[cid] = new_density;
+      iou_tau_density[cid] = tau_density;
 
       // divergence de la vitesse mode A1
       out_div_u[cid] =
-        inv_deltat  * ( 1.0 / iou_density_g[cid] - 1.0 / in_density_n_g[cid] )
-        / iou_tau_density_g[cid];
+        inv_deltat  * ( 1.0 / iou_density[cid] - 1.0 / in_density_n[cid] )
+        / iou_tau_density[cid];
+
+      const AllEnvCell & allenvcell_conv{c2a[cid]};
+
+      if (allenvcell_conv.nbEnvironment() > 1) 
+      {
+        ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv)
+	{
+          compute_density_tau(in_density_n[envcell_i], 
+              in_cell_mass[envcell_i], in_cell_volume[envcell_i], 
+              /*OUT*/new_density, /*OUT*/tau_density);
+              
+	  iou_density[envcell_i] = new_density;
+	  iou_tau_density[envcell_i] = tau_density;
+        }
+      }
     };
   }
-  // Pendant ce temps, calcul sur GPU sur la queue_glob
 
-  auto menv_queue = m_acc_env->multiEnvMng()->multiEnvQueue();
 #if 0
   ENUMERATE_ENV(ienv,mm){
     IMeshEnvironment* env = *ienv;
@@ -1410,38 +1423,7 @@ updateDensity()
         
     }
   }
-#else
-  // Les calculs des valeurs mixtes sur les environnements sont indépendants 
-  // les uns des autres mais ne dépendent pas non plus des valeurs globales/pures
-  // Rappel : menv_queue->queue(*) sont des queues asynchrones indépendantes
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-
-    auto command = makeCommand(menv_queue->queue(env->id()));
-
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
-
-    Span<const Real> in_cell_volume(envView(m_cell_volume, env));
-    Span<const Real> in_cell_mass(envView(m_cell_mass, env));
-    Span<const Real> in_density_n(envView(m_density_n, env));
-
-    Span<Real> out_density(envView(m_density, env));
-    Span<Real> out_tau_density(envView(m_tau_density, env));
-
-    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-
-      compute_density_tau(in_density_n[imix], 
-          in_cell_mass[imix], in_cell_volume[imix], 
-          /*OUT*/out_density[imix], /*OUT*/out_tau_density[imix]);
-
-    }; // asynchrone par rapport au CPU et aux autres queues
-  }
 #endif
-  queue_glob.barrier();
-  menv_queue->waitAllQueues();
   
 //   m_density.synchronize();
 //   m_tau_density.synchronize();
