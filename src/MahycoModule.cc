@@ -546,7 +546,6 @@ computeArtificialViscosity()
   {
     auto command = makeCommand(queue);
 
-    auto in_env_id               = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
     auto in_div_u                = ax::viewIn(command, m_div_u);
     auto in_fracvol              = ax::viewIn(command, m_fracvol);
     auto in_caracteristic_length = ax::viewIn(command, m_caracteristic_length);
@@ -1446,7 +1445,6 @@ void MahycoModule::
 updateEnergyAndPressure()
 {
   PROF_ACC_BEGIN(__FUNCTION__);
-  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId();
 
   if (options()->withNewton) 
     updateEnergyAndPressurebyNewton();
@@ -1693,7 +1691,6 @@ updateEnergyAndPressureforGP()
       
       CellToAllEnvCellConverter c2a(mm);
       
-      //auto in_env_id               = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
       auto in_adiabatic_cst_env    = ax::viewIn(command, m_adiabatic_cst_env);
 
       auto in_pseudo_viscosity_n   = ax::viewIn(command, m_pseudo_viscosity_n); 
@@ -1820,58 +1817,32 @@ computePressionMoyenne()
     }
   }
 #else
-  m_acc_env->multiEnvMng()->checkMultiEnvGlobalCellId();
-
-  // Pas très efficace mais on va lancer un kernel sur tout le maillage pour
-  // ne sélectionner que les mailles mixtes et initialiser les grandeus
-  // moyennes
-  // puis on va calculer les grandeurs partielles environnement par
-  // environnement et mettre à jour au fur et à mesure les grandeurs moy.
-
   // Toutes les étapes doivent se faire les unes après les autres d'où une
   // queue unique
   auto queue = m_acc_env->newQueue();
   {
+    CellToAllEnvCellConverter c2a(mm);
+    
     auto command = makeCommand(queue);
 
-    auto in_env_id       = ax::viewIn(command, m_acc_env->multiEnvMng()->envId());
-    auto out_pressure    = ax::viewOut(command, m_pressure.globalVariable());
-    auto out_sound_speed = ax::viewOut(command, m_sound_speed.globalVariable());
+    auto in_fracvol        = ax::viewIn(command, m_fracvol);
+    auto inout_pressure    = ax::viewInOut(command, m_pressure);
+    auto inout_sound_speed = ax::viewInOut(command, m_sound_speed);
 
     command << RUNCOMMAND_ENUMERATE(Cell,cid,allCells()) {
-      Integer env_id = in_env_id[cid]; // id de l'env si maille pure, <0 sinon
 
-      if (env_id<0) { // vrai si maille mixte (nbEnv() == -env_id-1)
-        out_pressure[cid] = 0.;
-        out_sound_speed[cid] = 1.e-20;
+      const AllEnvCell & allenvcell_conv{c2a[cid]};
+        
+      if (allenvcell_conv.nbEnvironment() > 1) 
+      {
+        inout_pressure[cid] = 0.;
+        inout_sound_speed[cid] = 1.e-20;
+        
+	ENUMERATE_CELL_ENVCELL(envcell_i, allenvcell_conv) {
+          inout_pressure[cid] += in_fracvol[envcell_i] * inout_pressure[envcell_i];
+          inout_sound_speed[cid] = math::max(inout_sound_speed[envcell_i], inout_sound_speed[cid]);
+	}
       }
-    };
-  }
- 
-  ENUMERATE_ENV(ienv,mm){
-    IMeshEnvironment* env = *ienv;
-
-    // Les kernels sont lancés environnement par environnement les uns après les autres
-    auto command = makeCommand(queue);
-    
-    Span<const Integer> in_global_cell    (envView(m_acc_env->multiEnvMng()->globalCell(), env));
-    Span<const Real>    in_fracvol        (envView(m_fracvol,     env)); 
-    Span<const Real>    in_pressure       (envView(m_pressure,    env)); 
-    Span<const Real>    in_sound_speed    (envView(m_sound_speed, env)); 
-
-    auto inout_pressure    = ax::viewInOut(command, m_pressure.globalVariable());
-    auto inout_sound_speed = ax::viewInOut(command, m_sound_speed.globalVariable());
-
-    // Pour les mailles impures (mixtes), liste des indices valides 
-    Span<const Int32> in_imp_idx(env->impureEnvItems().valueIndexes());
-    Integer nb_imp = in_imp_idx.size();
-
-    command << RUNCOMMAND_LOOP1(iter, nb_imp) {
-      auto imix = in_imp_idx[iter()[0]]; // iter()[0] \in [0,nb_imp[
-      CellLocalId cid(in_global_cell[imix]); // on récupère l'identifiant de la maille globale
-
-      inout_pressure[cid] += in_fracvol[imix] * in_pressure[imix];
-      inout_sound_speed[cid] = math::max(in_sound_speed[imix], inout_sound_speed[cid]);
     };
   }
 #endif
