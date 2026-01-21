@@ -710,7 +710,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real ec_proj(0.);
       Real ec_reconst(0.);
       AllEnvCell all_env_cell = all_env_cell_converter[cell];
-      ENUMERATE_NODE(inode, cell->nodes()) {
+      ENUMERATE_NODE(inode, cell.nodes()) {
         if (m_u_dual_lagrange[inode][3] != 0.) {
           ec_proj = m_u_dual_lagrange[inode][4] / m_u_dual_lagrange[inode][3];
           ec_reconst = 0.5 * m_velocity[inode].squareNormL2();

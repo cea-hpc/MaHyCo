@@ -255,14 +255,14 @@ void RemapALEService::computeNewEnvCells(Integer index_env) {
     if (m_phi[cell][index_env] < options()->threshold  && cells_marker[cell.localId()] == 0) {
         cells_to_remove.add(cell.localId());
         info() << " cell " << cell.localId() 
-            << " ( " << cell->uniqueId() << " ) " << " fraction " << m_phi[cell][index_env]
+            << " ( " << cell.uniqueId() << " ) " << " fraction " << m_phi[cell][index_env]
             << " retirée dans l'env " << env->name();
     }
         
     if (m_phi[cell][index_env] > options()->threshold  && cells_marker[cell.localId()] == -1) {
         cells_to_add.add(cell.localId());
         info() << " cell " << cell.localId() 
-            << " ( " << cell->uniqueId() << " ) "  << " fraction " << m_phi[cell][index_env] 
+            << " ( " << cell.uniqueId() << " ) "  << " fraction " << m_phi[cell][index_env] 
             << " ajoutée dans l'env apres normalisation " << env->name();
     }
   }

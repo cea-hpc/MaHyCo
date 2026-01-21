@@ -258,16 +258,16 @@ class MahycoModule
   /** 
    *  Sauvegarde des variables à l'instant n 
    */
-  virtual void saveValuesAtN();
+  virtual void saveValuesAtN() override;
 
    /** 
    * Calcule la masse des mailles
    */
-  virtual void computeCellMass();
+  virtual void computeCellMass() override;
    /** 
    * Calcule la masse des noeuds
    */
-  virtual void computeNodeMass();
+  virtual void computeNodeMass() override;
 
   /** 
    * Calcule la pseudo viscosité au maille
@@ -275,7 +275,7 @@ class MahycoModule
    * il s'y a une partie linéaire et quadratique vis-vis du saut de vitesse .
    * Calcule la pseudo viscosité au maille au temps courant \q$t^{n}\f$.
    */
-  virtual void computeArtificialViscosity();
+  virtual void computeArtificialViscosity() override;
   
   /**
    * Calcul générique de m_force et de v_velocity_out
@@ -295,7 +295,7 @@ class MahycoModule
    * ensuite la nouvelle vitesse (\c m_velocity) aux noeuds a n+1/2
    * en fonction de celle à n-1/2
    */
-  virtual void updateVelocity();
+  virtual void updateVelocity() override;
   /**
    * Calcul de la vitesse de n a n-1/2
    * Pour CSTS
@@ -327,13 +327,13 @@ class MahycoModule
    * composante d'un vecteur vitesse pour chaque noeud de chaque face de
    * chaque surface sur laquelle on impose une condition aux limites.
    */		
-  virtual void applyBoundaryCondition();
+  virtual void applyBoundaryCondition() override;
 		
   /**
    * Modifie les coordonnées (\c m_node_coord)
    * des noeuds d'après la valeur du vecteur vitesse et du pas de temps.
    */
-  virtual void updatePosition();
+  virtual void updatePosition() override;
 		
   /**
    * Ce point d'entrée regroupe l'ensemble des calculs géométriques
@@ -361,13 +361,13 @@ class MahycoModule
    * cours du temps. Dans ce cas, la nouvelle densité est égale à la masse
    * divisée par le nouveau volume.
    */
-  virtual void updateDensity();
+  virtual void updateDensity() override;
 		
   /**
    * Ce point d'entrée calcule l'énergie interne, la pression et la vitesse
    * du son dans la maille en faisant appel au service d'équation d'état.
    */
-  virtual void updateEnergyAndPressure();
+  virtual void updateEnergyAndPressure() override;
   /*
    * Cacul de l'energie et de la pression par une méthode de Newton
    **/
@@ -379,7 +379,7 @@ class MahycoModule
     /**
    * Ce point d'entrée calcule la pression moyenne dans la maille.
    */
-  virtual void computePressionMoyenne();
+  virtual void computePressionMoyenne() override;
 	
   /**
    * Calcul d'un pas de temps à partir des grandeurs hydrodynamiques
@@ -399,7 +399,7 @@ class MahycoModule
    *   de temps doit être tel qu'on s'arrête exactement au temps spécifié
    *   dans le jeu de données (\c finalTime()).
    */
-  virtual void computeDeltaT();
+  virtual void computeDeltaT() override;
   
   /**
    * Calcul de quantites aux faces pour la projection :
@@ -448,10 +448,10 @@ class MahycoModule
   /**
    * point d'entree pour la phase de projection
    **/
-  virtual void remap();
+  virtual void remap() override;
  
   /** Retourne le numéro de version du module */
-  virtual VersionInfo versionInfo() const { return VersionInfo(1,0,0); }
+  virtual VersionInfo versionInfo() const override { return VersionInfo(1,0,0); }
   
  private:
  
