@@ -52,12 +52,6 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "cartesian/interface/ICartesianMesh.h"
-#include "cartesian/interface/CellDirectionMng.h"
-#include "cartesian/interface/FaceDirectionMng.h"
-#include "cartesian/interface/NodeDirectionMng.h"
-#include "cartesian/interface/CartesianConnectivity.h"
-
 #include "arcane/cartesianmesh/ICartesianMesh.h"
 // fin ajout au PIF
 
@@ -191,12 +185,6 @@ class MahycoModule
    */
   void checkOptions() override;
 
-  /**
-   * Initialisation de m_cartesian_mesh et m_dimensio
-   * 
-   */
-  void initCartesianMesh() override;
-  
   /**
    * Initialisation de m_arcane_cartesian_mesh et m_dimensio
    * 
@@ -464,9 +452,6 @@ class MahycoModule
   
   // inline void computeCQsSimd(SimdReal3 node_coord[8],SimdReal3 face_coord[6],SimdReal3 cqs[8]);
 
-  /** Construit le maillage cartésien et les managers par direction
-   */
-  CartesianInterface::ICartesianMesh* _initCartMesh();
   
   /** Construit le maillage Arcane cartésien et les managers par direction
    */
@@ -505,9 +490,6 @@ class MahycoModule
 
   
   /* variables membre */
-  // CartesianInterface:: = Arcane:: ou Cartesian::
-  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
-  // Arcane::CartesianMesh 
   Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
   Integer m_nb_vars_to_project;
