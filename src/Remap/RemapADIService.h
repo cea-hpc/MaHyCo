@@ -2,8 +2,8 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef IREMAPADISERVICE_H
-#define IREMAPADISERVICE_H
+#ifndef IREMAPARCANESERVICE_H
+#define IREMAPARCANESERVICE_H
 
 #include "TypesMahyco.h"
 
@@ -30,14 +30,11 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "RemapADI_axl.h"
-#include "cartesian/interface/CartesianConnectivity.h"
-#include "cartesian/interface/CellDirectionMng.h"
-#include "cartesian/interface/FaceDirectionMng.h"
-#include "cartesian/interface/ICartesianMesh.h"
-#include "cartesian/interface/NodeDirectionMng.h"
+#include "RemapArcane_axl.h"
 
 #include "accenv/IndexSelecter.h"
+
+#include "arcane/cartesianmesh/ICartesianMesh.h"
 
 class IAccEnv;
 
@@ -45,22 +42,22 @@ using namespace Arcane;
 using namespace Arcane::Materials;
 
 /**
- * Représente le service de Remap version ADI
+ * Représente le service de Remap version Arcane
  */
-class RemapADIService 
-: public ArcaneRemapADIObject
+class RemapArcaneService 
+: public ArcaneRemapArcaneObject
 {
 public:
   /** Constructeur de la classe */
-  RemapADIService(const ServiceBuildInfo & sbi);
+  RemapArcaneService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
-  virtual ~RemapADIService() {};
+  virtual ~RemapArcaneService() {};
   
   struct interval {
     double inf, sup;
   };
-  CartesianInterface::ICartesianMesh* m_cartesian_mesh;
+  Arcane::ICartesianMesh* m_arcane_cartesian_mesh;
   Materials::IMeshMaterialMng* mm;
 
 public:

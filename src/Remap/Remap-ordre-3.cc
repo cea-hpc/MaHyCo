@@ -2,12 +2,12 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#include "RemapADIService.h"
+#include "RemapArcaneService.h"
 
 // fonctions pour l'ordre 3
 // ----------------------------------
 // fonction pour evaluer le gradient
-Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
+Real RemapArcaneService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
                             Real y0, Real yp) {
   Real grad;
   grad = h0 / (hm + h0 + hp) *
@@ -17,7 +17,7 @@ Real RemapADIService::evaluate_grad(Real hm, Real h0, Real hp, Real ym,
 }
 // ----------------------------------
 // fonction pour évaluer ystar
-Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
+Real RemapArcaneService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
                              [[maybe_unused]] Real ymm, Real ym, Real yp, [[maybe_unused]] Real ypp,
                              Real gradm, Real gradp) {
   Real ystar, tmp1, tmp2;
@@ -32,7 +32,7 @@ Real RemapADIService::evaluate_ystar(Real hmm, Real hm, Real hp, Real hpp,
 }
 // ----------------------------------
 // fonction pour évaluer fm
-Real RemapADIService::evaluate_fm(Real x, Real dx, Real up, Real du,
+Real RemapArcaneService::evaluate_fm(Real x, Real dx, Real up, Real du,
                           Real u6) {
   Real fm;
   fm = up - 0.5 * x / dx * (du - (1. - 2. / 3. * x / dx) * u6);
@@ -40,7 +40,7 @@ Real RemapADIService::evaluate_fm(Real x, Real dx, Real up, Real du,
 }
 // ----------------------------------
 // fonction pour évaluer fr
-Real RemapADIService::evaluate_fp(Real x, Real dx, Real um, Real du,
+Real RemapArcaneService::evaluate_fp(Real x, Real dx, Real um, Real du,
                           Real u6) {
   Real fp;
   fp = um + 0.5 * x / dx * (du - (1. - 2. / 3. * x / dx) * u6);
@@ -48,7 +48,7 @@ Real RemapADIService::evaluate_fp(Real x, Real dx, Real um, Real du,
 }
 // ----------------------------------
 // fonction pour initialiser la structure interval
-Real2 RemapADIService::define_interval(Real a, Real b) {
+Real2 RemapArcaneService::define_interval(Real a, Real b) {
   Real2 I;
   I[0] = math::min(a, b);
   I[1] = math::max(a, b);
@@ -56,7 +56,7 @@ Real2 RemapADIService::define_interval(Real a, Real b) {
 }
 // ----------------------------------
 // fonction pour calculer l'intersection entre deux intervals
-Real2 RemapADIService::intersection(Real2 I1, Real2 I2) {
+Real2 RemapArcaneService::intersection(Real2 I1, Real2 I2) {
   Real2 I;
   if ((I1[1] < I2[0]) || (I2[1] < I1[0])) {
     I[0] = 0.;
@@ -69,7 +69,7 @@ Real2 RemapADIService::intersection(Real2 I1, Real2 I2) {
 }
 // ----------------------------------
 // fonction pour calculer le flux
-Real RemapADIService::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
+Real RemapArcaneService::ComputeFluxOrdre3(Real ymmm, Real ymm, Real ym, Real yp,
                                 Real ypp, Real yppp, Real hmmm,
                                 Real hmm, Real hm, Real hp, Real hpp,
                                 Real hppp, Real vdt) {
