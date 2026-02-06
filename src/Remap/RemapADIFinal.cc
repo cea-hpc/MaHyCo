@@ -2,7 +2,7 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#include "RemapArcaneService.h"
+#include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
 
 #include <accenv/IAccEnv.h>
@@ -20,7 +20,7 @@
  *         m_node_velocity_nplus1, m_x_velocity, m_y_velocity
  *******************************************************************************
  */
-void RemapArcaneService::remapVariables(Integer dimension, Integer withDualProjection, [[maybe_unused]] Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::remapVariables(Integer dimension, Integer withDualProjection, [[maybe_unused]] Integer nb_vars_to_project, Integer nb_env) {
   
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans remapVariables";

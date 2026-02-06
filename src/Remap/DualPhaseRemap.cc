@@ -2,7 +2,7 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#include "RemapArcaneService.h"
+#include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
 #include "accenv/IAccEnv.h"
 #include "arcane/utils/FatalErrorException.h"
@@ -26,7 +26,7 @@
  * \return m_dual_grad_phi
  *******************************************************************************
  */
-void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
+void RemapADIService::computeDualUremap(Integer idir, Integer nb_env)  {
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeDualUremap() pour la direction " << idir;
@@ -678,7 +678,7 @@ void RemapArcaneService::computeDualUremap(Integer idir, Integer nb_env)  {
  * \return m_phi_dual_lagrange, m_u_dual_lagrange synchonise sur les mailles fantomes
  *******************************************************************************
  */
-void RemapArcaneService::synchronizeDualUremap()  {
+void RemapADIService::synchronizeDualUremap()  {
   PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
 #if 0
@@ -707,7 +707,7 @@ void RemapArcaneService::synchronizeDualUremap()  {
  *******************************************************************************
  */
 template<typename LimType>
-void RemapArcaneService::
+void RemapADIService::
 computeDualGradPhi_LimC(Integer idir) {
   PROF_ACC_BEGIN(__FUNCTION__);
   

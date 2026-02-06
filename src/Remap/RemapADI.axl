@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<service name="RemapArcane" version="1.0" type="caseoption">
+<service name="RemapADI" version="1.0" type="caseoption">
 
 <description>Jeu de données du service Remap</description>
 <interface name="IRemap" />

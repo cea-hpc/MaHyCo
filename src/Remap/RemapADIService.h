@@ -2,8 +2,8 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#ifndef IREMAPARCANESERVICE_H
-#define IREMAPARCANESERVICE_H
+#ifndef IREMAPADIERVICE_H
+#define IREMAPADIERVICE_H
 
 #include "TypesMahyco.h"
 
@@ -30,7 +30,7 @@
 #include "arcane/materials/MeshMaterialVariableSynchronizerList.h"
 #include "arcane/materials/ComponentSimd.h"
 
-#include "RemapArcane_axl.h"
+#include "RemapADI_axl.h"
 
 #include "accenv/IndexSelecter.h"
 
@@ -44,15 +44,15 @@ using namespace Arcane::Materials;
 /**
  * Représente le service de Remap version Arcane
  */
-class RemapArcaneService 
-: public ArcaneRemapArcaneObject
+class RemapADIService 
+: public ArcaneRemapADIObject
 {
 public:
   /** Constructeur de la classe */
-  RemapArcaneService(const ServiceBuildInfo & sbi);
+  RemapADIService(const ServiceBuildInfo & sbi);
   
   /** Destructeur de la classe */
-  virtual ~RemapArcaneService() {};
+  virtual ~RemapADIService() {};
   
   struct interval {
     double inf, sup;

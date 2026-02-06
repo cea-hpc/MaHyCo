@@ -2,7 +2,7 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#include "RemapArcaneService.h"
+#include "RemapADIService.h"
 
 /**
  *******************************************************************************
@@ -15,7 +15,7 @@
  * \return valeur du gradient dual et limité
  *******************************************************************************
  */
-void RemapArcaneService::computeDualGradPhi(Node inode, 
+void RemapADIService::computeDualGradPhi(Node inode, 
                                           Node frontfrontnode, 
                                           Node frontnode, 
                                           Node backnode, 
@@ -83,7 +83,7 @@ void RemapArcaneService::computeDualGradPhi(Node inode,
  * \return  valeur de l'integral
  *******************************************************************************
  */
- Real RemapArcaneService::INTY(Real X, Real x0, Real y0, Real x1, Real y1) {
+ Real RemapADIService::INTY(Real X, Real x0, Real y0, Real x1, Real y1) {
   Real flux = 0.;
   // std::cout << " x0 " << x0 << std::endl;
   // std::cout << " x1 " << x1 << std::endl;
@@ -105,7 +105,7 @@ void RemapArcaneService::computeDualGradPhi(Node inode,
  * \return valeur du limiteur demandé
  *******************************************************************************
  */
- Real RemapArcaneService::fluxLimiter(int projectionLimiterId, Real r) {
+ Real RemapADIService::fluxLimiter(int projectionLimiterId, Real r) {
   if (projectionLimiterId == minmod) {
     return std::max(0.0, std::min(1.0, r));
   } else if (projectionLimiterId == superBee) {
@@ -127,7 +127,7 @@ void RemapArcaneService::computeDualGradPhi(Node inode,
  *hmoins, gradplus, gradmoins \return valeur du limiteur demandé
  *******************************************************************************
  */
-Real RemapArcaneService::fluxLimiterG(int projectionLimiterId, Real gradplus,
+Real RemapADIService::fluxLimiterG(int projectionLimiterId, Real gradplus,
                            Real gradmoins, [[maybe_unused]] Real y0, Real yplus,
                            Real ymoins, Real h0, Real hplus,
                            Real hmoins) {
@@ -184,7 +184,7 @@ Real RemapArcaneService::fluxLimiterG(int projectionLimiterId, Real gradplus,
  * \return y0plus, y0moins
  *******************************************************************************
  */
-Real RemapArcaneService::computeY0(int projectionLimiterId, [[maybe_unused]] Real y0, Real yplus,
+Real RemapADIService::computeY0(int projectionLimiterId, [[maybe_unused]] Real y0, Real yplus,
                         Real ymoins, Real h0, Real hplus, Real hmoins,
                         int type) {
   // retourne {{y0plus, y0moins}}
@@ -246,7 +246,7 @@ Real RemapArcaneService::computeY0(int projectionLimiterId, [[maybe_unused]] Rea
  * \return xg, xd
  *******************************************************************************
  */
-Real RemapArcaneService::computexgxd(Real y0, Real yplus, 
+Real RemapADIService::computexgxd(Real y0, Real yplus, 
                                           Real ymoins, Real h0,
                           Real y0plus, Real y0moins, int type) {
   // retourne {{xg, xd}}
@@ -276,7 +276,7 @@ Real RemapArcaneService::computexgxd(Real y0, Real yplus,
  * \return yg, yd
  *******************************************************************************
  */
-Real RemapArcaneService::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
+Real RemapADIService::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
                           Real y0plus, Real y0moins, Real grady,
                           int type) {
   // retourne {{yg, yd}}
@@ -306,7 +306,7 @@ Real RemapArcaneService::computeygyd(Real y0, Real yplus, Real ymoins, Real h0,
  * \return valeur du gradient limité de chaque variables phi
  *******************************************************************************
  */
-void RemapArcaneService::
+void RemapADIService::
 computeAndLimitGradPhi(int projectionLimiterId, Face frontFace, Face backFace, 
                        Cell cell, Cell frontcell, Cell backcell, int nb_vars) {
     
@@ -350,7 +350,7 @@ computeAndLimitGradPhi(int projectionLimiterId, Face frontFace, Face backFace,
  
  *******************************************************************************
  */
-void RemapArcaneService::
+void RemapADIService::
 computeAndLimitGradPhiDual(int projectionLimiterId, Node inode, 
                            Node frontnode, Node backnode, 
                            Real3 grad_front, Real3 grad_back, Real h0, Real hplus, Real hmoins) {
@@ -406,7 +406,7 @@ computeAndLimitGradPhiDual(int projectionLimiterId, Node inode,
  * \return flux des variables phi
  *******************************************************************************
  */
-void RemapArcaneService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell, 
+void RemapADIService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
                                      Integer projectionPenteBorneDebarFix, 
@@ -627,7 +627,7 @@ void RemapArcaneService::computeFluxPP(Cell cell, Cell frontcell, Cell backcell,
  * \return Flux, Flux_dual
  *******************************************************************************
  */
-void RemapArcaneService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell, 
+void RemapADIService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backcell, 
                                      Real face_normal_velocity, 
                                      Real deltat_n, Integer type, Real flux_threshold, 
                                      Integer projectionPenteBorneDebarFix, 
@@ -824,7 +824,7 @@ void RemapArcaneService::computeFluxPPPure(Cell cell, Cell frontcell, Cell backc
 //  * \return valeur de phi 
 //  *******************************************************************************
 //  */
-Real RemapArcaneService::computeRemapFlux(
+Real RemapADIService::computeRemapFlux(
         [[maybe_unused]] Integer projectionOrder, Integer projectionAvecPlateauPente,
         Real face_normal_velocity, [[maybe_unused]] Real3 face_normal,
         Real face_length, Real phi_face,

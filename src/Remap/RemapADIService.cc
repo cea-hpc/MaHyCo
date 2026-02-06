@@ -2,7 +2,7 @@
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
 // SPDX-License-Identifier: Apache-2.0
-#include "RemapArcaneService.h"
+#include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
 #include <arcane/ServiceBuilder.h>
 #include <accenv/IAccEnv.h>
@@ -10,18 +10,18 @@
 #include "arcane/cea/FaceDirectionMng.h"
 
 /** Constructeur de la classe */
-RemapArcaneService::RemapArcaneService(const ServiceBuildInfo & sbi)
-  : ArcaneRemapArcaneObject(sbi), m_idx_selecter(subDomain()) {
+RemapADIService::RemapADIService(const ServiceBuildInfo & sbi)
+  : ArcaneRemapADIObject(sbi), m_idx_selecter(subDomain()) {
   m_acc_env = ServiceBuilder<IAccEnv>(subDomain()).getSingleton();
 }
 
-Integer RemapArcaneService::getOrdreProjection() { return options()->ordreProjection;}
-bool RemapArcaneService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
-bool RemapArcaneService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
-bool RemapArcaneService::isEuler() {return options()->getIsEulerScheme();}
+Integer RemapADIService::getOrdreProjection() { return options()->ordreProjection;}
+bool RemapADIService::hasProjectionPenteBorne() { return options()->projectionPenteBorne;}
+bool RemapADIService::hasConservationEnergieTotale() { return options()->conservationEnergieTotale;}
+bool RemapADIService::isEuler() {return options()->getIsEulerScheme();}
 /**
  **************************************-*****************************************/
-void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, Integer nb_vars_to_project, Integer nb_env) {
     
     PROF_ACC_BEGIN(__FUNCTION__);
     synchronizeUremap();  
@@ -65,7 +65,7 @@ void RemapArcaneService::appliRemap(Integer dimension, Integer withDualProjectio
 }
 /**
  *******************************************************************************/
-void RemapArcaneService::resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer nb_env) {
     
     
   m_u_lagrange.resize(nb_vars_to_project);
@@ -93,7 +93,7 @@ void RemapArcaneService::resizeRemapVariables(Integer nb_vars_to_project, Intege
  * \param \return m_grad_phi, m_h_cell_lagrange
  *******************************************************************************
  */
-void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env)  {
+void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
 #if 0
@@ -277,7 +277,7 @@ void RemapArcaneService::computeGradPhiFace(Integer idir, Integer nb_vars_to_pro
  * \return m_grad_phi_face, m_delta_phi_face_ar, m_delta_phi_face_av
  *******************************************************************************
  */
-void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell()";
@@ -452,7 +452,7 @@ void RemapArcaneService::computeGradPhiCell(Integer idir, Integer nb_vars_to_pro
  *******************************************************************************
  */
 template<typename LimType>
-void RemapArcaneService::
+void RemapADIService::
 computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell_PBorn0_LimC()";
@@ -512,7 +512,7 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
  * \return m_phi_face
 *******************************************************************************
 */
-void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
+void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   PROF_ACC_BEGIN(__FUNCTION__);
 #if 0
@@ -639,7 +639,7 @@ void RemapArcaneService::computeUpwindFaceQuantitiesForProjection(Integer idir, 
  * \return m_phi_face
  *******************************************************************************
  */
-void RemapArcaneService::
+void RemapADIService::
 computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars_to_project)
 {
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection_PBorn0_O2()";
@@ -713,7 +713,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
  * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
-void RemapArcaneService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  
+void RemapADIService::computeUremap(Integer idir, Integer nb_vars_to_project, Integer nb_env)  
 {
   debug() << " Entree dans computeUremap()";
   PROF_ACC_BEGIN(__FUNCTION__);
@@ -863,7 +863,7 @@ void RemapArcaneService::computeUremap(Integer idir, Integer nb_vars_to_project,
  * \return m_u_lagrange, m_phi_lagrange, m_est_mixte, m_est_pure
  *******************************************************************************
  */
-void RemapArcaneService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
+void RemapADIService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_project, Integer nb_env)  {
   
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeUremap_PBorn0()";
@@ -1030,7 +1030,7 @@ void RemapArcaneService::computeUremap_PBorn0(Integer idir, Integer nb_vars_to_p
  * \return m_phi_lagrange, m_u_lagrange synchonise sur les mailles fantomes
  *******************************************************************************
  */
-void RemapArcaneService::synchronizeUremap()  {
+void RemapADIService::synchronizeUremap()  {
   PROF_ACC_BEGIN(__FUNCTION__);
     debug() << " Entree dans synchronizeUremap()";
     
@@ -1055,5 +1055,5 @@ void RemapArcaneService::synchronizeUremap()  {
   PROF_ACC_END;
 }
 /*---------------------------------------------------------------------------*/
-ARCANE_REGISTER_SERVICE_REMAPARCANE(RemapArcane, RemapArcaneService);
+ARCANE_REGISTER_SERVICE_REMAPADI(RemapADI, RemapADIService);
 /*---------------------------------------------------------------------------*/
