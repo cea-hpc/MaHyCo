@@ -178,7 +178,7 @@
   <!-- - - - - - forceRecompute itération - - - - -->
   <simple name="force-recompute-iteration" type="integer" default="20">
     <description>Fréquence d'appel à forcerRecompute() en nb d'itérations</description>
-  </simple>
- 
+  </simple> 
+
 </options>
 </service>

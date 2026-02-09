@@ -98,7 +98,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   for (Integer index_env=0; index_env < nb_env ; index_env++) 
   { 
     auto command = makeCommand(rqueue_arm.get());
-    
+
     auto in_euler_volume = ax::viewIn(command, m_euler_volume);
     auto in_u_lagrange   = ax::viewIn(command, m_u_lagrange);
 
@@ -113,7 +113,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       AllEnvCell all_env_cell = all_env_cell_converter[cid];
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         EnvCell ev = *ienvcell;
-	if (ev.environmentId() == index_env)
+	if (ev.environmentId() == index_env)      
           cell_in_env = true;
       }
 
@@ -180,7 +180,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
   if (to_add_rm_cells) 
   {
     to_update=true;
-    PROF_ACC_BEGIN("endUpdate");
+    PROF_ACC_BEGIN("endUpdate");    
     // finalisation avant remplissage des variables
     modifier.endUpdate();
     PROF_ACC_END;
@@ -398,12 +398,12 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
     auto inout_density           = ax::viewInOut(command, m_density);
     auto inout_internal_energy   = ax::viewInOut(command, m_internal_energy);
     auto inout_cell_mass         = ax::viewInOut(command, m_cell_mass);
-    auto inout_est_mixte         = ax::viewInOut(command, m_est_mixte);
+    auto inout_est_mixte         = ax::viewInOut(command, m_est_mixte);    
 
     command.addKernelName("moy") << RUNCOMMAND_ENUMERATE(Cell,cid,allCells())
     {
       AllEnvCell all_env_cell = all_env_cell_converter[cid];
-
+    
       Real vol = in_euler_volume[cid];  // volume euler   
       out_cell_volume[cid] = vol; // retour à la grille euler
       Real volt = 0.;
@@ -433,14 +433,14 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real unsurvol = 1. / vol;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         auto evi = *ienvcell;
-        Integer index_env = evi.environmentId();
+        Integer index_env = evi.environmentId();      
 
         // Simplification : 
         // in_u_lagrange[cid][index_env] *vol*unsurvolt*unsurvol == in_u_lagrange[cid][index_env] *unsurvolt
         Real fvol = in_u_lagrange[cid][index_env] * unsurvolt;
         if (fvol < threshold)
           fvol = 0.;
-	inout_fracvol[evi] = fvol;
+	inout_fracvol[evi] = fvol;        
         somme_frac += fvol;
       }
       // apres normamisation
@@ -449,7 +449,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real unsursomme_frac = 1. / somme_frac;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         auto evi = *ienvcell;
-        Integer index_env = evi.environmentId();
+        Integer index_env = evi.environmentId();      
 
         Real fvol = inout_fracvol[evi] * unsursomme_frac;
         if (fvol > 0.) {
@@ -474,7 +474,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         Real unsurmasset = 1./  masset;
         ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
           auto evi = *ienvcell;
-          Integer index_env = evi.environmentId();
+          Integer index_env = evi.environmentId();        
 
           // m_mass_fraction[ev] = m_u_lagrange[cell][nb_env + index_env] / masset;
           Real mass_frac = in_u_lagrange[cid][nb_env + index_env] * unsurmasset;
@@ -487,18 +487,18 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
         if (fmasset!= 0.) {
           Real unsurfmasset = 1. / fmasset;
           ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-            auto evi = *ienvcell;
+            auto evi = *ienvcell;          
 
             // m_mass_fraction[ev] /= fmasset;
             Real mass_frac = inout_mass_fraction[evi] * unsurfmasset;
-            inout_mass_fraction[evi] = mass_frac;
+            inout_mass_fraction[evi] = mass_frac;            
           }
         }
       }
       Real density_nplus1 = 0.;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         auto evi = *ienvcell;
-        Integer index_env = evi.environmentId();
+        Integer index_env = evi.environmentId();      
 
         Real density_env_nplus1 = 0.;
         Real fvol = inout_fracvol[evi];
@@ -531,7 +531,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
       Real pseudo_nplus1 = 0.;
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
         auto evi = *ienvcell;
-        Integer index_env = evi.environmentId();
+        Integer index_env = evi.environmentId();      
 
         Real fvol      = inout_fracvol[evi];
         Real mass_frac = inout_mass_fraction[evi];
@@ -565,7 +565,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
       // Boucle de "blindage" pas totalement portée
       ENUMERATE_CELL_ENVCELL(ienvcell,all_env_cell) {
-        auto evi = *ienvcell;
+        auto evi = *ienvcell;      
 
         if (inout_density[evi] < 0. || inout_internal_energy[evi] < 0.) {
           // Comment gérer des messages d'erreur ou d'avertissement ?
@@ -682,7 +682,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 
     auto in_fracvol = ax::viewIn(command_cv, m_fracvol);
     auto inout_cell_volume = ax::viewInOut(command_cv, m_cell_volume);
-
+    
     CellToAllEnvCellAccessor c2a(mm);
 
     command_cv.addKernelName("cellv") << RUNCOMMAND_ENUMERATE_CELL_ALLENVCELL(c2a,cid,allCells()) {
@@ -691,7 +691,7 @@ void RemapADIService::remapVariables(Integer dimension, Integer withDualProjecti
 	ENUMERATE_CELL_ALLENVCELL(iev,cid,c2a) {
 	  inout_cell_volume[*iev] = in_fracvol[*iev] * inout_cell_volume[cid];
 	}
-      }
+      } 
     };
   }
 

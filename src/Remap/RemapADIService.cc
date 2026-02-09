@@ -1,13 +1,13 @@
 ﻿// -*- tab-width: 2; indent-tabs-mode: nil; coding: utf-8-with-signature -*-
 // Copyright 2000-2024 CEA (www.cea.fr)
 // See the top-level COPYRIGHT file for details.
-// SPDX-License-Identifier: Apache-2.0#include "RemapADIService.h"
+// SPDX-License-Identifier: Apache-2.0
 #include "RemapADIService.h"
 #include "accenv/AcceleratorUtils.h"
-#include "cartesian/FactCartDirectionMng.h"
 #include <arcane/ServiceBuilder.h>
-
 #include <accenv/IAccEnv.h>
+#include "arcane/cea/CellDirectionMng.h"
+#include "arcane/cea/FaceDirectionMng.h"
 
 /** Constructeur de la classe */
 RemapADIService::RemapADIService(const ServiceBuildInfo & sbi)
@@ -28,13 +28,13 @@ void RemapADIService::appliRemap(Integer dimension, Integer withDualProjection, 
     synchronizeDualUremap();
     
     Integer idir(-1);
-    m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
-    
+    m_arcane_cartesian_mesh = Arcane::ICartesianMesh::getReference(mesh());
+
     for( Integer i=0; i< mesh()->dimension(); ++i){
       
       idir = (i + m_sens_projection())%(mesh()->dimension());
       // cas 2D : epaisseur de une maillage dans la direciton de projection
-      if (m_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
+      if (m_arcane_cartesian_mesh->cellDirection(idir).globalNbCell() == 1) continue;
       
       // calcul des gradients des quantites à projeter aux faces 
       computeGradPhiFace(idir, nb_vars_to_project, nb_env);
@@ -96,10 +96,9 @@ void RemapADIService::resizeRemapVariables(Integer nb_vars_to_project, Integer n
 void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_project, [[maybe_unused]] Integer nb_env)  {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiFace()";
-  
 #if 0
   
-  FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   
   ENUMERATE_FACE(iface, fdm.allFaces()) {
     Face face = *iface; 
@@ -127,21 +126,16 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
 
 #else
 
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
 
   auto queue_dfac = m_acc_env->newQueue();
   queue_dfac.setAsync(true);
   {
     auto command = makeCommand(queue_dfac);
 
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.allFaces();
-
     auto out_is_dir_face = ax::viewOut(command,m_is_dir_face);
 
-    command.addKernelName("is_dir_face") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    command.addKernelName("is_dir_face") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.allFaces()) {
 
       out_is_dir_face[fid][idir] = true;
     };
@@ -153,10 +147,6 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
     {
       auto command_f = makeCommand(queue_gphi);
 
-      auto cart_fdm = fact_cart.faceDirection(idir);
-      auto f2cid_stm = cart_fdm.face2CellIdStencil();
-      auto face_group = cart_fdm.innerFaces();
-
       auto in_face_normal  = ax::viewIn(command_f, m_face_normal);
       auto in_cell_coord   = ax::viewIn(command_f, m_cell_coord);
       auto in_phi_lagrange = ax::viewIn(command_f, m_phi_lagrange);
@@ -165,13 +155,12 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
 
       auto out_grad_phi_face = ax::viewOut(command_f, m_grad_phi_face);
 
-      command_f.addKernelName("gphi") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      command_f.addKernelName("gphi") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
         // Acces mailles gauche/droite 
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId pcid(f2cid.previousCell());
-        CellLocalId ncid(f2cid.nextCell());
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId pcid = dir_face.previousCell();
+        CellLocalId ncid = dir_face.nextCell();
 
         inout_deltax_lagrange[fid] = math::dot(
             (in_cell_coord[ncid] -  in_cell_coord[pcid]), in_face_normal[fid]);
@@ -191,37 +180,31 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
     {
       auto command_p = makeCommand(queue_hcell);
 
-      auto cart_fdm = fact_cart.faceDirection(idir);
-      auto f2cid_stm = cart_fdm.face2CellIdStencil();
-      auto face_group = cart_fdm.innerFaces();
-
       auto in_face_coord   = ax::viewIn(command_p, m_face_coord);
       auto in_cell_coord   = ax::viewIn(command_p, m_cell_coord);
       auto inout_h_cell_lagrange = ax::viewInOut(command_p, m_h_cell_lagrange);
 
       // D'abord contribution dans toutes les mailles précédentes
-      command_p.addKernelName("hcell_prev") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      command_p.addKernelName("hcell_prev") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
-        // Acces maille gauche
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId pcid(f2cid.previousCell());
+        // Acces mailles gauche 
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId pcid = dir_face.previousCell();
 
         // somme des distances entre le milieu de la maille et le milieu de la face
         inout_h_cell_lagrange[pcid] =  (in_face_coord[fid] - in_cell_coord[pcid]).normL2();
       };
 
-      const Integer last_idx = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
       // Puis, contrib dans toutes les mailles suivantes
-      command_p.addKernelName("hcell_next") << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-        auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+      command_p.addKernelName("hcell_next") << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
-        // Acces maille droite
-        auto f2cid = f2cid_stm.face(fid, idx);
-        CellLocalId ncid(f2cid.nextCell());
+        // Aces mailles droite 
+        DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+        CellLocalId ncid = dir_face.nextCell();
 
         // somme des distances entre le milieu de la maille et le milieu de la face
-        Real hcell = (idx[idir]==last_idx ? 0. : inout_h_cell_lagrange[ncid]);
+        //Real hcell = (idx[idir]==last_idx ? 0. : inout_h_cell_lagrange[ncid]);
+        Real hcell = inout_h_cell_lagrange[ncid];
         hcell +=  (in_face_coord[fid] - in_cell_coord[ncid]).normL2();
         inout_h_cell_lagrange[ncid] = hcell;
       };
@@ -231,31 +214,30 @@ void RemapADIService::computeGradPhiFace(Integer idir, Integer nb_vars_to_projec
     {
       auto command_c = makeCommand(queue_hcell);
 
-      auto cart_cdm = fact_cart.cellDirection(idir);
-      auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
-      auto cell_group = cart_cdm.allCells();
-
-      // Nb de mailles-1 dans la direction idir
-      const Integer ncell_m1 = fact_cart.cartesianGrid()->cartNumCell().nbItemDir(idir)-1;
-
       auto in_face_coord   = ax::viewIn(command_c, m_face_coord);
       auto in_cell_coord   = ax::viewIn(command_c, m_cell_coord);
       auto out_h_cell_lagrange = ax::viewOut(command_c, m_h_cell_lagrange);
 
+      Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
+
       // Parcours de toutes les mailles en excluant les contribs des faces de bord
-      command_c.addKernelName("hcell") << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
-        auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
+      command_c.addKernelName("hcell") << RUNCOMMAND_ENUMERATE(Cell, cid, cdm.allCells()) {
         
+        // Acces cell gauche/droite qui n'existent pas forcement
+	DirCellLocalId dir_cell(cdm.dirCellId(cid));
+        CellLocalId prev_cell = dir_cell.previous();
+        CellLocalId next_cell = dir_cell.next();
+
         // Acces faces gauche/droite qui existent forcement
-        auto c2fid = c2fid_stm.cellFace(cid, idx);
-        FaceLocalId pfid(c2fid.previousId());
-        FaceLocalId nfid(c2fid.nextId());
+        DirCellFaceLocalId cf(cdm.dirCellFaceId(cid));
+        FaceLocalId nfid = cf.nextId();
+        FaceLocalId pfid = cf.previousId();
 
         // somme des distances entre le milieu de la maille et les milieux des faces adjacentes dans idir
         Real hcell = 0;
-        if (idx[idir]>0) // Si maille bord gauche, on exclut la contrib de la face sur le bord gauche
+	if (!prev_cell.isNull()) // Si maille bord gauche, on exclut la contrib de la face sur le bord gauche
           hcell +=  (in_face_coord[pfid] - in_cell_coord[cid]).normL2();
-        if (idx[idir]<ncell_m1) // Si maille bord droit, on exclut la contrib de la face sur le bord droit
+	if (!next_cell.isNull()) // Si maille bord droit, on exclut la contrib de la face sur le bord droit
           hcell +=  (in_face_coord[nfid] - in_cell_coord[cid]).normL2();
 
         // Plus besoin d'appeler m_h_cell_lagrange.fill(0.0). On boucle ici sur toutes les mailles
@@ -299,7 +281,6 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
     
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell()";
-
   // il faut initialiser m_grad_phi = 0 pour le cas ordre 1 (CPU ou GPU). On passe par un RUNCOMMAND_ENUMERATE 
   // pour couvrir les cas GPU et CPU plutot qu'un fill qui conduirait à des transferts lors d'un run GPU.
 //   m_grad_phi.fill(0.0);
@@ -350,8 +331,8 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
   rqueue1->barrier();
   rqueue2->barrier();
 #endif
-  
-  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   if (options()->ordreProjection > 1) {
 #if 0
     info() << "options()->ordreProjection > 1";
@@ -375,7 +356,7 @@ void RemapADIService::computeGradPhiCell(Integer idir, Integer nb_vars_to_projec
         const Face& face = *iface;
         
         if ( m_is_dir_face[face][idir] == true) {
-          DirFace dir_face = fdm[face];
+          Arcane::DirFace dir_face = fdm[face];
           if (dir_face.previousCell() == cell) {
           frontFace = face;
           indexfrontface = iface.index(); 
@@ -476,18 +457,11 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
   PROF_ACC_BEGIN(__FUNCTION__);
   debug() << " Entree dans computeGradPhiCell_PBorn0_LimC()";
 
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
-
   auto queue = m_acc_env->newQueue();
   {
     auto command = makeCommand(queue);
     
-    auto cart_cdm = fact_cart.cellDirection(idir);
-#if 0
-    auto c2cid_stm = cart_cdm.cell2CellIdStencil();
-#endif
-    auto c2fid_stm = cart_cdm.cell2FaceIdStencil();
-    auto cell_group = cart_cdm.allCells();
+    Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
 
     auto in_grad_phi_face = ax::viewIn(command, m_grad_phi_face);
     auto out_grad_phi = ax::viewOut(command, m_grad_phi);
@@ -495,28 +469,14 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
     auto out_delta_phi_face_av = ax::viewOut(command, m_delta_phi_face_av);
     auto out_delta_phi_face_ar = ax::viewOut(command, m_delta_phi_face_ar);
 
-    command << RUNCOMMAND_LOOP(iter, cell_group.loopRanges()) {
-      auto [cid, idx] = c2fid_stm.idIdx(iter); // id maille + (i,j,k) maille
-
+    command << RUNCOMMAND_ENUMERATE(Cell, cid, cdm.allCells()) {
+      
       // Acces faces gauche/droite qui existent forcement
-      auto c2fid = c2fid_stm.cellFace(cid, idx);
-      FaceLocalId backFid(c2fid.previousId()); // back face
-      FaceLocalId frontFid(c2fid.nextId()); // front face
+      DirCellFaceLocalId cf(cdm.dirCellFaceId(cid));
+      FaceLocalId backFid  = cf.previousId(); // back face
+      FaceLocalId frontFid = cf.nextId(); // front face
 
-#if 0
-      // Acces mailles gauche/droite
-      auto c2cid = c2cid_stm.cell(cid, idx);
-      CellLocalId backCid(c2cid.previous()); // back cell
-      CellLocalId frontCid(c2cid.next()); // front cell
-
-      // Si maille voisine n'existe pas (bord), alors on prend maille centrale
-      if (ItemId::null(backCid))
-        backCid = cid;
-      if (ItemId::null(frontCid))
-        frontCid = cid;
-#endif
-
-      // calcul de m_grad_phi[cell]
+      // calcul de m_grad_phi[cid]
       // Spécialisation de computeAndLimitGradPhi 
       // pour options()->projectionLimiteurId < minmodG (limiteur classique)
       // info() << " Passage gradient limite Classique ";
@@ -538,7 +498,6 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
       }
     };
   }
-
   PROF_ACC_END;
 }
 
@@ -556,7 +515,6 @@ computeGradPhiCell_PBorn0_LimC(Integer idir, Integer nb_vars_to_project) {
 void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Integer nb_vars_to_project, Integer nb_env) {
     
   PROF_ACC_BEGIN(__FUNCTION__);
-
 #if 0
   info() << "options()->ordreProjection : " << options()->ordreProjection;
   info() << "options()->projectionPenteBorne : " << options()->projectionPenteBorne;
@@ -572,13 +530,13 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
   
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection()";
   Real deltat = m_global_deltat();
-  CartesianInterface::CellDirectionMng cdm(m_cartesian_mesh->cellDirection(idir));
-  CartesianInterface::FaceDirectionMng fdm(m_cartesian_mesh->faceDirection(idir));
+  Arcane::CellDirectionMng cdm(m_arcane_cartesian_mesh->cellDirection(idir));
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
   m_phi_face.fill(0.0);
   Integer order2 = options()->ordreProjection - 1;
   ENUMERATE_FACE(iface, fdm.innerFaces()) {
       Face face = *iface; 
-      DirFace dir_face = fdm[face];
+      Arcane::DirFace dir_face = fdm[face];
       Cell cellb = dir_face.previousCell();
       Cell cellf = dir_face.nextCell();
       
@@ -611,20 +569,20 @@ void RemapADIService::computeUpwindFaceQuantitiesForProjection(Integer idir, Int
         Cell cellbbb = cellb;
         Cell cellff = cellf;
         Cell cellfff = cellf;
-        DirCell ccb(cdm.cell(cellb));
+        Arcane::DirCell ccb(cdm.cell(cellb));
         if (ccb.previous().localId() != -1) {
           cellbb = ccb.previous();
           cellbbb = cellbb;
-          DirCell ccbb(cdm.cell(cellbb));
+          Arcane::DirCell ccbb(cdm.cell(cellbb));
           if (ccbb.previous().localId() != -1) {
             cellbbb = ccbb.previous();
           }
         }
-        DirCell ccf(cdm.cell(cellf));
+        Arcane::DirCell ccf(cdm.cell(cellf));
         if (ccf.next().localId() != -1) {
           cellff = ccf.next();
           cellfff = cellff;
-          DirCell ccff(cdm.cell(cellff));
+          Arcane::DirCell ccff(cdm.cell(cellff));
           if (ccff.next().localId() != -1) {
             cellfff = ccff.next();   
           }
@@ -686,8 +644,7 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 {
   debug() << " Entree dans computeUpwindFaceQuantitiesForProjection_PBorn0_O2()";
   PROF_ACC_BEGIN(__FUNCTION__);
-
-  Cartesian::FactCartDirectionMng fact_cart(mesh());
+  Arcane::FaceDirectionMng fdm(m_arcane_cartesian_mesh->faceDirection(idir));
 
   auto ref_queue = m_acc_env->refQueueAsync();
   // Init 0, pour simplifier sur toutes les faces
@@ -707,10 +664,6 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
     
     auto command = makeCommand(ref_queue.get());
 
-    auto cart_fdm = fact_cart.faceDirection(idir);
-    auto f2cid_stm = cart_fdm.face2CellIdStencil();
-    auto face_group = cart_fdm.innerFaces();
-
     auto in_deltax_lagrange      = ax::viewIn(command, m_deltax_lagrange);
     auto in_face_normal_velocity = ax::viewIn(command, m_face_normal_velocity);
     auto in_phi_lagrange         = ax::viewIn(command, m_phi_lagrange);
@@ -721,14 +674,13 @@ computeUpwindFaceQuantitiesForProjection_PBorn0_O2(Integer idir, Integer nb_vars
 
     auto out_phi_face = ax::viewOut(command, m_phi_face);
     
-    command << RUNCOMMAND_LOOP(iter, face_group.loopRanges()) {
-      auto [fid, idx] = f2cid_stm.idIdx(iter); // id face + (i,j,k) face
+    command << RUNCOMMAND_ENUMERATE(Face, fid, fdm.innerFaces()) {
 
       // Acces mailles gauche/droite
-      auto f2cid = f2cid_stm.face(fid, idx);
-      CellLocalId bCid(f2cid.previousCell());
-      CellLocalId fCid(f2cid.nextCell());
-
+      DirFaceLocalId dir_face(fdm.dirFaceId(fid));
+      CellLocalId bCid = dir_face.previousCell();
+      CellLocalId fCid = dir_face.nextCell();
+      
       // Maille upwind
       CellLocalId upwCid = (in_face_normal_velocity[fid] * in_deltax_lagrange[fid] > 0.0 ? bCid : fCid);
 

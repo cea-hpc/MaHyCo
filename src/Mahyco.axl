@@ -145,7 +145,6 @@
   <entry-point method-name="accBuild" name="AccBuild" where="build" property="none" />
 
   <entry-point method-name="checkOptions" name="CheckOptions" where="start-init" property="none" />
-  <entry-point method-name="initCartesianMesh" name="InitCartesianMesh" where="init" property="none" />
   <entry-point method-name="initArcaneCartesianMesh" name="InitArcaneCartesianMesh" where="init" property="none" />
   <entry-point method-name="allocCqs" name="AllocCqs" where="start-init" property="none" />
   <entry-point method-name="initDtIni" name="InitDtIni" where="start-init" property="none" />
@@ -234,13 +233,6 @@
   <service-instance name="remap" type="IRemap" default="RemapADI">
     <description>Service de projection </description>
   </service-instance>
-
-   <!-- - - - cartesian sort faces - - - - -->
-  <simple name="cartesian-sort-faces" type="bool" default="true">
-    <description>
-     Impose le tri cartésien des faces (valable que si le maillage est lui-même cartésien)
-    </description>
-  </simple>
 
    <!-- - - - schema csts - - - - -->
   <simple name="schema-csts" type="bool">

@@ -51,9 +51,6 @@ add_subdirectory(eos)
 # Remap
 add_subdirectory(Remap)
 
-# Cartesian
-add_subdirectory(cartesian)
-
 # Services communs pour les accélérateurs
 add_subdirectory(accenv)
 
@@ -68,7 +65,7 @@ arcane_accelerator_add_source_files(MahycoAnnexe.cc)
 arcane_accelerator_add_source_files(PrepareRemap.cc)
 arcane_accelerator_add_to_target(Mahyco)
 
-target_link_libraries(Mahyco PRIVATE mahyco_config casTest Remap cartesian eos accenv msgpass)
+target_link_libraries(Mahyco PRIVATE mahyco_config casTest Remap eos accenv msgpass)
 
 # Configuration
 set(config_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")

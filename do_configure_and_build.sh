@@ -144,7 +144,7 @@ fi
 
 # TEST 
 cd src
-cp ${MAHYCO_SRC_ROOT}/NONREGRESSION/CAS_BiSodCaseX_RemapArcane/Donnees.arc .
+cp ${MAHYCO_SRC_ROOT}/NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
 
 if [ "$host" == "c-inti.mg1.ccc.ocre.cea.fr" ]; then
   source ${MAHYCO_SRC_ROOT}/env_gcc12.3_cuda12.4_mpi4.1.7.sh

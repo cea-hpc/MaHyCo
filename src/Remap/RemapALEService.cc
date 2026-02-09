@@ -23,7 +23,7 @@ void RemapALEService::appliRemap([[maybe_unused]] Integer dimension, Integer wit
     synchronizeUremap();  
     resizeRemapVariables( nb_vars_to_project,  nb_env);
     
-    m_cartesian_mesh = CartesianInterface::ICartesianMesh::getReference(mesh());
+    m_cartesian_mesh = ICartesianMesh::getReference(mesh());
     mm = IMeshMaterialMng::getReference(mesh());
   
     if (! options()->getIsEulerScheme()) {
