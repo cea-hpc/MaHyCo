@@ -4,7 +4,6 @@
 
 VERBOSE=false
 btype="release"
-acctype="CUDANVCC"
 ARC_BUILD_TYPE="Release"
 LAUNCH_ARC_CTEST=false
 
@@ -22,14 +21,14 @@ usage() {
     echo "  -v                    Enable verbose mode"
     echo "  -h                    Show this help message"
     echo "  -arc_tests            Launch Arcane ctest after building (could be very long), deactivated by default"
-    echo "  -acc                  Specifi which kind of accelerator you want to use"
+    echo "  -acc                  Specify which kind of accelerator you want to use"
     echo "  -suff                 Suffix to be added after the Arcane version number in the <PATH_TO_ARC_INSTALL> variable"
     echo "                        For instance, a hash commit."
     echo ""
-    echo "This bash script is designed for Laptot computer and clusters from the CEA."
+    echo "This bash script is designed for Laptop computers and clusters from the CEA."
     echo "If you want to adapt it to a new archicture, please look at usage and adapt anything that is required."
     echo "At first, the hostname of your computer should be added to this script."
-    echo "Then, verify your dependecies (most likely, the same you use for building Arcane."
+    echo "Then, verify your dependecies (most likely, the same you use for building Arcane)."
     exit 1
 }
 
@@ -82,19 +81,14 @@ do
     -acc=*)
       ACC_MODE_SUFFIX="${arg#-acc=}"
       ACC_MODE_SUFFIX_PART="${ACC_MODE_SUFFIX:+_${ACC_MODE_SUFFIX}}"
-      ARCANE_ACCELERATOR_MODE=${ACC_MODE_SUFFIX_PART}
+      ARCANE_ACCELERATOR_MODE=${ACC_MODE_SUFFIX}
       shift 1
     ;;
     
     -acc=)
-      echo "-acc= : ${btype} valeur inconnue. Valeurs autorisées : {CUDANVCC, HIP}"
+      echo "-acc= : nécessiste une chaine de caractère. Valeurs autorisées : {CUDA, ROCM, HIP, SYCL}"
       exit 1
       shift 1
-    ;;
-    
-    -acc=)
-      echo "-acc= : nécessiste une chaine de caractère : CUDANVCC ou HIP"
-      exit 1
     ;;
     
     -suff=*)
@@ -124,6 +118,7 @@ fi
 if [ ${VERBOSE} == true ]; then
   echo "Arcane version is : " ${ARCANE_VERSION}
 fi
+
 
 #########################
 # Inti Cluster configuration 
@@ -167,7 +162,7 @@ if [ "$host" == "c-inti.mg1.ccc.ocre.cea.fr" ]; then
   COMMON_CMAKE_PREFIX_PATH="${_HWLOC_PATH};${_TBB_PATH};${_GOOGLETEST_PATH};${_OTF2_PATH};${_PARMETIS_PATH}"
   export COMMON_CMAKE_PREFIX_PATH
   echo "COMMON_CMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH}"
-  ARCANE_INSTALL_PREFIX=${ARCANE_INSTALL_ROOT}/arcane${ARCANE_VERSION}${SUFFIX_PART}_gcc123${ACC_MODE_SUFFIX}_mpi417/${CCCOS}/${ARC_BUILD_TYPE}
+  ARCANE_INSTALL_PREFIX=${ARCANE_INSTALL_ROOT}/arcane${ARCANE_VERSION}${SUFFIX_PART}_gcc123${ACC_MODE_SUFFIX_PART}_mpi417/${CCCOS}/${ARC_BUILD_TYPE}
   module purge
   module load cmake/3.26.4 c++/gcc/12 cuda/12.4 hdf5/1.14.3 swig mpi/openmpi/4.1.7
   source ${PWD}/common2.sh
@@ -181,7 +176,7 @@ else
   CCCOS=$(echo "${kernel}"__"${archi}")
   export CCCOS
   CUDA_ARCHI=75
-  ARCANE_INSTALL_PREFIX=${ARCANE_INSTALL_ROOT}/arcane${ARCANE_VERSION}${SUFFIX_PART}/${CCCOS}/${ARC_BUILD_TYPE}
+  ARCANE_INSTALL_PREFIX=${ARCANE_INSTALL_ROOT}/arcane${ARCANE_VERSION}${SUFFIX_PART}${ACC_MODE_SUFFIX_PART}/${CCCOS}/${ARC_BUILD_TYPE}
   MPI_LAUNCHER=`which mpiexec`
 fi
 
@@ -190,10 +185,20 @@ if [ ${VERBOSE} == true ]; then
   echo "Arcane will be installed at : " ${ARCANE_INSTALL_PREFIX}
 fi
 
-cd ${ARCANE_INSTALL_PREFIX}
-rm -rf   build/${ARC_BUILD_TYPE}
-mkdir -p build/${ARC_BUILD_TYPE}
-cd       build/${ARC_BUILD_TYPE}
+if [ -d ${ARCANE_INSTALL_PREFIX} ]; then
+  cd ${ARCANE_INSTALL_PREFIX}
+  rm -rf   build
+  mkdir -p build
+  cd       build
+else
+  echo "Folder ${ARCANE_INSTALL_PREFIX} does not exists, creating it."
+  mkdir -p ${ARCANE_INSTALL_PREFIX}
+  cd ${ARCANE_INSTALL_PREFIX}
+  rm -rf   build
+  mkdir -p build
+  cd       build
+fi
+
 
 export CXX=`which c++`
 export CC=`which gcc`
@@ -205,69 +210,56 @@ export CXX CC
 
 # On désactive le wrapper C# par défaut car il n'est pas utilisé sur inti.
 
-
 if [ ${VERBOSE} == true ]; then
-  echo "Cmake configuration line : "
-  echo "
-       cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
-             -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
-             -DARCANE_ACCELERATOR_MODE=CUDA 
-             -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
-             -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
-             -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
-             -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} 
-             -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
-       ${ARCANE_SRC_ROOT} "$*"
-       "
+  if [ -n "${ARCANE_ACCELERATOR_MODE}"  ]; then
+    echo "Cmake configuration line : "
+    echo "
+         cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
+  	     -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
+  	     -DARCANE_ACCELERATOR_MODE=${ACC_MODE_SUFFIX} 
+  	     -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
+  	     -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
+  	     -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
+  	     -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} 
+  	     -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
+         ${ARCANE_SRC_ROOT} "$*"
+         "
+  else
+    echo "Cmake configuration line : "
+    echo "
+         cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
+  	     -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
+  	     -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
+  	     -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
+  	     -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
+  	     -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
+         ${ARCANE_SRC_ROOT} "$*"
+         "
+  fi
 fi
 
-if [[ -z "${ARCANE_ACCELERATOR_MODE}"  ]]; then
-  echo "Cmake configuration line : "
-  echo "
-       cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
-             -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
-             -DARCANE_ACCELERATOR_MODE=${ACC_MODE_SUFFIX} 
-             -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
-             -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
-             -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
-             -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} 
-             -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
-       ${ARCANE_SRC_ROOT} "$*"
-       "
-elif
-  echo "Cmake configuration line : "
-  echo "
-       cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
-             -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
-             -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
-             -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
-             -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
-             -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
-       ${ARCANE_SRC_ROOT} "$*"
-       "
-fi
 
-if [[ -z "${ARCANE_ACCELERATOR_MODE}"  ]]; then
-  
-       cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
-             -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
-             -DARCANE_ACCELERATOR_MODE=${ACC_MODE_SUFFIX} 
-             -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
-             -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
-             -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
-             -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} 
-             -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
-       ${ARCANE_SRC_ROOT} "$*"
+if [ -n "${ARCANE_ACCELERATOR_MODE}"  ]; then
+
+$( cmake -DCMAKE_INSTALL_PREFIX="${ARCANE_INSTALL_PREFIX}" \
+      -DCMAKE_PREFIX_PATH="${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX}" \
+      -DARCANE_ACCELERATOR_MODE="${ACC_MODE_SUFFIX}" \
+      -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane \
+      -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE \
+      -DARCANE_BUILD_TYPE="${ARC_BUILD_TYPE}" \
+      -DCMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHI}" \
+      -DARCANE_CUSTOM_MPI_DRIVER="${MPI_LAUNCHER}" \
+"${ARCANE_SRC_ROOT}" "$*")
        
-elif
+else
  
-       cmake -DCMAKE_INSTALL_PREFIX=${ARCANE_INSTALL_PREFIX} 
-             -DCMAKE_PREFIX_PATH=${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX} 
-             -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane 
-             -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE 
-             -DARCANE_BUILD_TYPE=${ARC_BUILD_TYPE} 
-             -DARCANE_CUSTOM_MPI_DRIVER=${MPI_LAUNCHER} 
-       ${ARCANE_SRC_ROOT} "$*"
+$( cmake -DCMAKE_INSTALL_PREFIX="${ARCANE_INSTALL_PREFIX}" \
+      -DCMAKE_PREFIX_PATH="${COMMON_CMAKE_PREFIX_PATH};${HYPRE_PREFIX}" \
+      -DARCANEFRAMEWORK_BUILD_COMPONENTS=Arcane \
+      -DCMAKE_DISABLE_FIND_PACKAGE_SWIG=TRUE \
+      -DARCANE_BUILD_TYPE="${ARC_BUILD_TYPE}" \
+      -DARCANE_CUSTOM_MPI_DRIVER="${MPI_LAUNCHER}" \
+"${ARCANE_SRC_ROOT}" "$*" )
        
 fi
 

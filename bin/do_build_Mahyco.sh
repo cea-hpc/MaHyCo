@@ -6,7 +6,7 @@ VERBOSE=false
 btype="release"
 MHC_BUILD_TYPE="Release"
 NVTX="TRUE"
-mhctype="CUDANVCC"
+CUDA_MODE="FALSE"
 
 host=`hostname -d`
 kernel=`uname -s`
@@ -71,13 +71,13 @@ do
       shift 1
     ;;
 
-    -v)
+    -v|--verbose)
       VERBOSE=true
       CMAKE_VERBOSE_MAKEFILE=true
       shift 1
     ;;
     
-    -h)
+    -h|--help)
       shift 1
       usage
     ;; 
@@ -85,12 +85,12 @@ do
     -acc=*)
       MHC_MODE_SUFFIX="${arg#-acc=}"
       MHC_MODE_SUFFIX_PART="${MHC_MODE_SUFFIX:+_${MHC_MODE_SUFFIX}}"
-      mhctype=${MHC_MODE_SUFFIX_PART}
+      CUDA_MODE="TRUE"
       shift 1
     ;;
     
     -acc=)
-      echo "-acc= : nécessiste une chaine de caractère : {cuda, hip}"
+      echo "-acc= : nécessiste une chaine de caractère : {CUDA, HIP}"
       exit 1
     ;;
 
@@ -127,26 +127,25 @@ else
   BASETMPDIR_NONREG="/tmp"
 fi
 
-rm -rf   build_${CCCOS}/${MHC_BUILD_TYPE}
-mkdir -p build_${CCCOS}/${MHC_BUILD_TYPE}
-cd       build_${CCCOS}/${MHC_BUILD_TYPE}
+rm -rf   build_${CCCOS}${MHC_MODE_SUFFIX_PART}/${MHC_BUILD_TYPE}
+mkdir -p build_${CCCOS}${MHC_MODE_SUFFIX_PART}/${MHC_BUILD_TYPE}
+cd       build_${CCCOS}${MHC_MODE_SUFFIX_PART}/${MHC_BUILD_TYPE}
 
 
 if [ ${VERBOSE} == true ]; then
   echo "Cmake configuration line : "
-  echo "
-	cmake  -DWANT_CUDA=${MHC_MODE_SUFFIX} \
-	       -DCMAKE_BUILD_TYPE=${MHC_BUILD_TYPE} \
-	       -DWANT_PROF_ACC=${NVTX} \
-	       -DArcane_ROOT=${ARCANE_INSTALL_PATH}/${CCCOS}/${MHC_BUILD_TYPE} \
-	       -DMPI_LAUNCHER=${MPI_LAUNCHER} \
-	       -DBASETMPDIR_NONREG=${BASETMPDIR_NONREG} \
-	       -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} \
-	       ${MAHYCO_SRC_ROOT} "$*"
-       "
+  echo " "
+  echo "cmake  -DWANT_CUDA=${CUDA_MODE} "
+  echo "       -DCMAKE_BUILD_TYPE=${MHC_BUILD_TYPE} "
+  echo "       -DWANT_PROF_ACC=${NVTX} "
+  echo "       -DArcane_ROOT=${ARCANE_INSTALL_PATH}/${CCCOS}/${MHC_BUILD_TYPE} "
+  echo "       -DMPI_LAUNCHER=${MPI_LAUNCHER} "
+  echo "       -DBASETMPDIR_NONREG=${BASETMPDIR_NONREG} "
+  echo "       -DCMAKE_CUDA_ARCHITECTURES=${CUDA_ARCHI} "
+  echo "       ${MAHYCO_SRC_ROOT} "$*" "
 fi
 
-cmake  -DWANT_CUDA=${MHC_MODE_SUFFIX} \
+cmake  -DWANT_CUDA=${CUDA_MODE} \
        -DCMAKE_BUILD_TYPE=${MHC_BUILD_TYPE} \
        -DWANT_PROF_ACC=${NVTX} \
        -DArcane_ROOT=${ARCANE_INSTALL_PATH}/${CCCOS}/${MHC_BUILD_TYPE} \
