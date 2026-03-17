@@ -82,7 +82,7 @@
      <deltat-init>0.00001</deltat-init>
      <deltat-min>0.00000001</deltat-min>
      <deltat-max>0.01</deltat-max>
-    <longueur-caracteristique>racine-cubique-volume</longueur-caracteristique>
+    <longueur-caracteristique>faces-opposees</longueur-caracteristique>
      
     <final-time>.2</final-time>
     
