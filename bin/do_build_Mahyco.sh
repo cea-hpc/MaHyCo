@@ -128,7 +128,7 @@ else
 fi
 
 
-if [[ ! -f "${ARCANE_INSTALL_PATH}/${CCCOS}/${MHC_BUILD_TYPE}/lib/libarcane_accelerator_cuda_runtime.so" ]]; then
+if [[ "${CUDA_MODE}" == "TRUE" && ! -f "${ARCANE_INSTALL_PATH}/${CCCOS}/${MHC_BUILD_TYPE}/lib/libarcane_accelerator_cuda_runtime.so" ]]; then
   echo "Lib libarcane_accelerator_cuda_runtime.so couldn't be found in ${ARCANE_INSTALL_PATH}. You will not be able to launch Mahyco with support of Nvidia GPUs."
   echo "Please recompile Arcane with support of Nvidia GPUs."
   exit 1

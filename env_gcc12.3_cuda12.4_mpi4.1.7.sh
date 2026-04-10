@@ -7,6 +7,8 @@ export CXX=`which c++`
 export CC=`which gcc`
 export CXX CC
 
-# en attendant que SLURM_JOB_ID soit correctement configuré sur GH200
-JOB_ID="${CCCSHMDIR#/dev/shm/SLURM_}"
-export SLURM_JOB_ID=${JOB_ID}
+# en attendant que SLURM_JOB_ID soit correctement configuré sur GH200 si allocation via ccc_mprun -x
+if [[ ! -v SLURM_JOB_ID ]]; then
+  JOB_ID="${CCCSHMDIR#/dev/shm/SLURM_}"
+  export SLURM_JOB_ID=${JOB_ID}
+fi
