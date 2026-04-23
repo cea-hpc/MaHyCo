@@ -165,7 +165,6 @@ if [ "$host" == "c-inti.mg1.ccc.ocre.cea.fr" ]; then
   ARCANE_INSTALL_PREFIX=${ARCANE_INSTALL_ROOT}/arcane${ARCANE_VERSION}${SUFFIX_PART}_gcc123${ACC_MODE_SUFFIX_PART}_mpi417/${CCCOS}/${ARC_BUILD_TYPE}
   module purge
   module load cmake/3.26.4 c++/gcc/12 cuda/12.4 hdf5/1.14.3 swig mpi/openmpi/4.1.7
-  source ${PWD}/common2.sh
   MPI_LAUNCHER="/usr/bin/ccc_mprun"
 
 else  
