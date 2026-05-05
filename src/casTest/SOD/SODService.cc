@@ -1,8 +1,25 @@
 #include "SODService.h"
 #include "../../TypesMahyco.h"
+#include "arcane/core/ICartesianMeshGenerationInfo.h"
+#include <arcane/cartesianmesh/ICartesianMesh.h>
+
+double SODService::computeInterfacePosition() {
+  ICartesianMeshGenerationInfo * cmgi = ICartesianMeshGenerationInfo::getReference(mesh(), false);
+  Real3 origin = cmgi->globalOrigin();
+  Real3 length = cmgi->globalLength();
+  double interfPos(0.);
+  if (options()->casTest == SodCaseX) interfPos = origin.x + length.x / 2.;
+  if (options()->casTest == SodCaseY) interfPos = origin.y + length.y / 2.;
+  if (options()->casTest == SodCaseZ) interfPos = origin.z + length.z / 2.;
+  if (options()->casTest == BiSodSph) 
+  {
+    const Real3 interf_pos_vec = length - origin;
+    interfPos = std::sqrt(interf_pos_vec.squareNormL2()) / 2.;
+  }
+  return interfPos;
+}
 
 void SODService::initMatMono([[maybe_unused]] Integer dim)  {
-    
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
     m_materiau[cell] = 0.;
@@ -10,7 +27,6 @@ void SODService::initMatMono([[maybe_unused]] Integer dim)  {
 }
 
 void SODService::initVarMono([[maybe_unused]] Integer dim)  {
-    
   // mise à zero puis initialisation des fractions de masses et volumes
   m_mass_fraction.fill(0.0);
   m_fracvol.fill(0.0);
@@ -19,10 +35,11 @@ void SODService::initVarMono([[maybe_unused]] Integer dim)  {
     double r(0.);
     double pInit;
     double rhoInit;
+    double interfPos = computeInterfacePosition();
     if (options()->casTest == SodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == SodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == SodCaseZ) r = m_cell_coord[cell].z;
-    if (r < 0.5) {
+    if (r < interfPos) {
       pInit = 1.0;
       rhoInit = 1.0;
     } else {
@@ -34,12 +51,12 @@ void SODService::initVarMono([[maybe_unused]] Integer dim)  {
     m_fracvol[cell] = 1.;
     m_mass_fraction[cell] = 1.;
   }
-  ENUMERATE_NODE(inode, allNodes()){
+  ENUMERATE_NODE(inode, allNodes()) {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }
+
 void SODService::initMat(Integer dim)  {
-    
   info() << options()->casTest;
   if (options()->casTest == SodCaseX ||
        options()->casTest == SodCaseY ||
@@ -50,6 +67,7 @@ void SODService::initMat(Integer dim)  {
   ENUMERATE_CELL(icell, allCells()) {
     Cell cell = *icell;
     double r(0.);
+    double interfPos = computeInterfacePosition();
     if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
@@ -60,7 +78,7 @@ void SODService::initMat(Integer dim)  {
       const Real z = m_cell_coord[cell].z;
       r = std::sqrt(x*x + y*y + z*z);
     }
-    if (r < 0.5) {
+    if (r < interfPos) {
       m_materiau[cell] = 0.;
       // m_materiau[cell] = 0.9;
     } else {
@@ -71,23 +89,22 @@ void SODService::initMat(Integer dim)  {
 }
 
 void SODService::initVar(Integer dim)  {
-    
-    
- if (options()->casTest == SodCaseX ||
-       options()->casTest == SodCaseY ||
-       options()->casTest == SodCaseZ) {
-        initVarMono(dim);
-        return;
- }
- info() << " on rentre ici"; 
- // mise à zero puis initialisation des fractions de masses et volumes
- m_mass_fraction.fill(0.0);
- m_fracvol.fill(0.0);
- CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
- ENUMERATE_CELL(icell,allCells()) {
+  if (options()->casTest == SodCaseX ||
+        options()->casTest == SodCaseY ||
+        options()->casTest == SodCaseZ) {
+         initVarMono(dim);
+         return;
+  }
+  info() << " on rentre ici"; 
+  // mise à zero puis initialisation des fractions de masses et volumes
+  m_mass_fraction.fill(0.0);
+  m_fracvol.fill(0.0);
+  CellToAllEnvCellConverter all_env_cell_converter(IMeshMaterialMng::getReference(mesh()));
+  ENUMERATE_CELL(icell,allCells()) {
     Cell cell = *icell;
     AllEnvCell all_env_cell = all_env_cell_converter[cell]; 
     double r(0.);
+    double interfPos = computeInterfacePosition();
     if (options()->casTest == BiSodCaseX) r = m_cell_coord[cell].x;
     if (options()->casTest == BiSodCaseY) r = m_cell_coord[cell].y;
     if (options()->casTest == BiSodCaseZ) r = m_cell_coord[cell].z;
@@ -98,7 +115,7 @@ void SODService::initVar(Integer dim)  {
       const Real z = m_cell_coord[cell].z;
       r = std::sqrt(x*x + y*y + z*z);
     }
-    if (r < 0.5) {
+    if (r < interfPos) {
       m_density[cell] = 1.0;
       m_pressure[cell] = 1.0;
       m_fracvol[cell] = 1.;
@@ -133,7 +150,7 @@ void SODService::initVar(Integer dim)  {
       }
     }
   }
-  ENUMERATE_NODE(inode, allNodes()){
+  ENUMERATE_NODE(inode, allNodes()) {
     m_velocity[inode] = {0.0, 0.0, 0.0};
   }
 }

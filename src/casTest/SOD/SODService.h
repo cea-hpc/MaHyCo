@@ -47,6 +47,9 @@ public:
   virtual void initVar(Integer dim);
   virtual bool hasReverseOption();
   virtual Real getReverseParameter();
+
+private:
+  double computeInterfacePosition();
 };
 
 #endif
