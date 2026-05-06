@@ -1,7 +1,7 @@
 #!/bin/sh
 
 module purge
-module load cmake/3.26.4 c++/gcc/12 cuda/12.4 hdf5/1.14.3 swig mpi/openmpi/4.1.7
+module load cmake/3.26.4 c++/gcc/12 cuda/12.4 hdf5/1.14.3 mpi/openmpi/4.1.7
 
 export CXX=`which c++`
 export CC=`which gcc`

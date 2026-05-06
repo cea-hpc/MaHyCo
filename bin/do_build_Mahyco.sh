@@ -176,8 +176,8 @@ cp ${MAHYCO_SRC_ROOT}/NONREGRESSION/CAS_BiSodCaseX/Donnees.arc .
 
 if [ "$host" == "c-inti.mg1.ccc.ocre.cea.fr" ]; then
   source ${MAHYCO_SRC_ROOT}/env_gcc12.3_cuda12.4_mpi4.1.7.sh
-  ccc_mprun -n 4 -c 72 -p gh200-bxi ../../../bin/wrapper_mgpu.bash ./Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+  ccc_mprun -n 1 -p gh200-bxi ./Mahyco Donnees.arc
 else
-  mpiexec -n 1 ./Mahyco -A,AcceleratorRuntime=cuda Donnees.arc
+  mpiexec -n 1 ./Mahyco Donnees.arc
 fi
 
