@@ -9,9 +9,8 @@
 #
 # Options:
 #   -e <path>          Path to executable (mandatory, resolved to absolute path)
-#   -p <label>         Label used in listing filenames  (default: local)
+#   -p <partition>     TGCC partition                    (default: gh200-bxi)
 #   -a <args>          Extra arguments for the executable (default: none)
-#   -n <tasks/node>    MPI tasks per node / max threads  (default: 288)
 #   -o <file>          Output script name               (default: run_all.sh)
 #   -M                 Generate pure MPI cases          (default: both)
 #   -T                 Generate multi-thread cases      (default: both)
@@ -19,10 +18,9 @@
 # ==============================================================================
 
 # --- Default parameters ---
-LABEL="local"
+PARTITION="gh200-bxi"
 EXECUTABLE=""
 EXE_ARGS=""
-NTASKS_PER_NODE=288
 OUTPUT_SCRIPT="run_all.sh"
 DO_MPI=1
 DO_MT=1
@@ -35,10 +33,9 @@ usage() {
 
 while getopts ":p:e:a:n:o:MTh" opt; do
     case $opt in
-        p) LABEL="$OPTARG" ;;
+        p) PARTITION="$OPTARG" ;;
         e) EXECUTABLE="$OPTARG" ;;
         a) EXE_ARGS="$OPTARG" ;;
-        n) NTASKS_PER_NODE="$OPTARG" ;;
         o) OUTPUT_SCRIPT="$OPTARG" ;;
         M) DO_MPI=1; DO_MT=0 ;;
         T) DO_MPI=0; DO_MT=1 ;;
@@ -67,10 +64,9 @@ if [[ ! -x "$EXECUTABLE" ]]; then
 fi
 
 echo "=== generate_mpirun.sh ==="
-echo "  Label           : $LABEL"
+echo "  PARTITION       : $PARTITION"
 echo "  Executable      : $EXECUTABLE"
 echo "  Extra args      : ${EXE_ARGS:-(none)}"
-echo "  Tasks/node      : $NTASKS_PER_NODE"
 echo "  Output script   : $OUTPUT_SCRIPT"
 echo "  Pure MPI        : $([ $DO_MPI -eq 1 ] && echo yes || echo no)"
 echo "  Multi-thread    : $([ $DO_MT  -eq 1 ] && echo yes || echo no)"
@@ -163,7 +159,7 @@ if [[ $DO_MPI -eq 1 && ${#mpi_cases[@]} -gt 0 ]]; then
     for entry in "${mpi_cases[@]}"; do
         read -r arc_file nprocs nx ny nz <<< "$entry"
         nprocs_fmt=$(printf "%03d" "$nprocs")
-        listing="listing_${LABEL}_n${nprocs_fmt}"
+        listing="listing_${PARTITION}_n${nprocs_fmt}"
 
         if [[ -n "$EXE_ARGS" ]]; then
             run_cmd="\${EXECUTABLE} ${arc_file} \${EXE_ARGS}"
@@ -188,7 +184,7 @@ if [[ $DO_MT -eq 1 && ${#mt_cases[@]} -gt 0 ]]; then
     for entry in "${mt_cases[@]}"; do
         read -r ref_arc ncores <<< "$entry"
         ncores_fmt=$(printf "%03d" "$ncores")
-        listing="listing_${LABEL}_k${ncores_fmt}"
+        listing="listing_${PARTITION}_k${ncores_fmt}"
 
         if [[ -n "$EXE_ARGS" ]]; then
             run_cmd="\${EXECUTABLE} -A,T=${ncores} ${ref_arc} \${EXE_ARGS}"
