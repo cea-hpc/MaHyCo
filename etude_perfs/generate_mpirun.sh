@@ -188,12 +188,12 @@ if [[ $DO_MT -eq 1 && ${#mt_cases[@]} -gt 0 ]]; then
     for entry in "${mt_cases[@]}"; do
         read -r ref_arc ncores <<< "$entry"
         ncores_fmt=$(printf "%03d" "$ncores")
-        listing="listing_${LABEL}_n${ncores_fmt}"
+        listing="listing_${LABEL}_k${ncores_fmt}"
 
         if [[ -n "$EXE_ARGS" ]]; then
-            run_cmd="\${EXECUTABLE} ${ref_arc} \${EXE_ARGS}"
+            run_cmd="\${EXECUTABLE} -A,T=${ncores} ${ref_arc} \${EXE_ARGS}"
         else
-            run_cmd="\${EXECUTABLE} ${ref_arc}"
+            run_cmd="\${EXECUTABLE} -A,T=${ncores} ${ref_arc}"
         fi
 
         cat >> "$OUTPUT_SCRIPT" <<EOF
