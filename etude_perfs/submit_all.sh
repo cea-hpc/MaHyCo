@@ -33,10 +33,10 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 shopt -s nullglob
-msub_files=(job_Donnees*_nsd_*.msub)
+msub_files=(job_Donnees*.msub)
 
 if [[ ${#msub_files[@]} -eq 0 ]]; then
-    echo "ERROR: no file matching job_Donnees*_nsd_*.msub found in $(pwd)"
+    echo "ERROR: no file matching job_Donnees*.msub found in $(pwd)"
     echo "Run ./generate_msub.sh first."
     exit 1
 fi
