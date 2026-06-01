@@ -142,7 +142,7 @@ EOF
         fi
         cat >> "$OUTPUT_SCRIPT" <<EOF
 log "MT   | file=${arc_file}  ncores=${nprocs}  nsd=${nx}x${ny}x${nz}"
-mpirun -n 1 -x OMP_NUM_THREADS=${nprocs} ${mt_run_cmd} > ${listing}
+mpirun -n 1 --bind-to none ${mt_run_cmd} > ${listing}
 log "done | listing=${listing}"
 
 EOF
